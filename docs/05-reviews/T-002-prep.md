@@ -162,3 +162,93 @@ melos run test                                     -> all packages pass; storize
 
 ## Re-verify when fixed
 Un-skip the QA-10/QA-11 tests in `sanitize_har_round3_test.dart`, run the full suite, and also re-run the CLI on all `adv_*.har`.
+
+---
+
+# Round 4 verification (commit 9cc8e17)
+
+## Verdict: **FAIL** (one blocker: QA-14, unknown-key leak through the sibling rule)
+
+QA-10 as specified (map-of-ids parents), QA-11, QA-12 (report column), QA-13 UA/x-ig-app-id all hold. But the "lower snake_case plus one allowlisted sibling" rule is still a username leak, and the final scan cannot catch it (it does not look for names).
+
+## Probe results (in-process, FAKE data; tests in `test/tool/sanitize_har_round4_qa_test.dart`)
+
+| Probe | Result |
+|-------|--------|
+| `{"pk":"1","<snake_username>":{...}}` | **LEAK**: key kept, value subtree sanitized (QA-14) |
+| unknown map `viewers` = `{count:2, <snake_username>:{seen:true}}` | **LEAK** (QA-14) |
+| unknown map `seen_by` = `{user:{..}, <snake_username>:{..}}` | **LEAK**: a user literally named `user` (or `id`, `count`, `status`, `text`, `type`, `code`, `url`, `seen`, `following`...) is an allowlisted sibling, so every other username in the map is kept (QA-15) |
+| `likers_map` keyed by usernames, no known sibling | clean (all keys become `key_N`) |
+| `mentions`, `tagged_users`, all-unknown keys, dotted names, uppercase, digits | clean |
+| user named `username` / `id` inside `users`, or next to numeric ids | clean |
+| nested `reels` / `users` map inside a username key; user named `reels` | clean |
+| values: `full_name`, `username`, `caption.text`, `biography`, `profile_pic_url`, arrays of strings, `pk`/`id`/`user_id` holding a name, IG profile URL, text with URL | all become `<str:N>` / `<url ...>`; none kept |
+| value under `type`/`status`/`kind`/`audience`/`media_type` that is identifier-shaped | kept (QA-17, low) |
+| 10-digit user id as a JSON int under a key not ending in id/pk/owner (for example `mentioned`) | kept (QA-18, low); 13+ digit ints and all digit-strings are mapped |
+| key `xdt_<name>` directly under `data` | kept (QA-16, info; GraphQL root names are schema names, not usernames) |
+| query name / bare query flag shaped `[a-z_]{1,24}` | kept (QA-19) |
+| header name shaped `[a-z]+(-[a-z]+)*` | kept (QA-19) |
+| `accept` / `content-type` header value that is a plain word | kept (QA-22, low) |
+| non-standard method (`zzfake`): regex runs after `toUpperCase`; response `mimeType` such as `application/<word>` | kept (QA-23, info) |
+| query/header names with dot, digit, uppercase, `@`; query values; path segments `/api/v1/<name>/info/` | clean (`<name>`, `<hdr>`, `<v>`, `<seg>`) |
+| `x-ig-app-id`, user-agent header with a word value | `<v>`, `<ua>` |
+
+## QA-14 (Blocker): sibling rule keeps usernames
+
+`_mapKey` keeps any snake_case key (<= 40 chars) when `hasKnownSibling` is true, and `hasKnownSibling` is true when any sibling is in the allowlist. Real usernames match `[a-z0-9._]`, so any underscore-only/alphanumeric username in a username-keyed map that is not in `_idMapParents` and happens to include one allowlisted key (a `count`, a `status`, `pk`, or a user whose name is a common word) is kept. Dotted names are replaced, which only hides part of the problem. Instagram does return username-keyed maps outside the seven listed parents in some endpoints (viewer, mention and tag maps), and the spike will see endpoints we have not listed. Likelihood: medium. Impact: third-party usernames in a public repo. The final scan cannot catch it.
+
+Recommendation, in order of strength:
+1. **Structural dynamic-map detection** (cheap, do this regardless): treat an object as a dynamic map when it has >= 2 keys and (all values are objects, or all values have the same scalar type) and fewer than half of the keys are on the allowlist. In `viewers` above it leaves `count` plus two object siblings (not "all objects"), so also use rule 2.
+2. **Replace the sibling rule by a ratio rule plus type rule**: an unknown key is kept only if it is in the allowlist or a sibling-corpus vocabulary, or if >= 50% of the siblings are allowlisted AND its value is not an object with the same shape as another unknown sibling (two unknown siblings with objects of the same key set are almost certainly a username map).
+3. **Strictest option (recommended for the real run)**: drop the sibling rule entirely and use a per-run opt-in. The tool prints the distinct replaced key names as `key_N` with their counts, and the user adds `--keep-key name` for field names the extractor needs, after seeing them in `report.md` (names that look like usernames are never listed). Survival of unknown but legitimate fields costs one extra run; a leak is permanent in git history.
+
+QA-15 is the same defect (a username equal to an allowlisted word defeats the dynamic-map idea) and is closed by option 1 or 3, not by the sibling rule.
+
+## Header and query name residual (probe 4)
+Severity **low**. Real Instagram endpoints put usernames in query **values** (`?username=`, `?query=`) and in the path, both of which are replaced (`<v>`, `<seg>`). I found no real endpoint where a username is a query or header **name**. It needs a crafted URL, and a HAR of the user's own browsing does not produce one. A bare flag such as `?zzfake` is the only plausible shape and also has no real source. Accept, but close it cheaply by keeping only names from the known lists (drop `_shortQueryName`/`_shortHeaderName`) and counting the rest in the report.
+
+## coarseUserAgent (probe 5)
+Six real-world strings (Android WebView with model and Build id, Instagram Android app with dpi, model, codename, chipset and build number, Instagram iOS with device id and scale, Safari iOS, Edge Windows, Chrome Android with model `K`) reduce to `Chrome/120 (Android, WebView)`, `Instagram/300 (Android)`, `Instagram/312 (iOS)`, `Safari/17 (iOS)`, `Edge/120 (Windows)`, `Chrome/120 (Android)`. None contains a model, build, locale, resolution or minor version. Unknown family or a username-led UA becomes `<ua>`. PASS.
+
+## Fail-closed (probe 6)
+The final scan detects secrets, signed URLs, emails, phones, tokens, **not names**. A username in an uncovered place is not caught (test `scan itself does not detect a plain username` documents this). Covered places are now closed except QA-14/15/17/19/22/23. Recommendation: since usernames cannot be detected, the tool should refuse to write when the number of kept-but-unknown keys is high, or add a `report.md` section listing kept non-allowlisted key names for the user's mandatory skim (names only, never values).
+
+## TECH_SPEC 4.1 survival (probe 7)
+Fields IG-1..IG-5 (`id, username, full_name, is_private, followed_by_viewer, blocked_by_viewer, profile_pic_url, user.pk, items, pk, taken_at, expiring_at, media_type, image_versions2.candidates, video_versions, video_duration, audience, story_link_stickers, code, product_type, carousel_media, caption.text, more_available, num_results, next_max_id`) all survive, and `audience`/`product_type` values survive. Two losses:
+- **QA-20 (Medium, usefulness)**: `message` and `error_type` values are replaced by `<str:N>`, so `login_required`, `checkpoint_required`, `feedback_required` cannot be observed. The failure map needs them. Fix: a known-value allowlist for those two keys (not a shape rule, which would pass usernames).
+- **QA-21 (info)**: camelCase keys (`profilePicUrl`) become `key_N`. Web GraphQL is mostly snake_case, so acceptable; the report counts them.
+
+## Re-run of earlier tests and tools
+- Round 1-3 adversarial tests are all still active (0 `skip:` in them) and pass.
+- CLI on the 10 `adv_*.har` plus `synthetic.har`: exit 0 on all 11; marker grep (`zzfake`, `FAKE_SESSION`, `fakeuser`, `FAKEOH`, `FAKESIG`, names and captions) over all outputs: nothing found.
+- gitleaks `dir .`: `no leaks found` (about 372 MB scanned). gitleaks `git .`: `no leaks found`, 145 commits.
+- `dart format --output=none --set-exit-if-changed .`: `Formatted 314 files (0 changed)`, exit 0.
+- `flutter analyze`: `No issues found!`
+- `melos run test`:
+  - storize_data `+1423 ~4: All tests passed!`
+  - storize_app `+471 ~1: All tests passed!`
+  - storize_domain `+210: All tests passed!`
+  - storize_model `+73: All tests passed!`
+  - storize_platform_android `+69: All tests passed!`
+  - storize_instagram `+250 ~15: All tests passed!` (the 15 skipped are all the QA-14..QA-23 probes of this round, nothing else is skipped)
+- Guardrails: no Instagram or Flutter imports in domain/model touched; no real hosts, cookies or tokens in the new test file (FAKE names only); governor untouched.
+- CI run for 9cc8e17: id 44609651702, **completed, conclusion success**.
+
+## Tests added
+`packages/storize_instagram/test/tool/sanitize_har_round4_qa_test.dart` (29 active passing, 15 skipped). Skipped tests reproduce QA-14 (x3), QA-15, QA-16, QA-17, QA-18, QA-19 (x3), QA-20, QA-21, QA-22, QA-23. I confirmed that each skipped test fails when un-skipped (QA-14/15 reproduced through the CLI as well).
+
+## Findings (round 4)
+
+| ID | Severity | Problem |
+|----|----------|---------|
+| QA-14 | **Blocker** | snake_case + any allowlisted sibling keeps username keys in unknown maps |
+| QA-15 | **Blocker** (same fix) | a user named like an allowlisted key makes the map keep all keys |
+| QA-20 | Medium | `message` / `error_type` values replaced; failure map unobservable |
+| QA-17 | Low | identifier-shaped values kept under `type/status/kind/audience/media_type` |
+| QA-18 | Low | 10-12 digit ints under non-id keys kept |
+| QA-19 | Low (accepted) | lowercase query and header names kept |
+| QA-22 | Low | `accept` / `content-type` values keep any plain word |
+| QA-16, QA-21, QA-23 | Info | `xdt_*` under `data`; camelCase keys; method and response mimeType shapes |
+
+## Re-verify when fixed
+Un-skip QA-14/15 (and QA-20) in `sanitize_har_round4_qa_test.dart`, re-run the CLI on all `adv_*.har`, and add the two unknown-map shapes (`viewers` with `count`, `seen_by` with a user named `user`) to a fixture.
