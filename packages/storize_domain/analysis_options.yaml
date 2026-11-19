@@ -1,0 +1,6 @@
+include: ../../analysis_options.yaml
+
+linter:
+  rules:
+    # Every public API in storize_domain needs dartdoc (TECH_SPEC §12).
+    public_member_api_docs: true
