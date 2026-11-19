@@ -29,6 +29,8 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
+| T-011 | backend-developer (sonnet) | new `packages/storize_data/lib/log/**`, new `packages/storize_data/test/log/**`, new `packages/storize_domain/lib/src/ports/diagnostic_log.dart` (+ fake in new `lib/src/testing/fake_diagnostic_log.dart`, test in new `test/testing/diagnostic_log_test.dart`), `app/lib/main.dart`, new `app/test/core/crash_hooks*` | 16:45 |
+| T-019 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/**`, new `packages/storize_domain/test/usecases/**` | 16:45 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -45,7 +47,7 @@
 | T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | **done** (device checks → P-4) | 4 | QA PASS + CI [44510544819](https://github.com/Amr905/Storize/actions/runs/44510544819) · `05-reviews/T-009.md` |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | **done** | 2 | QA PASS (+108 tests) + CI [44514083877](https://github.com/Amr905/Storize/actions/runs/44514083877) · `05-reviews/T-010.md` |
 | T-010a | StorageInfo via plugin `storageStats` + T-010 minor fixes | Medium | sonnet | Backend Developer | T-010 | **done** | 1 | QA PASS + CI [44523285849](https://github.com/Amr905/Storize/actions/runs/44523285849) · `05-reviews/T-010a.md` |
-| T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
+| T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | in_progress | 1 | — |
 | T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | **done** | 2 | QA PASS r2 (+92 tests) + CI [44513670058](https://github.com/Amr905/Storize/actions/runs/44513670058) · `05-reviews/T-012.md` |
 | T-012a | Lease clock-skew in repos + limit-record retry | Medium | sonnet | Backend Developer | T-012, T-006 | **done** | 1 | QA PASS + CI [44517651587](https://github.com/Amr905/Storize/actions/runs/44517651587) · `05-reviews/T-012a.md` |
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | todo | — | — |
@@ -54,7 +56,7 @@
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-012 | todo | — | — |
 | T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | todo | — | — |
-| T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | todo | — | — |
+| T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | in_progress | 1 | — |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
