@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 21 / 42 tasks done (50%)** — original plan 16 / 37 (43%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 22 / 42 tasks done (52%)** — original plan 17 / 37 (46%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,13 +29,12 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
 | ID | Title | Complexity | Model | Specialist | Depends on | Status | Attempts | Verified by / evidence |
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
 | T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
-| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | **waiting on user capture (P-3)** — sanitizer tooling approved (prep r6 PASS, branch `t-002-spike`) | 4 | — |
+| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | **done** | 6 (prep) + 2 | QA PASS r2 (0 leaks) + CI [44634743140](https://github.com/Amr905/Storize/actions/runs/44634743140) · `05-reviews/T-002-prep.md`, `T-002.md` |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | **done** | 1 | QA PASS + CI [44463661224](https://github.com/Amr905/Storize/actions/runs/44463661224) · `05-reviews/T-005.md` |
@@ -100,6 +99,8 @@
 ## Pending user decisions
 | ID | Decision | Options | Blocks |
 |----|----------|---------|--------|
+| UD-3 | Opening a story in the web page marks it **seen** (`PolarisStoriesV3SeenMutation`) | block the mutation in the hook (Lead rec.) · call the reel query from page context (no viewer UI) · accept (BR-8) | T-014 |
+| UD-4 | Commit c559f84 (old CDN edge label + a public place's coordinates; no credentials/names) is still fetchable by SHA on GitHub until GC | accept · ask GitHub Support to purge | — |
 
 ## Checkpoints
 | # | After tasks | Result | Report |
@@ -156,3 +157,4 @@
 - 2026-11-20 00:10 — T-024a QA PASS + CI → **done** (UD-1 resolved, primary #C93F17), merged; main green. **21/42 (50%)**. T-002 prep round 4 delivered → QA.
 - 2026-11-20 00:30 — T-002 prep round 4 QA **FAIL** (QA-14/15: a snake_case username next to any allowlisted key was kept; the final scan can't detect names). QA-11/12/13 and the listed map-of-ids parents hold. Lead design for round 5: drop the sibling rule; keys kept only by exact allowlist or reviewed `--keep-key`/`keep_keys.txt`; dynamic-map detection as defence in depth; known-value lists for `message`/`error_type`. Stays on Sonnet per UD-2; if round 5 fails, escalate to the user (Opus).
 - 2026-11-20 01:00 — T-002 prep rounds 5–6 QA PASS + CI green: sanitizer tooling **approved** for the real capture (residuals QA-24/27/28 Low/Info, accepted). T-002 now waits on the user's capture session with the test account (P-3), per `docs/03-specs/CAPTURE_GUIDE.md` on branch `t-002-spike`. Progress 21/42 (50%).
+- 2026-11-20 01:20 — **T-002 done** (22/42, 52%): Lead ran the capture in the user's browser pane (in-page hook, no headers/cookies). First write-up leaked metadata (CDN edge label, location floats) on the public branch → user approved a branch-history rewrite → R2 fixes → QA PASS, 0 leaks. Merged; main green (instagram 417, app 481). AC2/AC4 → T-013 step 0; AC5 → T-014 (TASKS.md updated). Raw capture deleted. UD-3 (seen side effect) and UD-4 (GitHub purge) raised. Next: T-013.

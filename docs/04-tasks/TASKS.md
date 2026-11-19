@@ -245,6 +245,8 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   4. Each row of the failure map has a fixture test.
   5. Missing fields → `SchemaChanged(where)`.
   6. The WebView User-Agent and session headers are applied; nothing sensitive is logged.
+  7. *(Added 2026-11-20 from T-002.)* Step 0, live probe on the user's phone (P-4) through `RequestGovernor`: try IG-1…IG-5 once each and record only status + top-level key names; plus T-002 AC2 (story image/video plain GET) and AC4 (phone hook check). Direct mode is REST where the probe proves it; otherwise those calls use the GraphQL patterns in INSTAGRAM_EXTRACTION.md (doc_id discovered at runtime, never hard-coded).
+  8. *(From T-002.)* Images from the timeline/story responses (media/info is capped at 720 px); pinned posts are not "newest"; collab posts (`coauthor_producers`) count for the tracked user; non-fatal `errors[]` next to complete data is not `SchemaChanged`.
 
 ### T-014 — PageExtractor
 - **Tier:** L · **Files:** `packages/storize_instagram/lib/page/**`, `assets/hook.js`.
@@ -257,6 +259,8 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   6. The JS handler only accepts messages from instagram.com origins.
   7. Parser tests on saved HTML/JSON fixtures.
   8. Background use is gated by `pageModeInBackground`.
+  9. *(Moved from T-002 AC5.)* On-device test: HeadlessInAppWebView runs inside the workmanager background isolate on two phones (P-4).
+  10. *(From T-002.)* Opening a story in the page fires `PolarisStoriesV3SeenMutation` (marks it seen). Behaviour per user decision UD-3.
 
 ### T-015 — InstagramPlatform
 - **Tier:** M · **Files:** `packages/storize_instagram/lib/instagram_platform.dart`, `lib/media/**`.
