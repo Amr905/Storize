@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_inappwebview: ^6.1.5
   material_ui: ^1.1.0
   storize_data: any
   storize_domain: any
