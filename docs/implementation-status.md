@@ -28,6 +28,7 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
+| T-013 | backend-developer (sonnet) | new `packages/storize_instagram/lib/direct/**`, `lib/mapper/**`, `lib/probe/**`; new `test/direct/**`, `test/mapper/**`, `test/probe/**`; new `test/fixtures/synthetic/**` (failure-map fixtures, fake data only) | 01:25 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -47,7 +48,7 @@
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | **done** | 3 | QA PASS r3 + CI [44579941049](https://github.com/Amr905/Storize/actions/runs/44579941049) (gitleaks green) · `05-reviews/T-011.md` |
 | T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | **done** | 2 | QA PASS r2 (+92 tests) + CI [44513670058](https://github.com/Amr905/Storize/actions/runs/44513670058) · `05-reviews/T-012.md` |
 | T-012a | Lease clock-skew in repos + limit-record retry | Medium | sonnet | Backend Developer | T-012, T-006 | **done** | 1 | QA PASS + CI [44517651587](https://github.com/Amr905/Storize/actions/runs/44517651587) · `05-reviews/T-012a.md` |
-| T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | todo | — | — |
+| T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | in_progress | 1 | — |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | todo | — | — |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | Medium | sonnet | Backend Developer | T-013, T-014 | todo | — | — |
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
