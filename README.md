@@ -18,3 +18,17 @@ CLAUDE.md           Workflow rules for Claude agents
 ```
 
 See `CLAUDE.md` for the development workflow.
+
+## Development
+
+Toolchain: Flutter 3.50.0 (Dart 3.14), JDK 17, Android SDK 36. The repo is a Dart pub workspace (`app/` + `packages/*`).
+
+```sh
+flutter pub get                       # resolve the whole workspace (repo root)
+dart format --set-exit-if-changed .   # format check
+flutter analyze                       # static analysis
+dart pub global activate melos        # once
+melos run test                        # tests in every member
+melos run gen                         # code generation (no-op until build_runner is used)
+cd app && flutter run --flavor dev    # run the dev flavor on a phone
+```

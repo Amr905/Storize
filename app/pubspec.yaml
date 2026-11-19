@@ -1,0 +1,26 @@
+name: storize_app
+description: Storize Android app (Instagram story and post auto-saver).
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+
+environment:
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.1.0
+  storize_data: any
+  storize_domain: any
+  storize_instagram: any
+  storize_model: any
+  storize_platform_android: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

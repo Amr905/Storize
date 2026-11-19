@@ -1,0 +1,24 @@
+name: storize_platform_android
+description: Storize native Android plugin (MediaStore, OEM intents, thumbnails).
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.amr905.storize.platform
+        pluginClass: StorizePlatformPlugin

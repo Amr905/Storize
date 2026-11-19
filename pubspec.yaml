@@ -1,0 +1,44 @@
+name: storize_workspace
+description: Storize workspace root (Dart pub workspace + Melos scripts).
+publish_to: none
+
+environment:
+  sdk: ^3.14.0
+
+workspace:
+  - app
+  - packages/storize_model
+  - packages/storize_domain
+  - packages/storize_data
+  - packages/storize_instagram
+  - packages/storize_platform_android
+
+dev_dependencies:
+  melos: ^8.10.1
+  very_good_analysis: ^10.0.0
+
+melos:
+  scripts:
+    gen:
+      description: Run build_runner in every package that depends on it (no-op if none).
+      run: |
+        if [ -n "$(melos list --parsable --depends-on=build_runner 2>/dev/null)" ]; then
+          melos exec --fail-fast --depends-on=build_runner -- dart run build_runner build -d
+        else
+          echo "gen: no package depends on build_runner yet; nothing to do."
+        fi
+    test:
+      description: Run unit and widget tests in every member that has tests.
+      exec:
+        command: flutter test
+        failFast: false
+      packageFilters:
+        dirExists: test
+    golden:update:
+      description: Regenerate golden files in the app.
+      exec:
+        command: flutter test --update-goldens
+        failFast: true
+      packageFilters:
+        scope: storize_app
+        dirExists: test

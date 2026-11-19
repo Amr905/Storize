@@ -1,0 +1,14 @@
+name: storize_domain
+description: Pure Dart ports, use cases and test fakes for Storize.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  storize_model: any
+
+dev_dependencies:
+  test: ^1.25.0

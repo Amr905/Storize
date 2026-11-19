@@ -1,0 +1,20 @@
+name: storize_data
+description: Storize data layer (drift, settings, vault, gallery, logs).
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  storize_domain: any
+  storize_model: any
+  storize_platform_android: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
