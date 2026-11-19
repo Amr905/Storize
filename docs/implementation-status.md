@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **7 / 37** (+1 Could) · Checkpoint 1 GREEN · next checkpoint after 10 done (3 to go).
+- Tasks done: **8 / 37** (+1 Could) · Checkpoint 1 GREEN · next checkpoint after 10 done (2 to go).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,8 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-008 | backend-developer (sonnet) | `packages/storize_data/lib/security/**`, `packages/storize_data/test/security/**` | 08:55 |
+| T-006 | backend-developer (sonnet) | `packages/storize_data/lib/repo/**`, `packages/storize_data/test/repo/**` | 12:50 |
+| T-012 | backend-developer (sonnet) | `packages/storize_instagram/lib/governor/**`, `packages/storize_instagram/test/governor/**` | 12:50 |
 | T-009 | backend-developer (sonnet) | `packages/storize_platform_android/**` (Kotlin + Dart API + tests; no pubspec dependency changes without the Lead) | 08:55 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
@@ -41,13 +42,13 @@
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | **done** | 1 | QA PASS + CI [44463661224](https://github.com/Amr905/Storize/actions/runs/44463661224) · `05-reviews/T-005.md` |
-| T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
+| T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | in_progress | 1 | — |
 | T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | **done** | 2 | QA PASS (after F-1 fix) + CI [44461140658](https://github.com/Amr905/Storize/actions/runs/44461140658) · `05-reviews/T-007.md` |
-| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | in_review | 2 | — |
-| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | in_review | 1 | — |
+| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | **done** | 2 | QA PASS + CI [44465551564](https://github.com/Amr905/Storize/actions/runs/44465551564) · `05-reviews/T-008.md` |
+| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | changes_requested (round 3: Kotlin test compile) | 3 | — |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | todo | — | — |
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
-| T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | todo | — | — |
+| T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | in_progress | 1 | — |
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | todo | — | — |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | todo | — | — |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | Medium | sonnet | Backend Developer | T-013, T-014 | todo | — | — |
@@ -127,3 +128,6 @@
 - 2026-11-19 08:55 — T-008 (vault) and T-009 (native gallery plugin) started (sonnet, High). T-009's on-device check (P-4) is deferred to the user.
 - 2026-11-19 09:40 — T-005 QA PASS (41 QA tests, perf OK) → **done**. T-025 QA PASS → round 2 (unknown-route fallback, tab back) → **done**. Both merged; Lead wired `db/db.dart` into the storize_data barrel; main full suite green (795 tests). UX.md + TECH_SPEC §3 notes updated.
 - 2026-11-19 09:40 — T-008 QA PASS (leak hunt clean) with Low F-1 (capturedAt range) → round 2 fixed + Lead-approved shared `SessionStore.requiredCookies` (fake parity). T-009 delivered; CI compiled the Kotlin first time → QA started.
+- 2026-11-19 09:55 — T-008 round 2 CI green → **T-008 done**, merged; Lead wired `security/security.dart`; main suite green. T-009 round 2 (URI confinement F2 + F3–F8) delivered; Lead added a CI step for the plugin's Kotlin JVM tests → test sources failed to compile (`createTempDir` deprecated-as-error); main Kotlin compiled.
+- 2026-11-19 ~10:00–12:40 — paused: account usage limit (5-hour window).
+- 2026-11-19 12:50 — Resumed. T-009 round 3 sent. T-006 (repos) and T-012 (governor) started (sonnet).
