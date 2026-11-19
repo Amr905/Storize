@@ -1,0 +1,101 @@
+import 'package:storize_instagram/direct/ig_http.dart';
+import 'package:storize_model/storize_model.dart';
+
+/// Turns a reply into the `Failure` of the TECH_SPEC 4.1 failure map, or null
+/// when the reply is a usable JSON object.
+///
+/// Rules, in this order (the first that matches wins):
+/// 1. `checkpoint_required`, `challenge_required` or a `challenge` object:
+///    `SessionInvalid(challenge)`.
+/// 2. 401, a redirect to the login page, `login_required`,
+///    `user_has_logged_out` or `require_login`:
+///    `SessionInvalid(loginRequired)`.
+/// 3. `feedback_required` or a disabled account: `AccountRestricted`.
+/// 4. 429 or "please wait" or "too many requests": `RateLimited`.
+/// 5. 403 "not authorized to view": `TargetNotVisible`.
+/// 6. 404: `TargetNotFound`.
+/// 7. Any other non-2xx: `UnknownFailure(code, 'http_<code>')`.
+/// 8. A 2xx body that is not a JSON object: `SchemaChanged('response')`.
+///
+/// Markers are read from the top-level `message`, `error_type` and `error`.
+/// On a 2xx reply they count only when `status` is `fail`, `require_login` is
+/// true, or `data` is null next to an `errors[]` list. The `errors[]` messages
+/// are read only when `data` is null, so a non-fatal `errors[]` next to
+/// complete data is never a failure (AC8).
+final class FailureClassifier {
+  /// Creates the classifier.
+  const FailureClassifier();
+
+  /// Classifies [reply].
+  Failure? classify(IgReply reply) {
+    final body = reply.json is Map<String, Object?>
+        ? reply.json! as Map<String, Object?>
+        : null;
+    if (reply.isSuccess) {
+      if (body == null) return const SchemaChanged('response');
+      if (!_isFailBody(body)) return null;
+    }
+    final text = _markers(body, includeErrors: body?['data'] == null);
+    if (text.contains('checkpoint_required') ||
+        text.contains('challenge_required') ||
+        body?['challenge'] is Map<String, Object?>) {
+      return const SessionInvalid(SessionReason.challenge);
+    }
+    final redirectToLogin = (reply.redirectPath ?? '').contains(
+      '/accounts/login',
+    );
+    if (reply.status == 401 ||
+        redirectToLogin ||
+        text.contains('login_required') ||
+        text.contains('user_has_logged_out') ||
+        body?['require_login'] == true) {
+      return const SessionInvalid(SessionReason.loginRequired);
+    }
+    if (text.contains('feedback_required') ||
+        text.contains('account_disabled') ||
+        text.contains('account has been disabled') ||
+        text.contains('disabled your account')) {
+      return const AccountRestricted();
+    }
+    if (reply.status == 429 ||
+        text.contains('please wait') ||
+        text.contains('too many requests')) {
+      return RateLimited(reply.retryAfter);
+    }
+    if (text.contains('not authorized to view')) {
+      return const TargetNotVisible();
+    }
+    if (reply.status == 404) return const TargetNotFound();
+    if (!reply.isSuccess) {
+      return UnknownFailure(reply.status, 'http_${reply.status}');
+    }
+    return const UnknownFailure(null, 'status_fail');
+  }
+
+  /// Whether a 2xx body is really a failure.
+  bool _isFailBody(Map<String, Object?> body) {
+    if (body['status'] == 'fail' || body['require_login'] == true) return true;
+    return body.containsKey('data') &&
+        body['data'] == null &&
+        body['errors'] is List<Object?> &&
+        (body['errors']! as List<Object?>).isNotEmpty;
+  }
+
+  String _markers(Map<String, Object?>? body, {required bool includeErrors}) {
+    if (body == null) return '';
+    final parts = <String>[];
+    for (final key in const ['message', 'error_type', 'error']) {
+      final v = body[key];
+      if (v is String) parts.add(v);
+    }
+    final errors = body['errors'];
+    if (includeErrors && errors is List<Object?>) {
+      for (final e in errors) {
+        if (e is Map<String, Object?> && e['message'] is String) {
+          parts.add(e['message']! as String);
+        }
+      }
+    }
+    return parts.join(' ').toLowerCase();
+  }
+}

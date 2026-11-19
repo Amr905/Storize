@@ -1,0 +1,6 @@
+{
+  "message": "checkpoint_required",
+  "checkpoint_url": "https://example.test/ZZFAKE",
+  "lock": true,
+  "status": "fail"
+}

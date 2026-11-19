@@ -1,0 +1,5 @@
+{
+  "message": "Your account has been disabled",
+  "error_type": "account_disabled",
+  "status": "fail"
+}
