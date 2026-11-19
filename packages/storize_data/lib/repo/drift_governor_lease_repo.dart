@@ -8,6 +8,11 @@ final class DriftGovernorLeaseRepo implements GovernorLeaseRepo {
     : _dao = db.governorLeaseDao,
       _clock = clock;
 
+  static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(
+    0,
+    isUtc: true,
+  );
+
   final GovernorLeaseDao _dao;
   final Clock _clock;
 
@@ -42,7 +47,7 @@ final class DriftGovernorLeaseRepo implements GovernorLeaseRepo {
 
   @override
   Future<void> release({required int accountId, required String holder}) =>
-      _dao.release(accountId: accountId, holder: holder, now: _clock.now());
+      _dao.release(accountId: accountId, holder: holder, now: _epoch);
 
   @override
   Future<GovernorLease?> read(int accountId) async {

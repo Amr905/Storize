@@ -10,6 +10,29 @@ import '../support.dart';
 /// QA contract tests (T-004 verification): edge cases a real DB would honour.
 void main() {
   group('lease expiry edge', () {
+    test('clock skew: a lease beyond now + ttl is expired; release uses the '
+        'epoch', () async {
+      final clock = FakeClock(t0);
+      final repo = FakeGovernorLeaseRepo(clock);
+      final bucket = GovernorBucket(tokens: 1, lastRefillAt: t0);
+      const ttl = Duration(seconds: 10);
+      Future<GovernorLease?> take(String h) => repo.acquire(
+        accountId: 1,
+        holder: h,
+        ttl: ttl,
+        initialBucket: bucket,
+      );
+      await take('ui');
+      expect(await take('bg'), isNull);
+      clock.set(t0.subtract(const Duration(days: 1)));
+      expect(await take('bg'), isNotNull);
+      await repo.release(accountId: 1, holder: 'bg');
+      expect(
+        (await repo.read(1))!.expiresAt,
+        DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      );
+    });
+
     test(
       'at exactly expiresAt the lease is free; 1 ms before it is held',
       () async {

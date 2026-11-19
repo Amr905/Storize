@@ -7,6 +7,11 @@ final class FakeGovernorLeaseRepo implements GovernorLeaseRepo {
   /// Creates the repo. Use a `FakeClock` to make leases expire.
   FakeGovernorLeaseRepo(this._clock);
 
+  static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(
+    0,
+    isUtc: true,
+  );
+
   final Clock _clock;
   final Map<int, GovernorLease> _rows = {};
 
@@ -24,6 +29,7 @@ final class FakeGovernorLeaseRepo implements GovernorLeaseRepo {
     final now = _clock.now();
     if (existing != null &&
         existing.isHeldAt(now) &&
+        !existing.expiresAt.isAfter(now.add(ttl)) &&
         existing.holder != holder) {
       return null;
     }
@@ -50,13 +56,10 @@ final class FakeGovernorLeaseRepo implements GovernorLeaseRepo {
   }
 
   @override
-  Future<void> release({
-    required int accountId,
-    required String holder,
-  }) async {
+  Future<void> release({required int accountId, required String holder}) async {
     final lease = _rows[accountId];
     if (lease == null || lease.holder != holder) return;
-    _rows[accountId] = lease.copyWith(expiresAt: _clock.now());
+    _rows[accountId] = lease.copyWith(expiresAt: _epoch);
   }
 
   @override

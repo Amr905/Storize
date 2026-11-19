@@ -21,6 +21,12 @@ typedef GovernorLog = void Function(String message);
 /// zone. Used to refuse a nested `run` for the same account.
 final Object _runningKey = Object();
 
+/// Attempts to record a rate limit before giving up (N2).
+const int _limitRecordAttempts = 3;
+
+/// Wait before the first retry of a failed limit record; doubles each time.
+const Duration _limitRecordBackoff = Duration(milliseconds: 200);
+
 Future<void> _realDelay(Duration duration) => Future<void>.delayed(duration);
 
 /// The single gate for every Instagram call, direct or page mode (ADR-9).
@@ -356,16 +362,33 @@ class RequestGovernor {
 
   /// [_finish] for use after a call: it must never replace the call's own
   /// result or error, so nothing escapes from here.
+  ///
+  /// Recording a rate limit is retried when the repo write throws: up to
+  /// [_limitRecordAttempts] attempts, waiting 200 ms and then 400 ms on the
+  /// injected delay. Without a limit there is one best-effort attempt. If
+  /// every attempt fails, `record_failed` is logged.
   Future<void> _finishSafely(
     int accountId,
     _AccountState state,
     RateLimited? limited,
   ) async {
-    try {
-      await _finish(accountId, state, limited);
-    } on Object {
-      _logLine(accountId, null, Duration.zero, 'record_failed');
+    final attempts = limited == null ? 1 : _limitRecordAttempts;
+    var backoff = _limitRecordBackoff;
+    for (var attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        await _finish(accountId, state, limited);
+        return;
+      } on Object {
+        if (attempt == attempts) break;
+        try {
+          await _delay(backoff);
+        } on Object {
+          break;
+        }
+        backoff *= 2;
+      }
     }
+    _logLine(accountId, null, Duration.zero, 'record_failed');
   }
 
   /// Stores the outcome of a call: refills, stamps the call end (the jitter
