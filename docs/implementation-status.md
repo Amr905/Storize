@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **4 / 37** (+1 Could) · Next checkpoint: after 5 verified tasks (1 to go).
+- Tasks done: **5 / 37** (+1 Could) · **Checkpoint 1 due now** (T-001, T-003, T-024, T-004, T-007).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-005 | backend-developer (sonnet) | `packages/storize_data/lib/db/**`, `packages/storize_data/test/db/**`, `packages/storize_data/drift_schemas/**`, `packages/storize_data/build.yaml` | 07:30 |
-| T-007 | backend-developer (haiku) | `packages/storize_data/lib/settings/**`, `packages/storize_data/test/settings/**` | 07:30 |
 | T-025 | frontend-developer (sonnet) | `app/lib/**` except `app/lib/ui/**` and `app/lib/debug/**` and `main_debug_inspector.dart`; `app/l10n.yaml`; `app/test/**` except `app/test/ui/**` and `app/test/debug/**`; `app/pubspec.yaml` **only** the `flutter: generate: true` line | 07:30 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
@@ -41,9 +40,9 @@
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | **blocked (UD-2: 2 failed QA rounds on a High task → user decides Sonnet vs Opus)** | 4 | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
-| T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | in_progress | 1 | — |
+| T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | in_review | 1 | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
-| T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | in_review | 1 | — |
+| T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | **done** | 2 | QA PASS (after F-1 fix) + CI [44461140658](https://github.com/Amr905/Storize/actions/runs/44461140658) · `05-reviews/T-007.md` |
 | T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | todo | — | — |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | todo | — | — |
@@ -61,7 +60,7 @@
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | todo | — | — |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
-| T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | in_progress | 1 | — |
+| T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | in_review | 1 | — |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | todo | — | — |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
@@ -117,3 +116,4 @@
 - 2026-11-19 07:30 — Wave 3: T-005 (sonnet), T-007 (haiku), T-025 (sonnet).
 - 2026-11-19 08:05 — T-007: developer stopped correctly at a lint needing a dev-dependency (out of lock); Lead added `shared_preferences_platform_interface` (dev) → analyze clean, 20 tests → QA started.
 - 2026-11-19 08:10 — T-002 prep round 3 re-verification: **FAIL** (QA-10 blocker: username-like object keys survive; QA-11 medium: doc_id/query_hash shape). Second failed QA round on a High task → per protocol, **stopped and asked the user (UD-2)**.
+- 2026-11-19 08:30 — T-007 QA FAIL (F-1 timestamp overflow) → round 2 fixed → CI green → **T-007 done**, merged; Lead wired `storize_data` barrel. T-005 and T-025 delivered → QA. **Checkpoint 1 started.**
