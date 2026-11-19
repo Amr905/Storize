@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Schema dumps and generated migration test helpers (T-005):
+          #   dart run drift_dev schema dump lib/db/storize_database.dart drift_schemas/
+          #   dart run drift_dev schema generate drift_schemas/ test/db/generated/
+          databases:
+            storize: lib/db/storize_database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/db/generated/
+          sql:
+            dialect: sqlite
