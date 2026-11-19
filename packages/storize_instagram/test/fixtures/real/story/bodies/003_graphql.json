@@ -1,0 +1,229 @@
+{
+  "data": {
+    "xdt_api__v1__feed__reels_media": {
+      "reels_media": [
+        {
+          "id": "user_1",
+          "reel_type": "user_reel",
+          "items": [
+            {
+              "id": "media_16_user_1",
+              "original_height": 854,
+              "original_width": 480,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 1138,
+                    "width": 640
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 854,
+                    "width": 480
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 569,
+                    "width": 320
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 427,
+                    "width": 240
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 640,
+                    "width": 640
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 640,
+                    "width": 640
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 640,
+                    "width": 640
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 480,
+                    "width": 480
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 320,
+                    "width": 320
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 240,
+                    "width": 240
+                  },
+                  {
+                    "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+                    "height": 150,
+                    "width": 150
+                  }
+                ]
+              },
+              "media_type": 2,
+              "taken_at": 1795115924,
+              "pk": "media_16",
+              "has_audio": true,
+              "key_338": [
+                {
+                  "key_339": {
+                    "key_340": false,
+                    "key_341": "<str:0>",
+                    "key_20": "<str:109>",
+                    "key_342": "<str:59>"
+                  },
+                  "id": "media_17"
+                }
+              ],
+              "key_343": null,
+              "carousel_media_count": null,
+              "carousel_media": null,
+              "accessibility_caption": null,
+              "code": "<str:11>",
+              "is_dash_eligible": 1,
+              "number_of_qualities": 2,
+              "video_dash_manifest": "<dash:6027>",
+              "video_versions": [
+                {
+                  "type": 101,
+                  "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>"
+                },
+                {
+                  "type": 102,
+                  "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>"
+                },
+                {
+                  "type": 103,
+                  "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>"
+                }
+              ],
+              "key_344": null,
+              "key_345": null,
+              "story_link_stickers": null,
+              "key_346": null,
+              "key_347": null,
+              "key_348": null,
+              "key_349": [
+                {
+                  "key_350": 0.5,
+                  "key_351": 0.42,
+                  "width": 0.5,
+                  "height": 0.5,
+                  "key_352": 0,
+                  "key_353": "<str:11>",
+                  "id": "media_18",
+                  "product_type": "feed"
+                }
+              ],
+              "key_354": null,
+              "key_355": null,
+              "key_356": null,
+              "key_357": null,
+              "key_358": null,
+              "key_359": null,
+              "video_duration": 15,
+              "key_360": null,
+              "key_361": false,
+              "key_362": null,
+              "key_363": null,
+              "product_type": "story",
+              "key_364": null,
+              "key_365": null,
+              "key_366": false,
+              "key_367": false,
+              "user": {
+                "key_368": "<str:11>",
+                "pk": "user_1",
+                "id": "user_1",
+                "key_369": null,
+                "key_370": {
+                  "key_371": false
+                },
+                "key_372": "<str:15>"
+              },
+              "audience": null,
+              "key_373": false,
+              "key_374": null,
+              "key_375": [],
+              "can_reshare": true,
+              "__typename": "XDTMediaDict",
+              "key_376": null,
+              "media_overlay_info": null,
+              "caption": null,
+              "key_377": "<str:348>",
+              "story_cta": null,
+              "key_378": null,
+              "expiring_at": 1795202324,
+              "is_paid_partnership": false,
+              "key_379": null,
+              "key_380": null,
+              "key_381": null,
+              "key_382": null,
+              "key_383": null,
+              "key_384": false,
+              "key_385": {
+                "key_386": false,
+                "key_387": null
+              },
+              "can_reply": true
+            }
+          ],
+          "user": {
+            "pk": "user_1",
+            "id": "user_1",
+            "username": "<str:16>",
+            "__typename": "XDTUserDict",
+            "friendship_status": {
+              "following": true
+            },
+            "key_372": "<str:15>",
+            "user_id": "user_1",
+            "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "is_private": false,
+            "is_verified": false,
+            "key_370": {
+              "key_388": null,
+              "key_389": false,
+              "key_371": false,
+              "key_390": false
+            },
+            "key_391": null,
+            "key_392": null,
+            "key_393": false
+          },
+          "seen": 0,
+          "key_394": null,
+          "key_20": null,
+          "can_reshare": true,
+          "latest_reel_media": 1795115924,
+          "key_395": null
+        }
+      ],
+      "key_396": []
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "user_2",
+        "pk": "user_2",
+        "user_id": "user_2",
+        "key_397": false
+      }
+    }
+  },
+  "extensions": {
+    "key_398": {
+      "key_399": 8000000019,
+      "key_400": 8000000020
+    },
+    "key_401": true
+  }
+}

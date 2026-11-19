@@ -126,11 +126,11 @@ void main() {
     }
     expect(
       text,
-      contains('<url host=scontent-xxx.cdninstagram.com path_shape=3seg.jpg>'),
+      contains('<url host=cdninstagram.com path_shape=3seg.jpg>'),
     );
     expect(
       text,
-      contains('<url host=scontent-xxx.cdninstagram.com path_shape=6seg.mp4>'),
+      contains('<url host=cdninstagram.com path_shape=6seg.mp4>'),
     );
   });
 

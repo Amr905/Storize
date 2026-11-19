@@ -1,0 +1,176 @@
+{
+  "tool": "sanitize_har",
+  "version": 1,
+  "harEntries": 7,
+  "jsonRequests": 7,
+  "requests": [
+    {
+      "n": 1,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/bulk-route-definitions/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 1940,
+        "paramCount": 26,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 8851,
+      "bodyFile": "bodies/001_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 2,
+      "method": "GET",
+      "host": "www.instagram.com",
+      "path": "/api/v1/media/media_1/comments/",
+      "query": {
+        "<name>": [
+          "true",
+          "false"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "application/json; charset=utf-8",
+      "responseSize": 36600,
+      "bodyFile": "bodies/002_media_comments.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 3,
+      "method": "GET",
+      "host": "www.instagram.com",
+      "path": "/api/v1/media/media_1/info/",
+      "query": {},
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "application/json; charset=utf-8",
+      "responseSize": 43567,
+      "bodyFile": "bodies/003_media_info.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 4,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/bulk-route-definitions/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2016,
+        "paramCount": 28,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 25162,
+      "bodyFile": "bodies/004_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 5,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/bulk-route-definitions/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2429,
+        "paramCount": 37,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 40601,
+      "bodyFile": "bodies/005_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 6,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/bulk-route-definitions/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2557,
+        "paramCount": 39,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 89120,
+      "bodyFile": "bodies/006_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 7,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/<seg>",
+      "query": {
+        "__a": "<v>",
+        "<name>": [
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>"
+        ],
+        "__d": "<v>"
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "<str>",
+      "responseSize": 94,
+      "bodyFile": "bodies/007_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    }
+  ]
+}

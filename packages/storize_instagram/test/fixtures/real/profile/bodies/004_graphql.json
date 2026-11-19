@@ -1,0 +1,166 @@
+{
+  "data": {
+    "user": {
+      "pk": "user_1",
+      "key_12": {
+        "key_13": false,
+        "key_14": null,
+        "key_15": false,
+        "key_16": false
+      },
+      "friendship_status": {
+        "following": true,
+        "blocking": false,
+        "key_17": false,
+        "outgoing_request": false,
+        "followed_by": false,
+        "incoming_request": false,
+        "key_18": false,
+        "is_bestie": false,
+        "key_19": false,
+        "key_20": false
+      },
+      "key_21": null,
+      "key_22": "<str:17>",
+      "key_23": false,
+      "is_private": false,
+      "key_24": null,
+      "key_25": null,
+      "key_26": null,
+      "key_27": false,
+      "key_28": [],
+      "key_29": [
+        {
+          "key_30": "<str:0>",
+          "key_31": false,
+          "key_32": "<str:17>",
+          "key_33": "<str:8>",
+          "key_34": "<url host=l.instagram.com path_shape=0seg>",
+          "key_35": "<str:0>",
+          "media_type": "<str:4>",
+          "key_36": "<str:19>",
+          "url": "<url host=www.instagram.com path_shape=1seg>",
+          "key_37": "<str:4>"
+        },
+        {
+          "key_30": "<str:0>",
+          "key_31": false,
+          "key_32": "<str:16>",
+          "key_33": "<str:8>",
+          "key_34": "<url host=l.instagram.com path_shape=0seg>",
+          "key_35": "<str:0>",
+          "media_type": "<str:4>",
+          "key_36": "<str:18>",
+          "url": "<url host=www.instagram.com path_shape=1seg>",
+          "key_37": "<str:4>"
+        }
+      ],
+      "key_38": null,
+      "key_39": {
+        "key_40": []
+      },
+      "key_41": null,
+      "key_42": false,
+      "username": "<str:16>",
+      "key_43": null,
+      "key_44": null,
+      "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+      "key_45": {
+        "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>"
+      },
+      "key_46": false,
+      "latest_reel_media": 1795115924,
+      "key_47": null,
+      "key_48": [],
+      "biography": "<str:146>",
+      "full_name": "<str:28>",
+      "is_verified": false,
+      "key_49": true,
+      "key_50": 3,
+      "key_51": 40311,
+      "key_52": 5,
+      "key_53": [
+        {
+          "username": "<str:16>",
+          "id": null
+        },
+        {
+          "username": "<str:15>",
+          "id": null
+        }
+      ],
+      "key_54": [
+        {
+          "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+          "id": "user_2"
+        },
+        {
+          "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+          "id": "media_8"
+        },
+        {
+          "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+          "id": "media_9"
+        }
+      ],
+      "key_55": "<str:0>",
+      "key_56": "<str:0>",
+      "key_57": false,
+      "key_58": "<str:0>",
+      "key_59": {
+        "key_60": []
+      },
+      "key_61": "<str:0>",
+      "key_62": false,
+      "key_63": false,
+      "key_64": false,
+      "key_65": {
+        "key_66": null,
+        "key_67": null
+      },
+      "key_68": [],
+      "key_69": null,
+      "key_70": "<url host=l.instagram.com path_shape=0seg>",
+      "external_url": "<url host=www.instagram.com path_shape=1seg>",
+      "key_71": [],
+      "key_72": null,
+      "key_73": null,
+      "key_74": false,
+      "id": "user_1",
+      "key_75": true,
+      "key_76": false,
+      "key_77": false,
+      "key_78": false,
+      "key_79": null,
+      "key_80": 4,
+      "media_count": 79,
+      "key_81": false,
+      "key_82": 1,
+      "key_83": true,
+      "key_84": null,
+      "key_85": false,
+      "key_86": 0,
+      "key_87": 8000000010
+    },
+    "viewer": {
+      "user": {
+        "pk": "user_3",
+        "id": "user_3",
+        "key_88": false,
+        "key_26": {
+          "key_89": false,
+          "key_90": false,
+          "key_91": null,
+          "id": "<str:29>"
+        }
+      }
+    }
+  },
+  "extensions": {
+    "key_3": {
+      "key_4": 8000000011,
+      "key_5": 8000000012
+    },
+    "key_6": true
+  }
+}

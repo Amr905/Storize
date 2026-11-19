@@ -180,7 +180,7 @@ void main() {
     expect(j['video_dash_manifest'], '<dash:17>');
     expect(
       (j['owner'] as Map)['url'],
-      '<url host=scontent-x.cdninstagram.com path_shape=3seg.jpg>',
+      '<url host=cdninstagram.com path_shape=3seg.jpg>',
     );
   });
 

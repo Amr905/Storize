@@ -276,11 +276,24 @@ void main() {
       )!;
       expect(out, isNot(contains('zzfake_value')));
     });
-    test('shipped keep_keys.txt has no entries', () {
+    test('shipped keep_keys.txt holds only the reviewed schema names', () {
+      // T-002 (2026-11-20): each name was checked against the real capture.
+      // Adding a name needs a review: extend this list in the same PR.
+      const reviewed = {
+        'xdt_api__v1__feed__reels_media',
+        'xdt_api__v1__feed__user_timeline_graphql_connection',
+        'xdt_viewer',
+        'carousel_media_count',
+        'timeline_pinned_user_ids',
+        'coauthor_producers',
+        'media_count',
+      };
       final lines = File('tool/keep_keys.txt')
           .readAsLinesSync()
-          .where((l) => l.trim().isNotEmpty && !l.trim().startsWith('#'));
-      expect(lines, isEmpty);
+          .map((l) => l.trim())
+          .where((l) => l.isNotEmpty && !l.startsWith('#'))
+          .toSet();
+      expect(lines, reviewed);
     });
   });
 

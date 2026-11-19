@@ -1,0 +1,238 @@
+{
+  "tool": "sanitize_har",
+  "version": 1,
+  "harEntries": 8,
+  "jsonRequests": 8,
+  "requests": [
+    {
+      "n": 1,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/<seg>/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 1911,
+        "paramCount": 26,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 3258,
+      "bodyFile": "bodies/001_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 2,
+      "method": "GET",
+      "host": "www.instagram.com",
+      "path": "/ajax/<seg>/",
+      "query": {
+        "<name>": [
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>"
+        ],
+        "__d": "<v>",
+        "__a": "<v>"
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 36465,
+      "bodyFile": "bodies/002_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 3,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/api/graphql",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2083,
+        "paramCount": 29,
+        "paramNames": [
+          "__d",
+          "__a",
+          "variables",
+          "doc_id"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 21405,
+      "bodyFile": "bodies/003_graphql.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 4,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/api/graphql",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 1991,
+        "paramCount": 29,
+        "paramNames": [
+          "__d",
+          "__a",
+          "variables",
+          "doc_id"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 280,
+      "bodyFile": "bodies/004_graphql.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 5,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/bulk-route-definitions/",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 1950,
+        "paramCount": 25,
+        "paramNames": [
+          "__d",
+          "__a"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 3331,
+      "bodyFile": "bodies/005_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 6,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/api/graphql",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2183,
+        "paramCount": 29,
+        "paramNames": [
+          "__d",
+          "__a",
+          "variables",
+          "doc_id"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 196,
+      "bodyFile": "bodies/006_graphql.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 7,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/ajax/<seg>",
+      "query": {
+        "__a": "<v>",
+        "<name>": [
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>",
+          "<v>"
+        ],
+        "__d": "<v>"
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "<str>",
+      "responseSize": 94,
+      "bodyFile": "bodies/007_ajax.json",
+      "bodyNote": null,
+      "candidate": null
+    },
+    {
+      "n": 8,
+      "method": "POST",
+      "host": "www.instagram.com",
+      "path": "/api/graphql",
+      "query": {},
+      "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "size": 2132,
+        "paramCount": 29,
+        "paramNames": [
+          "__d",
+          "__a",
+          "variables",
+          "doc_id"
+        ]
+      },
+      "requestHeaderNames": [],
+      "requestHeaders": {},
+      "status": 200,
+      "mimeType": "text/javascript; charset=utf-8",
+      "responseSize": 17445,
+      "bodyFile": "bodies/008_graphql.json",
+      "bodyNote": null,
+      "candidate": null
+    }
+  ]
+}

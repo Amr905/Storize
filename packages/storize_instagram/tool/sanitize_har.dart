@@ -174,6 +174,27 @@ const Set<String> _secretKeys = {
 
 const Set<String> _geoKeys = {'lat', 'lng', 'latitude', 'longitude'};
 
+/// Original-key paths where `latest_reel_media` stays (the tracked user or the
+/// story reel owner: the extractors use it as a change signal, T-002 L1).
+/// Everywhere else (commenters, tagged users, other authors) it becomes null.
+const Set<String> _keepLatestReelPaths = {
+  r'$.data.user.latest_reel_media',
+  r'$.data.xdt_api__v1__feed__reels_media.reels_media[].latest_reel_media',
+};
+
+/// Floats outside location objects: round to 2 decimals; if more than 4
+/// digits would still follow the decimal point (or the value is in exponent
+/// form) drop the value.
+Object? _roundFloat(double v) {
+  if (v.isNaN || v.isInfinite) return null;
+  final r = double.parse(v.toStringAsFixed(2));
+  final s = r.toString();
+  if (s.contains('e') || s.contains('E')) return null;
+  final dot = s.indexOf('.');
+  if (dot >= 0 && s.length - dot - 1 > 4) return null;
+  return r;
+}
+
 /// Numeric keys that stay as they are even when they have 13+ digits.
 final RegExp _timeKey = RegExp(
   r'(time|_at$|^at$|_ms$|_us$|date|latest_reel_media|duration|expir)',
@@ -580,6 +601,8 @@ String? _urlPlaceholder(String s) {
   if (!known.any((k) => host == k || host.endsWith('.$k'))) host = 'external';
   if (host == 'instagram.com' || host.endsWith('.instagram.com')) {
     host = _safeHost(host);
+  } else if (_cdnDomains.any((d) => host == d || host.endsWith('.$d'))) {
+    host = _cdnHost(host);
   }
   final segs = m[2]!.split('/').where((p) => p.isNotEmpty).toList();
   final ext = segs.isEmpty
@@ -725,12 +748,43 @@ void _recordField(_Ctx c, String lk, String path, Object? v) {
 }
 
 /// Sanitizes one scalar under key `lk` (already lower-cased).
-Object? _scalar(_Ctx c, String lk, Object? v, String parentKey) {
+///
+/// [rawKey] is the ORIGINAL lower-cased key (even when the key was renamed to
+/// `key_N`), [rawPath] the original-key path and [inLocation] is true inside a
+/// `location`/`location_*` subtree or an object whose `__typename` contains
+/// `Location` (T-002 round 2, B2). Those rules must see original names.
+Object? _scalar(
+  _Ctx c,
+  String lk,
+  Object? v,
+  String parentKey, {
+  String rawKey = '',
+  String rawPath = '',
+  bool inLocation = false,
+}) {
   if (v == null || v is bool) return v;
   if (v is num) {
-    if (lk.contains('phone') || _geoKeys.contains(lk)) {
+    if (_geoKeys.contains(rawKey) || rawKey.startsWith('location_')) {
+      c.bump('geo_values_nulled');
+      return null;
+    }
+    if (v is double && inLocation) {
+      c.bump('location_floats_nulled');
+      return null;
+    }
+    if (rawKey == 'latest_reel_media' &&
+        !_keepLatestReelPaths.contains(rawPath)) {
+      c.bump('latest_reel_media_nulled');
+      return null;
+    }
+    if (lk.contains('phone')) {
       c.bump('num');
       return 0;
+    }
+    if (v is double) {
+      final r = _roundFloat(v);
+      if (r == null) c.bump('floats_nulled');
+      return r;
     }
     if (_timeKey.hasMatch(lk)) return v;
     if (v is int && (_isIdKey(lk) || v.abs().toString().length >= 10)) {
@@ -754,10 +808,17 @@ Object? _walk(
   required String key,
   required String parentKey,
   required String path,
+  String rawPath = r'$',
+  bool inLocation = false,
   bool inList = false,
 }) {
   if (node is Map<String, Object?>) {
     final out = <String, Object?>{};
+    // B2: decided on ORIGINAL names, before any key becomes key_N.
+    final typename = node['__typename'];
+    final locHere =
+        inLocation ||
+        (typename is String && typename.toLowerCase().contains('location'));
     final dynamicMap =
         (!inList && _idMapParents.contains(key.toLowerCase())) ||
         _isDynamicMap(c, node);
@@ -776,6 +837,9 @@ Object? _walk(
       final lk = replaced ? '' : rawLk;
       final childPath =
           '$path.${placeholder ? newKey : (replaced ? '*' : newKey)}';
+      final childRaw = '$rawPath.$k';
+      final childLoc =
+          locHere || rawLk == 'location' || rawLk.startsWith('location_');
       _recordField(c, lk, childPath, v);
       if (v == null) {
         out[newKey] = null;
@@ -788,9 +852,19 @@ Object? _walk(
           key: replaced ? newKey : k,
           parentKey: key,
           path: childPath,
+          rawPath: childRaw,
+          inLocation: childLoc,
         );
       } else {
-        out[newKey] = _scalar(c, lk, v, key);
+        out[newKey] = _scalar(
+          c,
+          lk,
+          v,
+          key,
+          rawKey: rawLk,
+          rawPath: childRaw,
+          inLocation: childLoc,
+        );
       }
     });
     return out;
@@ -806,10 +880,20 @@ Object? _walk(
             key: key,
             parentKey: parentKey,
             path: '$path[]',
+            rawPath: '$rawPath[]',
+            inLocation: inLocation,
             inList: true,
           )
         else
-          _scalar(c, lk, e, parentKey),
+          _scalar(
+            c,
+            lk,
+            e,
+            parentKey,
+            rawKey: lk,
+            rawPath: '$rawPath[]',
+            inLocation: inLocation,
+          ),
     ];
   }
   return node;
@@ -1191,6 +1275,36 @@ const Set<String> _knownHostLabels = {
   'help',
   'about',
 };
+
+/// CDN registrable domains whose edge/region labels are scrubbed.
+const List<String> _cdnDomains = ['fbcdn.net', 'cdninstagram.com'];
+
+/// First labels of CDN hosts that name a service, not a place.
+const Set<String> _genericCdnLabels = {
+  'scontent',
+  'static',
+  'video',
+  'instagram',
+};
+
+/// `scontent.fbcdn.net` form (T-002 round 2, B1): the registrable domain plus
+/// the first label when it is generic. Every edge or region label (for
+/// example the label that names the point of presence near the capturer, and
+/// the `fna`/`xx` middle labels) is dropped, so the output never hints at a
+/// city. `edge.fna.fbcdn.net` becomes `fbcdn.net`.
+String _cdnHost(String host) {
+  for (final d in _cdnDomains) {
+    if (host == d) return d;
+    if (host.endsWith('.$d')) {
+      final first = host
+          .substring(0, host.length - d.length - 1)
+          .split('.')
+          .first;
+      return _genericCdnLabels.contains(first) ? '$first.$d' : d;
+    }
+  }
+  return '<host>';
+}
 
 /// Host for summary.json / report.md: instagram.com hosts with only known
 /// labels, everything else `<label>`.

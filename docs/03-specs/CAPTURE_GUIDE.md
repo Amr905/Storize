@@ -109,3 +109,11 @@ TECH_SPEC §4.1 step 6 (does `HeadlessInAppWebView` run inside the background wo
 
 **Do not send** the `raw` folder, any `.har`, or screenshots of DevTools.
 After sending, delete `D:\capture\raw` and log out of Chrome's Instagram session if you want (the test account's password is untouched by any of this).
+
+## Automated capture (T-002 note, 2026-11-20)
+The first real capture was not made with Chrome DevTools: the Lead used an in-page fetch/XHR hook in a logged-in desktop
+browser and built HAR files with **no request/response headers and no cookies**. Consequences: the sanitizer reports show
+no header names, and the minimal REST header set is still unknown. The sanitized result and the processing steps are in
+[INSTAGRAM_EXTRACTION.md](INSTAGRAM_EXTRACTION.md). To refresh fixtures: run the sanitizer on each HAR (outside the repo),
+copy only the needed `bodies/*.json` plus `report.md` and `summary.json`, delete `docId` from `summary.json`, then run
+gitleaks and a grep of the worktree for the raw identifiers before committing.
