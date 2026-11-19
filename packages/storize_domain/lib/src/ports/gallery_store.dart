@@ -32,12 +32,15 @@ abstract interface class GalleryStore {
 
   /// Whether the file at [contentUri] still exists (EC-20).
   ///
-  /// A missing file is `false`, not an error. Throws [GalleryWriteFailed] when
-  /// the check itself fails.
+  /// A missing file is `false`, not an error. Throws [GalleryPermissionDenied]
+  /// when the gallery refuses the lookup, [GalleryStorageFull] when the
+  /// system reports the device as full, and [GalleryWriteFailed] when the
+  /// check itself fails for any other reason.
   Future<bool> exists(String contentUri);
 
   /// The size in bytes of the file at [contentUri], or null if it is missing.
   ///
-  /// Throws [GalleryWriteFailed] when the lookup itself fails.
+  /// Throws the same set as [exists]: [GalleryPermissionDenied],
+  /// [GalleryStorageFull] or [GalleryWriteFailed].
   Future<int?> size(String contentUri);
 }

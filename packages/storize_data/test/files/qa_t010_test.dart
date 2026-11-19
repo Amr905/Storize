@@ -46,11 +46,6 @@ void main() {
         ];
         expect(missed, isEmpty, reason: 'mirror accepts: $missed');
       },
-      skip:
-          'F-1 minor: plugin_rules.dart misses 46 Cf code points '
-          '(U+0600-0605, 06DD, 070F, 0890-0891, 08E2, 180E, FFF9-FFFB, 110BD, '
-          '110CD, 13430-1343F, 1BCA0-1BCA3, 1D173-1D17A, E0001); the lib '
-          'sanitiser covers them',
     );
 
     test('displayNameFor and relativeDirFor strip every hidden code point', () {
@@ -485,7 +480,7 @@ void main() {
     }
 
     test(
-      'a wrong-typed native answer escapes as TypeError (documented gap)',
+      'a wrong-typed native answer becomes GalleryWriteFailed(BAD_RESPONSE)',
       () async {
         // A wrong-typed answer is not a StorizePlatformException.
         native.channel; // ignore: unnecessary_statements
@@ -499,10 +494,9 @@ void main() {
             mime: 'image/jpeg',
           ),
         );
-        // F-4 minor: the plugin wrapper's generic cast throws a raw TypeError
-        // for a wrong-typed insert answer; the store does not wrap it.
-        expect(e, isA<TypeError>());
-        expect(e, isNot(isA<GalleryStoreException>()));
+        // F-4: the channel cast throws a TypeError; the store maps it.
+        expect(e, isA<GalleryWriteFailed>());
+        expect((e! as GalleryWriteFailed).code, 'BAD_RESPONSE');
       },
     );
 
@@ -527,14 +521,15 @@ void main() {
       },
     );
 
-    test('exists/size may throw GalleryPermissionDenied (doc says only '
-        'GalleryWriteFailed)', () async {
-      native.failNext = PlatformException(code: 'PERMISSION_DENIED');
-      final e = await catching(() => store.exists('content://media/x'));
-      // Documents current behaviour; port doc for exists/size promises only
-      // GalleryWriteFailed. See finding F-2 (minor).
-      expect(e, isA<GalleryPermissionDenied>());
-    });
+    test(
+      'exists/size may throw GalleryPermissionDenied (port documents it)',
+      () async {
+        native.failNext = PlatformException(code: 'PERMISSION_DENIED');
+        final e = await catching(() => store.exists('content://media/x'));
+        // F-4: the port documents the full set for exists/size.
+        expect(e, isA<GalleryPermissionDenied>());
+      },
+    );
   });
 
   group('QA contract parity real vs fake', () {

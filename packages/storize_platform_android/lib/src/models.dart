@@ -96,3 +96,15 @@ class StopReason {
   /// When the process ended, in milliseconds since the epoch.
   final int? timestampMs;
 }
+
+/// Result of `storageStats`: space on the volume that holds the gallery.
+@immutable
+class StorageStats {
+  const StorageStats({required this.freeBytes, required this.totalBytes});
+
+  /// Bytes available to the app.
+  final int freeBytes;
+
+  /// Total bytes of the volume.
+  final int totalBytes;
+}

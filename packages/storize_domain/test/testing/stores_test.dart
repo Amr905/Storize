@@ -215,6 +215,31 @@ void main() {
       expect(await store.delete(f.uri), isTrue);
     });
 
+    test(
+      'failNextExists / failNextSize fire once for the documented set',
+      () async {
+        final f = await save();
+        for (final error in <GalleryStoreException>[
+          const GalleryPermissionDenied(),
+          const GalleryStorageFull(),
+          const GalleryWriteFailed('IO_ERROR'),
+        ]) {
+          store.failNextExists(error);
+          await expectLater(
+            store.exists(f.uri),
+            throwsA(predicate((e) => identical(e, error))),
+          );
+          expect(await store.exists(f.uri), isTrue);
+          store.failNextSize(error);
+          await expectLater(
+            store.size(f.uri),
+            throwsA(predicate((e) => identical(e, error))),
+          );
+          expect(await store.size(f.uri), 42);
+        }
+      },
+    );
+
     test('gallery exceptions are domain exceptions with a code', () {
       expect(const GalleryPermissionDenied().code, 'PERMISSION_DENIED');
       expect(const GalleryStorageFull().code, 'STORAGE_FULL');

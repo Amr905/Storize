@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_catching_errors, the channel cast throws a TypeError.
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 import 'package:storize_platform_android/storize_platform_android.dart';
@@ -10,12 +11,18 @@ import 'package:storize_platform_android/storize_platform_android.dart';
 /// receive URIs that [save] returned.
 ///
 /// Errors: see `GalleryPermissionDenied`, `GalleryStorageFull` and
-/// `GalleryWriteFailed`. A missing file is `false`/`null`, never an error.
+/// `GalleryWriteFailed`. `exists` and `size` can throw all three. A wrong-typed
+/// native answer is `GalleryWriteFailed(BAD_RESPONSE)`. A missing file is
+/// `false`/`null`, never an error.
 final class PluginGalleryStore implements GalleryStore {
   /// Creates the store over the native plugin API.
   PluginGalleryStore(this._plugin);
 
   final StorizePlatformAndroid _plugin;
+
+  /// Code used when the native side answers with a wrong type (the channel
+  /// cast throws a `TypeError`).
+  static const String _badResponse = 'BAD_RESPONSE';
 
   @override
   Future<GalleryFile> save({
@@ -34,6 +41,8 @@ final class PluginGalleryStore implements GalleryStore {
       );
     } on StorizePlatformException catch (e) {
       throw _map(e);
+    } on TypeError {
+      throw const GalleryWriteFailed(_badResponse);
     }
     return GalleryFile(
       uri: inserted.uri,
@@ -50,6 +59,8 @@ final class PluginGalleryStore implements GalleryStore {
     } on StorizePlatformException catch (e) {
       if (_isMissing(e)) return false;
       throw _map(e);
+    } on TypeError {
+      throw const GalleryWriteFailed(_badResponse);
     }
   }
 
@@ -60,6 +71,8 @@ final class PluginGalleryStore implements GalleryStore {
     } on StorizePlatformException catch (e) {
       if (_isMissing(e)) return false;
       throw _map(e);
+    } on TypeError {
+      throw const GalleryWriteFailed(_badResponse);
     }
   }
 
@@ -70,6 +83,8 @@ final class PluginGalleryStore implements GalleryStore {
     } on StorizePlatformException catch (e) {
       if (_isMissing(e)) return null;
       throw _map(e);
+    } on TypeError {
+      throw const GalleryWriteFailed(_badResponse);
     }
   }
 

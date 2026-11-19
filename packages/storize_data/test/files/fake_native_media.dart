@@ -39,6 +39,12 @@ class FakeNativeMedia {
   /// Leave `relativePath` out of the insert answer.
   bool omitRelativePath = false;
 
+  /// Free bytes reported by `storageStats`.
+  int freeBytes = 5 * 1024 * 1024 * 1024;
+
+  /// Total bytes reported by `storageStats`.
+  int totalBytes = 64 * 1024 * 1024 * 1024;
+
   /// Throw this on the next call.
   PlatformException? failNext;
   int _next = 0;
@@ -51,6 +57,9 @@ class FakeNativeMedia {
     if (err != null) {
       failNext = null;
       throw err;
+    }
+    if (call.method == 'storageStats') {
+      return {'freeBytes': freeBytes, 'totalBytes': totalBytes};
     }
     final args = Map<String, Object?>.from(call.arguments as Map);
     switch (call.method) {

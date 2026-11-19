@@ -28,6 +28,8 @@ final class FakeGalleryStore implements GalleryStore {
   final List<GalleryFile> _saved = [];
   Object? _nextSaveError;
   GalleryStoreException? _nextDeleteError;
+  GalleryStoreException? _nextExistsError;
+  GalleryStoreException? _nextSizeError;
   int _counter = 0;
 
   /// The files that currently exist, in save order.
@@ -61,6 +63,15 @@ final class FakeGalleryStore implements GalleryStore {
   /// `GalleryPermissionDenied()` for a row Storize does not own).
   // ignore: use_setters_to_change_properties, a verb reads better in tests.
   void failNextDelete(GalleryStoreException error) => _nextDeleteError = error;
+
+  /// Makes the next `exists` throw [error]: any of [GalleryPermissionDenied],
+  /// [GalleryStorageFull] or [GalleryWriteFailed], as the port documents.
+  // ignore: use_setters_to_change_properties, a verb reads better in tests.
+  void failNextExists(GalleryStoreException error) => _nextExistsError = error;
+
+  /// Makes the next `size` throw [error], same set as [failNextExists].
+  // ignore: use_setters_to_change_properties, a verb reads better in tests.
+  void failNextSize(GalleryStoreException error) => _nextSizeError = error;
 
   @override
   Future<GalleryFile> save({
@@ -101,9 +112,22 @@ final class FakeGalleryStore implements GalleryStore {
   }
 
   @override
-  Future<bool> exists(String contentUri) async =>
-      _files.containsKey(contentUri);
+  Future<bool> exists(String contentUri) async {
+    final error = _nextExistsError;
+    if (error != null) {
+      _nextExistsError = null;
+      throw error;
+    }
+    return _files.containsKey(contentUri);
+  }
 
   @override
-  Future<int?> size(String contentUri) async => _files[contentUri]?.sizeBytes;
+  Future<int?> size(String contentUri) async {
+    final error = _nextSizeError;
+    if (error != null) {
+      _nextSizeError = null;
+      throw error;
+    }
+    return _files[contentUri]?.sizeBytes;
+  }
 }

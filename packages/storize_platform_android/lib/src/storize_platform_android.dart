@@ -80,6 +80,18 @@ class StorizePlatformAndroid {
     throw _bad('size', value);
   }
 
+  /// Free and total bytes of the primary shared storage (the gallery volume).
+  Future<StorageStats> storageStats() async {
+    final raw = await _call<Object?>(_media, 'storageStats');
+    if (raw is! Map) throw _bad('storageStats', raw);
+    final free = raw['freeBytes'];
+    final total = raw['totalBytes'];
+    if (free is! int || total is! int || free < 0 || total <= 0) {
+      throw _bad('storageStats', raw);
+    }
+    return StorageStats(freeBytes: free, totalBytes: total);
+  }
+
   /// A WEBP frame of a video, scaled so the longer side is at most [maxSize].
   /// Pass exactly one of [uri] or [path].
   Future<Uint8List> videoThumbnail({
