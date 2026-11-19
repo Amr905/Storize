@@ -56,6 +56,7 @@ void main() {
         (_) async => {
           'uri': 'content://media/external/images/media/42',
           'size': 1234,
+          'displayName': 'nour_k_1 (1).jpg',
           'relativePath': 'Pictures/Storize/nour_k/',
         },
       );
@@ -74,6 +75,7 @@ void main() {
       });
       expect(result.uri, 'content://media/external/images/media/42');
       expect(result.size, 1234);
+      expect(result.displayName, 'nour_k_1 (1).jpg');
       expect(result.relativePath, 'Pictures/Storize/nour_k/');
     });
 
@@ -86,6 +88,7 @@ void main() {
         mime: 'image/jpeg',
       );
       expect(result.relativePath, isNull);
+      expect(result.displayName, 'x.jpg');
     });
 
     test('a malformed result is a badResponse error', () async {

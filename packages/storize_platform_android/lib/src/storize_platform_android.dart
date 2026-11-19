@@ -46,27 +46,39 @@ class StorizePlatformAndroid {
     final uri = map?['uri'];
     final size = map?['size'];
     final relativePath = map?['relativePath'];
+    final finalName = map?['displayName'];
     if (uri is! String || size is! int) {
       throw _bad('insert', map);
     }
     return InsertedMedia(
       uri: uri,
       size: size,
+      displayName: finalName is String ? finalName : displayName,
       relativePath: relativePath is String ? relativePath : null,
     );
   }
 
   /// Deletes the file. False if it was already gone. No system prompt for
-  /// files the app owns.
-  Future<bool> delete(String uri) async =>
-      _requireBool('delete', await _call<bool>(_media, 'delete', {'uri': uri}));
+  /// files the app owns. A file outside `Storize/` is refused with
+  /// `PERMISSION_DENIED`.
+  Future<bool> delete(String uri) async => _requireBool(
+    'delete',
+    await _call<Object?>(_media, 'delete', {'uri': uri}),
+  );
 
-  /// Whether the file is still there.
-  Future<bool> exists(String uri) async =>
-      _requireBool('exists', await _call<bool>(_media, 'exists', {'uri': uri}));
+  /// Whether the file is still there (false for files outside `Storize/`).
+  Future<bool> exists(String uri) async => _requireBool(
+    'exists',
+    await _call<Object?>(_media, 'exists', {'uri': uri}),
+  );
 
   /// Size in bytes, or null if the file is missing.
-  Future<int?> size(String uri) => _call<int>(_media, 'size', {'uri': uri});
+  Future<int?> size(String uri) async {
+    final value = await _call<Object?>(_media, 'size', {'uri': uri});
+    if (value == null) return null;
+    if (value is int) return value;
+    throw _bad('size', value);
+  }
 
   /// A WEBP frame of a video, scaled so the longer side is at most [maxSize].
   /// Pass exactly one of [uri] or [path].
@@ -150,8 +162,8 @@ class StorizePlatformAndroid {
     }
   }
 
-  bool _requireBool(String method, bool? value) =>
-      value ?? (throw _bad(method, value));
+  bool _requireBool(String method, Object? value) =>
+      value is bool ? value : throw _bad(method, value);
 
   StorizePlatformException _bad(String method, Object? value) =>
       StorizePlatformException(

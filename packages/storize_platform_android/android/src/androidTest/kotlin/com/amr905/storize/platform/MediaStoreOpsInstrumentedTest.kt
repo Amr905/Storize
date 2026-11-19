@@ -147,4 +147,37 @@ class MediaStoreOpsInstrumentedTest {
         if (Build.VERSION.SDK_INT < 30) assertTrue(reasons.isEmpty())
         assertTrue(reasons.size <= 5)
     }
+
+    @Test
+    fun rowOutsideStorizeIsNotTouched() {
+        org.junit.Assume.assumeTrue(Build.VERSION.SDK_INT >= 29)
+        val values =
+            android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "outside_${System.nanoTime()}.jpg")
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/StorizeX_test/")
+            }
+        val uri =
+            context.contentResolver.insert(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                values,
+            )!!
+        try {
+            assertFalse(ops.exists(uri.toString()))
+            assertNull(ops.size(uri.toString()))
+            val code = assertThrows(PluginException::class.java) { ops.delete(uri.toString()) }.code
+            assertEquals(ErrorCodes.PERMISSION_DENIED, code)
+        } finally {
+            context.contentResolver.delete(uri, null, null)
+        }
+    }
+
+    @Test
+    fun insertReturnsTheFinalName() {
+        val name = "final_${System.nanoTime()}.jpg"
+        val first = insertImage(name)
+        val second = insertImage(name)
+        assertEquals(name, first["displayName"])
+        assertTrue(second["displayName"] as String != name)
+    }
 }

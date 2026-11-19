@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class MediaStoreOps(private val context: Context) {
     private val resolver get() = context.contentResolver
+    private val guard = StorizeGuard(context)
 
     fun insert(
         sourcePath: String?,
@@ -90,8 +91,13 @@ class MediaStoreOps(private val context: Context) {
                 throw IOException("Could not clear IS_PENDING")
             }
             val size = sizeOf(uri) ?: source.length()
-            return mapOf("uri" to uri.toString(), "size" to size, "relativePath" to relativePath)
-        } catch (e: Exception) {
+            return mapOf(
+                "uri" to uri.toString(),
+                "size" to size,
+                "displayName" to (queryDisplayName(uri) ?: name),
+                "relativePath" to relativePath,
+            )
+        } catch (e: Throwable) {
             try {
                 resolver.delete(uri, null, null)
             } catch (_: Exception) {
@@ -100,6 +106,16 @@ class MediaStoreOps(private val context: Context) {
             throw e
         }
     }
+
+    /** The name MediaStore really used (it renames duplicates to `name (1).ext`). */
+    private fun queryDisplayName(uri: Uri): String? =
+        try {
+            resolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use {
+                if (it.moveToFirst() && !it.isNull(0)) it.getString(0) else null
+            }
+        } catch (e: RuntimeException) {
+            null
+        }
 
     @TargetApi(Build.VERSION_CODES.Q)
     private fun tryInsert(
@@ -136,7 +152,7 @@ class MediaStoreOps(private val context: Context) {
         if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) {
             throw PluginException(ErrorCodes.IO_ERROR, "External storage is not mounted")
         }
-        val root = legacyRoot()
+        val root = guard.legacyRoot()
         val targetDir = File(root, dir)
         if (!FileNames.isInside(root, File(targetDir, "x"))) {
             throw PluginException(ErrorCodes.INVALID_ARGUMENT, "relativeDir escapes the Storize folder")
@@ -155,7 +171,12 @@ class MediaStoreOps(private val context: Context) {
         val scanned = scan(target, mime)
         val uri = scanned?.toString() ?: Uri.fromFile(target).toString()
         val relative = "Pictures/Storize/$dir/"
-        return mapOf("uri" to uri, "size" to target.length(), "relativePath" to relative)
+        return mapOf(
+            "uri" to uri,
+            "size" to target.length(),
+            "displayName" to finalName,
+            "relativePath" to relative,
+        )
     }
 
     fun delete(uriString: String?): Boolean {
@@ -166,6 +187,11 @@ class MediaStoreOps(private val context: Context) {
             val deleted = file.delete()
             if (deleted) scan(file, null)
             return deleted
+        }
+        when (guard.classify(uri)) {
+            RowCheck.MISSING -> return false
+            RowCheck.FOREIGN -> throw PluginException(ErrorCodes.PERMISSION_DENIED, "This file is not in the Storize folder")
+            RowCheck.ALLOWED -> Unit
         }
         return try {
             resolver.delete(uri, null, null) > 0
@@ -179,6 +205,7 @@ class MediaStoreOps(private val context: Context) {
     fun exists(uriString: String?): Boolean {
         val uri = managedUri(uriString)
         if (uri.scheme == "file") return File(requireNotNull(uri.path)).isFile
+        if (guard.classify(uri) != RowCheck.ALLOWED) return false
         return try {
             resolver.openFileDescriptor(uri, "r")?.use { true } ?: false
         } catch (e: FileNotFoundException) {
@@ -196,6 +223,7 @@ class MediaStoreOps(private val context: Context) {
             val file = File(requireNotNull(uri.path))
             return if (file.isFile) file.length() else null
         }
+        if (guard.classify(uri) != RowCheck.ALLOWED) return null
         return sizeOf(uri)
     }
 
@@ -232,15 +260,12 @@ class MediaStoreOps(private val context: Context) {
         }
         if (uri.scheme == "file") {
             val path = uri.path
-            if (path.isNullOrEmpty() || !FileNames.isInside(legacyRoot(), File(path))) {
+            if (path.isNullOrEmpty() || !guard.fileAllowed(File(path))) {
                 throw PluginException(ErrorCodes.INVALID_ARGUMENT, "File is outside the Storize folder")
             }
         }
         return uri
     }
-
-    @Suppress("DEPRECATION")
-    private fun legacyRoot(): File = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Storize")
 
     /** Scans [file]; returns the MediaStore URI or null if the scanner did not answer in time. */
     private fun scan(

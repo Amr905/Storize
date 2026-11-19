@@ -96,4 +96,129 @@ class InputValidationTest {
         assertEquals(ErrorCodes.INSERT_FAILED, mapThrowable(PluginException(ErrorCodes.INSERT_FAILED, "x")).first)
         assertEquals(ErrorCodes.UNKNOWN, mapThrowable(IllegalStateException("x")).first)
     }
+
+    @Test
+    fun pinsLiteralPercentAndUnicodeSlashes() {
+        assertEquals("%2e%2e", InputValidation.requireRelativeDir("%2e%2e"))
+        assertEquals("a\uFF0Fb", InputValidation.requireRelativeDir("a\uFF0Fb"))
+        assertEquals("a\u2215b.jpg", InputValidation.requireDisplayName("a\u2215b.jpg"))
+    }
+
+    @Test
+    fun rejectsDotOnlyAndTrailingNames() {
+        for (v in listOf(".", "..", "...", "a.", "a ")) {
+            assertEquals(v, ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireDisplayName(v) })
+            assertEquals(v, ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireRelativeDir(v) })
+        }
+    }
+
+    @Test
+    fun lengthBoundaries() {
+        InputValidation.requireRelativeDir("x".repeat(100))
+        InputValidation.requireDisplayName("x".repeat(251) + ".jpg")
+        assertEquals(ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireRelativeDir("x".repeat(101)) })
+        assertEquals(ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireDisplayName("x".repeat(252) + ".jpg") })
+    }
+
+    @Test
+    fun rejectsFormatControlAndHiddenDirs() {
+        for (v in listOf("a\u202Eb", "a\u200Eb", "a\u0085b", "a\u0080b", "a\u009Fb", "a\u007Fb", "a\u2028b", "a\u2029b", ".hidden", "a/.nomedia")) {
+            assertEquals(v, ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireRelativeDir(v) })
+        }
+        assertEquals(ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireDisplayName("a\u202Eb.jpg") })
+        assertEquals(ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireDisplayName(".nomedia") })
+    }
+
+    @Test
+    fun allowsEmojiAndNonLatinLetters() {
+        assertEquals("caf\u00e9_\uD83D\uDE00", InputValidation.requireRelativeDir("caf\u00e9_\uD83D\uDE00"))
+    }
+
+    @Test
+    fun capsSegmentCountAtFour() {
+        assertEquals("a/b/c/d", InputValidation.requireRelativeDir("a/b/c/d"))
+        assertEquals(ErrorCodes.INVALID_ARGUMENT, code { InputValidation.requireRelativeDir("a/b/c/d/e") })
+    }
+
+    @Test
+    fun uriPolicyEdgeCases() {
+        assertFalse(UriPolicy.isManaged("content", "user@media"))
+        assertFalse(UriPolicy.isManaged("content", "MEDIA"))
+        assertFalse(UriPolicy.isManaged("content", "com.android.contacts"))
+        assertFalse(UriPolicy.isManaged("content", null))
+    }
+
+    @Test
+    fun isInsideSiblingPrefixAndSymlink() {
+        val parent = createTempDir("p")
+        try {
+            val root = java.io.File(parent, "Storize").apply { mkdirs() }
+            assertFalse(FileNames.isInside(root, java.io.File(parent, "StorizeEvil/x.jpg")))
+            val link = java.nio.file.Files.createSymbolicLink(java.io.File(root, "l").toPath(), parent.toPath())
+            assertFalse(FileNames.isInside(root, java.io.File(link.toFile(), "x.jpg")))
+        } finally {
+            parent.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun uniqueEdgeCases() {
+        assertEquals("a (1)", FileNames.unique("a") { it == "a" })
+        assertEquals(".nm (1)", FileNames.unique(".nm") { it == ".nm" })
+    }
+
+    @Test
+    fun mapsSecurityExceptionSubclass() {
+        class Sub : SecurityException("x")
+        assertEquals(ErrorCodes.PERMISSION_DENIED, mapThrowable(Sub()).first)
+    }
+
+    @Test
+    fun relativePathPolicyAcceptsOnlyStorizeFolders() {
+        for (ok in listOf("Pictures/Storize/nour_k/", "Pictures/Storize/nour_k", "Movies/Storize/a/b/")) {
+            assertTrue(ok, StorizePolicy.relativePathAllowed(ok))
+        }
+        val bad =
+            listOf(
+                null, "", "Pictures/", "Pictures/Storize/", "Pictures/StorizeX/a/", "Pictures/Storize2/a/", "pictures/Storize/a/",
+                "DCIM/Storize/a/", "Download/Storize/a/", "Pictures/Other/Storize/a/", "Pictures/Storize/../x/", "Pictures/Storize/./a/",
+                "/Pictures/Storize/a/", "Pictures//Storize/a/", "Pictures\\Storize\\a\\", "Music/Storize/a/",
+            )
+        for (v in bad) assertFalse("for $v", StorizePolicy.relativePathAllowed(v))
+    }
+
+    @Test
+    fun dataPathPolicyIsCanonicalAndSiblingSafe() {
+        val parent = createTempDir("storage")
+        try {
+            val pictures = java.io.File(parent, "Pictures/Storize").apply { mkdirs() }
+            val movies = java.io.File(parent, "Movies/Storize").apply { mkdirs() }
+            val roots = listOf(pictures, movies)
+            assertTrue(StorizePolicy.dataPathAllowed(java.io.File(pictures, "u/a.jpg").path, roots))
+            assertTrue(StorizePolicy.dataPathAllowed(java.io.File(movies, "u/a.mp4").path, roots))
+            assertFalse(StorizePolicy.dataPathAllowed(java.io.File(parent, "Pictures/StorizeX/a.jpg").path, roots))
+            assertFalse(StorizePolicy.dataPathAllowed(java.io.File(parent, "Pictures/Storize/../Other/a.jpg").path, roots))
+            assertFalse(StorizePolicy.dataPathAllowed(java.io.File(parent, "DCIM/a.jpg").path, roots))
+            assertFalse(StorizePolicy.dataPathAllowed(pictures.path, roots))
+            assertFalse(StorizePolicy.dataPathAllowed(null, roots))
+            assertFalse(StorizePolicy.dataPathAllowed("", roots))
+        } finally {
+            parent.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun thumbnailPathPolicyAllowsStorizeAndCacheOnly() {
+        val parent = createTempDir("t")
+        try {
+            val storize = java.io.File(parent, "Pictures/Storize").apply { mkdirs() }
+            val cache = java.io.File(parent, "cache").apply { mkdirs() }
+            assertTrue(StorizePolicy.thumbnailPathAllowed(java.io.File(cache, "v.mp4"), listOf(storize), cache))
+            assertTrue(StorizePolicy.thumbnailPathAllowed(java.io.File(storize, "u/v.mp4"), listOf(storize), cache))
+            assertFalse(StorizePolicy.thumbnailPathAllowed(java.io.File(parent, "other/v.mp4"), listOf(storize), cache))
+            assertFalse(StorizePolicy.thumbnailPathAllowed(java.io.File(cache, "../x.mp4"), listOf(storize), cache))
+        } finally {
+            parent.deleteRecursively()
+        }
+    }
 }

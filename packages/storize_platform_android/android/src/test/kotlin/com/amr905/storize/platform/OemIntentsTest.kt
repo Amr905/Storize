@@ -64,4 +64,16 @@ class OemIntentsTest {
         assertEquals(100 to 50, ThumbnailMath.targetSize(100, 50, 512))
         assertEquals(16 to 1, ThumbnailMath.targetSize(4000, 1, 16))
     }
+
+    @Test
+    fun thumbnailMathDegenerate() {
+        assertEquals(0 to 0, ThumbnailMath.targetSize(0, 0, 512))
+    }
+
+    @Test
+    fun oemNormalizeEdges() {
+        assertEquals("other", OemIntents.normalize("   "))
+        assertEquals("xiaomi", OemIntents.normalize("BlackShark"))
+        assertEquals("other", OemIntents.normalize("nokia"))
+    }
 }

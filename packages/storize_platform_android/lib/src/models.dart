@@ -7,6 +7,7 @@ class InsertedMedia {
   const InsertedMedia({
     required this.uri,
     required this.size,
+    required this.displayName,
     this.relativePath,
   });
 
@@ -16,6 +17,10 @@ class InsertedMedia {
 
   /// Size in bytes.
   final int size;
+
+  /// The name the file really got. It differs from the requested name when
+  /// the gallery renamed it, for example to `name (1).jpg`.
+  final String displayName;
 
   /// The folder actually used, for example `Pictures/Storize/nour_k/`.
   /// Videos can land in `Movies/Storize/...` if the system refuses `Pictures`.

@@ -39,11 +39,24 @@ android {
         getByName("main") {
             java.srcDirs("src/main/kotlin")
         }
+        getByName("test") {
+            java.srcDirs("src/test/kotlin")
+        }
+        getByName("androidTest") {
+            java.srcDirs("src/androidTest/kotlin")
+        }
     }
 
     defaultConfig {
         minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
 }
 
 kotlin {

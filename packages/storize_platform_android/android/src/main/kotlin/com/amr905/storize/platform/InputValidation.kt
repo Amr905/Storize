@@ -8,6 +8,7 @@ object InputValidation {
 
     private const val MAX_SEGMENT = 100
     private const val MAX_NAME = 255
+    private const val MAX_SEGMENTS = 4
     private const val FORBIDDEN = ":*?\"<>|\\"
 
     fun requireMime(mime: String?): String {
@@ -23,7 +24,9 @@ object InputValidation {
         if (value.startsWith("/") || value.startsWith("~") || Regex("^[A-Za-z]:").containsMatchIn(value)) {
             invalid("relativeDir must be relative")
         }
-        for (segment in value.split("/")) {
+        val segments = value.split("/")
+        if (segments.size > MAX_SEGMENTS) invalid("relativeDir has too many segments")
+        for (segment in segments) {
             if (segment.isEmpty()) invalid("relativeDir has an empty segment")
             checkSegment(segment, "relativeDir", MAX_SEGMENT)
         }
@@ -34,7 +37,6 @@ object InputValidation {
     fun requireDisplayName(value: String?): String {
         if (value.isNullOrEmpty()) invalid("displayName is required")
         if (value.contains('/')) invalid("displayName must not contain '/'")
-        if (value.startsWith(".")) invalid("displayName must not start with '.'")
         checkSegment(value, "displayName", MAX_NAME)
         return value
     }
@@ -44,14 +46,28 @@ object InputValidation {
     private fun checkSegment(segment: String, label: String, max: Int) {
         if (segment.length > max) invalid("$label is too long")
         if (segment.contains("..")) invalid("$label must not contain '..'")
-        if (segment == ".") invalid("$label must not be '.'")
+        if (segment.startsWith(".")) invalid("$label must not start with '.'")
         if (segment.endsWith(".") || segment.endsWith(" ")) invalid("$label must not end with '.' or space")
-        for (c in segment) {
-            if (c.code < 0x20 || c.code == 0x7F || FORBIDDEN.indexOf(c) >= 0) {
+        var i = 0
+        while (i < segment.length) {
+            val cp = segment.codePointAt(i)
+            if ((cp < 0x80 && FORBIDDEN.indexOf(cp.toChar()) >= 0) || isHiddenControl(cp)) {
                 invalid("$label contains a forbidden character")
             }
+            i += Character.charCount(cp)
         }
     }
+
+    /** Control (C0, DEL, C1), format (bidi marks, zero-width) and line/paragraph separators. */
+    private fun isHiddenControl(cp: Int): Boolean =
+        when (Character.getType(cp).toByte()) {
+            Character.CONTROL,
+            Character.FORMAT,
+            Character.LINE_SEPARATOR,
+            Character.PARAGRAPH_SEPARATOR,
+            -> true
+            else -> false
+        }
 
     private fun invalid(message: String): Nothing = throw PluginException(ErrorCodes.INVALID_ARGUMENT, message)
 }

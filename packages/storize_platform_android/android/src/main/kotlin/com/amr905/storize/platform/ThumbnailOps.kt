@@ -10,6 +10,8 @@ import java.io.File
 
 /** Video frame to WEBP bytes. Blocking: call from a background thread. */
 class ThumbnailOps(private val context: Context) {
+    private val guard = StorizeGuard(context)
+
     fun videoThumbnail(
         uriString: String?,
         path: String?,
@@ -27,7 +29,11 @@ class ThumbnailOps(private val context: Context) {
         var scaled: Bitmap? = null
         try {
             if (path != null) {
-                if (!File(path).isFile) {
+                val file = File(path)
+                if (!StorizePolicy.thumbnailPathAllowed(file, guard.roots(), context.cacheDir)) {
+                    throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Path is outside the Storize folder and the app cache")
+                }
+                if (!file.isFile) {
                     throw PluginException(ErrorCodes.SOURCE_NOT_FOUND, "Video file does not exist")
                 }
                 retriever.setDataSource(path)
@@ -35,6 +41,9 @@ class ThumbnailOps(private val context: Context) {
                 val uri = Uri.parse(uriString)
                 if (uri.scheme != "content" || !UriPolicy.isManaged(uri.scheme, uri.authority)) {
                     throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Only MediaStore content URIs are accepted")
+                }
+                if (guard.classify(uri) != RowCheck.ALLOWED) {
+                    throw PluginException(ErrorCodes.INVALID_ARGUMENT, "URI is not a Storize file")
                 }
                 retriever.setDataSource(context, uri)
             }

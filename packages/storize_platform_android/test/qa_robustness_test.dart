@@ -137,26 +137,41 @@ void main() {
       );
     });
 
-    // Documents a gap: invokeMethod<T> casts the result, so a wrong runtime
-    // type escapes as a TypeError instead of a StorizePlatformException.
-    test('size: a String result escapes as a non-plugin error (gap)', () async {
+    test('size: a String result is badResponse', () async {
       media((_) async => 'oops');
       await expectLater(
         api.size('content://media/x'),
-        throwsA(isNot(isA<StorizePlatformException>())),
+        throwsA(
+          isA<StorizePlatformException>().having(
+            (e) => e.kind,
+            'kind',
+            StorizePlatformErrorKind.badResponse,
+          ),
+        ),
       );
     });
 
-    test(
-      'delete: a String result escapes as a non-plugin error (gap)',
-      () async {
-        media((_) async => 'oops');
-        await expectLater(
-          api.delete('content://media/x'),
-          throwsA(isNot(isA<StorizePlatformException>())),
-        );
-      },
-    );
+    test('delete: a String result is badResponse', () async {
+      media((_) async => 'oops');
+      await expectLater(
+        api.delete('content://media/x'),
+        throwsA(
+          isA<StorizePlatformException>().having(
+            (e) => e.kind,
+            'kind',
+            StorizePlatformErrorKind.badResponse,
+          ),
+        ),
+      );
+    });
+
+    test('exists: an int result is badResponse', () async {
+      media((_) async => 1);
+      await expectLater(
+        api.exists('content://media/x'),
+        throwsA(isA<StorizePlatformException>()),
+      );
+    });
   });
 
   group('errors', () {

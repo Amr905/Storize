@@ -27,6 +27,10 @@ Errors come back as `PlatformException` codes and map to `StorizePlatformExcepti
   per-work `WorkInfo.stopReason`, because that needs a `work-runtime` dependency.
 - **`openBatterySettings`:** tries the ignore-optimizations request (skipped if already exempt), then the OEM screens,
   then app details. Returns `request_ignore`, `oem_<name>`, `app_details` or `none`. OEM class names are best effort.
+- `delete`, `exists`, `size` and `videoThumbnail(uri)` only act on rows under `Pictures/Storize/` or `Movies/Storize/`
+  (`RELATIVE_PATH` on API 29+, `DATA` on API <= 28). A foreign row gives `PERMISSION_DENIED` for delete, `false` for exists,
+  `null` for size, `INVALID_ARGUMENT` for the thumbnail. `videoThumbnail(path)` accepts only the Storize folders or the app cache.
+- `insert` returns the final `displayName` (it can become `name (1).ext`).
 - The manifest has no components, so nothing is exported.
 
 ## Tests
@@ -35,17 +39,8 @@ Errors come back as `PlatformException` codes and map to `StorizePlatformExcepti
 - Kotlin JVM tests: `android/src/test/kotlin` (pure helpers).
 - Instrumentation tests: `android/src/androidTest/kotlin` (insert, delete, exists, size on a real MediaStore).
 
-The two Kotlin test folders need these test-only dependencies in `android/build.gradle.kts`, which are not added yet
-(they await Lead approval):
-
-```kotlin
-android { defaultConfig { testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" } }
-dependencies {
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test:runner:1.6.2")
-}
-```
+The test-only dependencies (JUnit, androidx.test) and the instrumentation runner are declared in `android/build.gradle.kts`.
+CI runs the JVM tests with `:storize_platform_android:testDebugUnitTest`.
 
 Run on a device or emulator (not verified from this sandbox; start emulators at API 28, 29 and 34+, or plug in the P-4 phones), from a Flutter app
 that depends on this plugin (library modules have no wrapper of their own):
