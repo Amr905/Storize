@@ -1,5 +1,7 @@
 /// Storize Instagram adapter (extractors, governor, fixtures).
 library;
 
-/// Package version marker (placeholder until real exports land).
+export 'governor/governor.dart';
+
+/// Package version marker.
 const String storizeInstagramVersion = '0.1.0';

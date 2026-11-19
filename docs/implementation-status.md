@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **10 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 **GREEN** (51932bc, CI 44513898175) · next checkpoint after 15 done.
+- Tasks done: **11 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 **GREEN** (51932bc, CI 44513898175) · next checkpoint after 15 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -30,7 +30,6 @@
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 | T-010 | backend-developer (sonnet) | `packages/storize_data/lib/files/**`, `packages/storize_data/test/files/**`; round 2 adds `packages/storize_domain/lib/src/exceptions.dart` (or new `lib/src/ports/gallery_exceptions.dart`), `lib/src/ports/gallery_store.dart`, `lib/src/testing/fake_gallery_store.dart`, `lib/storize_domain.dart`, `lib/testing.dart`, related `packages/storize_domain/test/**` | 13:50 |
-| T-012 | backend-developer (sonnet) | `packages/storize_instagram/lib/governor/**`, `packages/storize_instagram/test/governor/**` | 12:50 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -85,7 +84,9 @@
 - **T-021:** call `DartPluginRegistrant.ensureInitialized()` before `StorizeDatabase.open()` in the background isolate; `close()` at the end of the task; device-test `open()`.
 - **T-034:** `resetOnError` in flutter_secure_storage wipes **all** entries incl. the PIN hash → treat "appLock = true but no PIN hash" as a reset state (force new PIN / clear flag + tell the user); never unlock silently (T-008 QA N-1).
 - **T-010 / T-026:** request `WRITE_EXTERNAL_STORAGE` at runtime on API ≤ 28 (S-03 card); store `relativePath` from `insert` (video may fall back to `Movies/Storize/<dir>/` if MediaStore rejects `Pictures/` for video — T-009).
-- **T-012a (new follow-up, Medium):** lease clock-skew in the repos — a lease with `expiresAt > now + ttl` counts as expired; `release` sets `expiresAt` to the epoch. Touches the T-005 DAO, the T-006 drift repo and the T-004 fake (T-012 QA F2). Start after T-006 merges.
+- **T-012a (follow-up, Medium):** lease clock-skew in the repos — a lease with `expiresAt > now + ttl` counts as expired; `release` sets `expiresAt` to the epoch. Touches the T-005 DAO, the T-006 drift repo and the T-004 fake (T-012 QA F2). Also: bounded retry when recording a rate limit fails (T-012 QA N2); swap `_SkewTolerantRepo` in the QA test for the plain fake.
+- **T-013/T-014:** never start unawaited governed work inside `RequestGovernor.run`'s `call` (zone guard false positive, T-012 QA N1).
+- **Watch:** `storize_data/test/db/qa_perf_test.dart` "library kind=POST" took 1019 ms vs 1000 ms under full-suite load once (T-012 QA N4); raise the budget if it recurs.
 - **T-017/T-018:** `decodeJsonMap(null)` returns an unmodifiable map — copy before mutating (T-006 QA). `watchRecent` window is fixed at subscribe time (accepted).
 - **T-010a (new follow-up, Low/Medium):** plugin `storageStats` method (StatFs) on `storize/media` + `PluginStorageInfo` in storize_data (T-010 gap). Needs a plugin lock.
 - **T-010 (Lead-approved port change):** gallery exceptions (`GalleryPermissionDenied`, `GalleryStorageFull`, `GalleryWriteFailed`) move to `storize_domain`.
@@ -138,3 +139,4 @@
 - 2026-11-19 13:45 — T-012 QA PASS with findings (clock skew, lost rate-limit report, starvation, uncapped retryAfter, double-report) → round 2. T-006 round 2 (fake fixes) → QA. T-010 started.
 - 2026-11-19 14:20 — T-006 QA PASS + CI green → **T-006 done**, merged; Lead exported `repo/repo.dart`; main suite green (data 561, domain 110, model 73, plugin 59, app 283). **10/37 → Checkpoint 2** started. T-012 round 2 delivered (51bff80, pushed) → QA re-verify. T-010 delivered → round 2 (exceptions to domain, approved port change); StorageInfo split to T-010a.
 - 2026-11-19 14:45 — **Checkpoint 2 GREEN** (`05-reviews/CHECKPOINT-2.md`): format/analyze/gen clean, all suites pass twice (no flakes), no count regressions, CI green. Info only: host `app/android` shell is outside the plugin (expected). T-010 round 2 → QA. T-012a started.
+- 2026-11-19 15:05 — T-012 round 2 QA PASS + CI green → **T-012 done** (11/37), merged; Lead exported the governor from `storize_instagram.dart`; main green (instagram 92). Lead added deps `cryptography` (data, app) and `local_auth` (app) for T-034. T-010 → QA.
