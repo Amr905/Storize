@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **9 / 37** (+1 Could) · Checkpoint 1 GREEN · next checkpoint after 10 done (1 to go).
+- Tasks done: **10 / 37** (+1 Could) · Checkpoint 1 GREEN · **Checkpoint 2 running** (after 10 done).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,8 +29,7 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-010 | backend-developer (sonnet) | `packages/storize_data/lib/files/**`, `packages/storize_data/test/files/**` | 13:50 |
-| T-006 | backend-developer (sonnet) | `packages/storize_data/lib/repo/**`, `packages/storize_data/test/repo/**` | 12:50 |
+| T-010 | backend-developer (sonnet) | `packages/storize_data/lib/files/**`, `packages/storize_data/test/files/**`; round 2 adds `packages/storize_domain/lib/src/exceptions.dart` (or new `lib/src/ports/gallery_exceptions.dart`), `lib/src/ports/gallery_store.dart`, `lib/src/testing/fake_gallery_store.dart`, `lib/storize_domain.dart`, `lib/testing.dart`, related `packages/storize_domain/test/**` | 13:50 |
 | T-012 | backend-developer (sonnet) | `packages/storize_instagram/lib/governor/**`, `packages/storize_instagram/test/governor/**` | 12:50 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
@@ -42,13 +41,13 @@
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | **done** | 1 | QA PASS + CI [44463661224](https://github.com/Amr905/Storize/actions/runs/44463661224) · `05-reviews/T-005.md` |
-| T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | in_review | 2 | — |
+| T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | **done** | 2 | QA PASS (561 data tests) + CI [44512427485](https://github.com/Amr905/Storize/actions/runs/44512427485) · `05-reviews/T-006.md` |
 | T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | **done** | 2 | QA PASS (after F-1 fix) + CI [44461140658](https://github.com/Amr905/Storize/actions/runs/44461140658) · `05-reviews/T-007.md` |
 | T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | **done** | 2 | QA PASS + CI [44465551564](https://github.com/Amr905/Storize/actions/runs/44465551564) · `05-reviews/T-008.md` |
 | T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | **done** (device checks → P-4) | 4 | QA PASS + CI [44510544819](https://github.com/Amr905/Storize/actions/runs/44510544819) · `05-reviews/T-009.md` |
-| T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | in_progress | 1 | — |
+| T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | changes_requested (exceptions → domain) | 2 | — |
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
-| T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | changes_requested (QA F1–F6) | 2 | — |
+| T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | in_review (round 2, 51bff80) | 2 | — |
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | todo | — | — |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | todo | — | — |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | Medium | sonnet | Backend Developer | T-013, T-014 | todo | — | — |
@@ -87,6 +86,9 @@
 - **T-034:** `resetOnError` in flutter_secure_storage wipes **all** entries incl. the PIN hash → treat "appLock = true but no PIN hash" as a reset state (force new PIN / clear flag + tell the user); never unlock silently (T-008 QA N-1).
 - **T-010 / T-026:** request `WRITE_EXTERNAL_STORAGE` at runtime on API ≤ 28 (S-03 card); store `relativePath` from `insert` (video may fall back to `Movies/Storize/<dir>/` if MediaStore rejects `Pictures/` for video — T-009).
 - **T-012a (new follow-up, Medium):** lease clock-skew in the repos — a lease with `expiresAt > now + ttl` counts as expired; `release` sets `expiresAt` to the epoch. Touches the T-005 DAO, the T-006 drift repo and the T-004 fake (T-012 QA F2). Start after T-006 merges.
+- **T-017/T-018:** `decodeJsonMap(null)` returns an unmodifiable map — copy before mutating (T-006 QA). `watchRecent` window is fixed at subscribe time (accepted).
+- **T-010a (new follow-up, Low/Medium):** plugin `storageStats` method (StatFs) on `storize/media` + `PluginStorageInfo` in storize_data (T-010 gap). Needs a plugin lock.
+- **T-010 (Lead-approved port change):** gallery exceptions (`GalleryPermissionDenied`, `GalleryStorageFull`, `GalleryWriteFailed`) move to `storize_domain`.
 - **T-024b (new follow-up, Low):** move `app/lib/ui/storize_strings.dart` labels into ARB/AppLocalizations; delete the class; update `app/test/ui` goldens to use the l10n delegates (T-025 QA F-4).
 
 ## Pending user decisions
@@ -134,3 +136,4 @@
 - 2026-11-19 12:50 — Resumed. T-009 round 3 sent. T-006 (repos) and T-012 (governor) started (sonnet).
 - 2026-11-19 13:45 — T-009 round 4 (F9: strict item URIs + single scoped delete) → CI green (Kotlin tests run in CI) → QA PASS → **T-009 done**, merged; main green. Device checks tracked under P-4.
 - 2026-11-19 13:45 — T-012 QA PASS with findings (clock skew, lost rate-limit report, starvation, uncapped retryAfter, double-report) → round 2. T-006 round 2 (fake fixes) → QA. T-010 started.
+- 2026-11-19 14:20 — T-006 QA PASS + CI green → **T-006 done**, merged; Lead exported `repo/repo.dart`; main suite green (data 561, domain 110, model 73, plugin 59, app 283). **10/37 → Checkpoint 2** started. T-012 round 2 delivered (51bff80, pushed) → QA re-verify. T-010 delivered → round 2 (exceptions to domain, approved port change); StorageInfo split to T-010a.
