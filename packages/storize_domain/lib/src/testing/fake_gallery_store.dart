@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:storize_domain/src/ports/gallery_store.dart';
+import 'package:storize_domain/src/testing/fake_media_cache.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// An in-memory [GalleryStore].
@@ -11,7 +12,13 @@ import 'package:storize_model/storize_model.dart';
 final class FakeGalleryStore implements GalleryStore {
   /// Creates a store. [defaultSizeBytes] is used when the source file is not
   /// on disk.
-  FakeGalleryStore({this.defaultSizeBytes = 1024});
+  ///
+  /// With a [cache], a source path produced by it reports the cached byte
+  /// count.
+  FakeGalleryStore({this.defaultSizeBytes = 1024, this.cache});
+
+  /// The cache whose fake part paths this store understands, if any.
+  final FakeMediaCache? cache;
 
   /// The size reported for sources that do not exist on disk.
   final int defaultSizeBytes;
@@ -50,7 +57,9 @@ final class FakeGalleryStore implements GalleryStore {
       throw error;
     }
     final source = File(sourcePath);
-    final size = source.existsSync() ? source.lengthSync() : defaultSizeBytes;
+    final size =
+        cache?.sizeOfPath(sourcePath) ??
+        (source.existsSync() ? source.lengthSync() : defaultSizeBytes);
     final file = GalleryFile(
       uri: 'content://fake/media/${++_counter}',
       sizeBytes: size,

@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:storize_domain/src/entities/internal.dart';
+import 'package:storize_domain/src/entities/target_limits.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// A tracked account (table `target`).
@@ -37,7 +38,7 @@ final class Target {
   static const int unsavedId = 0;
 
   /// The maximum length of [note].
-  static const int maxNoteLength = 200;
+  static const int maxNoteLength = TargetLimits.noteMaxLength;
 
   /// The database ID.
   final int id;
