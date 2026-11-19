@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **5 / 37** (+1 Could) · **Checkpoint 1 due now** (T-001, T-003, T-024, T-004, T-007).
+- Tasks done: **5 / 37** (+1 Could) · Checkpoint 1 **GREEN** · next checkpoint after 10 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -91,7 +91,8 @@
 ## Checkpoints
 | # | After tasks | Result | Report |
 |---|-------------|--------|--------|
-| 1 | (first 5 done) | — | — |
+| 1 | T-001, T-003, T-024, T-004, T-007 | **GREEN** — 0 regressions; counts = baselines; gen/goldens stable; +21 integration tests; coverage 89–98%; CI green | `05-reviews/CHECKPOINT-1.md` |
+| 2 | (next 5 done) | — | — |
 
 ## Log
 - 2026-11-19 01:50 — Phase 5 kicked off. Specialist agents defined (backend-developer, frontend-developer, qa-engineer).
@@ -117,3 +118,4 @@
 - 2026-11-19 08:05 — T-007: developer stopped correctly at a lint needing a dev-dependency (out of lock); Lead added `shared_preferences_platform_interface` (dev) → analyze clean, 20 tests → QA started.
 - 2026-11-19 08:10 — T-002 prep round 3 re-verification: **FAIL** (QA-10 blocker: username-like object keys survive; QA-11 medium: doc_id/query_hash shape). Second failed QA round on a High task → per protocol, **stopped and asked the user (UD-2)**.
 - 2026-11-19 08:30 — T-007 QA FAIL (F-1 timestamp overflow) → round 2 fixed → CI green → **T-007 done**, merged; Lead wired `storize_data` barrel. T-005 and T-025 delivered → QA. **Checkpoint 1 started.**
+- 2026-11-19 08:50 — **Checkpoint 1 GREEN** (commit ef64e0c): no regressions, +21 integration tests, CI green. Merged.
