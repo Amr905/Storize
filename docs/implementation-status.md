@@ -31,6 +31,8 @@
 | T-005 | backend-developer (sonnet) | `packages/storize_data/lib/db/**`, `packages/storize_data/test/db/**`, `packages/storize_data/drift_schemas/**`, `packages/storize_data/build.yaml` | 07:30 |
 | T-025 | frontend-developer (sonnet) | `app/lib/**` except `app/lib/ui/**` and `app/lib/debug/**` and `main_debug_inspector.dart`; `app/l10n.yaml`; `app/test/**` except `app/test/ui/**` and `app/test/debug/**`; `app/pubspec.yaml` **only** the `flutter: generate: true` line | 07:30 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
+| T-008 | backend-developer (sonnet) | `packages/storize_data/lib/security/**`, `packages/storize_data/test/security/**` | 08:55 |
+| T-009 | backend-developer (sonnet) | `packages/storize_platform_android/**` (Kotlin + Dart API + tests; no pubspec dependency changes without the Lead) | 08:55 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -43,8 +45,8 @@
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | in_review | 1 | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
 | T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | **done** | 2 | QA PASS (after F-1 fix) + CI [44461140658](https://github.com/Amr905/Storize/actions/runs/44461140658) · `05-reviews/T-007.md` |
-| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | todo | — | — |
-| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | todo | — | — |
+| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | in_progress | 1 | — |
+| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | in_progress | 1 | — |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | todo | — | — |
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | todo | — | — |
@@ -119,3 +121,4 @@
 - 2026-11-19 08:10 — T-002 prep round 3 re-verification: **FAIL** (QA-10 blocker: username-like object keys survive; QA-11 medium: doc_id/query_hash shape). Second failed QA round on a High task → per protocol, **stopped and asked the user (UD-2)**.
 - 2026-11-19 08:30 — T-007 QA FAIL (F-1 timestamp overflow) → round 2 fixed → CI green → **T-007 done**, merged; Lead wired `storize_data` barrel. T-005 and T-025 delivered → QA. **Checkpoint 1 started.**
 - 2026-11-19 08:50 — **Checkpoint 1 GREEN** (commit ef64e0c): no regressions, +21 integration tests, CI green. Merged.
+- 2026-11-19 08:55 — T-008 (vault) and T-009 (native gallery plugin) started (sonnet, High). T-009's on-device check (P-4) is deferred to the user.
