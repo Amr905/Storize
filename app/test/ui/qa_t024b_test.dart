@@ -47,7 +47,9 @@ void main() {
       l10n.pinProgress(3, 4): '3 of 4 digits entered',
       l10n.pinCooldown('0:30'): 'Try again in 0:30',
     };
-    expected.forEach((actual, want) => expect(actual, want));
+    for (final MapEntry(key: actual, value: want) in expected.entries) {
+      expect(actual, want);
+    }
   });
 
   testWidgets('PinPad exposes progress, delete, biometric and cooldown', (
@@ -105,7 +107,7 @@ void main() {
     expect(find.text('Instagram account restricted'), findsOneWidget);
     expect(find.text('Checks are paused.'), findsNWidgets(2));
     expect(find.text('Fix'), findsNWidgets(2));
-    expect(find.bySemanticsLabel(RegExp('^Fix\$')), findsNWidgets(2));
+    expect(find.bySemanticsLabel(RegExp(r'^Fix$')), findsNWidgets(2));
     handle.dispose();
   });
 
