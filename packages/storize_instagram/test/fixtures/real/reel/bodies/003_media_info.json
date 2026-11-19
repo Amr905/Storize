@@ -1,0 +1,590 @@
+{
+  "num_results": 1,
+  "more_available": false,
+  "items": [
+    {
+      "strong_id__": "media_1_user_1",
+      "id": "media_1_user_1",
+      "key_173": false,
+      "fbid": "media_55",
+      "key_174": 0,
+      "key_175": "<str:30>",
+      "key_176": "<str:7>",
+      "key_177": false,
+      "key_178": "<str:0>",
+      "key_179": false,
+      "key_180": false,
+      "key_181": false,
+      "key_182": false,
+      "key_183": true,
+      "key_184": "<str:13>",
+      "key_185": false,
+      "key_186": true,
+      "key_187": false,
+      "media_type": 2,
+      "key_188": "<str:344>",
+      "key_189": null,
+      "key_190": [],
+      "key_191": "<str:2>",
+      "key_192": false,
+      "key_193": false,
+      "timeline_pinned_user_ids": [],
+      "taken_at": 1794750838,
+      "pk": "media_1",
+      "key_194": false,
+      "key_195": false,
+      "key_196": false,
+      "key_197": false,
+      "product_type": "clips",
+      "key_198": false,
+      "key_199": true,
+      "key_200": [],
+      "key_201": false,
+      "key_202": false,
+      "key_203": "<str:32>",
+      "key_204": "<str:4>",
+      "key_205": [],
+      "key_206": [],
+      "key_207": [],
+      "key_208": false,
+      "key_209": false,
+      "key_210": null,
+      "key_211": null,
+      "key_212": null,
+      "coauthor_producers": [],
+      "key_213": false,
+      "key_214": [],
+      "is_paid_partnership": false,
+      "key_215": false,
+      "key_216": 2,
+      "key_217": {
+        "key_218": null,
+        "key_219": false,
+        "text": "<str:0>",
+        "url": null
+      },
+      "key_220": true,
+      "key_221": true,
+      "key_222": [],
+      "key_223": true,
+      "key_224": {
+        "key_225": {
+          "key_226": "<str:4>"
+        }
+      },
+      "key_227": false,
+      "key_228": false,
+      "key_229": [],
+      "has_audio": true,
+      "video_versions": [
+        {
+          "key_230": 1818517,
+          "height": 1280,
+          "id": "<str:17>",
+          "key_231": "<str:4>",
+          "type": 101,
+          "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>",
+          "key_232": null,
+          "width": 720,
+          "key_233": null
+        },
+        {
+          "key_230": 1818517,
+          "height": 1280,
+          "id": "<str:17>",
+          "key_231": "<str:4>",
+          "type": 102,
+          "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>",
+          "key_232": null,
+          "width": 720,
+          "key_233": null
+        },
+        {
+          "key_230": 1818517,
+          "height": 1280,
+          "id": "<str:17>",
+          "key_231": "<str:4>",
+          "type": 103,
+          "url": "<url host=instagram.fbcdn.net path_shape=6seg.mp4>",
+          "key_232": null,
+          "width": 720,
+          "key_233": null
+        }
+      ],
+      "number_of_qualities": 5,
+      "key_234": {
+        "key_235": false,
+        "key_236": null,
+        "key_237": null
+      },
+      "key_238": {
+        "key_239": "<str:4>"
+      },
+      "key_240": [],
+      "key_241": 0,
+      "key_242": null,
+      "key_243": false,
+      "image_versions2": {
+        "key_244": {
+          "key_245": {
+            "key_246": [],
+            "height": 1136,
+            "key_247": null,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 640,
+            "key_248": false
+          },
+          "key_249": {
+            "key_246": [],
+            "height": 1136,
+            "key_247": null,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 640,
+            "key_248": false
+          },
+          "key_250": null
+        },
+        "candidates": [
+          {
+            "key_246": [],
+            "height": 1280,
+            "key_247": null,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 720,
+            "key_248": false
+          },
+          {
+            "key_246": [],
+            "height": 427,
+            "key_247": null,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 240,
+            "key_248": false
+          }
+        ],
+        "key_251": {
+          "key_42": {
+            "key_252": 662,
+            "key_253": 105,
+            "key_254": 96,
+            "key_255": 1232,
+            "key_256": [
+              "<url host=instagram.fbcdn.net path_shape=3seg.jpg>"
+            ],
+            "key_257": 1500,
+            "key_258": 0.22,
+            "key_259": 176,
+            "key_260": 100,
+            "key_261": 15,
+            "key_262": 105,
+            "key_263": 22.64
+          }
+        }
+      },
+      "original_width": 1080,
+      "original_height": 1920,
+      "key_264": false,
+      "key_265": {
+        "in": []
+      },
+      "media_overlay_info": null,
+      "key_266": {
+        "items": []
+      },
+      "key_267": [],
+      "key_268": null,
+      "key_269": [],
+      "key_270": true,
+      "key_271": null,
+      "key_272": 7,
+      "clips_metadata": {
+        "key_273": "<str:5>",
+        "key_274": null,
+        "key_275": false,
+        "key_276": 0,
+        "key_277": null,
+        "key_278": {
+          "key_279": null,
+          "key_280": false
+        },
+        "key_281": {
+          "key_282": null,
+          "key_283": {
+            "key_284": false
+          }
+        },
+        "key_285": null,
+        "key_286": {
+          "key_287": "<str:16>"
+        },
+        "key_288": "<str:15>",
+        "key_289": {
+          "key_290": false
+        },
+        "key_291": null,
+        "key_292": null,
+        "key_293": null,
+        "key_294": {
+          "key_295": false,
+          "key_296": null
+        },
+        "key_297": null,
+        "key_200": [],
+        "key_298": false,
+        "key_299": null,
+        "key_300": false,
+        "key_301": false,
+        "key_302": {
+          "key_303": false,
+          "key_304": null,
+          "key_305": false,
+          "key_306": false,
+          "key_307": false,
+          "key_308": true,
+          "key_309": false,
+          "key_310": false,
+          "key_270": true,
+          "key_311": null,
+          "key_312": true,
+          "key_313": false,
+          "key_314": 0,
+          "key_315": null,
+          "key_316": null
+        },
+        "key_317": null,
+        "key_318": "<str:17>",
+        "key_319": null,
+        "key_320": null,
+        "original_sound_info": {
+          "key_321": true,
+          "key_322": "<str:17>",
+          "key_323": null,
+          "key_324": true,
+          "key_325": true,
+          "key_326": "<str:1861>",
+          "key_327": 22639,
+          "key_328": null,
+          "key_329": false,
+          "key_330": false,
+          "key_331": true,
+          "key_332": true,
+          "key_333": false,
+          "key_334": true,
+          "key_335": false,
+          "key_336": false,
+          "key_318": null,
+          "key_337": false,
+          "key_338": "<str:7>",
+          "key_339": "<str:14>",
+          "key_340": "<str:19>",
+          "key_341": "<url host=scontent.fbcdn.net path_shape=6seg.mp4>",
+          "key_342": false,
+          "key_343": 8000000056,
+          "key_344": null,
+          "key_345": null,
+          "key_346": 0,
+          "key_347": 0,
+          "key_348": 0,
+          "key_349": false,
+          "key_350": {
+            "strong_id__": "user_1",
+            "pk": "user_1",
+            "pk_id": "user_1",
+            "id": "user_1",
+            "username": "<str:16>",
+            "full_name": "<str:28>",
+            "is_private": false,
+            "is_verified": false,
+            "profile_pic_id": "media_5_user_1",
+            "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>"
+          },
+          "key_351": null,
+          "key_352": [],
+          "key_353": [],
+          "key_354": {
+            "key_355": null,
+            "key_356": false,
+            "key_357": false,
+            "key_358": "<str:0>",
+            "key_359": null,
+            "key_360": null,
+            "key_361": null,
+            "key_362": null,
+            "key_363": null
+          },
+          "key_364": null,
+          "key_225": {
+            "key_226": "<str:4>"
+          }
+        },
+        "key_365": null,
+        "key_366": null,
+        "key_367": null,
+        "key_368": null,
+        "key_280": false,
+        "key_369": null,
+        "key_370": null,
+        "key_371": null,
+        "key_372": null
+      },
+      "key_373": false,
+      "like_count": 266,
+      "key_374": false,
+      "key_375": [
+        "<str:16>"
+      ],
+      "key_376": [
+        {
+          "strong_id__": "user_15",
+          "pk": "user_15",
+          "pk_id": "user_15",
+          "id": "user_15",
+          "username": "<str:16>",
+          "full_name": "<str:17>",
+          "is_private": false,
+          "is_verified": true,
+          "profile_pic_id": "media_57_user_15",
+          "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>"
+        }
+      ],
+      "key_377": -1,
+      "caption": {
+        "strong_id__": "media_4",
+        "key_111": 0,
+        "key_112": 8000000003,
+        "key_114": 8000000003,
+        "key_115": false,
+        "key_118": false,
+        "pk": "media_4",
+        "key_120": false,
+        "content_type": "<str:7>",
+        "media_id": "media_1",
+        "status": "<str:6>",
+        "type": 1,
+        "user_id": "user_1",
+        "text": "<str:93>",
+        "user": {
+          "strong_id__": "user_1",
+          "pk": "user_1",
+          "pk_id": "user_1",
+          "id": "user_1",
+          "key_122": false,
+          "key_121": "<str:17>",
+          "username": "<str:16>",
+          "full_name": "<str:28>",
+          "is_private": false,
+          "is_verified": false,
+          "profile_pic_id": "media_5_user_1",
+          "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>"
+        },
+        "key_116": false,
+        "key_119": 0
+      },
+      "comment_count": 19,
+      "key_110": false,
+      "key_378": [],
+      "key_126": true,
+      "play_count": 6487,
+      "key_379": 6487,
+      "key_380": null,
+      "key_381": [],
+      "video_duration": 22.67,
+      "is_dash_eligible": 1,
+      "video_dash_manifest": "<dash:11706>",
+      "user": {
+        "strong_id__": "user_1",
+        "key_121": "<str:17>",
+        "key_382": false,
+        "id": "user_1",
+        "key_122": false,
+        "pk": "user_1",
+        "pk_id": "user_1",
+        "key_383": 1,
+        "key_384": 3,
+        "key_385": true,
+        "key_386": [],
+        "full_name": "<str:28>",
+        "key_387": false,
+        "key_388": false,
+        "is_private": false,
+        "key_389": false,
+        "key_390": false,
+        "key_147": {
+          "key_148": false,
+          "key_149": false,
+          "key_150": false
+        },
+        "is_verified": false,
+        "key_391": true,
+        "key_392": false,
+        "username": "<str:16>",
+        "key_393": false,
+        "key_394": {},
+        "key_395": {
+          "key_396": null,
+          "key_397": null,
+          "key_398": null,
+          "key_399": null,
+          "key_400": null,
+          "key_401": null,
+          "key_402": null,
+          "key_403": null,
+          "key_404": null,
+          "key_405": null,
+          "key_406": null,
+          "key_407": null,
+          "key_408": null
+        },
+        "friendship_status": {
+          "following": true,
+          "is_bestie": false,
+          "key_409": false,
+          "is_private": false,
+          "key_410": false,
+          "followed_by": false,
+          "key_411": false
+        },
+        "key_412": {
+          "height": 1080,
+          "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+          "width": 1080
+        },
+        "key_413": [
+          {
+            "height": 320,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 320
+          },
+          {
+            "height": 640,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 640
+          }
+        ],
+        "profile_pic_id": "media_5_user_1",
+        "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+        "key_414": false,
+        "key_415": true,
+        "key_416": false,
+        "latest_reel_media": null
+      },
+      "owner": {
+        "strong_id__": "user_1",
+        "key_121": "<str:17>",
+        "key_382": false,
+        "id": "user_1",
+        "key_122": false,
+        "pk": "user_1",
+        "pk_id": "user_1",
+        "key_383": 1,
+        "key_384": 3,
+        "key_385": true,
+        "key_386": [],
+        "full_name": "<str:28>",
+        "key_387": false,
+        "key_388": false,
+        "is_private": false,
+        "key_389": false,
+        "key_390": false,
+        "key_147": {
+          "key_148": false,
+          "key_149": false,
+          "key_150": false
+        },
+        "is_verified": false,
+        "key_391": true,
+        "key_392": false,
+        "username": "<str:16>",
+        "key_393": false,
+        "key_394": {},
+        "key_395": {
+          "key_396": null,
+          "key_397": null,
+          "key_398": null,
+          "key_399": null,
+          "key_400": null,
+          "key_401": null,
+          "key_402": null,
+          "key_403": null,
+          "key_404": null,
+          "key_405": null,
+          "key_406": null,
+          "key_407": null,
+          "key_408": null
+        },
+        "friendship_status": {
+          "following": true,
+          "is_bestie": false,
+          "key_409": false,
+          "is_private": false,
+          "key_410": false,
+          "followed_by": false,
+          "key_411": false
+        },
+        "key_412": {
+          "height": 1080,
+          "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+          "width": 1080
+        },
+        "key_413": [
+          {
+            "height": 320,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 320
+          },
+          {
+            "height": 640,
+            "url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+            "width": 640
+          }
+        ],
+        "profile_pic_id": "media_5_user_1",
+        "profile_pic_url": "<url host=instagram.fbcdn.net path_shape=3seg.jpg>",
+        "key_414": false,
+        "key_415": true,
+        "key_416": false,
+        "latest_reel_media": null
+      },
+      "key_417": {
+        "key_418": false,
+        "key_419": false,
+        "key_420": false,
+        "key_421": true
+      },
+      "key_422": false,
+      "key_123": false,
+      "code": "<str:11>",
+      "key_423": 8000000058,
+      "key_424": true,
+      "key_425": 0,
+      "key_426": true,
+      "key_427": false,
+      "key_428": false,
+      "key_429": false,
+      "key_430": false,
+      "key_431": [],
+      "key_432": null,
+      "key_433": null,
+      "key_434": false,
+      "key_435": [],
+      "key_436": false,
+      "key_437": false,
+      "key_438": false,
+      "key_439": true,
+      "key_440": true,
+      "key_441": 0,
+      "key_442": false,
+      "key_443": true,
+      "key_444": true,
+      "key_445": [
+        "<str:2>",
+        "<str:2>",
+        "<str:2>",
+        "<str:2>",
+        "<str:2>"
+      ]
+    }
+  ],
+  "key_446": false,
+  "status": "ok"
+}

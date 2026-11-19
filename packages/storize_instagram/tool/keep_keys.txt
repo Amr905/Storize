@@ -1,0 +1,28 @@
+# Object keys that the sanitizer keeps (one exact, case-sensitive name per line).
+# Everything else in a response body becomes key_N. Add a name ONLY after
+# checking in the Instagram web devtools (on your own machine) that the
+# position in report.md "Replaced object keys" is a schema field and not a
+# username, display name or other data. Reviewed in a PR. No usernames.
+
+# Added for T-002 (real capture 2026-11-20). Each name was checked against the
+# raw capture locally: it sits at a FIXED schema position (not a dynamic map),
+# never a username or ID. Path = where the extractors read it.
+
+# GraphQL data roots (docs/03-specs/INSTAGRAM_EXTRACTION.md)
+# $.data.xdt_api__v1__feed__reels_media.reels_media[].items[]  (story items)
+xdt_api__v1__feed__reels_media
+# $.data.xdt_api__v1__feed__user_timeline_graphql_connection.edges[].node  (posts of a user)
+xdt_api__v1__feed__user_timeline_graphql_connection
+# $.data.xdt_viewer.user.id  (logged-in viewer id: session check)
+xdt_viewer
+
+# Post node fields
+# edges[].node.carousel_media_count and items[].carousel_media_count (slide count vs carousel_media[].length)
+carousel_media_count
+# edges[].node.timeline_pinned_user_ids and items[].timeline_pinned_user_ids (non-empty = pinned post, not in date order)
+timeline_pinned_user_ids
+# edges[].node.coauthor_producers and items[].coauthor_producers (collab post: node.user may be the other author)
+coauthor_producers
+
+# $.data.user.media_count (PolarisProfilePageContentQuery): cheap post-count change signal
+media_count
