@@ -88,6 +88,18 @@ void main() {
       await cache.cleanupOrphans({});
       expect(cache.thumbnailBytes(5), [9]);
     });
+
+    test(
+      'cleanupOrphanThumbnails removes thumbs not live and counts them',
+      () async {
+        await cache.writeThumbnail(5, [9]);
+        await cache.writeThumbnail(6, [8]);
+        expect(await cache.cleanupOrphanThumbnails({6}), 1);
+        expect(cache.thumbnailBytes(5), isNull);
+        expect(cache.thumbnailBytes(6), [8]);
+        expect(await cache.cleanupOrphanThumbnails({6}), 0);
+      },
+    );
   });
 
   group('FakeStorageInfo and StoragePolicy', () {

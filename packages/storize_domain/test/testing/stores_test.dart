@@ -325,4 +325,60 @@ void main() {
       expect(s.cancelAllCalls, 1);
     });
   });
+
+  group('FakeMediaCache.deleteThumbnail (T-019a AC1)', () {
+    late FakeMediaCache cache;
+    setUp(() => cache = FakeMediaCache());
+
+    test('removes the thumbnail of that ID only', () async {
+      await cache.writeThumbnail(3, [1, 2]);
+      await cache.writeThumbnail(4, [9]);
+
+      await cache.deleteThumbnail(3);
+
+      expect(cache.thumbnailBytes(3), isNull);
+      expect(cache.thumbnailBytes(4), [9]);
+    });
+
+    test('is idempotent and never throws for a missing thumbnail', () async {
+      await cache.deleteThumbnail(42);
+      await cache.writeThumbnail(5, [1]);
+      await cache.deleteThumbnail(5);
+      await cache.deleteThumbnail(5);
+      expect(cache.thumbnailBytes(5), isNull);
+    });
+
+    test('leaves the part file of the same ID alone', () async {
+      await cache.append(6, Stream.value([1, 2]));
+      await cache.writeThumbnail(6, [3]);
+
+      await cache.deleteThumbnail(6);
+
+      expect(cache.partBytes(6), [1, 2]);
+      expect(cache.thumbnailBytes(6), isNull);
+    });
+
+    test('cleanupOrphans removes parts only, never thumbnails', () async {
+      await cache.writeThumbnail(1, [1]);
+      await cache.append(3, Stream.value([3]));
+
+      expect(await cache.cleanupOrphans({}), 1);
+      expect(cache.thumbnailBytes(1), [1]);
+      expect(cache.partIds, isEmpty);
+    });
+
+    test(
+      'cleanupOrphanThumbnails removes thumbnails not live, keeps live',
+      () async {
+        await cache.writeThumbnail(1, [1]);
+        await cache.writeThumbnail(2, [2]);
+        await cache.append(3, Stream.value([3]));
+
+        expect(await cache.cleanupOrphanThumbnails({2}), 1);
+        expect(cache.thumbnailBytes(1), isNull);
+        expect(cache.thumbnailBytes(2), [2]);
+        expect(cache.partIds, {3}, reason: 'parts are not swept here');
+      },
+    );
+  });
 }

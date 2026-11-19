@@ -56,9 +56,18 @@ final class FakeMediaCache implements MediaCache {
   Future<void> discard(int mediaFileId) async => _parts.remove(mediaFileId);
 
   @override
-  Future<int> cleanupOrphans(Set<int> keepIds) async {
-    final orphans = _parts.keys.where((id) => !keepIds.contains(id)).toList()
+  Future<int> cleanupOrphans(Set<int> pendingIds) async {
+    final orphans = _parts.keys.where((id) => !pendingIds.contains(id)).toList()
       ..forEach(_parts.remove);
+    return orphans.length;
+  }
+
+  // The fake keeps no `.tmp` files, so it counts only thumbnails.
+  @override
+  Future<int> cleanupOrphanThumbnails(Set<int> liveMediaIds) async {
+    final orphans =
+        _thumbs.keys.where((id) => !liveMediaIds.contains(id)).toList()
+          ..forEach(_thumbs.remove);
     return orphans.length;
   }
 
@@ -67,4 +76,8 @@ final class FakeMediaCache implements MediaCache {
     _thumbs[mediaFileId] = List<int>.of(webpBytes);
     return '$thumbDir/$mediaFileId.webp';
   }
+
+  @override
+  Future<void> deleteThumbnail(int mediaFileId) async =>
+      _thumbs.remove(mediaFileId);
 }

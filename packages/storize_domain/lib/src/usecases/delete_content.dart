@@ -79,8 +79,9 @@ final class DeleteContentResult {
 /// - When any file of an item fails with a [GalleryStoreException], the rows
 ///   of that item are kept and the item is reported in
 ///   [DeleteContentResult.failures]. The rest of the batch carries on.
-/// - The part file in the [MediaCache] is discarded best-effort once the
-///   gallery files are gone. A cache error never blocks the delete.
+/// - The part file and the thumbnail of each media file in the [MediaCache]
+///   are deleted best-effort once the gallery files are gone. A cache error
+///   never blocks the delete.
 /// - Rows are removed in chunks of [chunkSize], so a crash loses at most one
 ///   chunk of progress. Re-running is safe: files already gone count as
 ///   missing and unknown IDs are ignored.
@@ -167,6 +168,7 @@ final class DeleteContent {
         }
         for (final file in item.media) {
           await _discardPart(file.id);
+          await _discardThumbnail(file.id);
         }
         chunkOk.add(item.content.id);
       }
@@ -189,6 +191,14 @@ final class DeleteContent {
       await _cache.discard(mediaFileId);
     } on Object {
       // Best effort: a stale part file is removed by cleanupOrphans.
+    }
+  }
+
+  Future<void> _discardThumbnail(int mediaFileId) async {
+    try {
+      await _cache.deleteThumbnail(mediaFileId);
+    } on Object {
+      // Best effort: an orphan thumbnail is removed by cleanupOrphanThumbnails.
     }
   }
 }

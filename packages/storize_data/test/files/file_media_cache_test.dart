@@ -56,14 +56,17 @@ void main() {
     expect(await cache.partialLength(3), 5);
   });
 
-  test('cleanupOrphans on start: only part files go', () async {
+  test('cleanupOrphans on start: orphan parts go, thumbs stay', () async {
     final partDir = Directory('${cacheDir.path}/part')..createSync();
     File('${partDir.path}/1.part').writeAsBytesSync([1]);
     File('${partDir.path}/2.part').writeAsBytesSync([2]);
     File('${partDir.path}/junk.part').writeAsBytesSync([3]);
     File('${partDir.path}/note.txt').writeAsBytesSync([4]);
     await cache.writeThumbnail(1, [5]);
+    await cache.writeThumbnail(2, [6]);
 
+    // 1.part and junk.part are removed; 2.part is kept. Thumbnails are not
+    // part files, so both stay.
     expect(await cache.cleanupOrphans({2}), 2);
 
     expect(File('${partDir.path}/1.part').existsSync(), isFalse);
@@ -71,7 +74,54 @@ void main() {
     expect(File('${partDir.path}/2.part').existsSync(), isTrue);
     expect(File('${partDir.path}/note.txt').existsSync(), isTrue);
     expect(File('${filesDir.path}/thumbs/1.webp').existsSync(), isTrue);
+    expect(File('${filesDir.path}/thumbs/2.webp').existsSync(), isTrue);
   });
+
+  test(
+    'cleanupOrphanThumbnails removes only exact <int>.webp and .webp.tmp files',
+    () async {
+      final thumbs = Directory('${filesDir.path}/thumbs')..createSync();
+      File('${thumbs.path}/3.webp').writeAsBytesSync([1]);
+      File('${thumbs.path}/3.webp.tmp').writeAsBytesSync([1]);
+      File('${thumbs.path}/+4.webp').writeAsBytesSync([1]);
+      File('${thumbs.path}/05.webp').writeAsBytesSync([1]);
+      File('${thumbs.path}/x.webp').writeAsBytesSync([1]);
+      File('${thumbs.path}/7.png').writeAsBytesSync([1]);
+      Directory('${thumbs.path}/8.webp').createSync();
+
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 2);
+
+      expect(File('${thumbs.path}/3.webp').existsSync(), isFalse);
+      expect(File('${thumbs.path}/3.webp.tmp').existsSync(), isFalse);
+      for (final name in ['+4.webp', '05.webp', 'x.webp', '7.png']) {
+        expect(File('${thumbs.path}/$name').existsSync(), isTrue, reason: name);
+      }
+      expect(Directory('${thumbs.path}/8.webp').existsSync(), isTrue);
+    },
+  );
+
+  test('cleanupOrphanThumbnails keeps a live id and its .tmp', () async {
+    final thumbs = Directory('${filesDir.path}/thumbs')..createSync();
+    File('${thumbs.path}/3.webp').writeAsBytesSync([1]);
+    File('${thumbs.path}/3.webp.tmp').writeAsBytesSync([1]);
+    expect(await cache.cleanupOrphanThumbnails({3}), 0);
+    expect(File('${thumbs.path}/3.webp.tmp').existsSync(), isTrue);
+  });
+
+  test(
+    'cleanupOrphanThumbnails never deletes through a thumbnail symlink',
+    () async {
+      final outside = Directory('${root.path}/outside')..createSync();
+      final victim = File('${outside.path}/victim.jpg')..writeAsBytesSync([1]);
+      final thumbs = Directory('${filesDir.path}/thumbs')..createSync();
+      Link('${thumbs.path}/9.webp').createSync(victim.path);
+
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+
+      expect(victim.existsSync(), isTrue, reason: 'link target deleted');
+      expect(Link('${thumbs.path}/9.webp').existsSync(), isTrue);
+    },
+  );
 
   test('thumbnails go to <files>/thumbs/<id>.webp', () async {
     final path = await cache.writeThumbnail(9, [1, 2, 3]);

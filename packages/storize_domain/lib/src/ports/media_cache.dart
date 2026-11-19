@@ -22,11 +22,31 @@ abstract interface class MediaCache {
   /// Deletes the part file of [mediaFileId]. Does nothing if there is none.
   Future<void> discard(int mediaFileId);
 
-  /// Deletes every part file whose media file ID is not in [keepIds] and
-  /// returns how many were removed. Thumbnails are not touched.
-  Future<int> cleanupOrphans(Set<int> keepIds);
+  /// Deletes every part file whose media file ID is not in [pendingIds] and
+  /// returns how many were removed. [pendingIds] are the IDs of downloads that
+  /// are still in progress. Thumbnails are not touched; see
+  /// [cleanupOrphanThumbnails], which takes a different ID set.
+  Future<int> cleanupOrphans(Set<int> pendingIds);
+
+  /// Deletes every thumbnail `<id>.webp` and every `<id>.webp.tmp` leftover
+  /// whose media file ID is not in [liveMediaIds], and returns how many files
+  /// were removed.
+  ///
+  /// The caller must pass the IDs of **all** `media_file` rows, not only the
+  /// pending ones. A downloaded item still shows its thumbnail, so its ID is
+  /// live even though its part file is gone. Passing only pending IDs deletes
+  /// the thumbnails of every downloaded item. Files that are not exactly
+  /// `<int>.webp` or `<int>.webp.tmp` are left alone.
+  Future<int> cleanupOrphanThumbnails(Set<int> liveMediaIds);
 
   /// Stores [webpBytes] as the thumbnail of [mediaFileId], replacing any old
   /// one, and returns its path (for `MediaFile.thumbPath`).
   Future<String> writeThumbnail(int mediaFileId, List<int> webpBytes);
+
+  /// Deletes the thumbnail of [mediaFileId] and any leftover temp file of an
+  /// interrupted [writeThumbnail].
+  ///
+  /// Idempotent: a missing thumbnail is not an error, and a call for a missing
+  /// file never throws.
+  Future<void> deleteThumbnail(int mediaFileId);
 }
