@@ -868,4 +868,81 @@ void main() {
       });
     });
   });
+
+  group('round 6: host labels and extra known values', () {
+    String host(String url) {
+      final o = _run({'a': 1}, url: url);
+      expect(o.ok, isTrue, reason: '${o.leaks}');
+      return (_summary(o)['requests'] as List).single['host'] as String;
+    }
+
+    test('QA-25: only known instagram.com labels are kept', () {
+      for (final l in [
+        'www',
+        'i',
+        'graph',
+        'l',
+        'edge-chat',
+        'b',
+        'help',
+        'about',
+      ]) {
+        expect(host('https://$l.instagram.com/x/'), '$l.instagram.com');
+      }
+      expect(host('https://instagram.com/x/'), 'instagram.com');
+      expect(host('https://zzfake.instagram.com/x/'), '<label>.instagram.com');
+      expect(
+        host('https://z-p42.www.instagram.com/x/'),
+        '<label>.www.instagram.com',
+      );
+      expect(host('https://WWW.Instagram.com/x/'), 'www.instagram.com');
+    });
+
+    test('QA-25: URL values in bodies use the same label rule', () {
+      final out = _clean({
+        'external_url': 'https://zzfake.instagram.com/x',
+        'profile_pic_url': 'https://www.instagram.com/x.jpg',
+      });
+      expect(out, contains('<url host=<label>.instagram.com'));
+      expect(out, contains('<url host=www.instagram.com'));
+    });
+
+    test('QA-25: other hosts never reach the output', () {
+      final o = _run({'a': 1}, url: 'https://zzfake.example.com/x/');
+      expect(o.files.values.join().toLowerCase(), isNot(contains('zzfake')));
+    });
+
+    test('QA-26: extra failure-map values are known', () {
+      for (final v in [
+        'user_has_logged_out',
+        'sentry_block',
+        'rate_limit_error',
+        'unauthorized',
+        'Not authorized to view user',
+        'Invalid parameters',
+      ]) {
+        final j = _body(_run({'message': v, 'error_type': v}));
+        expect(j['message'], v);
+        expect(j['error_type'], v);
+      }
+    });
+
+    test('QA-26: new keys are kept but their values stay default-deny', () {
+      final j = _body(
+        _run({
+          'message': 'checkpoint_required',
+          'checkpoint_url': 'https://www.instagram.com/challenge/zzfake/abc/',
+          'error_title': 'zzfake_nour needs to confirm',
+          'profile_pic_url_hd':
+              'https://scontent-x.cdninstagram.com/zzfake.jpg',
+          'challenge': {'lock': true},
+        }),
+      );
+      expect(j['checkpoint_url'], startsWith('<url host=www.instagram.com'));
+      expect('${j['error_title']}', startsWith('<str:'));
+      expect(j['profile_pic_url_hd'], startsWith('<url host='));
+      expect(j.containsKey('challenge'), isTrue);
+      expect(jsonEncode(j).toLowerCase(), isNot(contains('zzfake')));
+    });
+  });
 }

@@ -160,7 +160,7 @@ void main() {
         })!;
         expect(out, contains('"is_private"'));
       },
-      skip: 'QA-24 (low): dynamic-map rule also replaces schema keys in all-bool/all-string objects with a majority of unknown keys',
+      skip: 'QA-24 (accepted usefulness trade-off, Lead decision round 6; use --keep-key / keep_keys.txt to rescue schema keys): dynamic-map rule also replaces schema keys in all-bool/all-string objects with a majority of unknown keys',
     );
   });
 
@@ -174,7 +174,6 @@ void main() {
         expect(out, isNotNull);
         expect(out!.toLowerCase(), isNot(contains('zzfake')));
       },
-      skip: 'QA-25 (low/info): host labels are not allowlisted; Instagram does not use username subdomains',
     );
     test('userinfo and port are not copied', () {
       final out = _out({
@@ -321,7 +320,7 @@ void main() {
     ]) {
       test('real-world message "$v" survives (QA-26, low)', () {
         expect(_out({'message': v, 'status': 'fail'}), contains(v));
-      }, skip: 'QA-26 (low): value not in the known list; shows as <str:N>');
+      });
     }
     test('values with a username in message stay replaced', () {
       final out = _out({'message': 'zzfake_nour is private'})!;
@@ -330,15 +329,16 @@ void main() {
   });
 
   group('5 fail closed', () {
-    test('token in an instagram host label blocks all output', () {
+    test('token in an instagram host label is replaced (QA-25)', () {
       final o = sanitizeHar(
         _har(
           {'status': 'ok'},
           url: 'https://a1b2c3d4e5f60718293a4b5c6d7e8f90.instagram.com/api/v1/x/',
         ),
       );
-      expect(o.ok, isFalse);
-      expect(o.files, isEmpty);
+      expect(o.ok, isTrue);
+      expect(o.files.values.join(), isNot(contains('a1b2c3d4')));
+      expect(o.files.values.join(), contains('<label>.instagram.com'));
     });
   });
 }

@@ -316,37 +316,48 @@ void main() {
   });
 
   group('fails closed', () {
-    // Strings, keys, MIME types and methods are default-deny. The request
-    // host is copied as is (it must be an instagram.com host), so a token
-    // hidden in a sub-domain proves the final scan still blocks all output.
-    final leaky = jsonEncode(
-      _har([
-        _entry(
-          'https://a1b2c3d4e5f60718293a4b5c6d7e8f90.instagram.com/api/v1/x/',
-          {'a': 1},
-        ),
-      ]),
-    );
+    // Every field the sanitizer copies is default-deny, so nothing in a real
+    // HAR reaches the final scan with a secret. The scan is therefore tested
+    // directly with planted output text (and through the CLI by injecting a
+    // sanitizer that returns such text).
+    const planted = '{"a": "a1b2c3d4e5f60718293a4b5c6d7e8f90"}';
+    Map<String, String> files() => {
+      'summary.json': '{}',
+      'bodies/001_x.json': planted,
+    };
 
-    test('a token hidden in prose blocks all output', () {
-      final out = sanitizeHar(leaky);
+    test('a token in any output file blocks all output', () {
+      final out = finalizeOutputs(files());
       expect(out.ok, isFalse);
       expect(out.files, isEmpty);
-      expect(out.leaks, isNotEmpty);
-      expect(out.leaks.join(), contains('long hex/base64 token'));
+      expect(out.leaks, ['bodies/001_x.json: long hex/base64 token']);
       expect(out.leaks.join(), isNot(contains('a1b2c3d4')));
+    });
+
+    test('clean output passes the final scan unchanged', () {
+      final out = finalizeOutputs({'summary.json': '{"a": "<str:3>"}'});
+      expect(out.ok, isTrue);
+      expect(out.files, hasLength(1));
     });
 
     test('CLI exits 1 and writes nothing', () async {
       final tmp = Directory.systemTemp.createTempSync('har_test_');
       addTearDown(() => tmp.deleteSync(recursive: true));
-      final input = File('${tmp.path}/in.har')..writeAsStringSync(leaky);
+      final input = File('${tmp.path}/in.har')
+        ..writeAsStringSync(
+          jsonEncode(
+            _har([
+              _entry('https://www.instagram.com/api/v1/x/', {'a': 1}),
+            ]),
+          ),
+        );
       final outDir = '${tmp.path}/out';
       final err = StringBuffer();
       final code = await run(
         [input.path, outDir],
         out: StringBuffer(),
         err: err,
+        sanitizer: (text, {keepKeys = const {}}) => finalizeOutputs(files()),
       );
       expect(code, 1);
       expect(Directory(outDir).existsSync(), isFalse);

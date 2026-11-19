@@ -56,6 +56,12 @@ const Set<String> _failureValues = {
   'consent_required',
   'rate_limited',
   'generic_request_error',
+  'user_has_logged_out',
+  'sentry_block',
+  'rate_limit_error',
+  'unauthorized',
+  'Not authorized to view user',
+  'Invalid parameters',
   'Please wait a few minutes before you try again.',
 };
 
@@ -80,6 +86,7 @@ const Set<String> _allowedKeys = {
   'story_link_stickers', 'code', 'product_type', 'carousel_media', 'caption',
   'text', 'width', 'height', 'url', 'count', 'more_available', 'next_max_id',
   'num_results', 'status', 'message', 'error_type', 'require_login', 'spam',
+  'checkpoint_url', 'challenge', 'error_title', 'profile_pic_url_hd',
   // synthetic.har
   'biography', 'dimensions', 'edge_media_to_caption',
   'edge_owner_to_timeline_media', 'edges', 'external_url', 'has_audio',
@@ -571,6 +578,9 @@ String? _urlPlaceholder(String s) {
     'fbsbx.com',
   ];
   if (!known.any((k) => host == k || host.endsWith('.$k'))) host = 'external';
+  if (host == 'instagram.com' || host.endsWith('.instagram.com')) {
+    host = _safeHost(host);
+  }
   final segs = m[2]!.split('/').where((p) => p.isNotEmpty).toList();
   final ext = segs.isEmpty
       ? ''
@@ -1168,6 +1178,30 @@ bool _isKnownMime(String v) {
   return true;
 }
 
+/// Sub-domain labels of instagram.com that are kept (QA-25). Any other label
+/// could carry a name, so it becomes `<label>`. The fixtures and the
+/// extraction spec only need `www` and `i`; the rest are known Instagram hosts.
+const Set<String> _knownHostLabels = {
+  'www',
+  'i',
+  'graph',
+  'l',
+  'edge-chat',
+  'b',
+  'help',
+  'about',
+};
+
+/// Host for summary.json / report.md: instagram.com hosts with only known
+/// labels, everything else `<label>`.
+String _safeHost(String host) {
+  final h = host.toLowerCase();
+  if (h == 'instagram.com') return h;
+  if (!h.endsWith('.instagram.com')) return '<host>';
+  final labels = h.substring(0, h.length - '.instagram.com'.length).split('.');
+  return '${labels.map((l) => _knownHostLabels.contains(l) ? l : '<label>').join('.')}.instagram.com';
+}
+
 const Set<String> _knownMethods = {
   'GET',
   'POST',
@@ -1312,7 +1346,7 @@ SanitizeOutcome sanitizeHar(String harText, {Set<String> keepKeys = const {}}) {
     final row = <String, Object?>{
       'n': n,
       'method': _knownMethods.contains(method) ? method : '<str>',
-      'host': s.uri.host,
+      'host': _safeHost(s.uri.host),
       'path': cleanPath,
       'query': _describeQuery(c, query),
       if (post != null) 'postData': _describePost(post),
@@ -1509,7 +1543,13 @@ SanitizeOutcome sanitizeHar(String harText, {Set<String> keepKeys = const {}}) {
   }
   files['report.md'] = b.toString();
 
-  // Final scan of every output file (fail closed).
+  return finalizeOutputs(files);
+}
+
+/// Final scan of every output file (fail closed): if anything looks like a
+/// secret, returns no files and the findings (kinds only). Public so tests can
+/// feed it planted text directly.
+SanitizeOutcome finalizeOutputs(Map<String, String> files) {
   final leaks = <String>[];
   files.forEach((name, text) {
     for (final kind in findLeaks(text)) {
@@ -1567,6 +1607,8 @@ Future<int> run(
   required StringSink out,
   required StringSink err,
   String? defaultKeepKeysPath,
+  SanitizeOutcome Function(String harText, {Set<String> keepKeys}) sanitizer =
+      sanitizeHar,
 }) async {
   final help = args.contains('--help') || args.contains('-h');
   final positional = <String>[];
@@ -1622,7 +1664,7 @@ Future<int> run(
   }
   final SanitizeOutcome outcome;
   try {
-    outcome = sanitizeHar(input.readAsStringSync(), keepKeys: keep);
+    outcome = sanitizer(input.readAsStringSync(), keepKeys: keep);
   } on FormatException catch (e) {
     err.writeln('Could not read the HAR: ${e.message}');
     return 2;
