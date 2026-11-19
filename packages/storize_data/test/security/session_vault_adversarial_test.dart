@@ -335,18 +335,30 @@ void main() {
     });
     test(
       'capturedAt beyond DateTime range must not make load throw',
-      skip: 'QA finding F1 (T-008): load throws RangeError; remove skip on fix',
       () async {
-        backend.data['storize.session.1'] = _env(1, at: 9000000000000000000);
-        Object? thrown;
-        SessionBlob? r;
-        try {
-          r = await store.load(1);
-        } on Object catch (e) {
-          thrown = e;
+        for (final at in [
+          9000000000000000000,
+          8640000000000001,
+          -1,
+          -9000000000000000000,
+        ]) {
+          reports.clear();
+          backend.data['storize.session.1'] = _env(1, at: at);
+          Object? thrown;
+          SessionBlob? r;
+          try {
+            r = await store.load(1);
+          } on Object catch (e) {
+            thrown = e;
+          }
+          expect(thrown, isNull, reason: 'load threw for $at: $thrown');
+          expect(r, isNull);
+          expect(reports, [(1, 'invalid_shape')]);
         }
-        expect(thrown, isNull, reason: 'load threw: $thrown');
-        expect(r, isNull);
+        backend.data['storize.session.1'] = _env(1, at: 8640000000000000);
+        expect(await store.load(1), isNotNull);
+        backend.data['storize.session.1'] = _env(1, at: 0);
+        expect(await store.load(1), isNotNull);
       },
     );
     test('key naming is per account, no collisions 1 vs 11', () async {
@@ -436,7 +448,7 @@ void main() {
       }
     });
 
-    test('DIVERGENCE: real store rejects missing required cookies on save, fake accepts', () async {
+    test('both stores reject missing required cookies on save', () async {
       final bad = SessionBlob(
         cookies: {'csrftoken': _s3},
         userAgent: 'x',
@@ -444,8 +456,14 @@ void main() {
       );
       await expectLater(store.save(1, bad), throwsArgumentError);
       final fake = FakeSessionStore();
-      await fake.save(1, bad); // does not throw: documented divergence
-      expect(await fake.load(1), bad);
+      await expectLater(fake.save(1, bad), throwsArgumentError);
+      expect(await fake.load(1), isNull);
+      try {
+        await fake.save(1, bad);
+      } on ArgumentError catch (e) {
+        expect(e.toString(), contains('sessionid'));
+        expect(e.toString(), isNot(contains(_s3)));
+      }
     });
 
     test(

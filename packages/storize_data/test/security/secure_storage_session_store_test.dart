@@ -472,6 +472,14 @@ void main() {
           expect(await s.load(1), isNull);
         });
 
+        test('save rejects missing required cookies', () async {
+          await expectLater(
+            s.save(1, _blob(cookies: {'csrftoken': _fakeCsrf})),
+            throwsArgumentError,
+          );
+          expect(await s.load(1), isNull);
+        });
+
         test('millisecond UTC capturedAt survives', () async {
           final at = DateTime.utc(2026, 1, 2, 3, 4, 5, 678);
           await s.save(1, _blob(capturedAt: at));

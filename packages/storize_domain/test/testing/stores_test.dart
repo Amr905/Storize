@@ -194,7 +194,7 @@ void main() {
     test('save, load, overwrite and clear', () async {
       final store = FakeSessionStore();
       final blob = SessionBlob(
-        cookies: {'sessionid': 'x'},
+        cookies: {'sessionid': 'x', 'ds_user_id': 'y'},
         userAgent: 'ua',
         capturedAt: t0,
       );
@@ -202,7 +202,11 @@ void main() {
       await store.save(1, blob);
       expect(await store.load(1), blob);
       expect(await store.load(2), isNull);
-      final other = SessionBlob(cookies: {}, userAgent: 'u2', capturedAt: t0);
+      final other = SessionBlob(
+        cookies: {'sessionid': 'x2', 'ds_user_id': 'y2'},
+        userAgent: 'u2',
+        capturedAt: t0,
+      );
       await store.save(1, other);
       expect(await store.load(1), other);
       await store.clear(1);
@@ -210,6 +214,36 @@ void main() {
       expect(await store.load(1), isNull);
       expect(store.accountIds, isEmpty);
     });
+
+    test(
+      'save rejects missing or empty required cookies, names only',
+      () async {
+        final store = FakeSessionStore();
+        for (final cookies in [
+          <String, String>{'ds_user_id': 'SECRETVAL'},
+          {'sessionid': 'SECRETVAL', 'ds_user_id': ''},
+          {'csrftoken': 'SECRETVAL'},
+        ]) {
+          final blob = SessionBlob(
+            cookies: cookies,
+            userAgent: 'ua',
+            capturedAt: t0,
+          );
+          await expectLater(
+            store.save(1, blob),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.toString(),
+                'message',
+                isNot(contains('SECRETVAL')),
+              ),
+            ),
+          );
+        }
+        expect(store.accountIds, isEmpty);
+        expect(SessionStore.requiredCookies, ['sessionid', 'ds_user_id']);
+      },
+    );
   });
 
   group('FakeScheduler', () {

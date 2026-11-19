@@ -92,13 +92,16 @@ final class SecureStorageSessionStore implements SessionStore {
   static FlutterSecureStorage defaultStorage() => const FlutterSecureStorage();
 
   /// The cookies that a session must contain (TECH_SPEC §5.1).
-  static const List<String> requiredCookies = ['sessionid', 'ds_user_id'];
+  static const List<String> requiredCookies = SessionStore.requiredCookies;
 
   /// The current envelope version.
   static const int envelopeVersion = 1;
 
   /// The storage key for [accountId]: `storize.session.<accountId>`.
   static String keyFor(int accountId) => 'storize.session.$accountId';
+
+  static const int _maxEpochMs = 8640000000000000;
+  static final DateTime _epoch = DateTime.utc(1970);
 
   final FlutterSecureStorage _storage;
 
@@ -108,9 +111,7 @@ final class SecureStorageSessionStore implements SessionStore {
 
   @override
   Future<void> save(int accountId, SessionBlob session) async {
-    final missing = requiredCookies
-        .where((name) => (session.cookies[name] ?? '').isEmpty)
-        .toList();
+    final missing = SessionStore.missingCookies(session);
     if (missing.isNotEmpty) {
       throw ArgumentError(
         'Session is missing required cookies: ${missing.join(', ')}',
@@ -153,9 +154,12 @@ final class SecureStorageSessionStore implements SessionStore {
     final cookiesRaw = decoded['cookies'];
     final userAgent = decoded['userAgent'];
     final capturedAt = decoded['capturedAt'];
+    // DateTime throws RangeError outside +-8.64e15 ms, and load must not throw.
     if (cookiesRaw is! Map<String, Object?> ||
         userAgent is! String ||
-        capturedAt is! int) {
+        capturedAt is! int ||
+        capturedAt < 0 ||
+        capturedAt > _maxEpochMs) {
       return _unreadable(accountId, SessionUnreadableReason.invalidShape);
     }
     final cookies = <String, String>{};
@@ -166,7 +170,9 @@ final class SecureStorageSessionStore implements SessionStore {
       }
       cookies[entry.key] = value;
     }
-    if (requiredCookies.any((name) => (cookies[name] ?? '').isEmpty)) {
+    if (SessionStore.missingCookies(
+      SessionBlob(cookies: cookies, userAgent: userAgent, capturedAt: _epoch),
+    ).isNotEmpty) {
       return _unreadable(accountId, SessionUnreadableReason.invalidShape);
     }
     return SessionBlob(
