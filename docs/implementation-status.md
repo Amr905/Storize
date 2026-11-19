@@ -38,12 +38,12 @@
 | ID | Title | Complexity | Model | Specialist | Depends on | Status | Attempts | Verified by / evidence |
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
 | T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
-| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | changes_requested (prep: QA FAIL, sanitizer leaks → default-deny redesign) | 3 | — |
+| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | **blocked (UD-2: 2 failed QA rounds on a High task → user decides Sonnet vs Opus)** | 4 | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | in_progress | 1 | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
-| T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | in_progress | 1 | — |
+| T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | in_review | 1 | — |
 | T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | todo | — | — |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | todo | — | — |
@@ -86,6 +86,7 @@
 ## Pending user decisions
 | ID | Decision | Options | Blocks |
 |----|----------|---------|--------|
+| UD-2 | T-002 sanitizer failed QA twice (round 1 value leaks → fixed; round 3: username-like object KEYS leak, QA-10; doc_id not shape-checked, QA-11) | continue on Sonnet with the precise fix spec (Lead rec.) · switch T-002 to Opus | T-002 → T-013/T-014 (critical path) |
 | UD-1 | Light `primary` #D9481F fails WCAG AA (4.29:1 white-on, 4.05:1 as text) | keep · #C93F17 (rec.) · #C2410C · #BF3D16 | follow-up T-024a (token + UX.md + goldens) |
 
 ## Checkpoints
@@ -114,3 +115,5 @@
 - 2026-11-19 07:15 — T-004 QA PASS (107 tests), CI green → **T-004 done**, merged. T-002 prep QA **FAIL** (sanitizer leaks: URL-encoded/nested-JSON session ids, usernames in paths, PII fields) → round 3 default-deny redesign.
 - 2026-11-19 07:25 — Lead added wave-3 dependencies centrally (drift 2.35, drift_flutter, shared_preferences, path_provider, flutter_secure_storage 11.2, logging, flutter_riverpod 3.5, go_router 18.1, flutter_localizations, intl) — CI green incl. APK.
 - 2026-11-19 07:30 — Wave 3: T-005 (sonnet), T-007 (haiku), T-025 (sonnet).
+- 2026-11-19 08:05 — T-007: developer stopped correctly at a lint needing a dev-dependency (out of lock); Lead added `shared_preferences_platform_interface` (dev) → analyze clean, 20 tests → QA started.
+- 2026-11-19 08:10 — T-002 prep round 3 re-verification: **FAIL** (QA-10 blocker: username-like object keys survive; QA-11 medium: doc_id/query_hash shape). Second failed QA round on a High task → per protocol, **stopped and asked the user (UD-2)**.
