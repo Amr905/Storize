@@ -26,6 +26,7 @@ class StorizePlatformPlugin : FlutterPlugin {
 
         val media = MediaStoreOps(context)
         val thumbnails = ThumbnailOps(context)
+        val storage = StorageStatsOps()
         val battery = BatteryOps(context)
         val exits = ExitReasonOps(context)
 
@@ -45,6 +46,7 @@ class StorizePlatformPlugin : FlutterPlugin {
                         "delete" -> background(result) { media.delete(call.argument<String>("uri")) }
                         "exists" -> background(result) { media.exists(call.argument<String>("uri")) }
                         "size" -> background(result) { media.size(call.argument<String>("uri")) }
+                        "storageStats" -> background(result) { storage.storageStats() }
                         "videoThumbnail" ->
                             background(result) {
                                 thumbnails.videoThumbnail(

@@ -1,5 +1,8 @@
 /// Reports the free and total space of the device storage that holds the
 /// gallery.
+///
+/// Implementations may throw when the platform cannot answer. Callers treat
+/// that as "unknown" and do not stop downloads because of it.
 abstract interface class StorageInfo {
   /// Bytes currently free on the gallery volume.
   Future<int> freeBytes();

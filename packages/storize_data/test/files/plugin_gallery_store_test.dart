@@ -225,4 +225,53 @@ void main() {
       );
     });
   });
+
+  group('wrong-typed native answers (F-4)', () {
+    void answer(Object? value) => TestDefaultBinaryMessengerBinding
+        .instance
+        .defaultBinaryMessenger
+        .setMockMethodCallHandler(native.channel, (_) async => value);
+
+    Matcher badResponse() => throwsA(
+      isA<GalleryWriteFailed>().having((e) => e.code, 'code', 'BAD_RESPONSE'),
+    );
+
+    test('save maps a TypeError to GalleryWriteFailed(BAD_RESPONSE)', () {
+      answer('junk');
+      expect(save(), badResponse());
+    });
+
+    test('delete, exists and size map it too', () {
+      answer('junk');
+      expect(
+        store.delete('content://media/external/images/media/1'),
+        badResponse(),
+      );
+      expect(
+        store.exists('content://media/external/images/media/1'),
+        badResponse(),
+      );
+      expect(
+        store.size('content://media/external/images/media/1'),
+        badResponse(),
+      );
+    });
+  });
+
+  group('exists/size error set (F-4)', () {
+    for (final method in ['exists', 'size']) {
+      Future<Object?> call() => method == 'exists'
+          ? store.exists('content://media/external/images/media/1')
+          : store.size('content://media/external/images/media/1');
+
+      test('$method surfaces PERMISSION_DENIED and STORAGE_FULL', () async {
+        native.failNext = PlatformException(code: 'PERMISSION_DENIED');
+        await expectLater(call(), throwsA(isA<GalleryPermissionDenied>()));
+        native.failNext = PlatformException(code: 'STORAGE_FULL');
+        await expectLater(call(), throwsA(isA<GalleryStorageFull>()));
+        native.failNext = PlatformException(code: 'IO_ERROR');
+        await expectLater(call(), throwsA(isA<GalleryWriteFailed>()));
+      });
+    }
+  });
 }
