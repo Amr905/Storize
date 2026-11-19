@@ -13,19 +13,8 @@ void main() {
     expect(storizeMediaChannel.name, 'storize/media');
   });
 
-  test('placeholder channel reports notImplemented', () async {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          storizeMediaChannel,
-          (call) async => throw MissingPluginException(),
-        );
-    addTearDown(
-      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(storizeMediaChannel, null),
-    );
-    await expectLater(
-      storizeMediaChannel.invokeMethod<void>('anything'),
-      throwsA(isA<MissingPluginException>()),
-    );
+  test('media channel is a method channel with the standard codec', () {
+    expect(storizeMediaChannel.codec, isA<StandardMethodCodec>());
+    expect(storizeMediaChannelName, 'storize/media');
   });
 }
