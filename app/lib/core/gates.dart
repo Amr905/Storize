@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 
 /// Whether first-run onboarding (S-01 to S-03) is finished.
 ///
@@ -11,5 +12,8 @@ final onboardingCompleteProvider = Provider<bool>((ref) => true);
 
 /// Whether the app is locked and must show S-14.
 ///
-/// Defaults to false. T-034 provides the real value.
-final appLockedProvider = Provider<bool>((ref) => false);
+/// Driven by `lockControllerProvider` (T-034). It is false until `main`
+/// wires the app lock (`appLockWiredProvider`).
+final appLockedProvider = Provider<bool>(
+  (ref) => ref.watch(lockControllerProvider.select((s) => s.locked)),
+);
