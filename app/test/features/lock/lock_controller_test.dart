@@ -22,8 +22,10 @@ void main() {
   LockController ctl(ProviderContainer c) =>
       c.read(lockControllerProvider.notifier);
 
-  test('unwired app is never locked (other screens need no fakes)', () {
-    final c = ProviderContainer();
+  test('the test opt-out is the only way to an unlocked, unwired app', () {
+    final c = ProviderContainer(
+      overrides: [appLockTestBypassProvider.overrideWithValue(true)],
+    );
     addTearDown(c.dispose);
     expect(c.read(appLockedProvider), isFalse);
   });

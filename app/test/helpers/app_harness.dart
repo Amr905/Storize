@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/app.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
@@ -75,6 +76,7 @@ Future<AppHarness> pumpApp(
   String? initialLocation,
   TextDirection? textDirection,
   FakeAccountRepo? accounts,
+  bool bypassLock = true,
 }) async {
   final repo = accounts ?? FakeAccountRepo();
   await tester.pumpWidget(
@@ -83,6 +85,9 @@ Future<AppHarness> pumpApp(
       overrides: [
         accountRepoProvider.overrideWithValue(repo),
         initialLocationProvider.overrideWithValue(initialLocation),
+        // The lock is fail-closed; other screens' tests opt out here. Lock
+        // tests pass bypassLock: false.
+        if (bypassLock) appLockTestBypassProvider.overrideWithValue(true),
         ...overrides,
       ],
     ),

@@ -2,6 +2,24 @@ import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_data/security/pin_vault.dart';
 import 'package:storize_domain/storize_domain.dart';
 
+/// Why the lock cannot be used right now, if it cannot.
+enum LockProblem {
+  /// Nothing is wrong.
+  none,
+
+  /// Secure storage could not be read. Stay locked and offer a retry. Never
+  /// offer a new PIN: the saved PIN may be fine.
+  unreadable,
+
+  /// The lock was set up (the setting is on) but its data is gone: secure
+  /// storage was wiped (T-008 N-1). The only case that offers a new PIN.
+  resetRequired,
+
+  /// A biometric-only lock whose sensor is not usable right now. Stay locked
+  /// and offer a retry. Never offer a new PIN.
+  biometricUnavailable,
+}
+
 /// Which ways of unlocking work right now.
 final class LockMethods {
   /// Creates the value.
@@ -10,7 +28,17 @@ final class LockMethods {
     required this.pinLength,
     required this.biometricAvailable,
     this.cooldown,
+    this.problem = LockProblem.none,
   });
+
+  /// Secure storage could not be read.
+  const LockMethods.unreadable()
+    : this(
+        hasPin: false,
+        pinLength: null,
+        biometricAvailable: false,
+        problem: LockProblem.unreadable,
+      );
 
   /// A usable PIN is stored.
   final bool hasPin;
@@ -24,10 +52,12 @@ final class LockMethods {
   /// Running PIN cooldown, if any.
   final Duration? cooldown;
 
-  /// The lock is on but nothing can unlock it: the saved PIN is gone (for
-  /// example a secure-storage reset, T-008 N-1) and no biometric works. The
-  /// UI must force a new PIN. It must never unlock on its own.
-  bool get resetRequired => !hasPin && !biometricAvailable;
+  /// What is wrong, if anything.
+  final LockProblem problem;
+
+  /// The lock's data was wiped: the UI forces a new PIN. It must never
+  /// unlock on its own.
+  bool get resetRequired => problem == LockProblem.resetRequired;
 }
 
 /// App-lock operations over the PIN store, the biometric prompt and the
@@ -52,15 +82,36 @@ final class AppLockService {
   /// Whether the user turned the app lock on.
   Future<bool> isEnabled() async => (await settings.get()).appLockEnabled;
 
-  /// The unlock methods that work now.
+  /// The unlock methods that work now, and what is wrong if none does.
+  ///
+  /// A new PIN is offered (`resetRequired`) only when nothing of the lock
+  /// survives: no usable PIN and no method marker, or a PIN marker whose
+  /// hash is gone. A storage read error or a biometric sensor that is
+  /// unavailable for the moment never counts as a reset.
   Future<LockMethods> methods() async {
-    final hasPin = await pins.hasPin();
-    return LockMethods(
-      hasPin: hasPin,
-      pinLength: hasPin ? await pins.pinLength() : null,
-      biometricAvailable: await biometric.isAvailable(),
-      cooldown: hasPin ? await pins.cooldownRemaining() : null,
-    );
+    try {
+      final hasPin = await pins.hasPin();
+      final marker = await pins.method();
+      final biometricOk = await biometric.isAvailable();
+      var problem = LockProblem.none;
+      if (!hasPin) {
+        if (marker == LockMethod.biometric) {
+          if (!biometricOk) problem = LockProblem.biometricUnavailable;
+        } else {
+          // Marker missing (wipe) or marker "pin" with no hash left.
+          problem = LockProblem.resetRequired;
+        }
+      }
+      return LockMethods(
+        hasPin: hasPin,
+        pinLength: hasPin ? await pins.pinLength() : null,
+        biometricAvailable: biometricOk,
+        cooldown: hasPin ? await pins.cooldownRemaining() : null,
+        problem: problem,
+      );
+    } on PinStorageException {
+      return const LockMethods.unreadable();
+    }
   }
 
   /// Whether a strong biometric can be used now.
@@ -86,6 +137,7 @@ final class AppLockService {
   /// fingerprint. Any old PIN is removed so the state is unambiguous.
   Future<void> enableWithBiometric() async {
     await pins.clear();
+    await pins.markBiometric();
     await _setEnabled(enabled: true);
   }
 

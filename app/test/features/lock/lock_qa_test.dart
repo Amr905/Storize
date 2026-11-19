@@ -13,6 +13,7 @@ import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
+import 'package:storize_data/security/pin_vault.dart';
 
 import '../../helpers/app_harness.dart';
 import 'lock_fakes.dart';
@@ -82,9 +83,8 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
-  group('QA fail-open default and unwired providers (F-1)', () {
-    test('KNOWN RISK: lock enabled in settings but main did not wire it: '
-        'the app is open', () async {
+  group('QA fail-closed default and unwired providers (F-1)', () {
+    test('lock enabled in settings but nothing opted out: locked', () async {
       final f = LockFixture(pin: '1234');
       final c = ProviderContainer(
         overrides: [
@@ -92,21 +92,18 @@ void main() {
           pinStoreProvider.overrideWithValue(f.pins),
           biometricAuthProvider.overrideWithValue(f.bio),
           clockProvider.overrideWithValue(f.clock),
-          // appLockWiredProvider deliberately NOT overridden.
         ],
       );
       addTearDown(c.dispose);
       c.listen(lockControllerProvider, (_, _) {});
       await settle();
       expect((await f.settings.get()).appLockEnabled, isTrue);
-      expect(c.read(appLockedProvider), isFalse);
+      expect(c.read(appLockedProvider), isTrue);
     });
 
-    test('wired but every other provider unwired: locked (failed), '
-        'no crash, unlock() is a no-op', () async {
-      final c = ProviderContainer(
-        overrides: [appLockWiredProvider.overrideWithValue(true)],
-      );
+    test('every provider unwired: locked (failed), no crash, unlock() is a '
+        'no-op', () async {
+      final c = ProviderContainer();
       addTearDown(c.dispose);
       c.listen(lockControllerProvider, (_, _) {});
       await settle();
@@ -116,13 +113,10 @@ void main() {
       expect(c.read(appLockedProvider), isTrue);
     });
 
-    test('wired, settings fine, PIN store unwired: locked, no crash', () async {
+    test('settings fine, PIN store unwired: locked, no crash', () async {
       final f = LockFixture(pin: '1234');
       final c = ProviderContainer(
-        overrides: [
-          appLockWiredProvider.overrideWithValue(true),
-          settingsRepoProvider.overrideWithValue(f.settings),
-        ],
+        overrides: [settingsRepoProvider.overrideWithValue(f.settings)],
       );
       addTearDown(c.dispose);
       c.listen(lockControllerProvider, (_, _) {});
@@ -130,12 +124,10 @@ void main() {
       expect(c.read(appLockedProvider), isTrue);
     });
 
-    test('wired but clock unwired: a background event throws '
-        '(loud, but never unlocks)', () async {
+    test('clock unwired: a background event locks and never throws', () async {
       final f = LockFixture(pin: '1234');
       final c = ProviderContainer(
         overrides: [
-          appLockWiredProvider.overrideWithValue(true),
           settingsRepoProvider.overrideWithValue(f.settings),
           pinStoreProvider.overrideWithValue(f.pins),
           biometricAuthProvider.overrideWithValue(f.bio),
@@ -144,13 +136,18 @@ void main() {
       addTearDown(c.dispose);
       c.listen(lockControllerProvider, (_, _) {});
       await settle();
-      expect(
-        () => c
-            .read(lockControllerProvider.notifier)
-            .onLifecycle(AppLifecycleState.hidden),
-        throwsA(anything), // Riverpod wraps the UnimplementedError
-      );
+      final n = c.read(lockControllerProvider.notifier)..unlock();
+      expect(c.read(appLockedProvider), isFalse);
+      n.onLifecycle(AppLifecycleState.hidden);
       expect(c.read(appLockedProvider), isTrue);
+    });
+
+    test('only the explicit test opt-out unlocks the app', () {
+      final c = ProviderContainer(
+        overrides: [appLockTestBypassProvider.overrideWithValue(true)],
+      );
+      addTearDown(c.dispose);
+      expect(c.read(appLockedProvider), isFalse);
     });
   });
 
@@ -263,7 +260,7 @@ void main() {
     testWidgets('pages pushed before the re-lock are dropped; the lock '
         'screen shows no app content', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await _enter(t, '1234');
       await t.pumpAndSettle();
       await h.go('/targets/3');
@@ -282,7 +279,7 @@ void main() {
     testWidgets('a plain Navigator route (e.g. the S-12 PIN confirmation) '
         'does not survive the re-lock', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await _enter(t, '1234');
       await t.pumpAndSettle();
       expect(h.location, '/library');
@@ -313,7 +310,7 @@ void main() {
         ..devicePixelRatio = 1;
       addTearDown(t.view.reset);
       final f = LockFixture(pin: '1234');
-      await pumpApp(t, overrides: f.overrides);
+      await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await _enter(t, '1234');
       await t.pumpAndSettle();
       // The S-12 row pushes ConfirmIdentityPage on the root navigator.
@@ -341,7 +338,7 @@ void main() {
       t,
     ) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await h.go('storize://story/77');
       final texts = t
           .widgetList<Text>(find.byType(Text))
@@ -363,7 +360,7 @@ void main() {
     testWidgets('redirect fuzz while locked: always settles on /lock, '
         'never throws', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       for (final loc in [
         '/lock',
         '/lock?from=/lock',
@@ -414,6 +411,7 @@ void main() {
         final f = LockFixture(pin: '1234');
         final h = await pumpApp(
           t,
+          bypassLock: false,
           overrides: f.overrides,
           initialLocation: Uri(
             path: '/lock',
@@ -433,6 +431,7 @@ void main() {
       final f = LockFixture(pin: '1234');
       final h = await pumpApp(
         t,
+        bypassLock: false,
         overrides: [
           ...f.overrides,
           onboardingCompleteProvider.overrideWithValue(false),
@@ -512,27 +511,70 @@ void main() {
   });
 
   group('QA reset state (F-3)', () {
-    testWidgets('KNOWN RISK: a biometric-only lock whose sensor reports '
-        '"unavailable" offers a new PIN, and that unlocks', (t) async {
+    testWidgets('biometric-only lock, sensor unavailable: stays locked with a '
+        'retry and never offers a new PIN', (t) async {
       tall(t);
-      // Biometric-only lock: no PIN stored. The sensor is (temporarily or
-      // not) not available at cold start.
-      final f = LockFixture();
-      final h = await pumpApp(t, overrides: f.overrides);
+      final f = LockFixture(marker: LockMethod.biometric);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
+      expect(find.text('App lock was reset'), findsNothing);
+      expect(find.text('Create a PIN'), findsNothing);
+      expect(
+        find.text('Fingerprint is not available right now. Try again.'),
+        findsOneWidget,
+      );
+      expect(h.location.startsWith('/lock'), isTrue);
+      // The sensor comes back: Retry prompts and unlocks.
+      f.bio.available = true;
+      await t.tap(find.text('Retry'));
+      await t.pumpAndSettle();
+      expect(h.location, '/library');
+    });
+
+    testWidgets('a secure-storage read error stays locked with a retry and '
+        'keeps the saved PIN', (t) async {
+      tall(t);
+      final f = LockFixture(pin: '1234');
+      f.pins.unreadable = true;
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
+      expect(
+        find.text("Couldn't read the saved lock. Try again."),
+        findsOneWidget,
+      );
+      expect(find.text('Create a PIN'), findsNothing);
+      expect(find.text('App lock was reset'), findsNothing);
+      f.pins.unreadable = false;
+      await t.tap(find.text('Retry'));
+      await t.pumpAndSettle();
+      expect(find.text('Storize is locked'), findsOneWidget);
+      expect(f.pins.storedPin, '1234');
+      expect(h.location.startsWith('/lock'), isTrue);
+    });
+
+    testWidgets('a real wipe (setting on, marker and PIN gone) offers a new '
+        'PIN', (t) async {
+      tall(t);
+      final f = LockFixture(marker: LockMethod.pin);
+      f.pins.wipe();
+      await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(find.text('App lock was reset'), findsOneWidget);
-      await _enter(t, '2468');
-      await t.tap(find.text('Continue'));
-      await t.pumpAndSettle();
-      await _enter(t, '2468');
-      await t.tap(find.text('Save PIN'));
-      await t.pumpAndSettle();
-      expect(h.location, '/library', reason: 'unlocked without any proof');
+    });
+
+    testWidgets('a wipe with a working sensor does not unlock by biometric', (
+      t,
+    ) async {
+      tall(t);
+      final f = LockFixture(biometric: true);
+      f.pins.wipe();
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
+      expect(f.bio.prompts, 0);
+      expect(find.text('App lock was reset'), findsOneWidget);
+      expect(h.location.startsWith('/lock'), isTrue);
     });
 
     testWidgets('reset state never unlocks by itself, not even after '
         'resume cycles', (t) async {
       final f = LockFixture();
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       _background(t);
       f.clock.advance(const Duration(minutes: 5));
       _foreground(t);

@@ -616,6 +616,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm to turn off app lock'**
   String get appLockDisableReason;
+
+  /// S-14 message when secure storage cannot be read. No new PIN is offered.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the saved lock. Try again.'**
+  String get lockStorageUnreadable;
+
+  /// S-14 message for a fingerprint-only lock whose sensor is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint is not available right now. Try again.'**
+  String get lockBiometricUnavailable;
 }
 
 class _AppLocalizationsDelegate

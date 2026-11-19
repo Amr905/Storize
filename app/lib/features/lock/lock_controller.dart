@@ -11,10 +11,13 @@ Never _unwired(String name) => throw UnimplementedError(
   '$name is not wired yet. Override it in main() or in the test.',
 );
 
-/// Whether `main` has wired the app lock (settings, clock, PIN store and
-/// biometrics). While false the app is never locked, so tests of other
-/// screens need no lock fakes. **`main` must override it with true.**
-final appLockWiredProvider = Provider<bool>((ref) => false);
+/// Test-only opt-out of the lock. Production never overrides it, so the
+/// lock is fail-closed: until the settings, PIN store and biometric
+/// providers are wired and the "lock on" setting is read, the app stays
+/// locked (the lock screen shows a retry when a dependency is missing).
+/// Tests of other screens override it with true through
+/// `test/helpers/app_harness.dart`.
+final appLockTestBypassProvider = Provider<bool>((ref) => false);
 
 /// The PIN store ([PinVault] in production).
 final pinStoreProvider = Provider<PinStore>(
@@ -96,7 +99,7 @@ class LockController extends Notifier<LockState> {
 
   @override
   LockState build() {
-    if (!ref.watch(appLockWiredProvider)) return const LockState.off();
+    if (ref.watch(appLockTestBypassProvider)) return const LockState.off();
     final listener = AppLifecycleListener(onStateChange: onLifecycle);
     ref.onDispose(listener.dispose);
     unawaited(Future.microtask(refresh));
@@ -125,18 +128,41 @@ class LockController extends Notifier<LockState> {
     }
   }
 
+  // An unwired clock must not throw into the framework: the lock stays
+  // closed instead.
+  DateTime? _now() {
+    try {
+      return ref.read(clockProvider).now();
+    } on Object {
+      return null;
+    }
+  }
+
   /// App lifecycle input (public for tests).
   void onLifecycle(AppLifecycleState value) {
     switch (value) {
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
         // Keep the first timestamp: hidden comes before paused.
-        _backgroundedAt ??= ref.read(clockProvider).now();
+        final at = _now();
+        if (at == null) {
+          // No clock: cannot time the absence, so lock at once.
+          if (state.enabled) {
+            state = const LockState(LockPhase.locked, enabled: true);
+          }
+        } else {
+          _backgroundedAt ??= at;
+        }
       case AppLifecycleState.resumed:
         final since = _backgroundedAt;
         _backgroundedAt = null;
         if (since == null || !state.enabled || state.locked) return;
-        final away = ref.read(clockProvider).now().difference(since);
+        final now = _now();
+        if (now == null) {
+          state = const LockState(LockPhase.locked, enabled: true);
+          return;
+        }
+        final away = now.difference(since);
         if (away.isNegative || away >= relockAfter) {
           state = const LockState(LockPhase.locked, enabled: true);
         }

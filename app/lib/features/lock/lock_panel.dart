@@ -79,7 +79,9 @@ class _LockPanelState extends ConsumerState<LockPanel> {
       _digits = '';
     });
     _startCooldown(methods.cooldown);
-    if (methods.biometricAvailable && !_autoPrompted) {
+    if (methods.problem == LockProblem.none &&
+        methods.biometricAvailable &&
+        !_autoPrompted) {
       _autoPrompted = true;
       unawaited(_promptBiometric());
     }
@@ -161,6 +163,7 @@ class _LockPanelState extends ConsumerState<LockPanel> {
         setState(() => _digits = '');
         _startCooldown(remaining);
       case PinNotSet():
+      case PinUnreadable():
         await _load();
     }
   }
@@ -185,6 +188,18 @@ class _LockPanelState extends ConsumerState<LockPanel> {
       );
     }
     if (methods == null) return const SizedBox.shrink();
+    if (methods.problem == LockProblem.unreadable ||
+        methods.problem == LockProblem.biometricUnavailable) {
+      return _Message(
+        text: methods.problem == LockProblem.unreadable
+            ? l10n.lockStorageUnreadable
+            : l10n.lockBiometricUnavailable,
+        action: PrimaryButton(
+          label: l10n.retry,
+          onPressed: () => unawaited(_load()),
+        ),
+      );
+    }
     if (methods.resetRequired) {
       return Column(
         mainAxisSize: MainAxisSize.min,

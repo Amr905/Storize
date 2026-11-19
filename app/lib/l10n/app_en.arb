@@ -284,5 +284,13 @@
   "appLockDisableReason": "Confirm to turn off app lock",
   "@appLockDisableReason": {
     "description": "Reason shown in the fingerprint prompt when turning the lock off."
+  },
+  "lockStorageUnreadable": "Couldn't read the saved lock. Try again.",
+  "@lockStorageUnreadable": {
+    "description": "S-14 message when secure storage cannot be read. No new PIN is offered."
+  },
+  "lockBiometricUnavailable": "Fingerprint is not available right now. Try again.",
+  "@lockBiometricUnavailable": {
+    "description": "S-14 message for a fingerprint-only lock whose sensor is unavailable."
   }
 }

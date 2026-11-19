@@ -283,4 +283,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockDisableReason => 'Confirm to turn off app lock';
+
+  @override
+  String get lockStorageUnreadable =>
+      'Couldn\'t read the saved lock. Try again.';
+
+  @override
+  String get lockBiometricUnavailable =>
+      'Fingerprint is not available right now. Try again.';
 }

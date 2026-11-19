@@ -135,7 +135,7 @@ void main() {
       'v1:1.5:$_salt:$good',
       'v1:99999999999999999999:$_salt:$good',
       'v1:1000000000:$_salt:$good',
-      'v1:10000001:$_salt:$good',
+      'v1:1000001:$_salt:$good',
       'v1:50:%%%:$good',
       'v1:50:$_salt:%%%',
       'v1:50:$_salt:$good:extra',
@@ -370,10 +370,6 @@ void main() {
 
     test(
       'parallel verify calls are all counted (no lost update)',
-      skip:
-          'QA T-034 F-2: verify() is not serialised; 5 concurrent wrong '
-          'guesses count as 1. The UI has a busy guard, so not reachable '
-          'today. Un-skip when PinVault serialises verify.',
       () async {
         final v = vault();
         await v.setPin('2468');

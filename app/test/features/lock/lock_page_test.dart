@@ -56,7 +56,7 @@ void main() {
   group('cold start', () {
     testWidgets('shows only the lock screen, no app content', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(find.byType(LockPage), findsOneWidget);
       expect(find.text('Storize is locked'), findsOneWidget);
       expect(find.byType(AppShell), findsNothing);
@@ -67,14 +67,14 @@ void main() {
 
     testWidgets('lock off: straight to the Library', (t) async {
       final f = LockFixture(enabled: false);
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(find.byType(LockPage), findsNothing);
       expect(h.location, '/library');
     });
 
     testWidgets('correct PIN unlocks and returns to the Library', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '1234');
       await t.pumpAndSettle();
       expect(h.location, '/library');
@@ -83,7 +83,7 @@ void main() {
 
     testWidgets('a 6-digit PIN needs all six digits', (t) async {
       final f = LockFixture(pin: '135790');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '1357');
       expect(f.pins.verifyCalls, 0);
       await enter(t, '90');
@@ -95,7 +95,7 @@ void main() {
   group('wrong PIN', () {
     testWidgets('shows "Wrong PIN", clears the dots, stays locked', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '9999');
       await t.pump(const Duration(milliseconds: 500));
       expect(find.text('Wrong PIN'), findsOneWidget);
@@ -108,7 +108,7 @@ void main() {
 
     testWidgets('the error clears on the next digit', (t) async {
       final f = LockFixture(pin: '1234');
-      await pumpApp(t, overrides: f.overrides);
+      await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '9999');
       expect(find.text('Wrong PIN'), findsOneWidget);
       await t.tap(find.text('1'));
@@ -164,7 +164,7 @@ void main() {
   group('biometric', () {
     testWidgets('the prompt opens automatically; success unlocks', (t) async {
       final f = LockFixture(pin: '1234', biometric: true);
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(f.bio.prompts, 1);
       expect(f.bio.lastReason, 'Unlock Storize');
       expect(h.location, '/library');
@@ -173,7 +173,7 @@ void main() {
     testWidgets('cancel falls back to the PIN pad and a retry key', (t) async {
       final f = LockFixture(pin: '1234', biometric: true);
       f.bio.succeeds = false;
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(f.bio.prompts, 1);
       expect(h.location.startsWith('/lock'), isTrue);
       expect(find.byIcon(Icons.fingerprint_rounded), findsOneWidget);
@@ -189,7 +189,7 @@ void main() {
     ) async {
       final f = LockFixture(biometric: true);
       f.bio.succeeds = false;
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(find.text('5'), findsNothing);
       expect(find.text('Unlock with fingerprint'), findsOneWidget);
       f.bio.succeeds = true;
@@ -200,7 +200,7 @@ void main() {
 
     testWidgets('no biometric hardware: PIN only, no prompt', (t) async {
       final f = LockFixture(pin: '1234');
-      await pumpApp(t, overrides: f.overrides);
+      await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(f.bio.prompts, 0);
       expect(find.byIcon(Icons.fingerprint_rounded), findsNothing);
     });
@@ -211,6 +211,7 @@ void main() {
       final f = LockFixture(pin: '1234');
       final h = await pumpApp(
         t,
+        bypassLock: false,
         overrides: f.overrides,
         initialLocation: 'storize://story/77',
       );
@@ -224,7 +225,7 @@ void main() {
 
     testWidgets('a link that arrives while locked is kept', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await h.go('storize://post/5');
       expect(h.location.startsWith('/lock'), isTrue);
       expect(find.text('contentId=5'), findsNothing);
@@ -235,7 +236,7 @@ void main() {
 
     testWidgets('re-lock after 60 s returns to the same page', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '1234');
       await t.pumpAndSettle();
       await h.go('/targets/3');
@@ -258,7 +259,7 @@ void main() {
 
     testWidgets('59 s in the background does not lock', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '1234');
       await t.pumpAndSettle();
       t.binding
@@ -281,7 +282,7 @@ void main() {
     ) async {
       tall(t);
       final f = LockFixture(); // enabled, nothing stored
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(h.location.startsWith('/lock'), isTrue);
       expect(find.text('App lock was reset'), findsOneWidget);
       expect(find.textContaining('Create a new PIN'), findsOneWidget);
@@ -293,7 +294,7 @@ void main() {
 
     testWidgets('a wiped PIN is noticed when it is typed', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       f.pins.wipe();
       await enter(t, '1234');
       await t.pumpAndSettle();
@@ -306,7 +307,7 @@ void main() {
     ) async {
       tall(t);
       final f = LockFixture();
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '2468');
       await t.tap(find.text('Continue'));
       await t.pumpAndSettle();
@@ -321,7 +322,7 @@ void main() {
     testWidgets('mismatching entries do not unlock', (t) async {
       tall(t);
       final f = LockFixture();
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await enter(t, '2468');
       await t.tap(find.text('Continue'));
       await t.pumpAndSettle();
@@ -335,7 +336,7 @@ void main() {
 
     testWidgets('biometric gone but a PIN exists: PIN still works', (t) async {
       final f = LockFixture(pin: '1234');
-      final h = await pumpApp(t, overrides: f.overrides);
+      final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       expect(find.text('App lock was reset'), findsNothing);
       await enter(t, '1234');
       await t.pumpAndSettle();
@@ -349,6 +350,7 @@ void main() {
       final repo = FailingOnceSettings(f.settings);
       final h = await pumpApp(
         t,
+        bypassLock: false,
         overrides: f.overridesWith(settingsRepo: repo),
       );
       expect(find.text("Couldn't check the app lock."), findsOneWidget);

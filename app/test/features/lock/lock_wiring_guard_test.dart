@@ -1,23 +1,21 @@
-import 'dart:io';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 
-// QA T-034 F-1. The app lock is fail-open until `main` overrides
-// `appLockWiredProvider` with true (the default is false so other screens'
-// tests need no lock fakes). Nothing else enforces the override, so a release
-// built from a composition root that forgets it would ship with no lock even
-// though the setting says "on".
+// QA T-034 F-1, adapted: the lock is fail-closed. A composition root that
+// forgets to wire the lock cannot ship an open app: with nothing wired the
+// gate is locked (the lock screen shows a retry), and only the test-only
+// opt-out `appLockTestBypassProvider` opens it.
 void main() {
-  test(
-    'the composition root wires the app lock',
-    skip:
-        'Enable when the composition root exists (main.dart is a bare '
-        'runApp today). Better: make the lock fail-closed by default.',
-    () {
-      final main = File('lib/main.dart').readAsStringSync();
-      expect(main, contains('appLockWiredProvider'));
-      expect(main, contains('pinStoreProvider'));
-      expect(main, contains('biometricAuthProvider'));
-    },
-  );
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('with nothing wired the gate is locked', () async {
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    c.listen(lockControllerProvider, (_, _) {});
+    await Future<void>.delayed(Duration.zero);
+    expect(c.read(appLockedProvider), isTrue);
+    expect(c.read(appLockTestBypassProvider), isFalse);
+  });
 }

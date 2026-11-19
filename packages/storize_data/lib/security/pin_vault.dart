@@ -48,11 +48,48 @@ final class PinNotSet extends PinCheck {
   const PinNotSet();
 }
 
+/// The saved PIN could not be read (secure-storage error). Not the same as
+/// [PinNotSet]: nothing is known about the stored PIN, so the caller stays
+/// locked and offers a retry, and must never offer to create a new PIN.
+final class PinUnreadable extends PinCheck {
+  /// Creates the result.
+  const PinUnreadable();
+}
+
+/// Secure storage failed while reading the PIN or the lock marker. Carries no
+/// stored data.
+final class PinStorageException implements Exception {
+  /// Creates the exception.
+  const PinStorageException();
+
+  @override
+  String toString() => 'PinStorageException';
+}
+
+/// How the lock was set up (the marker stored when the lock is turned on).
+enum LockMethod {
+  /// A PIN (with the biometric as a shortcut when available).
+  pin,
+
+  /// Biometric only; no PIN is stored.
+  biometric,
+}
+
 /// What the app lock needs from a PIN store. [PinVault] is the production
 /// implementation; the app's tests use a fake.
 abstract interface class PinStore {
-  /// True when a well-formed PIN (hash and length) is stored.
+  /// True when a well-formed PIN (hash and length) is stored. Throws
+  /// [PinStorageException] when storage cannot be read.
   Future<bool> hasPin();
+
+  /// The method marker written when the lock was turned on, or null when it
+  /// is missing (secure storage was wiped, or the lock was never set up).
+  /// Throws [PinStorageException] when storage cannot be read or the value is
+  /// not understood.
+  Future<LockMethod?> method();
+
+  /// Records that the lock uses biometrics only (no PIN).
+  Future<void> markBiometric();
 
   /// The stored PIN's length (4 to 6), or null when there is no usable PIN.
   Future<int?> pinLength();
@@ -66,7 +103,7 @@ abstract interface class PinStore {
   /// The running cooldown, or null.
   Future<Duration?> cooldownRemaining();
 
-  /// Removes the PIN, the failure count and the cooldown.
+  /// Removes the PIN, the method marker, the failure count and the cooldown.
   Future<void> clear();
 }
 
@@ -132,7 +169,12 @@ final class PinVault implements PinStore {
   /// Storage key of the PIN length (needed to know when to auto-submit).
   static const String lengthKey = 'storize.pin.length';
 
-  static const int _maxIterations = 10000000;
+  /// Storage key of the method marker (`pin` or `biometric`).
+  static const String methodKey = 'storize.lock.method';
+
+  /// Largest iteration count accepted from storage. Stops a tampered value
+  /// from blocking a check for minutes.
+  static const int maxStoredIterations = 1000000;
 
   /// Iterations used for new hashes.
   final int iterations;
@@ -145,20 +187,32 @@ final class PinVault implements PinStore {
   /// Whether [pin] is 4 to 6 ASCII digits.
   static bool isValidPin(String pin) => RegExp(r'^\d{4,6}$').hasMatch(pin);
 
-  /// True when a well-formed hash and length are stored. A storage error
-  /// counts as no PIN.
+  /// True when a well-formed hash and length are stored. Throws
+  /// [PinStorageException] on a storage read error (that is not "no PIN").
   @override
   Future<bool> hasPin() async =>
       await _readHash() != null && await pinLength() != null;
 
   @override
+  Future<LockMethod?> method() async {
+    final raw = await _read(methodKey);
+    return switch (raw) {
+      null => null,
+      'pin' => LockMethod.pin,
+      'biometric' => LockMethod.biometric,
+      _ => throw const PinStorageException(),
+    };
+  }
+
+  @override
+  Future<void> markBiometric() => _storage.write(
+    key: methodKey,
+    value: 'biometric',
+  );
+
+  @override
   Future<int?> pinLength() async {
-    final String? raw;
-    try {
-      raw = await _storage.read(key: lengthKey);
-    } on Object {
-      return null;
-    }
+    final raw = await _read(lengthKey);
     final n = raw == null ? null : int.tryParse(raw);
     return n != null && n >= minLength && n <= maxLength ? n : null;
   }
@@ -171,6 +225,10 @@ final class PinVault implements PinStore {
     if (!isValidPin(pin)) {
       throw ArgumentError('PIN must be $minLength to $maxLength digits');
     }
+    // Never overwrite a hash that could not be read: this throws
+    // PinStorageException on a read error. Absent or malformed is fine.
+    await _readHash();
+    await _read(lengthKey);
     final salt = List<int>.generate(saltLength, (_) => _random.nextInt(256));
     final hash = await _hasher(pin, salt, iterations);
     await _storage.write(
@@ -178,14 +236,31 @@ final class PinVault implements PinStore {
       value: 'v1:$iterations:${base64.encode(salt)}:${base64.encode(hash)}',
     );
     await _storage.write(key: lengthKey, value: '${pin.length}');
+    await _storage.write(key: methodKey, value: 'pin');
     await _storage.delete(key: attemptsKey);
   }
 
-  /// Checks [pin].
+  Future<void> _verifyTail = Future<void>.value();
+
+  /// Checks [pin]. Calls run one at a time, so parallel guesses are all
+  /// counted.
   @override
-  Future<PinCheck> verify(String pin) async {
-    final stored = await _readHash();
-    if (stored == null || await pinLength() == null) return const PinNotSet();
+  Future<PinCheck> verify(String pin) {
+    final run = _verifyTail.then((_) => _verify(pin));
+    _verifyTail = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  Future<PinCheck> _verify(String pin) async {
+    final _StoredHash? stored;
+    final int? length;
+    try {
+      stored = await _readHash();
+      length = await pinLength();
+    } on PinStorageException {
+      return const PinUnreadable();
+    }
+    if (stored == null || length == null) return const PinNotSet();
 
     final state = await _readAttempts();
     final remaining = _remaining(state);
@@ -231,23 +306,28 @@ final class PinVault implements PinStore {
   Future<void> clear() async {
     await _storage.delete(key: hashKey);
     await _storage.delete(key: lengthKey);
+    await _storage.delete(key: methodKey);
     await _storage.delete(key: attemptsKey);
   }
 
   // Storage helpers.
 
-  Future<_StoredHash?> _readHash() async {
-    final String? raw;
+  Future<String?> _read(String key) async {
     try {
-      raw = await _storage.read(key: hashKey);
+      return await _storage.read(key: key);
     } on Object {
-      return null;
+      // The platform's error text is dropped.
+      throw const PinStorageException();
     }
+  }
+
+  Future<_StoredHash?> _readHash() async {
+    final raw = await _read(hashKey);
     if (raw == null) return null;
     final parts = raw.split(':');
     if (parts.length != 4 || parts[0] != 'v1') return null;
     final iter = int.tryParse(parts[1]);
-    if (iter == null || iter < 1 || iter > _maxIterations) return null;
+    if (iter == null || iter < 1 || iter > maxStoredIterations) return null;
     try {
       final salt = base64.decode(parts[2]);
       final hash = base64.decode(parts[3]);

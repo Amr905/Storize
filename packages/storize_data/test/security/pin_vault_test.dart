@@ -272,12 +272,76 @@ void main() {
       expect(await v.verify('2468'), isA<PinNotSet>());
     });
 
-    test('storage read error counts as no PIN, never as accepted', () async {
+    test('a storage read error is PinUnreadable, never PinNotSet', () async {
       final v = vault();
       await v.setPin('2468');
       storage.failReads = true;
-      expect(await v.hasPin(), isFalse);
+      expect(v.hasPin(), throwsA(isA<PinStorageException>()));
+      expect(v.method(), throwsA(isA<PinStorageException>()));
+      expect(await v.verify('2468'), isA<PinUnreadable>());
+      storage.failReads = false;
+      expect(await v.verify('2468'), isA<PinAccepted>());
+    });
+
+    test('setPin never overwrites a hash it failed to read', () async {
+      final v = vault();
+      await v.setPin('2468');
+      final before = Map<String, String>.of(storage.data);
+      storage.failReads = true;
+      await expectLater(v.setPin('1357'), throwsA(isA<PinStorageException>()));
+      storage.failReads = false;
+      expect(storage.data, before);
+      expect(await v.verify('2468'), isA<PinAccepted>());
+    });
+
+    test('the exception carries no stored data', () {
+      expect(const PinStorageException().toString(), 'PinStorageException');
+    });
+
+    group('method marker', () {
+      test('setPin writes pin; clear removes it', () async {
+        final v = vault();
+        expect(await v.method(), isNull);
+        await v.setPin('2468');
+        expect(await v.method(), LockMethod.pin);
+        await v.clear();
+        expect(await v.method(), isNull);
+      });
+
+      test('markBiometric writes biometric', () async {
+        final v = vault();
+        await v.markBiometric();
+        expect(await v.method(), LockMethod.biometric);
+        expect(await v.hasPin(), isFalse);
+      });
+
+      test('a wipe takes the marker too', () async {
+        final v = vault();
+        await v.setPin('2468');
+        storage.data.clear();
+        expect(await v.method(), isNull);
+      });
+
+      test('an unknown marker value is unreadable, not "missing"', () async {
+        storage.data[PinVault.methodKey] = 'weird';
+        expect(vault().method(), throwsA(isA<PinStorageException>()));
+      });
+    });
+
+    test('stored iterations above 1 000 000 are refused', () async {
+      expect(PinVault.maxStoredIterations, 1000000);
+      final v = vault();
+      await v.setPin('2468');
+      final parts = storage.data[PinVault.hashKey]!.split(':');
+      storage.data[PinVault.hashKey] = 'v1:1000001:${parts[2]}:${parts[3]}';
       expect(await v.verify('2468'), isA<PinNotSet>());
+    });
+
+    test('parallel verify calls are all counted', () async {
+      final v = vault();
+      await v.setPin('2468');
+      await Future.wait([for (var i = 0; i < 5; i++) v.verify('0000')]);
+      expect(await v.cooldownRemaining(), isNotNull);
     });
 
     for (final bad in [

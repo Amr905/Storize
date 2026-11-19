@@ -9,9 +9,15 @@ import 'package:storize_domain/testing.dart';
 /// In-memory [PinStore] with the real rules of [PinVault] reduced to what the
 /// UI needs: 5 wrong PINs start a 30 s cooldown that only [advance] ends.
 class FakePinStore implements PinStore {
-  FakePinStore({String? pin}) : _pin = pin; // ignore: prefer_initializing_formals, the field is private and mutable.
+  FakePinStore({String? pin, LockMethod? marker})
+    : _pin = pin,
+      _marker = marker ?? (pin != null ? LockMethod.pin : null);
 
   String? _pin;
+  LockMethod? _marker;
+
+  /// Simulates a secure-storage read error.
+  bool unreadable = false;
   int failures = 0;
   Duration? cooldown;
   int verifyCalls = 0;
@@ -25,15 +31,36 @@ class FakePinStore implements PinStore {
     cooldown = left > Duration.zero ? left : null;
   }
 
-  @override
-  Future<bool> hasPin() async => _pin != null;
+  void _check() {
+    if (unreadable) throw const PinStorageException();
+  }
 
   @override
-  Future<int?> pinLength() async => _pin?.length;
+  Future<bool> hasPin() async {
+    _check();
+    return _pin != null;
+  }
+
+  @override
+  Future<LockMethod?> method() async {
+    _check();
+    return _marker;
+  }
+
+  @override
+  Future<void> markBiometric() async => _marker = LockMethod.biometric;
+
+  @override
+  Future<int?> pinLength() async {
+    _check();
+    return _pin?.length;
+  }
 
   @override
   Future<void> setPin(String pin) async {
+    _check();
     _pin = pin;
+    _marker = LockMethod.pin;
     failures = 0;
     cooldown = null;
   }
@@ -41,6 +68,7 @@ class FakePinStore implements PinStore {
   @override
   Future<PinCheck> verify(String pin) async {
     verifyCalls++;
+    if (unreadable) return const PinUnreadable();
     if (_pin == null) return const PinNotSet();
     if (cooldown != null) return PinCoolingDown(cooldown!);
     if (pin == _pin) {
@@ -62,11 +90,15 @@ class FakePinStore implements PinStore {
   @override
   Future<void> clear() async {
     _pin = null;
+    _marker = null;
     cleared = true;
   }
 
   /// Simulates a secure-storage reset.
-  void wipe() => _pin = null;
+  void wipe() {
+    _pin = null;
+    _marker = null;
+  }
 
   String? get storedPin => _pin;
 }
@@ -96,9 +128,14 @@ class LockFixture {
     bool enabled = true,
     String? pin,
     bool biometric = false,
+    LockMethod? marker,
     DateTime? start,
   }) : settings = FakeSettingsRepo(AppSettings(appLockEnabled: enabled)),
-       pins = FakePinStore(pin: pin),
+       pins = FakePinStore(
+         pin: pin,
+         marker:
+             marker ?? (pin == null && biometric ? LockMethod.biometric : null),
+       ),
        bio = FakeBiometric(available: biometric),
        clock = FakeClock(start);
 
@@ -108,7 +145,6 @@ class LockFixture {
   final FakeClock clock;
 
   List<Override> overridesWith({SettingsRepo? settingsRepo}) => [
-    appLockWiredProvider.overrideWithValue(true),
     settingsRepoProvider.overrideWithValue(settingsRepo ?? settings),
     clockProvider.overrideWithValue(clock),
     pinStoreProvider.overrideWithValue(pins),
