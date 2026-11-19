@@ -9,11 +9,18 @@ environment:
   flutter: ">=3.50.0"
 
 dependencies:
+  cryptography: ^2.9.0
   flutter:
     sdk: flutter
   # Exact pin: 6.1.5 pulls flutter_inappwebview_android 1.1.3, which breaks under AGP 9
   # (removed proguard-android.txt). Revisit when 6.2.0 stable ships.
   flutter_inappwebview: 6.2.0-beta.3
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: ^3.5.0
+  go_router: ^18.1.4
+  intl: ^0.20.3
+  local_auth: ^3.0.2
   material_ui: ^1.1.0
   storize_data: any
   storize_domain: any
@@ -26,4 +33,5 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
+  generate: true
   uses-material-design: true

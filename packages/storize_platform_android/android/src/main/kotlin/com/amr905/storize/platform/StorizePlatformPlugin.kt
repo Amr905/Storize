@@ -1,27 +1,134 @@
 package com.amr905.storize.platform
 
+import android.os.Handler
+import android.os.Looper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 
-/** Native Android entry point for Storize. Real handlers arrive in T-009. */
-class StorizePlatformPlugin :
-    FlutterPlugin,
-    MethodChannel.MethodCallHandler {
-    private var channel: MethodChannel? = null
+/**
+ * Native Android entry point for Storize (ADR-11). Channels:
+ * `storize/media` (gallery) and `storize/system` (battery, OEM, stop reasons).
+ * MethodChannels are in-process, and the plugin manifest exports no components.
+ */
+class StorizePlatformPlugin : FlutterPlugin {
+    private var mediaChannel: MethodChannel? = null
+    private var systemChannel: MethodChannel? = null
+    private var executor: ExecutorService? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(binding.binaryMessenger, "storize/media").also {
-            it.setMethodCallHandler(this)
-        }
-    }
+        val context = binding.applicationContext
+        executor = Executors.newSingleThreadExecutor()
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        result.notImplemented()
+        val media = MediaStoreOps(context)
+        val thumbnails = ThumbnailOps(context)
+        val storage = StorageStatsOps()
+        val battery = BatteryOps(context)
+        val exits = ExitReasonOps(context)
+
+        mediaChannel =
+            MethodChannel(binding.binaryMessenger, MEDIA_CHANNEL).also { channel ->
+                channel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "insert" ->
+                            background(result) {
+                                media.insert(
+                                    call.argument<String>("sourcePath"),
+                                    call.argument<String>("relativeDir"),
+                                    call.argument<String>("displayName"),
+                                    call.argument<String>("mime"),
+                                )
+                            }
+                        "delete" -> background(result) { media.delete(call.argument<String>("uri")) }
+                        "exists" -> background(result) { media.exists(call.argument<String>("uri")) }
+                        "size" -> background(result) { media.size(call.argument<String>("uri")) }
+                        "storageStats" -> background(result) { storage.storageStats() }
+                        "videoThumbnail" ->
+                            background(result) {
+                                thumbnails.videoThumbnail(
+                                    call.argument<String>("uri"),
+                                    call.argument<String>("path"),
+                                    intArg(call, "maxSize"),
+                                )
+                            }
+                        else -> result.notImplemented()
+                    }
+                }
+            }
+
+        systemChannel =
+            MethodChannel(binding.binaryMessenger, SYSTEM_CHANNEL).also { channel ->
+                channel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "isIgnoringBatteryOptimizations" -> mainThread(result) { battery.isIgnoringBatteryOptimizations() }
+                        "openBatterySettings" -> mainThread(result) { battery.openBatterySettings(call.argument<String>("oem")) }
+                        "manufacturer" -> mainThread(result) { battery.manufacturer() }
+                        "lastStopReasons" -> background(result) { exits.lastStopReasons(intArg(call, "limit")) }
+                        else -> result.notImplemented()
+                    }
+                }
+            }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel?.setMethodCallHandler(null)
-        channel = null
+        mediaChannel?.setMethodCallHandler(null)
+        systemChannel?.setMethodCallHandler(null)
+        mediaChannel = null
+        systemChannel = null
+        executor?.shutdown()
+        executor = null
+    }
+
+    private fun intArg(
+        call: MethodCall,
+        key: String,
+    ): Int? = (call.argument<Any>(key) as? Number)?.toInt()
+
+    private fun mainThread(
+        result: MethodChannel.Result,
+        block: () -> Any?,
+    ) {
+        deliver(result, runCatching(block))
+    }
+
+    private fun background(
+        result: MethodChannel.Result,
+        block: () -> Any?,
+    ) {
+        val exec = executor
+        if (exec == null) {
+            result.error(ErrorCodes.UNAVAILABLE, "Plugin is detached", null)
+            return
+        }
+        try {
+            exec.execute {
+                val outcome = runCatching(block)
+                mainHandler.post { deliver(result, outcome) }
+            }
+        } catch (e: RejectedExecutionException) {
+            result.error(ErrorCodes.UNAVAILABLE, "Plugin is detached", null)
+        }
+    }
+
+    private fun deliver(
+        result: MethodChannel.Result,
+        outcome: Result<Any?>,
+    ) {
+        outcome.fold(
+            onSuccess = { result.success(it) },
+            onFailure = {
+                val (code, message) = mapThrowable(it)
+                result.error(code, message, null)
+            },
+        )
+    }
+
+    companion object {
+        const val MEDIA_CHANNEL = "storize/media"
+        const val SYSTEM_CHANNEL = "storize/system"
     }
 }

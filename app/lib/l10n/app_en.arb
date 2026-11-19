@@ -1,0 +1,380 @@
+{
+  "@@locale": "en",
+  "appTitle": "Storize",
+  "@appTitle": {
+    "description": "App name."
+  },
+  "navLibrary": "Library",
+  "@navLibrary": {
+    "description": "Bottom navigation label."
+  },
+  "navTargets": "Targets",
+  "@navTargets": {
+    "description": "Bottom navigation label."
+  },
+  "navActivity": "Activity",
+  "@navActivity": {
+    "description": "Bottom navigation label."
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Bottom navigation label."
+  },
+  "screenWelcome": "Welcome",
+  "@screenWelcome": {
+    "description": "Screen title."
+  },
+  "screenLogin": "Log in to Instagram",
+  "@screenLogin": {
+    "description": "Screen title."
+  },
+  "screenSetup": "Keep Storize running",
+  "@screenSetup": {
+    "description": "Screen title."
+  },
+  "screenLibrary": "Library",
+  "@screenLibrary": {
+    "description": "Screen title."
+  },
+  "screenStoryViewer": "Story",
+  "@screenStoryViewer": {
+    "description": "Screen title."
+  },
+  "screenPostViewer": "Post",
+  "@screenPostViewer": {
+    "description": "Screen title."
+  },
+  "screenTargets": "Targets",
+  "@screenTargets": {
+    "description": "Screen title."
+  },
+  "screenAddTarget": "Add target",
+  "@screenAddTarget": {
+    "description": "Screen title."
+  },
+  "screenTargetDetail": "Target details",
+  "@screenTargetDetail": {
+    "description": "Screen title."
+  },
+  "screenActivity": "Activity",
+  "@screenActivity": {
+    "description": "Screen title."
+  },
+  "screenSettings": "Settings",
+  "@screenSettings": {
+    "description": "Screen title."
+  },
+  "screenAccount": "Instagram account",
+  "@screenAccount": {
+    "description": "Screen title."
+  },
+  "screenLock": "App lock",
+  "@screenLock": {
+    "description": "Screen title."
+  },
+  "placeholderTodo": "TODO({task})",
+  "@placeholderTodo": {
+    "description": "Placeholder body shown until the screen task is implemented.",
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "statusActive": "Active",
+  "@statusActive": {
+    "description": "Status badge label."
+  },
+  "statusChecking": "Checking",
+  "@statusChecking": {
+    "description": "Status badge label."
+  },
+  "statusPaused": "Paused",
+  "@statusPaused": {
+    "description": "Status badge label."
+  },
+  "statusNotVisible": "Not visible",
+  "@statusNotVisible": {
+    "description": "Status badge label."
+  },
+  "statusUnavailable": "Unavailable",
+  "@statusUnavailable": {
+    "description": "Status badge label."
+  },
+  "statusError": "Error",
+  "@statusError": {
+    "description": "Status badge label."
+  },
+  "statusNeedsRelogin": "Needs re-login",
+  "@statusNeedsRelogin": {
+    "description": "Status badge label."
+  },
+  "statusRestricted": "Restricted",
+  "@statusRestricted": {
+    "description": "Status badge label."
+  },
+  "categoryOwn": "Own / client",
+  "@categoryOwn": {
+    "description": "Target category tag."
+  },
+  "categoryConsented": "Consented",
+  "@categoryConsented": {
+    "description": "Target category tag."
+  },
+  "categoryPublic": "Public",
+  "@categoryPublic": {
+    "description": "Target category tag."
+  },
+  "bannerFix": "Fix",
+  "@bannerFix": {
+    "description": "Session banner action."
+  },
+  "bannerReloginTitle": "Instagram login needs attention",
+  "@bannerReloginTitle": {
+    "description": "Session banner headline when the Instagram login needs attention."
+  },
+  "bannerReloginBody": "Checks are paused.",
+  "@bannerReloginBody": {
+    "description": "Session banner second line when the login needs attention."
+  },
+  "bannerRestrictedTitle": "Instagram account restricted",
+  "@bannerRestrictedTitle": {
+    "description": "Session banner headline when the Instagram account is restricted."
+  },
+  "bannerRestrictedBody": "Checks are paused.",
+  "@bannerRestrictedBody": {
+    "description": "Session banner second line when the account is restricted."
+  },
+  "thumbNew": "new",
+  "@thumbNew": {
+    "description": "Corner text marking a thumbnail as new (not yet viewed)."
+  },
+  "thumbBroken": "Can't load",
+  "@thumbBroken": {
+    "description": "Placeholder text on a thumbnail whose media failed to load."
+  },
+  "thumbSelected": "selected",
+  "@thumbSelected": {
+    "description": "Semantics suffix for a selected thumbnail."
+  },
+  "stepDone": "Done",
+  "@stepDone": {
+    "description": "Setup step status when the step is complete."
+  },
+  "stepPending": "To do",
+  "@stepPending": {
+    "description": "Setup step status when the step is not complete."
+  },
+  "stepSemantics": "Step {number}, {title}, {status}",
+  "@stepSemantics": {
+    "description": "Screen reader label of a setup step: number, title and status.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "statTileSemantics": "{label}: {value}",
+  "@statTileSemantics": {
+    "description": "Screen reader label of a stat tile: caption then value.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "kindSwitchSemantics": "{label}, {count}",
+  "@kindSwitchSemantics": {
+    "description": "Screen reader label of a kind switch segment with a count.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "all": "All",
+  "@all": {
+    "description": "Account filter chip that clears the selection."
+  },
+  "loading": "Loading",
+  "@loading": {
+    "description": "Screen reader label for loading indicators and skeletons."
+  },
+  "expand": "Expand",
+  "@expand": {
+    "description": "Semantics label of a control that expands a section."
+  },
+  "collapse": "Collapse",
+  "@collapse": {
+    "description": "Semantics label of a control that collapses a section."
+  },
+  "pinDelete": "Delete",
+  "@pinDelete": {
+    "description": "PIN pad backspace key semantics label."
+  },
+  "pinBiometric": "Use biometrics",
+  "@pinBiometric": {
+    "description": "PIN pad fingerprint key semantics label."
+  },
+  "pinProgress": "{filled} of {length} digits entered",
+  "@pinProgress": {
+    "description": "PIN pad semantics label.",
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      },
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "pinCooldown": "Try again in {time}",
+  "@pinCooldown": {
+    "description": "PIN pad cooldown.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyNoDataTitle": "Nothing here yet",
+  "emptyNoDataBody": "Items will show up here when there is something to see.",
+  "emptyFilteredTitle": "No matches",
+  "emptyFilteredBody": "Try changing or clearing the filters.",
+  "errorNetworkTitle": "No internet connection",
+  "errorNetworkBody": "Check your connection and try again.",
+  "errorRateLimitedTitle": "Instagram is limiting requests",
+  "errorRateLimitedBody": "Storize will try again later.",
+  "errorPlatformChangedTitle": "Instagram changed",
+  "errorPlatformChangedBody": "Update Storize to keep saving content.",
+  "errorUnknownTitle": "Something went wrong",
+  "errorUnknownBody": "Please try again.",
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button."
+  },
+  "lockTitle": "Storize is locked",
+  "@lockTitle": {
+    "description": "S-14 heading."
+  },
+  "lockWrongPin": "Wrong PIN",
+  "@lockWrongPin": {
+    "description": "S-14 error under the PIN dots."
+  },
+  "lockUnlockWithBiometrics": "Unlock with fingerprint",
+  "@lockUnlockWithBiometrics": {
+    "description": "S-14 button that reopens the fingerprint prompt."
+  },
+  "lockBiometricReason": "Unlock Storize",
+  "@lockBiometricReason": {
+    "description": "Reason shown in the system fingerprint prompt when opening the app."
+  },
+  "lockLoadFailed": "Couldn't check the app lock.",
+  "@lockLoadFailed": {
+    "description": "S-14 error when the lock settings cannot be read."
+  },
+  "lockResetTitle": "App lock was reset",
+  "@lockResetTitle": {
+    "description": "S-14 heading when the saved PIN is gone."
+  },
+  "lockResetBody": "Android cleared Storize's saved lock data. Create a new PIN to keep the app locked.",
+  "@lockResetBody": {
+    "description": "S-14 explanation of the reset state."
+  },
+  "pinSetupTitle": "Create a PIN",
+  "@pinSetupTitle": {
+    "description": "PIN setup heading, first entry."
+  },
+  "pinSetupHint": "Use 4 to 6 digits.",
+  "@pinSetupHint": {
+    "description": "PIN setup hint."
+  },
+  "pinSetupConfirmTitle": "Enter the PIN again",
+  "@pinSetupConfirmTitle": {
+    "description": "PIN setup heading, second entry."
+  },
+  "pinSetupMismatch": "The PINs don't match. Try again.",
+  "@pinSetupMismatch": {
+    "description": "PIN setup error when the second entry differs."
+  },
+  "pinSetupContinue": "Continue",
+  "@pinSetupContinue": {
+    "description": "PIN setup button after the first entry."
+  },
+  "pinSetupConfirm": "Save PIN",
+  "@pinSetupConfirm": {
+    "description": "PIN setup button after the second entry."
+  },
+  "pinSetupCancel": "Cancel",
+  "@pinSetupCancel": {
+    "description": "Semantics label of the close button on PIN setup and confirm screens."
+  },
+  "settingsAppLock": "App lock",
+  "@settingsAppLock": {
+    "description": "S-12 row title."
+  },
+  "settingsAppLockSubtitle": "Ask for your fingerprint or PIN when Storize opens.",
+  "@settingsAppLockSubtitle": {
+    "description": "S-12 row subtitle."
+  },
+  "settingsAppLockNote": "Files saved to your gallery are not protected by the app lock.",
+  "@settingsAppLockNote": {
+    "description": "S-12 note under the App lock row."
+  },
+  "appLockChooseTitle": "Turn on app lock",
+  "@appLockChooseTitle": {
+    "description": "Sheet title when choosing how to unlock."
+  },
+  "appLockChooseBiometric": "Use fingerprint",
+  "@appLockChooseBiometric": {
+    "description": "Sheet option."
+  },
+  "appLockChoosePin": "Use a PIN",
+  "@appLockChoosePin": {
+    "description": "Sheet option."
+  },
+  "appLockEnableReason": "Confirm your fingerprint to turn on app lock",
+  "@appLockEnableReason": {
+    "description": "Reason shown in the fingerprint prompt when turning the lock on."
+  },
+  "appLockEnabled": "App lock is on",
+  "@appLockEnabled": {
+    "description": "Snackbar after turning the lock on."
+  },
+  "appLockEnableFailed": "App lock was not turned on",
+  "@appLockEnableFailed": {
+    "description": "Snackbar when enabling failed or was cancelled."
+  },
+  "appLockDisabled": "App lock is off",
+  "@appLockDisabled": {
+    "description": "Snackbar after turning the lock off."
+  },
+  "appLockConfirmTitle": "Confirm it's you",
+  "@appLockConfirmTitle": {
+    "description": "Heading of the screen that asks for authentication before turning the lock off."
+  },
+  "appLockDisableReason": "Confirm to turn off app lock",
+  "@appLockDisableReason": {
+    "description": "Reason shown in the fingerprint prompt when turning the lock off."
+  },
+  "lockStorageUnreadable": "Couldn't read the saved lock. Try again.",
+  "@lockStorageUnreadable": {
+    "description": "S-14 message when secure storage cannot be read. No new PIN is offered."
+  },
+  "lockBiometricUnavailable": "Fingerprint is not available right now. Try again.",
+  "@lockBiometricUnavailable": {
+    "description": "S-14 message for a fingerprint-only lock whose sensor is unavailable."
+  }
+}
