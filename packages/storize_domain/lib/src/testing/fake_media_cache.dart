@@ -57,9 +57,15 @@ final class FakeMediaCache implements MediaCache {
 
   @override
   Future<int> cleanupOrphans(Set<int> keepIds) async {
-    final orphans = _parts.keys.where((id) => !keepIds.contains(id)).toList()
-      ..forEach(_parts.remove);
-    return orphans.length;
+    final partOrphans = _parts.keys
+        .where((id) => !keepIds.contains(id))
+        .toList();
+    final thumbOrphans = _thumbs.keys
+        .where((id) => !keepIds.contains(id))
+        .toList();
+    partOrphans.forEach(_parts.remove);
+    thumbOrphans.forEach(_thumbs.remove);
+    return partOrphans.length + thumbOrphans.length;
   }
 
   @override
@@ -67,4 +73,8 @@ final class FakeMediaCache implements MediaCache {
     _thumbs[mediaFileId] = List<int>.of(webpBytes);
     return '$thumbDir/$mediaFileId.webp';
   }
+
+  @override
+  Future<void> deleteThumbnail(int mediaFileId) async =>
+      _thumbs.remove(mediaFileId);
 }

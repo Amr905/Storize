@@ -85,8 +85,8 @@ void main() {
       expect(cache.thumbnailBytes(5), [1, 2]);
       await cache.writeThumbnail(5, [9]);
       expect(cache.thumbnailBytes(5), [9]);
-      await cache.cleanupOrphans({});
-      expect(cache.thumbnailBytes(5), [9]);
+      expect(await cache.cleanupOrphans({}), 1);
+      expect(cache.thumbnailBytes(5), isNull);
     });
   });
 

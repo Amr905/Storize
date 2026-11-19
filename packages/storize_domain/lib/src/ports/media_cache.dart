@@ -22,11 +22,20 @@ abstract interface class MediaCache {
   /// Deletes the part file of [mediaFileId]. Does nothing if there is none.
   Future<void> discard(int mediaFileId);
 
-  /// Deletes every part file whose media file ID is not in [keepIds] and
-  /// returns how many were removed. Thumbnails are not touched.
+  /// Deletes every part file and every thumbnail whose media file ID is not in
+  /// [keepIds], and returns how many files were removed in total (part files
+  /// and thumbnails together). Files that are not part files or `<id>.webp`
+  /// thumbnails are left alone.
   Future<int> cleanupOrphans(Set<int> keepIds);
 
   /// Stores [webpBytes] as the thumbnail of [mediaFileId], replacing any old
   /// one, and returns its path (for `MediaFile.thumbPath`).
   Future<String> writeThumbnail(int mediaFileId, List<int> webpBytes);
+
+  /// Deletes the thumbnail of [mediaFileId] and any leftover temp file of an
+  /// interrupted [writeThumbnail].
+  ///
+  /// Idempotent: a missing thumbnail is not an error, and a call for a missing
+  /// file never throws.
+  Future<void> deleteThumbnail(int mediaFileId);
 }

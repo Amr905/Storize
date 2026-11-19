@@ -66,6 +66,58 @@ final class ThrowingCache implements MediaCache {
   @override
   Future<String> writeThumbnail(int mediaFileId, List<int> webpBytes) =>
       inner.writeThumbnail(mediaFileId, webpBytes);
+
+  @override
+  Future<void> deleteThumbnail(int mediaFileId) =>
+      inner.deleteThumbnail(mediaFileId);
+}
+
+/// A media cache that records, for each `deleteThumbnail`, the value of
+/// [galleryFiles] at that moment, and whose `deleteThumbnail` can be made to
+/// throw. Everything else is delegated to [inner].
+final class SpyThumbCache implements MediaCache {
+  SpyThumbCache(this.inner, this.galleryFiles);
+
+  final FakeMediaCache inner;
+
+  /// How many gallery files still existed when a thumbnail was deleted.
+  final int Function() galleryFiles;
+  final List<({int mediaFileId, int galleryFilesLeft})> thumbDeletes = [];
+
+  /// When true, `deleteThumbnail` throws after recording the call.
+  bool throwOnDeleteThumbnail = false;
+
+  @override
+  Future<void> deleteThumbnail(int mediaFileId) async {
+    thumbDeletes.add((
+      mediaFileId: mediaFileId,
+      galleryFilesLeft: galleryFiles(),
+    ));
+    if (throwOnDeleteThumbnail) throw StateError('thumb boom');
+    await inner.deleteThumbnail(mediaFileId);
+  }
+
+  @override
+  Future<void> discard(int mediaFileId) => inner.discard(mediaFileId);
+
+  @override
+  Future<void> append(int mediaFileId, Stream<List<int>> bytes) =>
+      inner.append(mediaFileId, bytes);
+
+  @override
+  Future<int> cleanupOrphans(Set<int> keepIds) => inner.cleanupOrphans(keepIds);
+
+  @override
+  Future<String> completedPath(int mediaFileId) =>
+      inner.completedPath(mediaFileId);
+
+  @override
+  Future<int> partialLength(int mediaFileId) =>
+      inner.partialLength(mediaFileId);
+
+  @override
+  Future<String> writeThumbnail(int mediaFileId, List<int> webpBytes) =>
+      inner.writeThumbnail(mediaFileId, webpBytes);
 }
 
 final class Harness {

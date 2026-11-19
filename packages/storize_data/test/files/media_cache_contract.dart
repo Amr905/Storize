@@ -114,16 +114,29 @@ void mediaCacheContract(String label, Future<CacheHarness> Function() create) {
       },
     );
 
+    test('cleanupOrphans works with nothing stored', () async {
+      expect(await cache.cleanupOrphans(<int>{}), 0);
+    });
+
     test(
-      'cleanupOrphans works with nothing stored and leaves thumbs',
+      'cleanupOrphans removes thumbs not in keepIds and counts them with parts',
       () async {
-        expect(await cache.cleanupOrphans(<int>{}), 0);
         await cache.writeThumbnail(7, [1, 2, 3]);
         await cache.append(8, Stream.value([1]));
-        expect(await cache.cleanupOrphans(<int>{}), 1);
-        expect(await h.thumbBytes(7), [1, 2, 3]);
+        expect(await cache.cleanupOrphans(<int>{}), 2);
+        expect(await h.thumbBytes(7), isNull);
+        expect(await cache.partialLength(8), 0);
       },
     );
+
+    test('cleanupOrphans keeps thumbs whose id is in keepIds', () async {
+      await cache.writeThumbnail(1, [1]);
+      await cache.writeThumbnail(2, [2]);
+      expect(await cache.cleanupOrphans({2}), 1);
+      expect(await h.thumbBytes(1), isNull);
+      expect(await h.thumbBytes(2), [2]);
+      expect(await cache.cleanupOrphans({2}), 0);
+    });
 
     test('writeThumbnail stores and replaces', () async {
       final path = await cache.writeThumbnail(4, [1, 2]);
@@ -131,6 +144,37 @@ void mediaCacheContract(String label, Future<CacheHarness> Function() create) {
       expect(await h.thumbBytes(4), [1, 2]);
       await cache.writeThumbnail(4, [9]);
       expect(await h.thumbBytes(4), [9]);
+    });
+
+    test('deleteThumbnail removes only that thumbnail', () async {
+      await cache.writeThumbnail(4, [1]);
+      await cache.writeThumbnail(5, [2]);
+      await cache.deleteThumbnail(4);
+      expect(await h.thumbBytes(4), isNull);
+      expect(await h.thumbBytes(5), [2]);
+    });
+
+    test('deleteThumbnail is idempotent and ignores a missing file', () async {
+      await cache.deleteThumbnail(40);
+      await cache.writeThumbnail(41, [1]);
+      await cache.deleteThumbnail(41);
+      await cache.deleteThumbnail(41);
+      expect(await h.thumbBytes(41), isNull);
+    });
+
+    test('deleteThumbnail leaves the part file of the same id alone', () async {
+      await cache.append(6, Stream.value([1, 2]));
+      await cache.writeThumbnail(6, [3]);
+      await cache.deleteThumbnail(6);
+      expect(await h.partBytes(6), [1, 2]);
+      expect(await h.thumbBytes(6), isNull);
+    });
+
+    test('a thumbnail can be written again after deleteThumbnail', () async {
+      await cache.writeThumbnail(9, [1]);
+      await cache.deleteThumbnail(9);
+      await cache.writeThumbnail(9, [7]);
+      expect(await h.thumbBytes(9), [7]);
     });
   });
 }
