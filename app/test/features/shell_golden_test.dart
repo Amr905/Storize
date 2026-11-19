@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_model/storize_model.dart';
@@ -27,6 +28,7 @@ void main() {
             overrides: [
               accountRepoProvider.overrideWithValue(repo),
               initialLocationProvider.overrideWithValue('/library'),
+              appLockTestBypassProvider.overrideWithValue(true),
             ],
           ),
         );

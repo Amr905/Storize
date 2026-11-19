@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_domain/storize_domain.dart';
@@ -62,7 +63,12 @@ void main() {
   ) async {
     final repo = _StrictAccountRepo();
     await t.pumpWidget(
-      StorizeApp(overrides: [accountRepoProvider.overrideWithValue(repo)]),
+      StorizeApp(
+        overrides: [
+          accountRepoProvider.overrideWithValue(repo),
+          appLockTestBypassProvider.overrideWithValue(true),
+        ],
+      ),
     );
     await t.pumpAndSettle();
     final router = ProviderScope.containerOf(

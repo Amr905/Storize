@@ -201,4 +201,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get lockTitle => 'Storize is locked';
+
+  @override
+  String get lockWrongPin => 'Wrong PIN';
+
+  @override
+  String get lockUnlockWithBiometrics => 'Unlock with fingerprint';
+
+  @override
+  String get lockBiometricReason => 'Unlock Storize';
+
+  @override
+  String get lockLoadFailed => 'Couldn\'t check the app lock.';
+
+  @override
+  String get lockResetTitle => 'App lock was reset';
+
+  @override
+  String get lockResetBody =>
+      'Android cleared Storize\'s saved lock data. Create a new PIN to keep the app locked.';
+
+  @override
+  String get pinSetupTitle => 'Create a PIN';
+
+  @override
+  String get pinSetupHint => 'Use 4 to 6 digits.';
+
+  @override
+  String get pinSetupConfirmTitle => 'Enter the PIN again';
+
+  @override
+  String get pinSetupMismatch => 'The PINs don\'t match. Try again.';
+
+  @override
+  String get pinSetupContinue => 'Continue';
+
+  @override
+  String get pinSetupConfirm => 'Save PIN';
+
+  @override
+  String get pinSetupCancel => 'Cancel';
+
+  @override
+  String get settingsAppLock => 'App lock';
+
+  @override
+  String get settingsAppLockSubtitle =>
+      'Ask for your fingerprint or PIN when Storize opens.';
+
+  @override
+  String get settingsAppLockNote =>
+      'Files saved to your gallery are not protected by the app lock.';
+
+  @override
+  String get appLockChooseTitle => 'Turn on app lock';
+
+  @override
+  String get appLockChooseBiometric => 'Use fingerprint';
+
+  @override
+  String get appLockChoosePin => 'Use a PIN';
+
+  @override
+  String get appLockEnableReason =>
+      'Confirm your fingerprint to turn on app lock';
+
+  @override
+  String get appLockEnabled => 'App lock is on';
+
+  @override
+  String get appLockEnableFailed => 'App lock was not turned on';
+
+  @override
+  String get appLockDisabled => 'App lock is off';
+
+  @override
+  String get appLockConfirmTitle => 'Confirm it\'s you';
+
+  @override
+  String get appLockDisableReason => 'Confirm to turn off app lock';
+
+  @override
+  String get lockStorageUnreadable =>
+      'Couldn\'t read the saved lock. Try again.';
+
+  @override
+  String get lockBiometricUnavailable =>
+      'Fingerprint is not available right now. Try again.';
 }

@@ -460,6 +460,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// S-14 heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize is locked'**
+  String get lockTitle;
+
+  /// S-14 error under the PIN dots.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN'**
+  String get lockWrongPin;
+
+  /// S-14 button that reopens the fingerprint prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with fingerprint'**
+  String get lockUnlockWithBiometrics;
+
+  /// Reason shown in the system fingerprint prompt when opening the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Storize'**
+  String get lockBiometricReason;
+
+  /// S-14 error when the lock settings cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check the app lock.'**
+  String get lockLoadFailed;
+
+  /// S-14 heading when the saved PIN is gone.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock was reset'**
+  String get lockResetTitle;
+
+  /// S-14 explanation of the reset state.
+  ///
+  /// In en, this message translates to:
+  /// **'Android cleared Storize\'s saved lock data. Create a new PIN to keep the app locked.'**
+  String get lockResetBody;
+
+  /// PIN setup heading, first entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a PIN'**
+  String get pinSetupTitle;
+
+  /// PIN setup hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 4 to 6 digits.'**
+  String get pinSetupHint;
+
+  /// PIN setup heading, second entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the PIN again'**
+  String get pinSetupConfirmTitle;
+
+  /// PIN setup error when the second entry differs.
+  ///
+  /// In en, this message translates to:
+  /// **'The PINs don\'t match. Try again.'**
+  String get pinSetupMismatch;
+
+  /// PIN setup button after the first entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get pinSetupContinue;
+
+  /// PIN setup button after the second entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PIN'**
+  String get pinSetupConfirm;
+
+  /// Semantics label of the close button on PIN setup and confirm screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get pinSetupCancel;
+
+  /// S-12 row title.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get settingsAppLock;
+
+  /// S-12 row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for your fingerprint or PIN when Storize opens.'**
+  String get settingsAppLockSubtitle;
+
+  /// S-12 note under the App lock row.
+  ///
+  /// In en, this message translates to:
+  /// **'Files saved to your gallery are not protected by the app lock.'**
+  String get settingsAppLockNote;
+
+  /// Sheet title when choosing how to unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on app lock'**
+  String get appLockChooseTitle;
+
+  /// Sheet option.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint'**
+  String get appLockChooseBiometric;
+
+  /// Sheet option.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a PIN'**
+  String get appLockChoosePin;
+
+  /// Reason shown in the fingerprint prompt when turning the lock on.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your fingerprint to turn on app lock'**
+  String get appLockEnableReason;
+
+  /// Snackbar after turning the lock on.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock is on'**
+  String get appLockEnabled;
+
+  /// Snackbar when enabling failed or was cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock was not turned on'**
+  String get appLockEnableFailed;
+
+  /// Snackbar after turning the lock off.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock is off'**
+  String get appLockDisabled;
+
+  /// Heading of the screen that asks for authentication before turning the lock off.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get appLockConfirmTitle;
+
+  /// Reason shown in the fingerprint prompt when turning the lock off.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to turn off app lock'**
+  String get appLockDisableReason;
+
+  /// S-14 message when secure storage cannot be read. No new PIN is offered.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the saved lock. Try again.'**
+  String get lockStorageUnreadable;
+
+  /// S-14 message for a fingerprint-only lock whose sensor is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint is not available right now. Try again.'**
+  String get lockBiometricUnavailable;
 }
 
 class _AppLocalizationsDelegate

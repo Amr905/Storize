@@ -180,5 +180,117 @@
   "retry": "Retry",
   "@retry": {
     "description": "Retry button."
+  },
+  "lockTitle": "Storize is locked",
+  "@lockTitle": {
+    "description": "S-14 heading."
+  },
+  "lockWrongPin": "Wrong PIN",
+  "@lockWrongPin": {
+    "description": "S-14 error under the PIN dots."
+  },
+  "lockUnlockWithBiometrics": "Unlock with fingerprint",
+  "@lockUnlockWithBiometrics": {
+    "description": "S-14 button that reopens the fingerprint prompt."
+  },
+  "lockBiometricReason": "Unlock Storize",
+  "@lockBiometricReason": {
+    "description": "Reason shown in the system fingerprint prompt when opening the app."
+  },
+  "lockLoadFailed": "Couldn't check the app lock.",
+  "@lockLoadFailed": {
+    "description": "S-14 error when the lock settings cannot be read."
+  },
+  "lockResetTitle": "App lock was reset",
+  "@lockResetTitle": {
+    "description": "S-14 heading when the saved PIN is gone."
+  },
+  "lockResetBody": "Android cleared Storize's saved lock data. Create a new PIN to keep the app locked.",
+  "@lockResetBody": {
+    "description": "S-14 explanation of the reset state."
+  },
+  "pinSetupTitle": "Create a PIN",
+  "@pinSetupTitle": {
+    "description": "PIN setup heading, first entry."
+  },
+  "pinSetupHint": "Use 4 to 6 digits.",
+  "@pinSetupHint": {
+    "description": "PIN setup hint."
+  },
+  "pinSetupConfirmTitle": "Enter the PIN again",
+  "@pinSetupConfirmTitle": {
+    "description": "PIN setup heading, second entry."
+  },
+  "pinSetupMismatch": "The PINs don't match. Try again.",
+  "@pinSetupMismatch": {
+    "description": "PIN setup error when the second entry differs."
+  },
+  "pinSetupContinue": "Continue",
+  "@pinSetupContinue": {
+    "description": "PIN setup button after the first entry."
+  },
+  "pinSetupConfirm": "Save PIN",
+  "@pinSetupConfirm": {
+    "description": "PIN setup button after the second entry."
+  },
+  "pinSetupCancel": "Cancel",
+  "@pinSetupCancel": {
+    "description": "Semantics label of the close button on PIN setup and confirm screens."
+  },
+  "settingsAppLock": "App lock",
+  "@settingsAppLock": {
+    "description": "S-12 row title."
+  },
+  "settingsAppLockSubtitle": "Ask for your fingerprint or PIN when Storize opens.",
+  "@settingsAppLockSubtitle": {
+    "description": "S-12 row subtitle."
+  },
+  "settingsAppLockNote": "Files saved to your gallery are not protected by the app lock.",
+  "@settingsAppLockNote": {
+    "description": "S-12 note under the App lock row."
+  },
+  "appLockChooseTitle": "Turn on app lock",
+  "@appLockChooseTitle": {
+    "description": "Sheet title when choosing how to unlock."
+  },
+  "appLockChooseBiometric": "Use fingerprint",
+  "@appLockChooseBiometric": {
+    "description": "Sheet option."
+  },
+  "appLockChoosePin": "Use a PIN",
+  "@appLockChoosePin": {
+    "description": "Sheet option."
+  },
+  "appLockEnableReason": "Confirm your fingerprint to turn on app lock",
+  "@appLockEnableReason": {
+    "description": "Reason shown in the fingerprint prompt when turning the lock on."
+  },
+  "appLockEnabled": "App lock is on",
+  "@appLockEnabled": {
+    "description": "Snackbar after turning the lock on."
+  },
+  "appLockEnableFailed": "App lock was not turned on",
+  "@appLockEnableFailed": {
+    "description": "Snackbar when enabling failed or was cancelled."
+  },
+  "appLockDisabled": "App lock is off",
+  "@appLockDisabled": {
+    "description": "Snackbar after turning the lock off."
+  },
+  "appLockConfirmTitle": "Confirm it's you",
+  "@appLockConfirmTitle": {
+    "description": "Heading of the screen that asks for authentication before turning the lock off."
+  },
+  "appLockDisableReason": "Confirm to turn off app lock",
+  "@appLockDisableReason": {
+    "description": "Reason shown in the fingerprint prompt when turning the lock off."
+  },
+  "lockStorageUnreadable": "Couldn't read the saved lock. Try again.",
+  "@lockStorageUnreadable": {
+    "description": "S-14 message when secure storage cannot be read. No new PIN is offered."
+  },
+  "lockBiometricUnavailable": "Fingerprint is not available right now. Try again.",
+  "@lockBiometricUnavailable": {
+    "description": "S-14 message for a fingerprint-only lock whose sensor is unavailable."
   }
 }

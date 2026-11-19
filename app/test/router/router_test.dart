@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/router/routes.dart';
 
 import '../helpers/app_harness.dart';
@@ -214,7 +215,7 @@ void main() {
         overrides: [appLockedProvider.overrideWithValue(true)],
       );
       expect(h.location.startsWith('/lock'), isTrue);
-      expect(find.text('TODO(T-034)'), findsOneWidget);
+      expect(find.byType(LockPage), findsOneWidget);
       await h.go('/settings');
       expect(h.location.startsWith('/lock'), isTrue);
     });
@@ -252,7 +253,7 @@ void main() {
         overrides: g.overrides,
       );
       expect(h.location.startsWith('/lock'), isTrue);
-      expect(find.text('TODO(T-034)'), findsOneWidget);
+      expect(find.byType(LockPage), findsOneWidget);
       h.container.read(g.flag.notifier).set(value: false);
       await t.pumpAndSettle();
       expect(h.location, '/story/77');

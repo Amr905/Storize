@@ -1,26 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_domain/testing.dart';
 
 void main() {
   testWidgets('root widget pumps and shows the Library tab', (tester) async {
     await tester.pumpWidget(
       StorizeApp(
-        overrides: [accountRepoProvider.overrideWithValue(FakeAccountRepo())],
+        overrides: [
+          accountRepoProvider.overrideWithValue(FakeAccountRepo()),
+          appLockTestBypassProvider.overrideWithValue(true),
+        ],
       ),
     );
     await tester.pumpAndSettle();
     expect(find.text('Library'), findsWidgets);
   });
 
-  testWidgets('starts without wiring: unwired ports do not crash the shell', (
-    tester,
-  ) async {
+  testWidgets('starts without wiring: fail-closed, locked with a retry '
+      '(T-034 F-1)', (tester) async {
     await tester.pumpWidget(const StorizeApp());
     await tester.pumpAndSettle();
-    expect(find.text('Library'), findsWidgets);
+    expect(find.text("Couldn't check the app lock."), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
