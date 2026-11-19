@@ -29,6 +29,7 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-024 | frontend-developer (sonnet) | `app/lib/ui/**`, `app/test/ui/**` (incl. goldens). **No pubspec changes** (ask the Lead) | 03:10 |
+| T-004 | backend-developer (sonnet) | `packages/storize_domain/**` (incl. a package-level `analysis_options.yaml`) | 06:25 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -37,7 +38,7 @@
 | T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | in_progress | 1 | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
-| T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | todo | — | — |
+| T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | in_progress | 1 | — |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
 | T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | todo | — | — |
@@ -92,3 +93,4 @@
 - 2026-11-19 ~03:40 — T-024 and T-002 agents stopped by the account usage limit (5-hour window). Work saved uncommitted.
 - 2026-11-19 06:05 — User: "continue". Resumed T-024 and T-002 in place; T-003 round 3 started.
 - 2026-11-19 06:20 — T-003 round 3 fixed F-1; CI green → **T-003 done**, merged. T-024 delivered (66 app tests, 36 goldens) → QA started.
+- 2026-11-19 06:25 — T-004 delegated (backend-developer, sonnet, Medium).
