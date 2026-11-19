@@ -325,3 +325,62 @@ QA-14 and QA-15 are closed. No username-shaped key survives unless it is exactly
 | residual | Low | A username-shaped `--keep-key` is accepted (user responsibility) |
 
 Recommended before the real capture: apply the QA-25 label allowlist, and capture once with an empty keep list, review report.md placeholders, then opt in the legitimate field names. Nothing here blocks T-002 prep.
+
+---
+
+# Round 6 verification (commit 5b132d1)
+
+## Verdict: **PASS** (no blocker; two Low/Info residuals)
+
+## 1. Is `_safeHost` applied to every host output?
+- `summary.json` `host`: yes (`_safeHost(s.uri.host)`).
+- `report.md` unknown-requests table: reads the same `row['host']`, so yes. The candidates table prints only candidate text, no host.
+- Body `<url host=...>` placeholders: **only for instagram.com hosts.** Any host that is not under instagram.com becomes `external`, except four known domains. Those four (`cdninstagram.com`, `fbcdn.net`, `facebook.com`, `fbsbx.com`) keep their **full** host in the placeholder (QA-27, Low/Info, skipped test). Real CDN labels are server names (`scontent-xxx`), but a crafted or page-like label (`facebook.com`, `fbsbx.com`) would be copied. The developer's claim "same rule in body placeholders" is true for instagram.com, not for these four. Fix: apply a label allowlist there too, or print only the registrable domain (`cdninstagram.com`) instead of the full host.
+
+## 2. Host edge cases (`test/tool/sanitize_har_round6_qa_test.dart`)
+
+| Input | Result |
+|-------|--------|
+| `zzfake.z-p42.www.instagram.com` | `<label>.<label>.www.instagram.com` |
+| `www.zzfake.instagram.com`, `i.i.i.instagram.com` | `www.<label>.instagram.com`, kept |
+| `ZZFake.Instagram.COM` | lower-cased, `<label>.instagram.com` |
+| `xn--zzfake-9ya.instagram.com` (punycode) | `<label>.instagram.com` |
+| userinfo and port | dropped |
+| trailing dot `zzfake.instagram.com.` | request dropped or label replaced; never echoed |
+| `instagram.com.zzfake.com`, `zzfake-instagram.com`, `www.instagram.com.zzfake.net`, `zzfakeinstagram.com`, `127.0.0.1`, `[::1]`, `zzfake.cdninstagram.com` as request host | request dropped, no host in output |
+| same shapes as URL values in bodies | `external` or `<label>`; no username, IP or lookalike text reaches the output |
+| `https://zzfake.instagram.com/..` in a body | `<url host=<label>.instagram.com ...>` |
+
+summary.json on `synthetic.har` shows only `www.instagram.com`.
+
+## 3. Injected sanitizer seam
+- `main()` calls `run()` without `sanitizer:`, so production always uses `sanitizeHar`, which ends in `finalizeOutputs`. A default `run()` writes sanitized output (tested), and `finalizeOutputs` blocks planted secrets, returns no files and does not echo the value (tested). An injected sanitizer wrapped in `finalizeOutputs` makes the CLI exit 1 and write nothing (tested).
+- Info (**QA-28**): `run()` itself does not call `finalizeOutputs`; it trusts the injected outcome. So the seam can bypass the scan **only** for a caller that injects a leaky sanitizer, which production never does. Cheap hardening: have `run()` call `finalizeOutputs(outcome.files)` on every outcome. Not a blocker; skipped test documents it.
+- Side effect of the round 6 host change: the old fail-closed host-token test can no longer fail (a token label is now `<label>`); the tests now use the seam, which is fine.
+
+## 4. QA-26 and QA-24
+The six extra known `message`/`error_type` values survive; `checkpoint_url`, `challenge`, `error_title`, `profile_pic_url_hd` keys stay while their values remain default-deny (`<url ...>`, `<str:N>`; tested with a username in each). QA-24 stays skipped with the Lead's reason (accepted).
+
+## 5. Re-run
+- CLI on 10 `adv_*.har` plus `synthetic.har`: exit 0 on all 11; marker grep over outputs: none.
+- gitleaks `dir .` and `git .`: no leaks found.
+- `dart format --output=none --set-exit-if-changed .`: 316 files, 0 changed.
+- `flutter analyze`: No issues found.
+- `melos run test`:
+  - storize_data `+1423 ~4`
+  - storize_app `+471 ~1`
+  - storize_domain `+210`
+  - storize_model `+73`
+  - storize_platform_android `+69`
+  - storize_instagram `+348 ~3` (all rounds 1-5 tests active and passing; the 3 skips are QA-24, QA-27, QA-28)
+- CI for 5b132d1: run 44614974867, completed, conclusion **success**.
+
+## Tests added
+`packages/storize_instagram/test/tool/sanitize_har_round6_qa_test.dart`: 10 active passing, 2 skipped (QA-27, QA-28); both skipped probes confirmed to fail when un-skipped.
+
+## Findings (round 6)
+
+| ID | Severity | Problem |
+|----|----------|---------|
+| QA-27 | Low/Info | body `<url host=...>` keeps the full host under cdninstagram.com, fbcdn.net, facebook.com, fbsbx.com |
+| QA-28 | Info | `run()` does not re-scan an injected sanitizer's output; production unaffected |
