@@ -277,8 +277,11 @@ int? _validRetention(Object? raw) {
 
 bool _bool(Object? raw, bool fallback) => raw is bool ? raw : fallback;
 
-/// The stored instant as UTC, or null when absent or out of range.
+/// The stored instant as UTC, or null when absent or outside
+/// `0 ≤ value ≤ _maxEpochMs`. Negative values count as corrupted: no setting
+/// predates 1970. Explicit comparisons, because `abs()` overflows for the
+/// minimum int.
 DateTime? _instant(Object? raw) {
-  if (raw is! int || raw.abs() > _maxEpochMs) return null;
+  if (raw is! int || raw < 0 || raw > _maxEpochMs) return null;
   return DateTime.fromMillisecondsSinceEpoch(raw, isUtc: true);
 }

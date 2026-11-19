@@ -192,6 +192,42 @@ void main() {
   });
 
   group('corrupted stored values', () {
+    test(
+      'negative and out-of-range timestamps read as null, never throw',
+      () async {
+        final raw = SharedPreferencesAsync();
+        for (final bad in <int>[
+          -1,
+          -8640000000000000,
+          8640000000000001,
+          9223372036854775807,
+          -9223372036854775808,
+        ]) {
+          await raw.setInt(SettingsKeys.riskAcknowledgedAt, bad);
+          await raw.setInt(SettingsKeys.lastUpdateCheckAt, bad);
+
+          final settings = await repo.get();
+
+          expect(settings.riskAcknowledgedAt, isNull, reason: '$bad');
+          expect(settings.lastUpdateCheckAt, isNull, reason: '$bad');
+        }
+      },
+    );
+
+    test('the epoch boundaries 0 and max are valid instants', () async {
+      final raw = SharedPreferencesAsync();
+      await raw.setInt(SettingsKeys.riskAcknowledgedAt, 0);
+      await raw.setInt(SettingsKeys.lastUpdateCheckAt, 8640000000000000);
+
+      final settings = await repo.get();
+
+      expect(settings.riskAcknowledgedAt, DateTime.utc(1970));
+      expect(
+        settings.lastUpdateCheckAt,
+        DateTime.fromMillisecondsSinceEpoch(8640000000000000, isUtc: true),
+      );
+    });
+
     test('fall back to the default for each field and never throw', () async {
       final raw = SharedPreferencesAsync();
       await raw.setString(SettingsKeys.storyIntervalMin, 'thirty');
