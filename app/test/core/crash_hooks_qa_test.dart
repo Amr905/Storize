@@ -10,7 +10,7 @@ import 'package:storize_data/log/log.dart';
 import 'package:storize_domain/src/ports/diagnostic_log.dart';
 import 'package:storize_domain/testing.dart';
 
-const _secret = 'ZZQASECRETONE9f8e7d';
+const _marker = 'ZZQAFAKEVALUE';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -103,15 +103,15 @@ void main() {
     () {
       d.installCrashHooks();
       final handled = PlatformDispatcher.instance.onError!(
-        StateError('async sessionid=$_secret'),
+        StateError('async sessionid=$_marker'),
         StackTrace.current,
       );
       expect(handled, isTrue);
       expect(logText(), contains('PlatformDispatcher.onError'));
-      expect(logText(), isNot(contains(_secret)));
+      expect(logText(), isNot(contains(_marker)));
       expect(
         File(d.marker.file.path).readAsStringSync(),
-        isNot(contains(_secret)),
+        isNot(contains(_marker)),
       );
     },
   );
@@ -197,11 +197,11 @@ void main() {
     test('captures sync throw and returns null', () {
       final r = CrashRecorder(log: d.log, marker: d.marker, clock: clock);
       final out = r.runGuarded<int>(
-        () => throw StateError('sync sessionid=$_secret'),
+        () => throw StateError('sync sessionid=$_marker'),
       );
       expect(out, isNull);
       expect(logText(), contains('(zone)'));
-      expect(logText(), isNot(contains(_secret)));
+      expect(logText(), isNot(contains(_marker)));
       expect(d.marker.read()!.type, 'StateError');
     });
 
