@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **10 / 37** (+1 Could) · Checkpoint 1 GREEN · **Checkpoint 2 running** (after 10 done).
+- Tasks done: **10 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 **GREEN** (51932bc, CI 44513898175) · next checkpoint after 15 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -137,3 +137,4 @@
 - 2026-11-19 13:45 — T-009 round 4 (F9: strict item URIs + single scoped delete) → CI green (Kotlin tests run in CI) → QA PASS → **T-009 done**, merged; main green. Device checks tracked under P-4.
 - 2026-11-19 13:45 — T-012 QA PASS with findings (clock skew, lost rate-limit report, starvation, uncapped retryAfter, double-report) → round 2. T-006 round 2 (fake fixes) → QA. T-010 started.
 - 2026-11-19 14:20 — T-006 QA PASS + CI green → **T-006 done**, merged; Lead exported `repo/repo.dart`; main suite green (data 561, domain 110, model 73, plugin 59, app 283). **10/37 → Checkpoint 2** started. T-012 round 2 delivered (51bff80, pushed) → QA re-verify. T-010 delivered → round 2 (exceptions to domain, approved port change); StorageInfo split to T-010a.
+- 2026-11-19 14:45 — **Checkpoint 2 GREEN** (`05-reviews/CHECKPOINT-2.md`): format/analyze/gen clean, all suites pass twice (no flakes), no count regressions, CI green. Info only: host `app/android` shell is outside the plugin (expected). T-010 round 2 → QA. T-012a started.
