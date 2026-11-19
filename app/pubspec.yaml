@@ -11,7 +11,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_inappwebview: ^6.1.5
+  # Exact pin: 6.1.5 pulls flutter_inappwebview_android 1.1.3, which breaks under AGP 9
+  # (removed proguard-android.txt). Revisit when 6.2.0 stable ships.
+  flutter_inappwebview: 6.2.0-beta.3
   material_ui: ^1.1.0
   storize_data: any
   storize_domain: any

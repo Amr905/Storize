@@ -157,12 +157,14 @@ class _InspectorWebView extends StatelessWidget {
       onWebViewCreated: (controller) {
         controller.addJavaScriptHandler(
           handlerName: hookHandlerName,
-          callback: (args) async {
-            // Origin of the page as the native side sees it, not as the
-            // page claims.
-            final url = await controller.getUrl();
-            final pageOrigin = url == null ? '' : '${url.scheme}://${url.host}';
-            final parsed = parseHookMessage(args, pageOrigin: pageOrigin);
+          callback: (JavaScriptHandlerFunctionData data) {
+            // Origin of the frame that posted, as reported by the native
+            // side (not by the page).
+            final o = data.origin;
+            final parsed = parseHookMessage(
+              data.args,
+              pageOrigin: '${o.scheme}://${o.host}',
+            );
             if (parsed != null) log.add(parsed);
             return null;
           },
