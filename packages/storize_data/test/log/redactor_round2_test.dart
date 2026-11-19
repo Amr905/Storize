@@ -16,6 +16,7 @@ void _gone(String input) {
 }
 
 void main() {
+  _n1n2();
   group('F1 percent-decoding', () {
     test('fully encoded CDN URL loses its signed params', () {
       final out = Redactor.redact(
@@ -252,6 +253,66 @@ void main() {
       expect(File('${tmp.path}/storize.log.12').existsSync(), isFalse);
       expect(File('${tmp.path}/storize.log.2').existsSync(), isTrue);
       expect(File('${tmp.path}/storize.log.bak').existsSync(), isTrue);
+    });
+  });
+}
+
+void _n1n2() {
+  group('N1 scrub as written first', () {
+    for (final sep in ['%3B', '%2C', '%26', '%22', '%20', '%27', '%7D']) {
+      test('value split by $sep is redacted whole', () {
+        final out = Redactor.redact('sessionid=ZZFAKE_HEAD${sep}ZZFAKE_TAIL');
+        expect(out, isNot(contains('ZZFAKE_TAIL')));
+        expect(out, isNot(contains('ZZFAKE_HEAD')));
+      });
+    }
+    test('CDN URL with %20 in the query keeps no query', () {
+      final out = Redactor.redact(
+        'https://scontent.cdninstagram.com/a.jpg?ccb=1%20&xyz=ZZFAKE_Q',
+      );
+      expect(out, isNot(contains('ZZFAKE_Q')));
+      expect(out, contains('?${Redactor.mask}'));
+    });
+    test('encoded CDN URL still gets its whole query stripped', () {
+      final out = Redactor.redact(
+        'https%3A%2F%2Fscontent.cdninstagram.com%2Fa.jpg%3Fccb%3D1%2520%26xyz%3DZZFAKE_Q',
+      );
+      expect(out, isNot(contains('ZZFAKE_Q')));
+    });
+  });
+
+  group('N2 deep encodings', () {
+    String enc(String v, int n) {
+      var s = v;
+      for (var i = 0; i < n; i++) {
+        s = Uri.encodeComponent(s);
+      }
+      return s;
+    }
+
+    for (final n in [4, 5, 6, 7]) {
+      test('key=value ${n}x encoded', () {
+        _gone(enc('sessionid=$_s', n));
+      });
+      test('CDN URL ${n}x encoded', () {
+        _gone(enc('https://scontent.cdninstagram.com/a.jpg?oh=$_s', n));
+      });
+    }
+    test('harmless text stays as written', () {
+      expect(Redactor.redact('a%2520b'), 'a%2520b');
+    });
+  });
+
+  group('N4 tag separators', () {
+    test('U+0085 and other separators in the tag become underscores', () {
+      final tmp = Directory.systemTemp.createTempSync('storize_tag_');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final file = RotatingLogFile(Directory('${tmp.path}/l'));
+      FileDiagnosticLog(
+        file: file,
+        clock: FakeClock(DateTime.utc(2026, 11, 19)),
+      ).log(LogLevel.info, 'a\u0085b c\u000Bd e', 'm');
+      expect(file.current.readAsStringSync(), contains('[a_b_c_d_e]'));
     });
   });
 }

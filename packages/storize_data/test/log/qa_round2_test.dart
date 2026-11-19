@@ -107,29 +107,20 @@ void main() {
     test('4-times encoded key=value: value is still redacted', () {
       _gone(_enc('sessionid=$_a', 4));
     });
-    test(
-      '4-times encoded CDN URL',
-      () {
-        _gone(_enc('https://scontent.cdninstagram.com/a.jpg?oh=$_a', 4));
-      },
-      skip: 'N2 minor: three decode passes are not enough for a 4x-encoded URL',
-    );
+    test('4-times encoded CDN URL', () {
+      _gone(_enc('https://scontent.cdninstagram.com/a.jpg?oh=$_a', 4));
+    });
     test('5- and 6-times encoded key=value', () {
       _gone(_enc('sessionid=$_a', 5));
       _gone(_enc('sessionid=$_a', 6));
-    }, skip: 'N2 minor: leaks beyond 4 levels of encoding');
+    });
   });
 
   group('N1: decoded text can split a value (regression vs round 1)', () {
     for (final sep in ['%3B', '%2C', '%26', '%22', '%20']) {
-      test(
-        'sessionid=<secret>$sep<secret>',
-        () {
-          _gone('sessionid=${_a}x$sep$_b');
-        },
-        skip:
-            'N1 major: decoding turns $sep into a value terminator, so the tail after it leaks',
-      );
+      test('sessionid=<secret>$sep<secret>', () {
+        _gone('sessionid=${_a}x$sep$_b');
+      });
     }
     test(
       'round-1 behaviour for the same inputs (control): :-joined value is fine',
@@ -137,15 +128,11 @@ void main() {
         _gone('sessionid=123%3A${_a}%3A27%3A$_b');
       },
     );
-    test(
-      'unknown CDN param after %20',
-      () {
-        _gone(
-          'https://scontent.cdninstagram.com/a.jpg?ccb=1%20&xyz=$_a sessionid%3D$_b',
-        );
-      },
-      skip: 'N1 (same class): %20 ends the URL token after decoding, so the query tail is no longer stripped',
-    );
+    test('unknown CDN param after %20', () {
+      _gone(
+        'https://scontent.cdninstagram.com/a.jpg?ccb=1%20&xyz=$_a sessionid%3D$_b',
+      );
+    });
   });
 
   group('bare-key rule', () {
@@ -242,21 +229,17 @@ void main() {
         log.log(LogLevel.info, 'a${s}b$s$forged', 'm');
       }
       final text = file.current.readAsStringSync();
-      for (final s in seps.skip(2).where((x) => x != '\u0085')) {
+      for (final s in seps.skip(2)) {
         expect(text, isNot(contains(s)), reason: 'raw ${s.codeUnits} in log');
       }
       // Each call produced exactly one physical line (split on \n only).
       expect(text.split('\n').where((l) => l.isNotEmpty).length, seps.length);
     });
 
-    test(
-      'N4 minor: U+0085 (NEL) in the tag is written raw',
-      () {
-        log.log(LogLevel.info, 'a\u0085b', 'm');
-        expect(file.current.readAsStringSync(), isNot(contains('\u0085')));
-      },
-      skip: 'N4 minor: Dart \\s does not match U+0085, so the tag sanitiser lets it through',
-    );
+    test('N4 minor: U+0085 (NEL) in the tag is written raw', () {
+      log.log(LogLevel.info, 'a\u0085b', 'm');
+      expect(file.current.readAsStringSync(), isNot(contains('\u0085')));
+    });
 
     test('message, error and stack separators are all indented', () {
       for (final s in seps) {

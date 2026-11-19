@@ -60,7 +60,7 @@ final class FileDiagnosticLog implements DiagnosticLog {
         ..write(' ')
         ..write(level.name.toUpperCase())
         ..write(' [')
-        ..write(Redactor.redact(tag).replaceAll(RegExp(r'\s'), '_'))
+        ..write(Redactor.redact(tag).replaceAll(_tagUnsafe, '_'))
         ..write('] ')
         ..write(_indent(Redactor.redact(message)));
       if (error != null) {
@@ -81,9 +81,11 @@ final class FileDiagnosticLog implements DiagnosticLog {
     }
   }
 
-  static final RegExp _lineBreak = RegExp(
-    '\r\n|[\n\r\u000B\u000C\u0085\u2028\u2029]',
-  );
+  /// Every character that can end a line, including those Dart's `\s` misses
+  /// (U+0085). Shared by [_indent] and the tag sanitiser.
+  static const String _breakChars = '\n\r\u000B\u000C\u0085\u2028\u2029';
+  static final RegExp _lineBreak = RegExp('\r\n|[$_breakChars]');
+  static final RegExp _tagUnsafe = RegExp('[\\s$_breakChars]');
 
   /// Turns every line break inside one field into `\n  | `, so injected text
   /// can never start a new entry at column 0 (log forging). Stack traces stay

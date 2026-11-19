@@ -107,8 +107,8 @@ abstract final class Redactor {
     '&#(?:[xX]([0-9A-Fa-f]{1,4})|([0-9]{1,4}));',
   );
 
-  /// How many rounds of decoding are tried (covers `%253D`, `%25253D`).
-  static const int _decodePasses = 3;
+  /// Most rounds of decoding (stops earlier once a round changes nothing).
+  static const int _decodePasses = 8;
 
   // Any URL, including JSON-escaped ones (`https:\/\/host\/path`).
   static final RegExp _url = RegExp(
@@ -125,16 +125,19 @@ abstract final class Redactor {
   /// cut to [maxLength]. Safe to call on any text and never throws; applying
   /// it twice gives the same result.
   ///
-  /// The text is matched in a decoded form too (percent, `\uXXXX`, HTML
-  /// entities, zero-width and fullwidth characters, up to [_decodePasses]
-  /// rounds). If a secret is found there, the decoded and redacted text is
-  /// returned; otherwise the text is redacted as it was written.
+  /// The text is scrubbed as written, then decoded (percent, `\uXXXX`, HTML
+  /// entities, zero-width and fullwidth characters, to a fixed point of at most
+  /// [_decodePasses] rounds) and scrubbed again. If the second scrub finds
+  /// more, its result is returned; otherwise the first.
   static String redact(String input) {
     String s;
     try {
-      final normal = _normalize(input);
-      s = _scrub(normal);
-      if (s == normal && normal != input) s = _scrub(input);
+      // Scrub as written first, so a value matched in its encoded form is
+      // removed whole before decoding can split it at `%3B`, `%20` and so on.
+      final first = _scrub(input);
+      final normal = _normalize(first);
+      final second = _scrub(normal);
+      s = second != normal ? second : first;
     } on Object {
       s = mask; // Fail closed.
     }
@@ -190,9 +193,17 @@ abstract final class Redactor {
   }
 
   // The decoded character if printable ASCII, else the text as written.
+  // Space, `<` and `>` stay encoded: decoding them would end a URL token and
+  // leave the rest of its signed query outside the CDN-URL rule.
   static String _ascii(Match m, int group, int radix) {
     final code = int.tryParse(m[group]!, radix: radix);
-    if (code == null || code < 0x20 || code > 0x7E) return m[0]!;
+    if (code == null ||
+        code <= 0x20 ||
+        code > 0x7E ||
+        code == 0x3C ||
+        code == 0x3E) {
+      return m[0]!;
+    }
     return String.fromCharCode(code);
   }
 
