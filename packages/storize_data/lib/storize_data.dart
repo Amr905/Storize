@@ -4,6 +4,7 @@
 library;
 
 export 'db/db.dart';
+export 'files/files.dart';
 export 'repo/repo.dart';
 export 'security/security.dart';
 export 'settings/settings.dart';
