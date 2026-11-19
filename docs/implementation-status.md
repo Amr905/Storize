@@ -63,6 +63,7 @@
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
+| T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | in_progress | 1 | — |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | todo | — | — |
