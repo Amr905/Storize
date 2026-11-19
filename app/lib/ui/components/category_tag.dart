@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Why an account is tracked (UX §5.3).
@@ -16,15 +16,17 @@ class CategoryTag extends StatelessWidget {
   /// Optional replacement text.
   final String? label;
 
-  static String defaultLabel(CategoryKind kind) => switch (kind) {
-    CategoryKind.ownClient => StorizeStrings.categoryOwn,
-    CategoryKind.consented => StorizeStrings.categoryConsented,
-    CategoryKind.publicFigure => StorizeStrings.categoryPublic,
-  };
+  static String defaultLabel(AppLocalizations l10n, CategoryKind kind) =>
+      switch (kind) {
+        CategoryKind.ownClient => l10n.categoryOwn,
+        CategoryKind.consented => l10n.categoryConsented,
+        CategoryKind.publicFigure => l10n.categoryPublic,
+      };
 
   @override
   Widget build(BuildContext context) {
     final c = StorizeColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final tone = switch (kind) {
       CategoryKind.ownClient => c.tagOwn,
       CategoryKind.consented => c.tagConsented,
@@ -41,7 +43,7 @@ class CategoryTag extends StatelessWidget {
           vertical: StorizeSpacing.s4,
         ),
         child: Text(
-          label ?? defaultLabel(kind),
+          label ?? defaultLabel(l10n, kind),
           style: Theme.of(
             context,
           ).textTheme.labelMedium?.copyWith(color: tone.onContainer),

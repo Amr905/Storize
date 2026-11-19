@@ -134,6 +134,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stepPending => 'To do';
 
   @override
+  String stepSemantics(int number, String title, String status) {
+    return 'Step $number, $title, $status';
+  }
+
+  @override
+  String statTileSemantics(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String kindSwitchSemantics(String label, int count) {
+    return '$label, $count';
+  }
+
+  @override
   String get all => 'All';
 
   @override

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show immutable, setEquals;
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 import 'package:storize_app/ui/utils/bidi.dart';
 
@@ -84,7 +84,7 @@ class AccountChipRow extends StatelessWidget {
       child: Row(
         children: [
           _Chip(
-            label: allLabel ?? StorizeStrings.all,
+            label: allLabel ?? AppLocalizations.of(context).all,
             selected: selectedIds.isEmpty,
             onTap: () {
               if (!setEquals(selectedIds, <String>{})) {

@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Shared chrome for `StoryThumb` and `PostThumb`: media area, optional "new"
@@ -63,7 +63,7 @@ class ThumbFrame extends StatelessWidget {
                   ),
                   const SizedBox(height: StorizeSpacing.s4),
                   Text(
-                    StorizeStrings.thumbBroken,
+                    AppLocalizations.of(context).thumbBroken,
                     style: textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),

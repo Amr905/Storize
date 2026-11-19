@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Pulsing placeholder block wrapper shared by the skeletons.
@@ -39,7 +39,7 @@ class _PulseState extends State<_Pulse> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: StorizeStrings.loading,
+      label: AppLocalizations.of(context).loading,
       container: true,
       excludeSemantics: true,
       child: FadeTransition(

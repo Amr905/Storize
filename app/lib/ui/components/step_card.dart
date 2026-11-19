@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/components/buttons.dart';
-import 'package:storize_app/ui/storize_strings.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Completion state of a [StepCard].
@@ -69,8 +69,8 @@ class _StepCardState extends State<StepCard> {
     final colors = StorizeColors.of(context);
     final done = widget.status == StepStatus.done;
     final statusText = done
-        ? StorizeStrings.stepDone
-        : StorizeStrings.stepPending;
+        ? AppLocalizations.of(context).stepDone
+        : AppLocalizations.of(context).stepPending;
     final showBody = !widget.expandable || _expanded;
 
     final header = Row(
@@ -137,7 +137,11 @@ class _StepCardState extends State<StepCard> {
               Semantics(
                 button: true,
                 expanded: _expanded,
-                label: 'Step ${widget.number}, ${widget.title}, $statusText',
+                label: AppLocalizations.of(context).stepSemantics(
+                  widget.number,
+                  widget.title,
+                  statusText,
+                ),
                 excludeSemantics: true,
                 onTap: _toggle,
                 child: InkWell(
@@ -154,7 +158,11 @@ class _StepCardState extends State<StepCard> {
             else
               Semantics(
                 container: true,
-                label: 'Step ${widget.number}, ${widget.title}, $statusText',
+                label: AppLocalizations.of(context).stepSemantics(
+                  widget.number,
+                  widget.title,
+                  statusText,
+                ),
                 excludeSemantics: true,
                 child: header,
               ),

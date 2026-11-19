@@ -281,91 +281,109 @@ abstract class AppLocalizations {
   /// **'Fix'**
   String get bannerFix;
 
-  /// No description provided for @bannerReloginTitle.
+  /// Session banner headline when the Instagram login needs attention.
   ///
   /// In en, this message translates to:
   /// **'Instagram login needs attention'**
   String get bannerReloginTitle;
 
-  /// No description provided for @bannerReloginBody.
+  /// Session banner second line when the login needs attention.
   ///
   /// In en, this message translates to:
   /// **'Checks are paused.'**
   String get bannerReloginBody;
 
-  /// No description provided for @bannerRestrictedTitle.
+  /// Session banner headline when the Instagram account is restricted.
   ///
   /// In en, this message translates to:
   /// **'Instagram account restricted'**
   String get bannerRestrictedTitle;
 
-  /// No description provided for @bannerRestrictedBody.
+  /// Session banner second line when the account is restricted.
   ///
   /// In en, this message translates to:
   /// **'Checks are paused.'**
   String get bannerRestrictedBody;
 
-  /// No description provided for @thumbNew.
+  /// Corner text marking a thumbnail as new (not yet viewed).
   ///
   /// In en, this message translates to:
   /// **'new'**
   String get thumbNew;
 
-  /// No description provided for @thumbBroken.
+  /// Placeholder text on a thumbnail whose media failed to load.
   ///
   /// In en, this message translates to:
   /// **'Can\'t load'**
   String get thumbBroken;
 
-  /// No description provided for @thumbSelected.
+  /// Semantics suffix for a selected thumbnail.
   ///
   /// In en, this message translates to:
   /// **'selected'**
   String get thumbSelected;
 
-  /// No description provided for @stepDone.
+  /// Setup step status when the step is complete.
   ///
   /// In en, this message translates to:
   /// **'Done'**
   String get stepDone;
 
-  /// No description provided for @stepPending.
+  /// Setup step status when the step is not complete.
   ///
   /// In en, this message translates to:
   /// **'To do'**
   String get stepPending;
 
-  /// No description provided for @all.
+  /// Screen reader label of a setup step: number, title and status.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {number}, {title}, {status}'**
+  String stepSemantics(int number, String title, String status);
+
+  /// Screen reader label of a stat tile: caption then value.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String statTileSemantics(String label, String value);
+
+  /// Screen reader label of a kind switch segment with a count.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {count}'**
+  String kindSwitchSemantics(String label, int count);
+
+  /// Account filter chip that clears the selection.
   ///
   /// In en, this message translates to:
   /// **'All'**
   String get all;
 
-  /// No description provided for @loading.
+  /// Screen reader label for loading indicators and skeletons.
   ///
   /// In en, this message translates to:
   /// **'Loading'**
   String get loading;
 
-  /// No description provided for @expand.
+  /// Semantics label of a control that expands a section.
   ///
   /// In en, this message translates to:
   /// **'Expand'**
   String get expand;
 
-  /// No description provided for @collapse.
+  /// Semantics label of a control that collapses a section.
   ///
   /// In en, this message translates to:
   /// **'Collapse'**
   String get collapse;
 
-  /// No description provided for @pinDelete.
+  /// PIN pad backspace key semantics label.
   ///
   /// In en, this message translates to:
   /// **'Delete'**
   String get pinDelete;
 
-  /// No description provided for @pinBiometric.
+  /// PIN pad fingerprint key semantics label.
   ///
   /// In en, this message translates to:
   /// **'Use biometrics'**

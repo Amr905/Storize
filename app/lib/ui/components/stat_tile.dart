@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Value + label tile (S-09), e.g. "128" / "Saved".
@@ -17,7 +18,7 @@ class StatTile extends StatelessWidget {
     final theme = Theme.of(context);
     return Semantics(
       container: true,
-      label: '$label: $value',
+      label: AppLocalizations.of(context).statTileSemantics(label, value),
       excludeSemantics: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
