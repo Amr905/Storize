@@ -85,6 +85,7 @@ void main() {
       for (final (name, fg, bg) in _pairs(scheme, colors)) {
         test(name, () {
           final ratio = contrast(fg, bg);
+          // Prints the ratios so they show up in the test log.
           // ignore: avoid_print
           print('${entry.key} | $name = ${ratio.toStringAsFixed(2)}');
           expect(ratio, greaterThanOrEqualTo(_minRatio));
