@@ -77,25 +77,26 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       onContainer: Color(0xFF8A2E10),
     ),
     tagOwn: StorizeTone(
-      color: Color(0xFFD9481F),
-      container: Color(0xFFFFE3D8),
-      onContainer: Color(0xFF8A2E10),
+      color: Color(0xFF2F4C8A),
+      container: Color(0xFFE3ECFB),
+      onContainer: Color(0xFF2F4C8A),
     ),
     tagConsented: StorizeTone(
-      color: Color(0xFF2D5DA8),
-      container: Color(0xFFE1EBFA),
-      onContainer: Color(0xFF1F4278),
+      color: Color(0xFF5B3DB0),
+      container: Color(0xFFEDE6FA),
+      onContainer: Color(0xFF5B3DB0),
     ),
     tagPublic: StorizeTone(
-      color: Color(0xFF6B4FA3),
-      container: Color(0xFFECE5F8),
-      onContainer: Color(0xFF4A3478),
+      color: Color(0xFF1E6E66),
+      container: Color(0xFFE5F3F1),
+      onContainer: Color(0xFF1E6E66),
     ),
     mediaScrim: Color(0xB3000000),
     onMediaScrim: Color(0xFFFFFFFF),
   );
 
-  /// Dark palette (see [light]).
+  /// Dark palette (see [light]). Category tags keep the mockup hues
+  /// (blue / purple / teal) with dark containers and light text, >= 4.5:1.
   static const dark = StorizeColors(
     success: StorizeTone(
       color: Color(0xFF5BD69A),
@@ -123,19 +124,19 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       onContainer: Color(0xFFFFB59A),
     ),
     tagOwn: StorizeTone(
-      color: Color(0xFFFF8A5C),
-      container: Color(0xFF5A1D07),
-      onContainer: Color(0xFFFFB59A),
-    ),
-    tagConsented: StorizeTone(
       color: Color(0xFF8DB4F0),
       container: Color(0xFF1B2E4D),
       onContainer: Color(0xFFB9D0F7),
     ),
-    tagPublic: StorizeTone(
+    tagConsented: StorizeTone(
       color: Color(0xFFB79DEB),
       container: Color(0xFF2E2347),
       onContainer: Color(0xFFD8C8F6),
+    ),
+    tagPublic: StorizeTone(
+      color: Color(0xFF7FD3C9),
+      container: Color(0xFF12332F),
+      onContainer: Color(0xFFA6E0D8),
     ),
     mediaScrim: Color(0xB3000000),
     onMediaScrim: Color(0xFFFFFFFF),
@@ -156,13 +157,13 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
   /// Checking / informational (ember).
   final StorizeTone info;
 
-  /// Category tag: own / client.
+  /// Category tag: own / client (blue, matches mockup S-07).
   final StorizeTone tagOwn;
 
-  /// Category tag: consented.
+  /// Category tag: consented / person who agreed (purple).
   final StorizeTone tagConsented;
 
-  /// Category tag: public.
+  /// Category tag: public creator (teal).
   final StorizeTone tagPublic;
 
   /// Dark scrim behind badges that sit on top of media.
