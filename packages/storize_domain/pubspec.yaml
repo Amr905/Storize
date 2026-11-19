@@ -8,6 +8,7 @@ environment:
   sdk: ^3.14.0
 
 dependencies:
+  meta: ^1.19.0
   storize_model: any
 
 dev_dependencies:
