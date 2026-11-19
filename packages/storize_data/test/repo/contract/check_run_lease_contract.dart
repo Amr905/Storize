@@ -15,11 +15,8 @@ void runCheckRunRepoContract(RepoHarness Function() create) {
   });
   tearDown(() => h.dispose());
 
-  Future<CheckRun> start(CheckScope scope, DateTime at) => repo.start(
-    scope: scope,
-    trigger: CheckTrigger.periodic,
-    startedAt: at,
-  );
+  Future<CheckRun> start(CheckScope scope, DateTime at) =>
+      repo.start(scope: scope, trigger: CheckTrigger.periodic, startedAt: at);
 
   test('start returns an unfinished run with an id', () async {
     final a = await start(CheckScope.stories, at(1));
@@ -244,7 +241,10 @@ void runGovernorLeaseRepoContract(RepoHarness Function() create) {
 
     await repo.release(accountId: 1, holder: 'A');
     final released = (await repo.read(1))!;
-    expect(released.expiresAt, h.clock.now());
+    expect(
+      released.expiresAt,
+      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+    );
     expect(released.isHeldAt(h.clock.now()), isFalse);
     expect(released.bucket, bucket);
     expect((await take('B'))!.bucket, bucket);
@@ -289,6 +289,73 @@ void runGovernorLeaseRepoContract(RepoHarness Function() create) {
       await repo.writeBucket(accountId: 5, holder: 'A', bucket: bucket),
       isFalse,
     );
+  });
+
+  group('clock skew', () {
+    for (final back in [const Duration(hours: 1), const Duration(days: 1)]) {
+      test('clock back ${back.inHours} h with the lease held: another '
+          'holder acquires', () async {
+        await take('A');
+        final bucket = aBucket(tokens: 2);
+        await repo.writeBucket(accountId: 1, holder: 'A', bucket: bucket);
+        h.clock.advance(-back);
+        final b = await take('B', bucket: aBucket(tokens: 99));
+        expect(b, isNotNull);
+        expect(b!.holder, 'B');
+        expect(b.expiresAt, h.clock.now().add(ttl));
+        expect(b.bucket, bucket);
+        // The new lease is a normal one and blocks others again.
+        expect(await take('C'), isNull);
+      });
+    }
+
+    test('release after a back-jump never blocks', () async {
+      await take('A');
+      h.clock.advance(const Duration(hours: -1));
+      await repo.release(accountId: 1, holder: 'A');
+      expect(
+        (await repo.read(1))!.expiresAt,
+        DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      );
+      // Even if the clock returns, the released lease is free.
+      expect(await take('B'), isNotNull);
+      h.clock.advance(const Duration(hours: -2));
+      await repo.release(accountId: 1, holder: 'B');
+      h.clock.advance(const Duration(days: -1));
+      expect(await take('C'), isNotNull);
+    });
+
+    test('release by a non-holder after a back-jump changes nothing', () async {
+      final lease = (await take('A'))!;
+      h.clock.advance(const Duration(minutes: -5));
+      await repo.release(accountId: 1, holder: 'B');
+      expect((await repo.read(1))!.expiresAt, lease.expiresAt);
+    });
+
+    test('a normal unexpired lease still blocks', () async {
+      await take('A');
+      h.clock.advance(const Duration(seconds: 5));
+      expect(await take('B'), isNull);
+      h.clock.advance(const Duration(seconds: -3));
+      expect(await take('B'), isNull); // small back-jump, within ttl
+    });
+
+    test('boundary: expiresAt exactly now + ttl still blocks, 1 ms more '
+        'does not', () async {
+      await take('A');
+      // Same instant: expiresAt == now + ttl exactly.
+      expect(await take('B'), isNull);
+      h.clock.advance(const Duration(milliseconds: -1));
+      // expiresAt = now + ttl + 1 ms: impossible, counts as expired.
+      expect(await take('B'), isNotNull);
+    });
+
+    test('the same holder still re-acquires after a back-jump', () async {
+      await take('A');
+      h.clock.advance(const Duration(hours: -1));
+      final again = await take('A');
+      expect(again!.expiresAt, h.clock.now().add(ttl));
+    });
   });
 
   test('accounts have independent leases', () async {

@@ -6,7 +6,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_model/storize_model.dart';
@@ -35,60 +34,6 @@ final class _Env {
     delay: time.delay,
     random: Random(seedValue + holder.hashCode),
     log: logs.add,
-  );
-}
-
-/// The repo side of QA-F2 (follow-up T-012a): a lease with `expiresAt` further
-/// away than `ttl` cannot be real (the clock moved back) and counts as
-/// expired. Wraps the fake so the governor is tested against both behaviours.
-final class _SkewTolerantRepo implements GovernorLeaseRepo {
-  _SkewTolerantRepo(this._inner, this._clock);
-
-  final FakeGovernorLeaseRepo _inner;
-  final Clock _clock;
-
-  @override
-  Future<GovernorLease?> acquire({
-    required int accountId,
-    required String holder,
-    required Duration ttl,
-    required GovernorBucket initialBucket,
-  }) async {
-    final row = await _inner.read(accountId);
-    if (row != null && row.expiresAt.isAfter(_clock.now().add(ttl))) {
-      await _inner.release(accountId: accountId, holder: row.holder);
-    }
-    return _inner.acquire(
-      accountId: accountId,
-      holder: holder,
-      ttl: ttl,
-      initialBucket: initialBucket,
-    );
-  }
-
-  @override
-  Future<GovernorLease?> read(int accountId) => _inner.read(accountId);
-
-  @override
-  Future<bool> renew({
-    required int accountId,
-    required String holder,
-    required Duration ttl,
-  }) => _inner.renew(accountId: accountId, holder: holder, ttl: ttl);
-
-  @override
-  Future<void> release({required int accountId, required String holder}) =>
-      _inner.release(accountId: accountId, holder: holder);
-
-  @override
-  Future<bool> writeBucket({
-    required int accountId,
-    required String holder,
-    required GovernorBucket bucket,
-  }) => _inner.writeBucket(
-    accountId: accountId,
-    holder: holder,
-    bucket: bucket,
   );
 }
 
@@ -499,20 +444,18 @@ void main() {
     test(
       '(e2) clock goes back 1 day, other isolate B (repo applies T-012a rule)',
       () async {
-        // With the plain fake repo B stays blocked until the clock catches
-        // up: that part is repo-side (T-012a). The governor must work as
-        // soon as the repo treats an impossible expiry as expired.
+        // The repo treats an impossible expiry as expired (T-012a), so B
+        // does not wait for the clock to catch up.
         final e = _Env();
-        final tolerant = _SkewTolerantRepo(e.repo, e.time.clock);
         final a = RequestGovernor(
-          leases: tolerant,
+          leases: e.repo,
           clock: e.time.clock,
           holder: 'A',
           delay: e.time.delay,
           random: Random(1),
         );
         final b = RequestGovernor(
-          leases: tolerant,
+          leases: e.repo,
           clock: e.time.clock,
           holder: 'B',
           delay: e.time.delay,

@@ -27,8 +27,10 @@ class GovernorLeaseDao extends DatabaseAccessor<StorizeDatabase>
       _byAccount(accountId).getSingleOrNull();
 
   /// Takes the lease for [holder] until `now + ttl`. Returns the row, or null
-  /// when another holder has an unexpired lease. A first lease starts from
-  /// [initialBucket]; later ones keep the stored bucket.
+  /// when another holder has an unexpired lease. A lease with
+  /// `expiresAt > now + ttl` counts as expired (the clock moved back). A
+  /// first lease starts from [initialBucket]; later ones keep the stored
+  /// bucket.
   Future<GovernorLeaseRow?> acquire({
     required int accountId,
     required String holder,
@@ -39,6 +41,8 @@ class GovernorLeaseDao extends DatabaseAccessor<StorizeDatabase>
     final existing = await read(accountId);
     if (existing != null &&
         existing.expiresAt.isAfter(now) &&
+        // A lease further away than ttl cannot be real (clock moved back).
+        !existing.expiresAt.isAfter(now.add(ttl)) &&
         existing.holder != holder) {
       return null;
     }
@@ -83,8 +87,9 @@ class GovernorLeaseDao extends DatabaseAccessor<StorizeDatabase>
     return true;
   });
 
-  /// Ends the lease of [holder] at [now]; the bucket stays. No-op for a
-  /// different holder.
+  /// Ends the lease of [holder] by setting `expiresAt` to [now]; the bucket
+  /// stays. No-op for a different holder. [GovernorLeaseRepo.release] passes
+  /// the epoch so the value can never block after a clock jump back.
   Future<void> release({
     required int accountId,
     required String holder,
