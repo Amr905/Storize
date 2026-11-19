@@ -114,6 +114,69 @@ void main() {
       expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
     });
+
+    testWidgets(
+      'asymmetric padding mirrors (fails on EdgeInsets.only(left:))',
+      (
+        tester,
+      ) async {
+        // SessionBanner pads start 16 / end 8. The icon's gap to the start edge
+        // must be 16 in both directions, the Fix button's gap to the end edge
+        // must be the same in both directions.
+        Future<(double, double)> gaps(TextDirection d) async {
+          await _pump(
+            tester,
+            SizedBox(
+              width: 400,
+              child: SessionBanner(
+                kind: SessionBannerKind.needsRelogin,
+                onFix: () {},
+              ),
+            ),
+            direction: d,
+          );
+          final box = tester.getRect(find.byType(SessionBanner));
+          final icon = tester.getRect(find.byIcon(Icons.warning_amber_rounded));
+          final fix = tester.getRect(find.byType(TextButton));
+          return d == TextDirection.ltr
+              ? (icon.left - box.left, box.right - fix.right)
+              : (box.right - icon.right, fix.left - box.left);
+        }
+
+        final ltr = await gaps(TextDirection.ltr);
+        final rtl = await gaps(TextDirection.rtl);
+        expect(rtl.$1, closeTo(ltr.$1, 0.01));
+        expect(rtl.$2, closeTo(ltr.$2, 0.01));
+      },
+    );
+
+    testWidgets('TargetRow avatar hugs the start edge with a 16 dp margin', (
+      tester,
+    ) async {
+      Future<double> gap(TextDirection d) async {
+        await _pump(
+          tester,
+          SizedBox(
+            width: 400,
+            child: TargetRow(
+              username: 'nour_k',
+              category: CategoryKind.ownClient,
+              status: StorizeStatus.active,
+              onTap: () {},
+            ),
+          ),
+          direction: d,
+        );
+        final box = tester.getRect(find.byType(TargetRow));
+        final av = tester.getRect(find.byType(StorizeAvatar));
+        return d == TextDirection.ltr
+            ? av.left - box.left
+            : box.right - av.right;
+      }
+
+      expect(await gap(TextDirection.ltr), 16);
+      expect(await gap(TextDirection.rtl), 16);
+    });
   });
 
   group('Touch targets >= 48 dp (AC-4)', () {
@@ -238,6 +301,41 @@ void main() {
         );
         expect(size.height, greaterThanOrEqualTo(48), reason: label);
       }
+    });
+
+    testWidgets('EmptyState action and ConfirmDialog buttons meet targets', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        themed(
+          EmptyState(
+            icon: Icons.inbox_rounded,
+            title: 'Nothing',
+            body: 'Body',
+            actionLabel: 'Add',
+            onAction: () {},
+          ),
+          brightness: Brightness.dark,
+        ),
+      );
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      await tester.pumpWidget(
+        themed(
+          const ConfirmDialog(
+            title: 'Remove?',
+            body: 'Body',
+            confirmLabel: 'Remove',
+            cancelLabel: 'Cancel',
+            destructive: true,
+          ),
+          brightness: Brightness.dark,
+        ),
+      );
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      handle.dispose();
     });
   });
 }
