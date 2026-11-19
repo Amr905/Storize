@@ -6,7 +6,7 @@ void main() {
   group('colour tokens (UX 5.2)', () {
     test('light scheme', () {
       final s = StorizeTheme.light().colorScheme;
-      expect(s.primary, const Color(0xFFD9481F));
+      expect(s.primary, const Color(0xFFC93F17));
       expect(s.onPrimary, const Color(0xFFFFFFFF));
       expect(s.primaryContainer, const Color(0xFFFFE3D8));
       expect(s.surface, const Color(0xFFFBF8F5));

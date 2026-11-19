@@ -38,6 +38,10 @@ List<_Pair> _pairs(ColorScheme s, StorizeColors c) {
       ),
     // StatusBadge in a card / on surface is drawn on its own container, so
     // that is all that is needed. Secondary text on the surfaces it appears on:
+    // Filled buttons, FAB and Switch thumb: label on primary (WCAG AA, UD-1).
+    ('onPrimary on primary (filled button)', s.onPrimary, s.primary),
+    // TextButton labels and active tab: primary used as text/icon on surface.
+    ('primary on surface (text/icon)', s.primary, s.surface),
     ('onSurface on surface', s.onSurface, s.surface),
     ('onSurfaceVariant on surface', s.onSurfaceVariant, s.surface),
     (
@@ -94,18 +98,26 @@ void main() {
     });
   }
 
+  test('light primary #C93F17 meets WCAG AA (UD-1)', () {
+    const s = StorizeTheme.lightScheme;
+    expect(s.primary, const Color(0xFFC93F17));
+    expect(
+      contrast(const Color(0xFFFFFFFF), s.primary),
+      greaterThanOrEqualTo(_minRatio),
+    );
+    expect(contrast(s.primary, s.surface), greaterThanOrEqualTo(_minRatio));
+  });
+
   test(
-    'KNOWN FAILURES pending UX decision: light primary pairs and warning text',
+    'KNOWN FAILURE pending UX decision: light warning text on surface (QA F3)',
     () {
       const s = StorizeTheme.lightScheme;
       const c = StorizeColors.light;
-      expect(contrast(s.onPrimary, s.primary), greaterThanOrEqualTo(_minRatio));
-      expect(contrast(s.primary, s.surface), greaterThanOrEqualTo(_minRatio));
       expect(
         contrast(c.warning.color, s.surface),
         greaterThanOrEqualTo(_minRatio),
       );
     },
-    skip: 'pending UX decision on light primary (QA F1/F2)',
+    skip: 'pending UX decision on light warning text (QA F3)',
   );
 }
