@@ -37,11 +37,21 @@ int deepHash(Object? value) {
 }
 
 /// Returns a copy of [value] where every nested list and map is unmodifiable.
+///
+/// A map whose keys are all Strings stays `Map<String, Object?>`, so callers
+/// can read JSON-like values with `as Map<String, Object?>`. Other maps keep
+/// `Map<Object?, Object?>`.
 Object? deepUnmodifiable(Object? value) {
   if (value is List) {
     return List<Object?>.unmodifiable(value.map(deepUnmodifiable));
   }
   if (value is Map) {
+    if (value.keys.every((key) => key is String)) {
+      return Map<String, Object?>.unmodifiable({
+        for (final e in value.entries)
+          e.key as String: deepUnmodifiable(e.value),
+      });
+    }
     return Map<Object?, Object?>.unmodifiable({
       for (final e in value.entries) e.key: deepUnmodifiable(e.value),
     });

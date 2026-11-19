@@ -201,6 +201,38 @@ void main() {
       expect(() => links.add(3), throwsUnsupportedError);
     });
 
+    test('nested list of maps stays readable as Map<String, Object?>', () {
+      final c = content(
+        extras: {
+          'links': <Object?>[
+            <String, Object?>{'url': 'https://example.test/a', 'n': 1},
+            <String, Object?>{'url': 'https://example.test/b', 'n': 2},
+          ],
+          'location': <String, Object?>{'name': 'Cairo'},
+        },
+      );
+      final links = c.extras['links']! as List<Object?>;
+      final first = links[0]! as Map<String, Object?>;
+      expect(first['url'], 'https://example.test/a');
+      expect(first['n'], 1);
+      expect(
+        (c.extras['location']! as Map<String, Object?>)['name'],
+        'Cairo',
+      );
+      expect(() => first['x'] = 1, throwsUnsupportedError);
+    });
+
+    test('non-String map keys are kept as Map<Object?, Object?>', () {
+      final c = content(
+        extras: {
+          'byId': <Object?, Object?>{1: 'one', 'k': 'v'},
+        },
+      );
+      final byId = c.extras['byId']! as Map<Object?, Object?>;
+      expect(byId[1], 'one');
+      expect(() => byId[2] = 'two', throwsUnsupportedError);
+    });
+
     test('toString omits caption and extras', () {
       final c = content(
         caption: 'PRIVATE CAPTION',

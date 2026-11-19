@@ -204,7 +204,6 @@ void main() {
         // Map<Object?, Object?> by deepUnmodifiable.
         expect(c.extras['location']! as Map<String, Object?>, isNotNull);
       },
-      skip: 'F-1: deepUnmodifiable loses the String key type (docs/05-reviews/T-003.md)',
     );
   });
 
