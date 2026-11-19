@@ -37,9 +37,13 @@ void main() {
     final controller = StreamController<List<int>>();
     final done = cache.append(3, controller.stream);
     controller.add([1, 2, 3, 4]);
-    // Give the write a moment; the stream is still open, so there was no
-    // close yet.
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+    // Poll (bounded) for the write; the stream is still open, so there was
+    // no close yet (CHECKPOINT-3 F-1: a fixed 100 ms wait flaked under load).
+    final file = File('${cacheDir.path}/part/3.part');
+    for (var i = 0; i < 200; i++) {
+      if (file.existsSync() && file.lengthSync() >= 4) break;
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
     expect(
       File('${cacheDir.path}/part/3.part').lengthSync(),
       4,

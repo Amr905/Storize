@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **16 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · **Checkpoint 3 running** (after 15 done).
+- Tasks done: **16 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · next checkpoint after 20 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -89,7 +89,7 @@
 - **T-010 / T-026:** request `WRITE_EXTERNAL_STORAGE` at runtime on API ≤ 28 (S-03 card); store `relativePath` from `insert` (video may fall back to `Movies/Storize/<dir>/` if MediaStore rejects `Pictures/` for video — T-009).
 - **T-012a (follow-up, Medium):** lease clock-skew in the repos — a lease with `expiresAt > now + ttl` counts as expired; `release` sets `expiresAt` to the epoch. Touches the T-005 DAO, the T-006 drift repo and the T-004 fake (T-012 QA F2). Also: bounded retry when recording a rate limit fails (T-012 QA N2); swap `_SkewTolerantRepo` in the QA test for the plain fake.
 - **T-013/T-014:** never start unawaited governed work inside `RequestGovernor.run`'s `call` (zone guard false positive, T-012 QA N1).
-- **Watch:** `storize_data/test/db/qa_perf_test.dart` "library kind=POST" took 1019 ms vs 1000 ms under full-suite load once (T-012 QA N4); raise the budget if it recurs.
+- **Fixed (Lead, CHECKPOINT-3 F-1):** perf budget 1000 → 2000 ms; kill-safety test polls (≤ 2 s) instead of a fixed 100 ms wait.
 - **T-017/T-018:** `decodeJsonMap(null)` returns an unmodifiable map — copy before mutating (T-006 QA). `watchRecent` window is fixed at subscribe time (accepted).
 - **T-010a (follow-up, Medium):** plugin `storageStats` method (StatFs) on `storize/media` + `PluginStorageInfo` in storize_data (T-010 gap). Also: add the 46 missing Cf code points to the test mirror `plugin_rules.dart` (T-010 QA F-1); align `GalleryStore.exists/size` docs + fake with the real error set (F-4).
 - **T-018:** never `append` the same media id concurrently (T-010 QA F-2). **T-021:** call `MediaCache.cleanupOrphans()` at start.
@@ -146,3 +146,4 @@
 - 2026-11-19 15:05 — T-012 round 2 QA PASS + CI green → **T-012 done** (11/37), merged; Lead exported the governor from `storize_instagram.dart`; main green (instagram 92). Lead added deps `cryptography` (data, app) and `local_auth` (app) for T-034. T-010 → QA.
 - 2026-11-19 15:20 — T-010 QA PASS (0 blocker/major, 4 minor) + CI green → **T-010 done** (12/37), merged; Lead exported `files/files.dart`; main green (data 750, domain 116). Lead added dep `dio` (storize_data) for T-023. Started T-012a, T-010a, T-023, T-034.
 - 2026-11-19 16:40 — T-012a QA PASS + CI → **done**. T-023 QA PASS, r2 fixed html_url host pinning (Medium) → CI → **done**. T-010a QA PASS, Kotlin verified in CI → **done**. T-034 QA found 3 majors (fail-open default, AppCompat theme, reset state) → r2 → QA PASS + CI (APK) → **done**. All merged; Lead exported `update/update.dart` and `security/pin_vault.dart`; main green (data 1064, domain 118, instagram 108, model 73, plugin 69, app 422). **16/37 → Checkpoint 3.**
+- 2026-11-19 19:30 — Resumed after the usage-limit pause (~16:50–18:55). **Checkpoint 3 GREEN** (`05-reviews/CHECKPOINT-3.md`): no regressions, counts up everywhere, CI green. Lead fixed the two load-sensitive tests (F-1). T-011 delivered → QA. T-019 delivered (resumed after the limit) → QA. Remaining backlog is blocked on T-002 (UD-2).

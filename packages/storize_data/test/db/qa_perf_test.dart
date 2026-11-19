@@ -114,7 +114,9 @@ void main() {
         'QA PERF library [${e.key}] rows=${rows.length} '
         '${sw.elapsedMilliseconds} ms\n  plan: ${plans.join(' | ')}',
       );
-      expect(sw.elapsedMilliseconds, lessThan(1000));
+      // 2000 ms: generous for loaded CI/dev machines (CHECKPOINT-3 F-1);
+      // the index still makes a real regression fail.
+      expect(sw.elapsedMilliseconds, lessThan(2000));
     });
   }
 
@@ -131,7 +133,9 @@ void main() {
       'limit20=${lim.length} ${sw2.elapsedMilliseconds} ms\n'
       '  plan: ${plans.join(' | ')}',
     );
-    expect(sw.elapsedMilliseconds, lessThan(1000));
+    // 2000 ms: generous for loaded CI/dev machines (CHECKPOINT-3 F-1);
+    // the index still makes a real regression fail.
+    expect(sw.elapsedMilliseconds, lessThan(2000));
   });
 
   test('other reads', () async {
