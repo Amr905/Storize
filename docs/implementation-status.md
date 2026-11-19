@@ -29,6 +29,8 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
+| T-019a | backend-developer (haiku) | `packages/storize_domain/lib/src/ports/media_cache.dart`, `packages/storize_domain/lib/src/testing/fake_media_cache.dart`, `packages/storize_domain/lib/src/usecases/delete_content.dart`, `packages/storize_domain/test/usecases/**`, `packages/storize_domain/test/testing/stores_test.dart`, `packages/storize_data/lib/files/file_media_cache.dart`, `packages/storize_data/test/files/**` | 21:35 |
+| T-024b | frontend-developer (haiku) | `app/lib/ui/**`, `app/lib/l10n/**`, `app/test/ui/**` | 21:35 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -54,6 +56,7 @@
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-012 | todo | — | — |
 | T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | todo | — | — |
+| T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | in_progress | 1 | — |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
