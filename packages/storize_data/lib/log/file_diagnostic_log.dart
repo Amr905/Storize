@@ -2,9 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:storize_data/log/redactor.dart';
 import 'package:storize_data/log/rotating_log_file.dart';
-// TODO(lead): drop once `ports/diagnostic_log.dart` is exported by the barrel.
-// ignore: implementation_imports
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
 import 'package:storize_domain/storize_domain.dart';
 
 /// The diagnostic log (TECH_SPEC §8, ADR-7): redacts each line, then appends

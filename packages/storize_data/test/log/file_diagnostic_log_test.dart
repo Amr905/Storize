@@ -5,7 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:storize_data/log/file_diagnostic_log.dart';
 import 'package:storize_data/log/redactor.dart';
 import 'package:storize_data/log/rotating_log_file.dart';
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 
 const _secret = 'ZZFAKE_SECRET_ONE_a1b2c3';

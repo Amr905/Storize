@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/log/log.dart';
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 
 const _marker = 'ZZQAFAKEVALUE';

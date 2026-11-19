@@ -6,9 +6,6 @@ import 'package:storize_data/log/crash_hooks.dart';
 import 'package:storize_data/log/crash_marker.dart';
 import 'package:storize_data/log/file_diagnostic_log.dart';
 import 'package:storize_data/log/rotating_log_file.dart';
-// TODO(lead): drop once `ports/diagnostic_log.dart` is exported by the barrel.
-// ignore: implementation_imports
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
 import 'package:storize_domain/storize_domain.dart';
 
 /// The diagnostics bundle: the log, the crash marker and the recorder, all

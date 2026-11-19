@@ -3,9 +3,6 @@ import 'dart:ui' show ErrorCallback, PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:storize_data/log/crash_marker.dart';
-// TODO(lead): drop once `ports/diagnostic_log.dart` is exported by the barrel.
-// ignore: implementation_imports
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
 import 'package:storize_domain/storize_domain.dart';
 
 /// Writes uncaught errors to the [DiagnosticLog] and the [CrashMarker].

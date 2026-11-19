@@ -8,7 +8,7 @@ import 'dart:isolate';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/log/file_diagnostic_log.dart';
 import 'package:storize_data/log/rotating_log_file.dart';
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 
 void main() {

@@ -1,5 +1,5 @@
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
-import 'package:storize_domain/src/testing/fake_diagnostic_log.dart';
+import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_domain/testing.dart';
 import 'package:test/test.dart';
 
 void main() {

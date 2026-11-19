@@ -7,8 +7,6 @@ import 'package:storize_data/log/crash_hooks.dart';
 import 'package:storize_data/log/crash_marker.dart';
 import 'package:storize_data/log/file_diagnostic_log.dart';
 import 'package:storize_data/log/rotating_log_file.dart';
-import 'package:storize_domain/src/ports/diagnostic_log.dart';
-import 'package:storize_domain/src/testing/fake_diagnostic_log.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_model/storize_model.dart';
