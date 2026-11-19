@@ -2,7 +2,7 @@
 
 > Maintained by the **Lead Orchestrator**. Updated after every delegation, review, and checkpoint.
 > Source of truth for task state. `TASKS.md` holds the specs; this file holds progress.
-> Last update: 2026-11-19 03:05 (Cairo)
+> Last update: 2026-11-19 06:05 (Cairo)
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
@@ -37,7 +37,7 @@
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
 | T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | in_progress | 1 | — |
-| T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | in_progress | 1 | — |
+| T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | in_review (fix F-1) | 3 | — |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | todo | — | — |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
@@ -88,3 +88,7 @@
 - 2026-11-19 02:55 — QA: PASS (AC3 pending; Gradle hosts are blocked in the workspace). CI run 1 failed at the APK build (AGP 9 resValues) → returned to the developer.
 - 2026-11-19 03:05 — Round 2 fixed; CI run 2 all green (APK + gitleaks). **T-001 done**, merged to main. Note: APK builds are verified via GitHub Actions on `t-*` branches.
 - 2026-11-19 03:10 — Wave 2 started in parallel (separate worktrees): T-003 (haiku), T-024 (sonnet), T-002 prep (sonnet; the capture itself needs the user's Instagram test account).
+- 2026-11-19 03:20 — T-003 round 1 → Lead REQUEST_CHANGES (RemoteUser missing followedByViewer/blockedByViewer; replace ignore_for_file with @immutable + `meta`). Round 2 fixed; 61 tests pass.
+- 2026-11-19 03:35 — T-003 QA: PASS with Medium F-1 (nested extras maps lose String key type). Lead requires the fix before merge (round 3).
+- 2026-11-19 ~03:40 — T-024 and T-002 agents stopped by the account usage limit (5-hour window). Work saved uncommitted.
+- 2026-11-19 06:05 — User: "continue". Resumed T-024 and T-002 in place; T-003 round 3 started.
