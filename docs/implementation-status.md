@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 19 / 41 tasks done (46%)** — original plan 16 / 37 (43%) + follow-ups 3 / 4 (T-010a, T-012a, T-024b done; T-019a in round 2). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · next checkpoint after 20 done.
+- **Progress: 20 / 41 tasks done (49%)** — original plan 16 / 37 (43%) + follow-ups 4 / 4 (T-010a, T-012a, T-019a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · **Checkpoint 4 running** (20 done).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-019a | backend-developer (haiku) | `packages/storize_domain/lib/src/ports/media_cache.dart`, `packages/storize_domain/lib/src/testing/fake_media_cache.dart`, `packages/storize_domain/lib/src/usecases/delete_content.dart`, `packages/storize_domain/test/usecases/**`, `packages/storize_domain/test/testing/stores_test.dart`, `packages/storize_data/lib/files/file_media_cache.dart`, `packages/storize_data/test/files/**` | 21:35 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -55,7 +54,7 @@
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-012 | todo | — | — |
 | T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | todo | — | — |
-| T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | changes_requested (split cleanup APIs, QA F1) | 2 | — |
+| T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
@@ -152,3 +151,4 @@
 - 2026-11-19 20:50 — T-019 round 2 QA PASS + CI green → **T-019 done** (17/37), merged; Lead exported the use cases from the domain barrel. T-011 round 2 QA **FAIL** (N1: decoding `%3B` etc. inside a value terminates it early → tail leaks; CI gitleaks flagged a QA test fixture) → round 3.
 - 2026-11-19 21:30 — T-011 round 3 QA PASS + CI green (gitleaks fixed: fake value removed from review doc, `.gitleaksignore` for history) → **T-011 done** (18/37), merged; Lead wired log barrels and removed the temporary `src` imports; main green (data 1382, domain 186, app 449). Remaining work is blocked on T-002 (UD-2), except follow-ups T-019a and T-024b.
 - 2026-11-19 22:15 — T-024b QA PASS + CI → **done**, merged (Lead fixed 3 lint infos in the QA test). T-019a QA PASS but F1 (one `keepIds` set for parts and thumbnails would wipe downloaded thumbnails at startup) → round 2: split into `cleanupOrphans(pendingIds)` + `cleanupOrphanThumbnails(liveMediaIds)`. Progress now reported as %: **19/41 (46%)**; original 37-task plan 16/37 (43%) — the earlier 49% wrongly counted 2 follow-ups as plan tasks.
+- 2026-11-19 22:45 — T-019a round 2 QA PASS + CI → **done**, merged; main green (data 1423, domain 210, app 458). **20/41 (49%)** → Checkpoint 4 started. No further unblocked tasks: the rest wait on T-002 (UD-2) or P-5.
