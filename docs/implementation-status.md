@@ -28,12 +28,12 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| — | — | — | — |
+| T-001 | backend-developer (sonnet) | `pubspec.yaml`, `analysis_options.yaml`, `melos.yaml` (if used), `app/**`, `packages/*/**` (skeleton files only), `.github/workflows/ci.yml`, `.gitignore`, `README.md` (dev section only) | 02:50 |
 
 ## Task board
 | ID | Title | Complexity | Model | Specialist | Depends on | Status | Attempts | Verified by / evidence |
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
-| T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | todo (ready) | — | — |
+| T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | in_progress | 1 | — |
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | todo | — | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | todo | — | — |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | todo | — | — |
