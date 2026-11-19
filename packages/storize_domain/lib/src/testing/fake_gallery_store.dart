@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:storize_domain/src/exceptions.dart';
 import 'package:storize_domain/src/ports/gallery_store.dart';
 import 'package:storize_domain/src/testing/fake_media_cache.dart';
 import 'package:storize_model/storize_model.dart';
@@ -26,6 +27,7 @@ final class FakeGalleryStore implements GalleryStore {
   final Map<String, GalleryFile> _files = {};
   final List<GalleryFile> _saved = [];
   Object? _nextSaveError;
+  GalleryStoreException? _nextDeleteError;
   int _counter = 0;
 
   /// The files that currently exist, in save order.
@@ -42,6 +44,23 @@ final class FakeGalleryStore implements GalleryStore {
   /// Removes the file as if the user deleted it in another app (EC-20).
   /// Returns false when it did not exist.
   bool simulateMissing(String contentUri) => _files.remove(contentUri) != null;
+
+  /// Makes the next `save` throw [GalleryPermissionDenied].
+  void failNextSaveWithPermissionDenied() =>
+      failNextSave(const GalleryPermissionDenied());
+
+  /// Makes the next `save` throw [GalleryStorageFull].
+  void failNextSaveWithStorageFull() =>
+      failNextSave(const GalleryStorageFull());
+
+  /// Makes the next `save` throw [GalleryWriteFailed] with [code].
+  void failNextSaveWithWriteFailed([String code = 'IO_ERROR']) =>
+      failNextSave(GalleryWriteFailed(code));
+
+  /// Makes the next `delete` throw [error] (for example
+  /// `GalleryPermissionDenied()` for a row Storize does not own).
+  // ignore: use_setters_to_change_properties, a verb reads better in tests.
+  void failNextDelete(GalleryStoreException error) => _nextDeleteError = error;
 
   @override
   Future<GalleryFile> save({
@@ -72,8 +91,14 @@ final class FakeGalleryStore implements GalleryStore {
   }
 
   @override
-  Future<bool> delete(String contentUri) async =>
-      _files.remove(contentUri) != null;
+  Future<bool> delete(String contentUri) async {
+    final error = _nextDeleteError;
+    if (error != null) {
+      _nextDeleteError = null;
+      throw error;
+    }
+    return _files.remove(contentUri) != null;
+  }
 
   @override
   Future<bool> exists(String contentUri) async =>
