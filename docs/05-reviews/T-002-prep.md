@@ -384,3 +384,8 @@ The six extra known `message`/`error_type` values survive; `checkpoint_url`, `ch
 |----|----------|---------|
 | QA-27 | Low/Info | body `<url host=...>` keeps the full host under cdninstagram.com, fbcdn.net, facebook.com, fbsbx.com |
 | QA-28 | Info | `run()` does not re-scan an injected sanitizer's output; production unaffected |
+
+## Lead decision — sanitizer tooling (2026-11-20)
+- Rounds 1–6; round 4 FAIL (QA-14/15) → Lead design (strict key default-deny + reviewed `keep_keys.txt`, dynamic maps) → round 5 PASS → round 6 hardening (host labels, failure-map values) PASS. CI [44614974867](https://github.com/Amr905/Storize/actions/runs/44614974867) green; gitleaks clean (dir + full history).
+- Accepted residuals (Low/Info): QA-24 (bool/string-only objects lose schema keys → rescue via `keep_keys.txt`), QA-27 (CDN/facebook host labels kept in body URL placeholders), QA-28 (`run()` with an injected sanitizer skips the final scan; production never injects). Fix QA-27/28 opportunistically in T-013.
+- **Sanitizer tooling: APPROVED for the real capture.** T-002 itself stays `in_progress` until the user's capture (P-3) is sanitized, reviewed and `INSTAGRAM_EXTRACTION.md` is filled in.
