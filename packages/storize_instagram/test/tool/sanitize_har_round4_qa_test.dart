@@ -49,28 +49,24 @@ void noLeak(
   });
 }
 
-const _qa14 = 'QA-14: snake_case key kept next to an allowlisted sibling';
-const _qa15 =
-    'QA-15: username equal to an allowlisted key makes the whole map keep its keys';
-
 void main() {
   group('1 snake_case + allowlisted sibling', () {
     noLeak('pk sibling', {
       'pk': '1',
       'zzfake_nour': {'a': 1},
-    }, skip: _qa14);
+    });
     noLeak('unknown map seen_by with a username that is an allowlisted word', {
       'seen_by': {
         'user': {'a': 1},
         'zzfake_nour': {'a': 1},
       },
-    }, skip: _qa15);
+    });
     noLeak('likers_map keyed by usernames, all unknown', {
       'likers_map': {
         'zzfake_nour': {'pk': '1234567890'},
         'zzfake_two': {'pk': '1234567891'},
       },
-    }, skip: _qa14);
+    });
     noLeak('mentions keyed by username, values are objects with known keys', {
       'mentions': {
         'zzfake_nour': {'username': 'x', 'pk': '1234567890'},
@@ -89,7 +85,7 @@ void main() {
         'zzfake_nour': {'seen': true},
         'zzfake_two': {'seen': true},
       },
-    }, skip: _qa14);
+    });
     noLeak('username dotted next to known sibling', {
       'id': '1',
       'zzfake.nour': 1,
@@ -98,7 +94,7 @@ void main() {
       'data': {
         'xdt_zzfake_nour': {'id': '1'},
       },
-    }, skip: 'QA-16: any xdt_/xig_ key directly under data is kept');
+    });
   });
 
   group('2 usernames shaped like allowlisted keys', () {
@@ -140,7 +136,6 @@ void main() {
         expect(out, isNotNull);
         expect(out!.toLowerCase(), isNot(contains('zzfake')));
       },
-      skip: 'QA-17: identifier-shaped value under type/status/kind/audience is kept',
     );
   });
 
@@ -181,15 +176,11 @@ void main() {
     noLeak('user id as a 10-digit int under non-id key', {
       'actor': 1234567890,
       'zzfake_marker': 1,
-    }, skip: 'covered below');
-    test(
-      '10-digit user id as int under non-id key (QA-18, low)',
-      () {
-        final out = _out({'mentioned': 1234567890, 'pk': '1'})!;
-        expect(out, isNot(contains('1234567890')));
-      },
-      skip: 'QA-18: ints under keys not ending in id/pk/owner are kept unless 13+ digits',
-    );
+    });
+    test('10-digit user id as int under non-id key (QA-18, low)', () {
+      final out = _out({'mentioned': 1234567890, 'pk': '1'})!;
+      expect(out, isNot(contains('1234567890')));
+    });
     noLeak('map key inside a dynamic map named like a dynamic parent', {
       'users': {
         'zzfake_a': {
@@ -213,7 +204,7 @@ void main() {
       final out = _out({'status': 'ok'}, url: '$_u?zzfake_nour=1');
       expect(out, isNotNull);
       expect(out!.toLowerCase(), isNot(contains('zzfake')));
-    }, skip: 'QA-19 (accepted residual): lowercase query/header name passes');
+    });
     test('header name with a username shape is kept (accepted residual)', () {
       final out = _out(
         {'status': 'ok'},
@@ -222,7 +213,7 @@ void main() {
         ],
       );
       expect(out!.toLowerCase(), isNot(contains('zzfake')));
-    }, skip: 'QA-19');
+    });
     noLeak('query name with dot/digit/uppercase', {
       'status': 'ok',
     }, url: '$_u?ZZfake.nour=1&zzfake9=2&zz.fake=1');
@@ -235,7 +226,6 @@ void main() {
         'status': 'ok',
       },
       url: '${_u}web_profile_info/?username=zzfake_nour&zzfake',
-      skip: 'QA-19 accepted residual: bare lowercase query name',
     );
     noLeak('path segments', {
       'status': 'ok',
@@ -249,7 +239,6 @@ void main() {
         {'name': 'content-type', 'value': 'zzfake'},
         {'name': 'user-agent', 'value': 'zzfake'},
       ],
-      skip: 'QA-22 (low): accept/content-type keep any plain word',
     );
   });
 
@@ -331,9 +320,6 @@ void main() {
         final all = o.files.values.join('\n').toLowerCase();
         expect(all, isNot(contains('zzfake')));
       },
-      skip:
-          'QA-23 (info): method is upper-cased before its shape check; '
-          'response mimeType keeps any word-shaped text',
     );
     test('scan itself does not detect a plain username (documented limitation)', () {
       // The final scan only looks for secrets/emails/phones/tokens, not names.
@@ -477,13 +463,15 @@ void main() {
         final all = o.files.values.join('\n');
         expect(all, contains('login_required'));
       },
-      skip: 'QA-20: message/error_type values are replaced, so the failure map cannot be observed',
     );
-    test('camelCase GraphQL keys next to known keys', () {
+    test('camelCase keys: opt-in matches exactly (QA-21)', () {
       final o = sanitizeHar(
         _har({'id': '1234567', 'profilePicUrl': 'x', 'fullName': 'y'}),
+        keepKeys: {'profilePicUrl'},
       );
-      expect(o.files.values.join('\n'), contains('profilePicUrl'));
-    }, skip: 'QA-21 (info): camelCase keys become key_N');
+      final all = o.files.values.join('\n');
+      expect(all, contains('"profilePicUrl"'));
+      expect(all, isNot(contains('fullName')));
+    });
   });
 }

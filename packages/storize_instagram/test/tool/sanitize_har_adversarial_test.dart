@@ -156,30 +156,30 @@ void main() {
       'placeholder unless its key is on the structural allowlist', () {
     final o = sanitizeHar(
       _har({
-        'a': 'free text',
+        'text': 'free text',
         'user': {'username': 'zzfakeu', 'full_name': 'ZZFAKE N'},
-        'list': ['x', 'y'],
+        'items': ['x', 'y'],
         'product_type': 'clips',
         'status': 'ok',
         'type': 'has space',
         'mime_type': 'video/mp4',
         'video_dash_manifest': '<MPD>zzfake</MPD>',
-        'image': {'url': 'https://scontent-x.cdninstagram.com/a/b/c.jpg?oh=1'},
+        'owner': {'url': 'https://scontent-x.cdninstagram.com/a/b/c.jpg?oh=1'},
       }),
     );
     final j = jsonDecode(
       o.files.entries.firstWhere((e) => e.key.startsWith('bodies/')).value,
     ) as Map<String, dynamic>;
-    expect(j['a'], '<str:9>');
+    expect(j['text'], '<str:9>');
     expect((j['user'] as Map)['username'], '<str:7>');
-    expect(j['list'], ['<str:1>', '<str:1>']);
+    expect(j['items'], ['<str:1>', '<str:1>']);
     expect(j['product_type'], 'clips');
     expect(j['status'], 'ok');
     expect(j['type'], '<str:9>', reason: 'allowlisted key, bad pattern');
     expect(j['mime_type'], 'video/mp4');
     expect(j['video_dash_manifest'], '<dash:17>');
     expect(
-      (j['image'] as Map)['url'],
+      (j['owner'] as Map)['url'],
       '<url host=scontent-x.cdninstagram.com path_shape=3seg.jpg>',
     );
   });

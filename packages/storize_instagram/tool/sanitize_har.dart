@@ -27,23 +27,40 @@ const String redacted = '<redacted>';
 // replaced unless its key is on an explicit allowlist of structural keys.
 // ---------------------------------------------------------------------------
 
-/// String values kept (if they also match a short pattern) for these keys.
-const Set<String> _allowedStringKeys = {
-  'media_type',
-  'product_type',
-  'audience',
-  'status',
-  '__typename',
-  'mime_type',
-  'content_type',
-  'type',
-  'kind',
-  'reel_type',
+/// Known values for enum-like keys (QA-12, QA-17, QA-20). A value is kept
+/// only if it is in the set for its key; shapes alone would pass usernames.
+const Map<String, Set<String>> _knownValues = {
+  'status': {'ok', 'fail'},
+  'product_type': {
+    'story',
+    'feed',
+    'clips',
+    'igtv',
+    'carousel_container',
+    'ad',
+  },
+  'audience': {'default', 'besties', 'close_friends'},
+  'media_type': {'GraphImage', 'GraphVideo', 'GraphSidecar'},
+  'type': {'GraphImage', 'GraphVideo', 'GraphSidecar', 'image', 'video'},
+  'reel_type': {'user_reel', 'highlight_reel', 'ad_reel'},
+  // Failure map values from TECH_SPEC 4.1.
+  'message': _failureValues,
+  'error_type': _failureValues,
 };
 
-/// Enum-like values (QA-12): identifier shape, 32 chars at most. `__typename`
-/// values such as `XDTGraphImage` pass.
-final RegExp _structValue = RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,31}$');
+const Set<String> _failureValues = {
+  'login_required',
+  'checkpoint_required',
+  'feedback_required',
+  'challenge_required',
+  'consent_required',
+  'rate_limited',
+  'generic_request_error',
+  'Please wait a few minutes before you try again.',
+};
+
+/// GraphQL type names: schema names with a known prefix.
+final RegExp _typenameValue = RegExp(r'^(XDT|XIG|Graph)[A-Za-z0-9_]{0,40}$');
 final RegExp _mimeValue = RegExp(r'^[A-Za-z0-9_\-]+/[A-Za-z0-9_.+\-]+$');
 
 /// Object keys that are kept verbatim (QA-10, default-deny for keys).
@@ -62,7 +79,7 @@ const Set<String> _allowedKeys = {
   'candidates', 'video_versions', 'video_duration', 'audience',
   'story_link_stickers', 'code', 'product_type', 'carousel_media', 'caption',
   'text', 'width', 'height', 'url', 'count', 'more_available', 'next_max_id',
-  'num_results', 'status', 'message', 'require_login', 'spam',
+  'num_results', 'status', 'message', 'error_type', 'require_login', 'spam',
   // synthetic.har
   'biography', 'dimensions', 'edge_media_to_caption',
   'edge_owner_to_timeline_media', 'edges', 'external_url', 'has_audio',
@@ -86,11 +103,6 @@ const Set<String> _allowedKeys = {
   'variables', 'ig_app_id', 'edit', 'shortcode_media',
 };
 
-/// GraphQL root fields under `data` (for example
-/// `xdt_api__v1__feed__user_timeline_graphql_connection`). They are schema
-/// names the extractor has to know, and they only count directly under `data`.
-final RegExp _graphqlRootField = RegExp(r'^(xdt|xig)_[a-z0-9_]{1,100}$');
-
 /// Parents whose own keys are dynamic (usernames or IDs). Every key under
 /// them that is not an ID becomes `key_N`, whatever it looks like.
 const Set<String> _idMapParents = {
@@ -103,11 +115,7 @@ const Set<String> _idMapParents = {
   'statuses',
 };
 
-/// Safe-word shape: lower-case snake_case, at most 40 chars. Allowed for an
-/// unknown key only when a sibling key is on the allowlist.
-final RegExp _safeWordKey = RegExp(r'^[a-z][a-z0-9]*(_[a-z0-9]+)*$');
-
-bool _isKnownKey(String k) =>
+bool _isAllowedKey(String k) =>
     _allowedKeys.contains(k) ||
     _mediaFieldKeys.contains(k) ||
     _secretKeys.contains(k.toLowerCase());
@@ -440,6 +448,22 @@ class _Ctx {
   final Map<int, Set<String>> fieldsByRequest = {};
   int currentRequest = 0;
 
+  /// Keys the user explicitly opted in (`--keep-key`, `keep_keys.txt`). Exact,
+  /// case-sensitive match.
+  Set<String> keepKeys = const {};
+
+  /// Keep-list entries that matched at least once.
+  final Set<String> keepKeysUsed = {};
+
+  /// Placeholder -> path (placeholdered) -> occurrences.
+  final Map<String, Map<String, int>> keyPaths = {};
+
+  /// Placeholders seen inside a detected dynamic map.
+  final Set<String> keysInDynamicMaps = {};
+
+  /// Allowlisted or opted-in.
+  bool isKept(String k) => _isAllowedKey(k) || keepKeys.contains(k);
+
   /// Object keys replaced by `key_N` (occurrences).
   int keysReplaced = 0;
 
@@ -565,11 +589,11 @@ String _denyString(_Ctx c, String lk, String s) {
     c.bump('url');
     return u;
   }
-  if (_allowedStringKeys.contains(lk)) {
-    final ok = (lk == 'mime_type' || lk == 'content_type')
-        ? _mimeValue.hasMatch(s)
-        : _structValue.hasMatch(s);
-    if (ok) return s;
+  final known = _knownValues[lk];
+  if (known != null && known.contains(s)) return s;
+  if (lk == '__typename' && _typenameValue.hasMatch(s)) return s;
+  if ((lk == 'mime_type' || lk == 'content_type') && _mimeValue.hasMatch(s)) {
+    return s;
   }
   c.bump('str');
   return '<str:${s.length}>';
@@ -620,13 +644,30 @@ void _collectKnown(_Ctx c, Object? node) {
   }
 }
 
-String _mapKey(
-  _Ctx c,
-  String k,
-  String parentKey, {
-  required bool dynamicMap,
-  required bool hasKnownSibling,
-}) {
+/// Scalar kind for dynamic-map detection; null for objects and arrays.
+String? _scalarKind(Object? v) => switch (v) {
+  null => 'null',
+  bool() => 'bool',
+  num() => 'num',
+  String() => 'string',
+  _ => null,
+};
+
+/// An object is a dynamic map (keys are data, not schema) when it has at
+/// least 2 keys, its values are all objects or all the same scalar type, and
+/// fewer than half of its keys are allowlisted (QA-14/QA-15).
+bool _isDynamicMap(_Ctx c, Map<String, Object?> node) {
+  if (node.length < 2) return false;
+  final vals = node.values.toList();
+  final allObjects = vals.every((v) => v is Map<String, Object?>);
+  final kinds = vals.map(_scalarKind).toSet();
+  final sameScalar = kinds.length == 1 && kinds.first != null;
+  if (!allObjects && !sameScalar) return false;
+  final kept = node.keys.where(c.isKept).length;
+  return kept * 2 < node.length;
+}
+
+String _mapKey(_Ctx c, String k, String parentKey, {required bool dynamicMap}) {
   if (_digitsId.hasMatch(k) || _compoundId.hasMatch(k)) {
     final m = _compoundId.firstMatch(k);
     if (m != null) {
@@ -634,21 +675,20 @@ String _mapKey(
     }
     return c.idName(k, _hintFor(parentKey, ''));
   }
-  // Default-deny (QA-10). URL-, email- and phone-shaped keys, usernames and
-  // display names fail both the allowlist and the safe-word shape, so they
-  // always end up as key_N.
+  // Strict default-deny (QA-10, QA-14, QA-15): only exact allowlist or
+  // opt-in matches stay. Everything else (usernames, display names, URL,
+  // email and phone shapes, camelCase look-alikes) becomes key_N, and
+  // so does every key inside a dynamic map.
   final reserved = RegExp(r'^key_\d+$').hasMatch(k);
   final keep =
       !dynamicMap &&
       !reserved &&
       !k.toLowerCase().startsWith('fbsr_') &&
-      (_isKnownKey(k) ||
-          (parentKey == 'data' && _graphqlRootField.hasMatch(k)) ||
-          (hasKnownSibling &&
-              k.length <= 40 &&
-              _safeWordKey.hasMatch(k) &&
-              !looksLikeSecretToken(k)));
-  if (keep) return k;
+      c.isKept(k);
+  if (keep) {
+    if (c.keepKeys.contains(k)) c.keepKeysUsed.add(k);
+    return k;
+  }
   c.keysReplaced++;
   return c.keyName(k);
 }
@@ -668,7 +708,7 @@ void _recordField(_Ctx c, String lk, String path, Object? v) {
     if (v is int || v is bool) {
       stat.values.add('$v');
     } else if (v is String) {
-      stat.values.add(_structValue.hasMatch(v) ? v : '<v>');
+      stat.values.add((_knownValues[lk]?.contains(v) ?? false) ? v : '<v>');
     }
   }
   c.fieldsByRequest.putIfAbsent(c.currentRequest, () => {}).add(label);
@@ -683,7 +723,7 @@ Object? _scalar(_Ctx c, String lk, Object? v, String parentKey) {
       return 0;
     }
     if (_timeKey.hasMatch(lk)) return v;
-    if (v is int && (_isIdKey(lk) || v.abs().toString().length >= 13)) {
+    if (v is int && (_isIdKey(lk) || v.abs().toString().length >= 10)) {
       return _mapId(c, lk, v, _hintFor(lk, parentKey)) ?? v;
     }
     return v;
@@ -708,28 +748,37 @@ Object? _walk(
 }) {
   if (node is Map<String, Object?>) {
     final out = <String, Object?>{};
-    final dynamicMap = !inList && _idMapParents.contains(key.toLowerCase());
-    final hasKnownSibling = node.keys.any(_isKnownKey);
+    final dynamicMap =
+        (!inList && _idMapParents.contains(key.toLowerCase())) ||
+        _isDynamicMap(c, node);
     node.forEach((k, v) {
       final rawLk = k.toLowerCase();
-      final newKey = _mapKey(
-        c,
-        k,
-        key,
-        dynamicMap: dynamicMap,
-        hasKnownSibling: hasKnownSibling,
-      );
+      final newKey = _mapKey(c, k, key, dynamicMap: dynamicMap);
       final replaced = newKey != k;
+      final placeholder = replaced && newKey.startsWith('key_');
+      if (placeholder) {
+        c.keyPaths
+            .putIfAbsent(newKey, () => {})
+            .update('$path.$newKey', (n) => n + 1, ifAbsent: () => 1);
+        if (dynamicMap) c.keysInDynamicMaps.add(newKey);
+      }
       // A replaced key carries no meaning, so its value is judged as unnamed.
       final lk = replaced ? '' : rawLk;
-      final childPath = '$path.${replaced ? '*' : newKey}';
+      final childPath =
+          '$path.${placeholder ? newKey : (replaced ? '*' : newKey)}';
       _recordField(c, lk, childPath, v);
       if (v == null) {
         out[newKey] = null;
       } else if (_secretKeys.contains(rawLk) || rawLk.startsWith('fbsr_')) {
         out[newKey] = redacted;
       } else if (v is Map<String, Object?> || v is List<Object?>) {
-        out[newKey] = _walk(c, v, key: k, parentKey: key, path: childPath);
+        out[newKey] = _walk(
+          c,
+          v,
+          key: replaced ? newKey : k,
+          parentKey: key,
+          path: childPath,
+        );
       } else {
         out[newKey] = _scalar(c, lk, v, key);
       }
@@ -905,9 +954,7 @@ Map<String, Object?> _describePost(Map<String, Object?> post) {
     }
   }
   return {
-    'mimeType': RegExp(r'^[A-Za-z0-9_.+\-/;= ]{1,80}$').hasMatch(mt)
-        ? mt
-        : '<str>',
+    'mimeType': _isKnownMime(mt) ? mt : '<str>',
     'size': text is String ? text.length : 0,
     'paramCount': names.length,
     'paramNames': [
@@ -964,9 +1011,14 @@ const Set<String> _knownQueryNames = {
   '__a',
   '__d',
   'fb_api_req_friendly_name',
+  'query',
+  'context',
+  'rank_token',
+  'next_max_id',
+  'hl',
+  'locale',
+  'extra_params',
 };
-final RegExp _shortQueryName = RegExp(r'^_{0,2}[a-z][a-z_]{0,23}$');
-final RegExp _shortHeaderName = RegExp(r'^[a-z]+(-[a-z]+){0,4}$');
 const Set<String> _knownHeaderNames = {
   'accept',
   'accept-encoding',
@@ -1000,6 +1052,37 @@ const Set<String> _knownHeaderNames = {
   'viewport-width',
   'priority',
   'connection',
+  'cache-control',
+  'pragma',
+  'upgrade-insecure-requests',
+  'sec-ch-ua-full-version-list',
+  'sec-ch-ua-model',
+  'sec-ch-ua-platform-version',
+  'sec-ch-ua-full-version',
+  'sec-ch-ua-arch',
+  'sec-ch-ua-bitness',
+  'sec-ch-ua-wow64',
+  'x-web-session-id',
+  'x-ig-d',
+  'x-ig-capabilities',
+  'x-ig-connection-type',
+  'x-ig-app-locale',
+  'x-ig-device-id',
+  'x-ig-android-id',
+  'x-ig-timezone-offset',
+  'x-mid',
+  'x-pigeon-session-id',
+  'x-pigeon-rawclienttime',
+  'x-fb-http-engine',
+  'x-fb-server-cluster',
+  'x-bloks-is-layout-rtl',
+  'x-ig-bandwidth-speed-kbps',
+  'x-ig-abr-connection-speed-kbps',
+  'x-ig-mapped-locale',
+  'x-ig-device-locale',
+  'x-ig-family-device-id',
+  'x-ig-eu-configure-disabled',
+  'x-root-field-name',
   'host',
   ':authority',
   ':method',
@@ -1010,17 +1093,11 @@ const Set<String> _knownHeaderNames = {
 /// Request header name for summary.json (QA-13).
 String _headerName(String raw) {
   final n = raw.toLowerCase();
-  if (_knownHeaderNames.contains(n) || _shortHeaderName.hasMatch(n)) {
-    return n.length <= 40 ? n : '<hdr>';
-  }
-  return '<hdr>';
+  return _knownHeaderNames.contains(n) ? n : '<hdr>';
 }
 
 /// Query parameter name for summary.json (QA-13).
-String _safeName(String n) =>
-    (_knownQueryNames.contains(n) || _shortQueryName.hasMatch(n))
-    ? n
-    : '<name>';
+String _safeName(String n) => _knownQueryNames.contains(n) ? n : '<name>';
 
 /// Reduces a User-Agent to browser/app family, major version and OS family
 /// (QA-13). No device model, build ID or minor version survives.
@@ -1057,26 +1134,68 @@ String coarseUserAgent(String ua) {
   return '$fam ($os$wv)';
 }
 
-final RegExp _mimeList = RegExp(r'^[A-Za-z0-9_.+\-/;=*, ]{0,120}$');
+const Set<String> _knownMimes = {
+  '*/*',
+  'application/json',
+  'application/x-www-form-urlencoded',
+  'application/javascript',
+  'application/octet-stream',
+  'application/graphql-response+json',
+  'application/xml',
+  'multipart/form-data',
+  'text/html',
+  'text/plain',
+  'text/javascript',
+  'text/xml',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'video/mp4',
+};
+
+/// True when [v] is a list of known MIME types with optional `charset=` and
+/// `q=` parameters (QA-22, QA-23). Anything else is not echoed.
+bool _isKnownMime(String v) {
+  if (v.isEmpty || v.length > 200) return false;
+  for (final raw in v.split(RegExp('[,;]'))) {
+    final part = raw.trim().toLowerCase();
+    if (_knownMimes.contains(part)) continue;
+    if (RegExp(r'^charset=[a-z0-9\-]{1,20}$').hasMatch(part)) continue;
+    if (RegExp(r'^q=[01](\.\d{1,3})?$').hasMatch(part)) continue;
+    return false;
+  }
+  return true;
+}
+
+const Set<String> _knownMethods = {
+  'GET',
+  'POST',
+  'PUT',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+  'PATCH',
+};
 
 String _safeHeaderValue(String name, String v) {
   if (name == 'user-agent') return coarseUserAgent(v);
   if (name == 'x-ig-app-id') {
     return RegExp(r'^\d{6,20}$').hasMatch(v) ? v : '<v>';
   }
-  final ok = _mimeList.hasMatch(v) && findLeaks(v).isEmpty;
+  final ok = _isKnownMime(v) && findLeaks(v).isEmpty;
   return ok ? v : '<str:${v.length}>';
 }
 
 /// Sanitizes a HAR document and returns the files to write.
-SanitizeOutcome sanitizeHar(String harText) {
+SanitizeOutcome sanitizeHar(String harText, {Set<String> keepKeys = const {}}) {
   final root = _asMap(jsonDecode(harText));
   final entries = _asList(_asMap(root?['log'])?['entries']);
   if (root == null || _asMap(root['log']) == null) {
     throw const FormatException('Not a HAR file (no "log" object).');
   }
 
-  final c = _Ctx();
+  final c = _Ctx()..keepKeys = keepKeys;
 
   // Pass 1: select entries and learn user/media IDs.
   final selected = <({Map<String, Object?> entry, Object? body, Uri uri})>[];
@@ -1192,7 +1311,7 @@ SanitizeOutcome sanitizeHar(String harText) {
     final mimeRaw = '${content['mimeType']}';
     final row = <String, Object?>{
       'n': n,
-      'method': RegExp(r'^[A-Z]{3,10}$').hasMatch(method) ? method : '<str>',
+      'method': _knownMethods.contains(method) ? method : '<str>',
       'host': s.uri.host,
       'path': cleanPath,
       'query': _describeQuery(c, query),
@@ -1200,9 +1319,7 @@ SanitizeOutcome sanitizeHar(String harText) {
       'requestHeaderNames': names,
       'requestHeaders': kept,
       'status': status,
-      'mimeType': RegExp(r'^[A-Za-z0-9_.+\-/;= ]{1,80}$').hasMatch(mimeRaw)
-          ? mimeRaw
-          : '<str>',
+      'mimeType': _isKnownMime(mimeRaw) ? mimeRaw : '<str>',
       'responseSize': size > 0 ? size : textLen,
       'bodyFile': bodyFile,
       'bodyNote': s.body == null
@@ -1341,11 +1458,50 @@ SanitizeOutcome sanitizeHar(String harText) {
   }
   b
     ..writeln()
+    ..writeln('## Replaced object keys (never the original names)')
+    ..writeln();
+  if (c.keyPaths.isEmpty) {
+    b.writeln('None.');
+  } else {
+    b
+      ..writeln(
+        'Decide what to add to `tool/keep_keys.txt` by the path and count: '
+        'open the same response in the Instagram web devtools on your own '
+        'machine and check whether that position is a schema field or a '
+        'name. Only schema field names may be added.',
+      )
+      ..writeln()
+      ..writeln('| Placeholder | Count | In dynamic map | Seen at (max 5) |')
+      ..writeln('|-------------|-------|----------------|-----------------|');
+    final names = c.keyPaths.keys.toList()
+      ..sort(
+        (a, b) =>
+            int.parse(a.substring(4)).compareTo(int.parse(b.substring(4))),
+      );
+    for (final k in names) {
+      final paths = c.keyPaths[k]!;
+      final total = paths.values.fold<int>(0, (a, b) => a + b);
+      final shown = paths.entries
+          .take(5)
+          .map((e) => '`${_mdCell(e.key)}` x${e.value}')
+          .join(', ');
+      b.writeln(
+        '| $k | $total | ${c.keysInDynamicMaps.contains(k) ? 'yes' : 'no'} | '
+        '$shown |',
+      );
+    }
+  }
+  b
+    ..writeln()
     ..writeln('## Replacement counts')
     ..writeln()
     ..writeln(
       '- object keys replaced with key_N: ${c.keysReplaced} '
       '(${c.distinctKeysReplaced} distinct)',
+    )
+    ..writeln(
+      '- keep-list entries used: ${c.keepKeysUsed.length} '
+      'of ${c.keepKeys.length}',
     );
   final ck = c.counts.keys.toList()..sort();
   for (final k in ck) {
@@ -1366,31 +1522,107 @@ SanitizeOutcome sanitizeHar(String harText) {
 
 const String _usage = '''
 Usage: dart sanitize_har.dart <in.har> <out_dir>
+         [--keep-key <name>]... [--keep-keys <file>]
 
 Sanitizes a Chrome HAR export for sharing. Writes summary.json, report.md and
 bodies/*.json into <out_dir>. Exits 1 and writes nothing if any secret-looking
-text survives. Never share the raw HAR.''';
+text survives. Never share the raw HAR.
+
+Object keys are default-deny: only known schema field names stay, every other
+key becomes key_N (see report.md). --keep-key / --keep-keys opt a schema field
+name in (one name per line in the file, # starts a comment). A keep_keys.txt
+next to this script is read automatically.''';
+
+final RegExp _keepKeyShape = RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,59}$');
+
+/// Parses keep-list lines. Returns null (and reports line numbers only) if a
+/// line is not a plain field name.
+Set<String>? _parseKeepLines(
+  Iterable<String> lines,
+  String label,
+  StringSink err,
+) {
+  final out = <String>{};
+  var n = 0;
+  var bad = false;
+  for (final raw in lines) {
+    n++;
+    final t = raw.trim();
+    if (t.isEmpty || t.startsWith('#')) continue;
+    if (!_keepKeyShape.hasMatch(t) || findLeaks(t).isNotEmpty) {
+      err.writeln(
+        'Invalid keep-key at $label line $n (plain field names only).',
+      );
+      bad = true;
+    } else {
+      out.add(t);
+    }
+  }
+  return bad ? null : out;
+}
 
 /// Runs the CLI. Returns the exit code.
 Future<int> run(
   List<String> args, {
   required StringSink out,
   required StringSink err,
+  String? defaultKeepKeysPath,
 }) async {
-  if (args.length != 2 || args.contains('--help') || args.contains('-h')) {
-    (args.contains('--help') || args.contains('-h') ? out : err).writeln(
-      _usage,
-    );
-    return args.contains('--help') || args.contains('-h') ? 0 : 2;
+  final help = args.contains('--help') || args.contains('-h');
+  final positional = <String>[];
+  final keep = <String>{};
+  var badArgs = false;
+  final fromArgs = <String>[];
+  for (var i = 0; i < args.length; i++) {
+    final a = args[i];
+    if (a == '--keep-key' || a == '--keep-keys') {
+      if (i + 1 >= args.length) {
+        badArgs = true;
+        break;
+      }
+      final v = args[++i];
+      if (a == '--keep-key') {
+        fromArgs.add(v);
+      } else {
+        final f = File(v);
+        if (!f.existsSync()) {
+          err.writeln('Keep-keys file not found: $v');
+          return 2;
+        }
+        final parsed = _parseKeepLines(f.readAsLinesSync(), 'file', err);
+        if (parsed == null) return 2;
+        keep.addAll(parsed);
+      }
+    } else if (a == '--help' || a == '-h') {
+      continue;
+    } else {
+      positional.add(a);
+    }
   }
-  final input = File(args[0]);
+  if (help || badArgs || positional.length != 2) {
+    (help ? out : err).writeln(_usage);
+    return help ? 0 : 2;
+  }
+  final cli = _parseKeepLines(fromArgs, '--keep-key', err);
+  if (cli == null) return 2;
+  keep.addAll(cli);
+  if (defaultKeepKeysPath != null && File(defaultKeepKeysPath).existsSync()) {
+    final parsed = _parseKeepLines(
+      File(defaultKeepKeysPath).readAsLinesSync(),
+      'keep_keys.txt',
+      err,
+    );
+    if (parsed == null) return 2;
+    keep.addAll(parsed);
+  }
+  final input = File(positional[0]);
   if (!input.existsSync()) {
-    err.writeln('Input file not found: ${args[0]}');
+    err.writeln('Input file not found: ${positional[0]}');
     return 2;
   }
   final SanitizeOutcome outcome;
   try {
-    outcome = sanitizeHar(input.readAsStringSync());
+    outcome = sanitizeHar(input.readAsStringSync(), keepKeys: keep);
   } on FormatException catch (e) {
     err.writeln('Could not read the HAR: ${e.message}');
     return 2;
@@ -1403,7 +1635,7 @@ Future<int> run(
     outcome.leaks.forEach((l) => err.writeln('  - $l'));
     return 1;
   }
-  final dir = Directory(args[1])..createSync(recursive: true);
+  final dir = Directory(positional[1])..createSync(recursive: true);
   outcome.files.forEach((rel, text) {
     final f = File('${dir.path}${Platform.pathSeparator}$rel');
     f.parent.createSync(recursive: true);
@@ -1417,5 +1649,10 @@ Future<int> run(
 }
 
 Future<void> main(List<String> args) async {
-  exitCode = await run(args, out: stdout, err: stderr);
+  exitCode = await run(
+    args,
+    out: stdout,
+    err: stderr,
+    defaultKeepKeysPath: Platform.script.resolve('keep_keys.txt').toFilePath(),
+  );
 }

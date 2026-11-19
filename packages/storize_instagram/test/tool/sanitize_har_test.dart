@@ -316,15 +316,14 @@ void main() {
   });
 
   group('fails closed', () {
-    // Strings and keys are default-deny. The one field copied with only a
-    // character-class check is the response mimeType, so a secret hidden there
-    // proves the independent final scan still blocks all output.
+    // Strings, keys, MIME types and methods are default-deny. The request
+    // host is copied as is (it must be an instagram.com host), so a token
+    // hidden in a sub-domain proves the final scan still blocks all output.
     final leaky = jsonEncode(
       _har([
         _entry(
-          'https://www.instagram.com/api/v1/x/',
+          'https://a1b2c3d4e5f60718293a4b5c6d7e8f90.instagram.com/api/v1/x/',
           {'a': 1},
-          mime: 'application/json; sessionid=Zx9Kq2Lm8Vb3Nc7X',
         ),
       ]),
     );
@@ -333,8 +332,9 @@ void main() {
       final out = sanitizeHar(leaky);
       expect(out.ok, isFalse);
       expect(out.files, isEmpty);
-      expect(out.leaks.single, contains('cookie/session/auth value'));
-      expect(out.leaks.single, isNot(contains('Zx9Kq2')));
+      expect(out.leaks, isNotEmpty);
+      expect(out.leaks.join(), contains('long hex/base64 token'));
+      expect(out.leaks.join(), isNot(contains('a1b2c3d4')));
     });
 
     test('CLI exits 1 and writes nothing', () async {
@@ -351,7 +351,7 @@ void main() {
       expect(code, 1);
       expect(Directory(outDir).existsSync(), isFalse);
       expect(err.toString(), contains('REFUSING TO WRITE'));
-      expect(err.toString(), isNot(contains('Zx9Kq2')));
+      expect(err.toString(), isNot(contains('a1b2c3d4')));
     });
 
     test('findLeaks flags cookies, signed URLs and long tokens', () {

@@ -73,6 +73,14 @@ dart packages\storize_instagram\tool\sanitize_har.dart D:\capture\raw\reel.har D
 - Open `D:\capture\out\story\report.md` in Notepad. Check: the candidate table lists what it saw, and the "Replacement counts" section says how many object keys were replaced by `key_N` (usernames used as keys are replaced; this is expected). Then skim one file in `bodies\`: if you can read any real name, caption, email, phone number or link, don't send it and tell the Lead.
 - If a path contains spaces, put it in double quotes, for example `"D:\my capture\story.har"`.
 
+### Keys the sanitizer replaced (`key_N`) and `keep_keys.txt`
+Object keys in the response bodies are default-deny: only a built-in list of known field names stays, and every other key becomes `key_N` (the same key always gets the same number within one run). Usernames are sometimes used as keys, which is why this is strict. `report.md` has a section **"Replaced object keys"**. It never prints the original key. For each `key_N` it shows how many times it was seen, whether it sat inside a map of names ("In dynamic map"), and where (a path such as `$.data.key_1.items[].key_2`; unknown parts of the path are `key_N` as well).
+
+If the Lead asks you to find out whether a replaced key is a field the extractor needs:
+1. Look at the path and the count in the report. A key with a high count, in a map marked "yes", is almost certainly a name. Leave it replaced.
+2. For a key at a fixed position (for example `$.data.key_1.edges[].node.key_2` with a count equal to the number of items), open the same response in the Instagram web devtools on your own machine (Network tab, Response) and look at that position. If it is a fixed field name such as `shortcode_media`, it is a schema field.
+3. Only then add that field name on its own line to `packages/storize_instagram/tool/keep_keys.txt` (or pass it once with `--keep-key name`, or `--keep-keys file.txt`), and run the sanitizer again. Never add anything that looks like a username, display name, e-mail, link or number. A person reviews that file in a PR.
+
 ## 5. Optional: phone check (about 10 minutes)
 
 9. (Optional, skip if short on time.) This proves the page-mode hook sees the same JSON inside Storize's own WebView.

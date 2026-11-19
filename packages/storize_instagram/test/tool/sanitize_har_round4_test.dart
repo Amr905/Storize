@@ -99,16 +99,17 @@ void main() {
       expect(((j['users'] as List).single as Map).keys, ['pk', 'username']);
     });
 
-    test('unknown safe-word key next to a known key is kept', () {
+    test('unknown safe-word keys are replaced even next to known keys', () {
       final j = _body(
         _run({
           'pk': '1234567890',
           'brand_new_field': 1,
-          'zzfake_nour.k': 2,
+          'zzfake_nour': 2,
         }),
       );
-      expect(j.containsKey('brand_new_field'), isTrue);
-      expect(j.keys.where((k) => k.startsWith('key_')), hasLength(1));
+      expect(j.keys.toSet(), hasLength(3));
+      expect(j.containsKey('pk'), isTrue);
+      expect(j.keys.where((k) => k.startsWith('key_')), hasLength(2));
     });
 
     test('unknown keys with only unknown siblings are replaced', () {
@@ -203,22 +204,145 @@ void main() {
       expect(out, matches(RegExp('(user|media)_1')));
     });
 
-    test('GraphQL root fields under data are kept, elsewhere they are not', () {
+    test('opt-in keys (keepKeys) are kept, exact and case-sensitive', () {
+      final o = sanitizeHar(
+        _har([
+          _entry({
+            'pk': '1234567890',
+            'xdt_api__v1__feed__user_timeline_graphql_connection': 1,
+            'profilePicUrl': 2,
+            'ProfilePicUrl': 3,
+            'zzfake_nour': 4,
+          }),
+        ]),
+        keepKeys: {
+          'xdt_api__v1__feed__user_timeline_graphql_connection',
+          'profilePicUrl',
+        },
+      );
+      expect(o.ok, isTrue);
+      final j = _body(o);
+      expect(
+        j.containsKey('xdt_api__v1__feed__user_timeline_graphql_connection'),
+        isTrue,
+      );
+      expect(j.containsKey('profilePicUrl'), isTrue);
+      expect(j.containsKey('ProfilePicUrl'), isFalse);
+      expect(o.files.values.join().toLowerCase(), isNot(contains('zzfake')));
+      expect(o.files['report.md'], contains('keep-list entries used: 2 of 2'));
+    });
+
+    test('xdt_ / xig_ names are not kept without an opt-in (QA-16)', () {
       final j = _body(
         _run({
-          'data': {'xdt_api__v1__feed__user_timeline_graphql_connection': 1},
-          'other': {'xdt_zzfake_user': 1},
+          'data': {'xdt_zzfake_user': 1},
+        }),
+      );
+      expect((j['data'] as Map).keys.single, startsWith('key_'));
+    });
+  });
+
+  group('dynamic maps (QA-14, QA-15)', () {
+    test('unknown map with a user literally named like a field', () {
+      final out = _clean({
+        'seen_by': {
+          'user': {'a': 1},
+          'zzfake_two': {'a': 1},
+        },
+      });
+      expect(out, isNot(contains('"user": {\n      "a"')));
+    });
+
+    test('allowlisted-looking keys inside a dynamic map are replaced', () {
+      final j = _body(
+        _run({
+          'seen_by': {
+            'user': {'a': 1},
+            'zzfake_three': {'a': 1},
+            'zzfake_two': {'a': 1},
+          },
+        }),
+      );
+      final inner = j.values.single as Map;
+      expect(inner.keys.every((k) => '$k'.startsWith('key_')), isTrue);
+    });
+
+    test('viewers map with a count sibling stays clean', () {
+      _clean({
+        'viewers': {
+          'count': 2,
+          'zzfake_nour': {'seen': true},
+          'zzfake_two': {'seen': true},
+        },
+      });
+    });
+
+    test('scalar maps of one type are dynamic', () {
+      final j = _body(
+        _run({
+          'tagged': {'id': true, 'zzfake_a': false, 'zzfake_b': true},
         }),
       );
       expect(
-        (j['data'] as Map).keys.single,
-        'xdt_api__v1__feed__user_timeline_graphql_connection',
+        (j['key_1'] as Map).keys.every((k) => '$k'.startsWith('key_')),
+        isTrue,
       );
-      expect(
-        (j['other'] as Map).keys.single,
-        startsWith('key_'),
-        reason: 'xdt_ names only count directly under data',
+    });
+
+    test('schema objects are not misclassified', () {
+      final j = _body(
+        _run({
+          'user': {'pk': '1234567890', 'username': 'x', 'is_private': false},
+          'dimensions': {'width': 1, 'height': 2},
+          'friendship_status': {'following': true, 'followed_by': false},
+        }),
       );
+      expect((j['user'] as Map).keys, ['pk', 'username', 'is_private']);
+      expect((j['dimensions'] as Map).keys, ['width', 'height']);
+      expect((j['friendship_status'] as Map).keys, [
+        'following',
+        'followed_by',
+      ]);
+    });
+
+    test('keep-list entries count as allowlisted for detection', () {
+      final o = sanitizeHar(
+        _har([
+          _entry({
+            'widget': {'alpha_field': 1, 'beta_field': 2},
+          }),
+        ]),
+        keepKeys: {'alpha_field', 'beta_field', 'widget'},
+      );
+      expect((_body(o)['widget'] as Map).keys, ['alpha_field', 'beta_field']);
+    });
+  });
+
+  group('report lists replaced keys by placeholder only', () {
+    test('placeholder, count, path; no original key', () {
+      final o = sanitizeHar(
+        _har([
+          _entry({
+            'seen_by': {
+              'zzfake_a': {'pk': '1234567890'},
+              'zzfake_b': {'pk': '1234567891'},
+            },
+          }),
+          _entry({
+            'seen_by': {
+              'zzfake_a': {'pk': '1234567890'},
+              'zzfake_c': {'pk': '1234567892'},
+            },
+          }),
+        ]),
+      );
+      final r = o.files['report.md']!;
+      expect(r.toLowerCase(), isNot(contains('zzfake')));
+      expect(r, contains('## Replaced object keys'));
+      expect(r, contains('| key_2 | 2 | yes |'));
+      expect(r, contains(r'`$.key_1.key_2` x2'));
+      expect(r, contains('yes'));
+      expect(r, contains('keep_keys.txt'));
     });
   });
 
@@ -302,19 +426,19 @@ void main() {
       return _body(o);
     }
 
-    test('identifier-shaped values pass, including GraphQL typenames', () {
+    test('known values pass, including GraphQL typenames', () {
       final j = enums({
         'status': 'ok',
         'product_type': 'clips',
-        'type': 'XDTGraphImage',
+        'type': 'GraphImage',
         '__typename': 'XDTGraphImage',
-        'audience': 'MediaAudience_default',
+        'audience': 'besties',
       });
       expect(j['status'], 'ok');
       expect(j['product_type'], 'clips');
-      expect(j['type'], 'XDTGraphImage');
+      expect(j['type'], 'GraphImage');
       expect(j['__typename'], 'XDTGraphImage');
-      expect(j['audience'], 'MediaAudience_default');
+      expect(j['audience'], 'besties');
     });
 
     test('anything else becomes a placeholder', () {
@@ -528,6 +652,220 @@ void main() {
           (jsonDecode(bodyByCandidate['IG-2']!) as Map)['reels'] as Map;
       final id = reels.keys.first;
       expect((reels[id] as Map)['user']['pk'], id);
+    });
+  });
+
+  group('round 5: known values, strict names, ints, CLI', () {
+    test('QA-20: failure-map values survive, anything else does not', () {
+      final j = _body(
+        _run({
+          'message': 'login_required',
+          'status': 'fail',
+          'error_type': 'checkpoint_required',
+          'require_login': true,
+        }),
+      );
+      expect(j['message'], 'login_required');
+      expect(j['error_type'], 'checkpoint_required');
+      expect(j['status'], 'fail');
+      for (final v in [
+        'feedback_required',
+        'challenge_required',
+        'consent_required',
+        'rate_limited',
+        'Please wait a few minutes before you try again.',
+      ]) {
+        expect(_body(_run({'message': v, 'status': 'fail'}))['message'], v);
+      }
+      final bad = _body(
+        _run({
+          'message': 'zzfake_nour is blocked',
+          'error_type': 'zzfake_nour',
+          'status': 'fail',
+        }),
+      );
+      expect('${bad['message']}', startsWith('<str:'));
+      expect('${bad['error_type']}', startsWith('<str:'));
+    });
+
+    test('QA-17: identifier-shaped but unknown enum values are replaced', () {
+      final out = _clean({
+        'pk': '1',
+        'type': 'zzfake_nour',
+        'status': 'zzfake_nour',
+        'audience': 'zzfake',
+        'product_type': 'zzfake_x',
+        'media_type': 'zzfake',
+        'reel_type': 'zzfake',
+      });
+      expect(out, contains('<str:'));
+    });
+
+    test('QA-18: 10 to 20 digit ints under non-id keys are mapped', () {
+      final o = _run({
+        'mentioned': 1234567890,
+        'pk': '1',
+        'big': 12345678901234,
+      });
+      final out = o.files.values.join();
+      expect(out, isNot(contains('1234567890')));
+      expect(out, isNot(contains('12345678901234')));
+      // Timestamps stay.
+      final t = _body(_run({'taken_at': 1700000000}));
+      expect(t['taken_at'], 1700000000);
+    });
+
+    test('QA-19: header and query names need a known-list match', () {
+      final o = _run(
+        {'a': 1},
+        url: '$_u?zzfake_nour=1&zzfake&username=x',
+        headers: [
+          {'name': 'zzfake-nour', 'value': 'x'},
+          {'name': 'accept', 'value': '*/*'},
+        ],
+      );
+      expect(o.ok, isTrue);
+      expect(o.files['summary.json']!.toLowerCase(), isNot(contains('zzfake')));
+      final r = (_summary(o)['requests'] as List).single;
+      expect(r['requestHeaderNames'], ['<hdr>', 'accept']);
+      expect((r['query'] as Map).keys, containsAll(['username', '<name>']));
+    });
+
+    test('QA-22: accept/content-type values must be known MIME types', () {
+      final o = _run(
+        {'a': 1},
+        headers: [
+          {'name': 'accept', 'value': 'zzfake'},
+          {'name': 'content-type', 'value': 'zzfake'},
+        ],
+      );
+      expect(o.files['summary.json']!.toLowerCase(), isNot(contains('zzfake')));
+      final ok = _run(
+        {'a': 1},
+        headers: [
+          {'name': 'accept', 'value': 'application/json, text/plain, */*'},
+          {
+            'name': 'content-type',
+            'value': 'application/x-www-form-urlencoded; charset=UTF-8',
+          },
+        ],
+      );
+      final h = (_summary(ok)['requests'] as List).single['requestHeaders'];
+      expect(h['accept'], 'application/json, text/plain, */*');
+      expect(h['content-type'], contains('charset=UTF-8'));
+    });
+
+    test('QA-23: method and response mimeType must be known', () {
+      final har = jsonEncode({
+        'log': {
+          'entries': [
+            {
+              'request': {
+                'method': 'zzfake',
+                'url': _u,
+                'headers': <Object?>[],
+              },
+              'response': {
+                'status': 200,
+                'content': {
+                  'mimeType': 'application/zzfake_nour',
+                  'text': '{}',
+                },
+              },
+            },
+          ],
+        },
+      });
+      final o = sanitizeHar(har);
+      expect(o.files.values.join().toLowerCase(), isNot(contains('zzfake')));
+    });
+
+    group('CLI keep options', () {
+      late Directory tmp;
+      late String input;
+      setUp(() {
+        tmp = Directory.systemTemp.createTempSync('har_keep_');
+        input = '${tmp.path}/in.har';
+        File(input).writeAsStringSync(
+          _har([
+            _entry({'pk': '1234567890', 'brand_new_field': 1, 'zzfake_x': 2}),
+          ]),
+        );
+      });
+      tearDown(() => tmp.deleteSync(recursive: true));
+
+      Future<(int, String, String)> cli(
+        List<String> extra, {
+        String? def,
+      }) async {
+        final out = StringBuffer();
+        final err = StringBuffer();
+        final code = await run(
+          [input, '${tmp.path}/out', ...extra],
+          out: out,
+          err: err,
+          defaultKeepKeysPath: def,
+        );
+        return (code, out.toString(), err.toString());
+      }
+
+      String body() {
+        final d = Directory('${tmp.path}/out/bodies').listSync().single;
+        return File(d.path).readAsStringSync();
+      }
+
+      test('without options every unknown key is replaced', () async {
+        final (code, _, _) = await cli([]);
+        expect(code, 0);
+        expect(body(), isNot(contains('brand_new_field')));
+        expect(body(), isNot(contains('zzfake')));
+      });
+
+      test('--keep-key (repeatable) and --keep-keys file', () async {
+        File('${tmp.path}/k.txt').writeAsStringSync(
+          '# comment\n\n  brand_new_field  \n',
+        );
+        final (code, _, _) = await cli([
+          '--keep-key',
+          'unused_name',
+          '--keep-keys',
+          '${tmp.path}/k.txt',
+        ]);
+        expect(code, 0);
+        expect(body(), contains('brand_new_field'));
+        expect(body(), isNot(contains('zzfake')));
+      });
+
+      test('default keep_keys.txt is read when given', () async {
+        File('${tmp.path}/keep_keys.txt')
+            .writeAsStringSync('brand_new_field\n');
+        final (code, _, _) = await cli([], def: '${tmp.path}/keep_keys.txt');
+        expect(code, 0);
+        expect(body(), contains('brand_new_field'));
+      });
+
+      test('invalid keep keys exit 2 without echoing the value', () async {
+        for (final bad in ['zzfake@x.com', 'a b', 'https://zzfake.com', '']) {
+          final (code, _, err) = await cli(['--keep-key', bad]);
+          if (bad.isEmpty) {
+            expect(code, 0);
+            continue;
+          }
+          expect(code, 2, reason: bad);
+          expect(err.toLowerCase(), isNot(contains('zzfake')));
+        }
+        final (c2, _, e2) = await cli(['--keep-key']);
+        expect(c2, 2);
+        expect(e2, contains('Usage'));
+      });
+
+      test('the committed keep_keys.txt parses and holds no usernames', () {
+        final lines = File('tool/keep_keys.txt').readAsLinesSync();
+        for (final l in lines.map((e) => e.trim())) {
+          if (l.isEmpty || l.startsWith('#')) continue;
+          expect(RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,59}$').hasMatch(l), isTrue);
+        }
+      });
     });
   });
 }

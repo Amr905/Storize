@@ -1,0 +1,5 @@
+# Object keys that the sanitizer keeps (one exact, case-sensitive name per line).
+# Everything else in a response body becomes key_N. Add a name ONLY after
+# checking in the Instagram web devtools (on your own machine) that the
+# position in report.md "Replaced object keys" is a schema field and not a
+# username, display name or other data. Reviewed in a PR. No usernames.
