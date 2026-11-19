@@ -38,7 +38,7 @@ Fixtures: `packages/storize_instagram/test/tool/fixtures/adv_*.har`; tests: `tes
 |-------|----------|--------|
 | `cookies[]`, `Cookie`/`cookie`/`COOKIE` headers, `X-CSRFToken`, `Set-Cookie`, response `cookies[]` (adv_cookies) | no values | exit 0, zero leaks |
 | `sessionid=` in body prose, nested in list, `"sessionid"` key | redacted | redacted |
-| `sessionid%3D<val>` in body string (adv_body_sessionid, probe) | redacted or exit 1 | **LEAK**, exit 0, value verbatim (QA-1) |
+| `sessionid%3D<val>` in body string (in-process probe in the adversarial test; not in the adv_body_sessionid fixture, which only holds the passing cases) | redacted or exit 1 | **LEAK**, exit 0, value verbatim (QA-1) |
 | signed CDN URL inside JSON-in-JSON string, escaped slashes, `_nc_*` query (adv_nested_json) | `?<redacted>` | zero leaks |
 | `csrftoken`, `enc_password`, `lsd` in form POST; JSON POST; multipart params (adv_post_body) | no values | exit 1, nothing written (false positive: the key name `csrftoken` in `postParams` trips the scanner; safe but this HAR cannot be shared) |
 | `/stories/<name>/<id>/`, `/<name>/`, `?username=`, `/feed/user/<name>/username/`, `?q=` (adv_usernames) | placeholders | zero leaks |
@@ -102,4 +102,4 @@ The 17 leak probes are committed as **skipped** tests (`QA-1`..`QA-6`, `QA-7`) s
 - `packages/storize_instagram/test/tool/fixtures/adv_*.har` (10 FAKE HARs)
 
 ## Re-verify when fixed
-Un-skip the `QA-1`..`QA-7` tests, re-run `melos run test`, and re-run the CLI on `adv_body_sessionid.har` and `adv_usernames.har`. Add a copy of each new leak the developer finds to the probe table.
+Un-skip the `QA-1`..`QA-7` tests, re-run `melos run test`, and re-run the probes via the CLI. Add a copy of each new leak the developer finds to the probe table.
