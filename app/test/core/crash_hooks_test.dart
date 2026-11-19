@@ -39,7 +39,7 @@ void main() {
 
   String logText() => diagnostics.files.current.readAsStringSync();
 
-  test('FlutterError.onError writes a redacted entry and the marker', () {
+  test('FlutterError.onError logs redacted at ERROR but writes no marker', () {
     hooks = diagnostics.installCrashHooks();
 
     FlutterError.onError!(
@@ -52,7 +52,8 @@ void main() {
     expect(logText(), contains('FlutterError.onError'));
     expect(logText(), contains('StateError'));
     expect(logText(), isNot(contains(_secret)));
-    expect(diagnostics.marker.read()!.type, 'StateError');
+    expect(logText(), contains('ERROR'));
+    expect(diagnostics.marker.read(), isNull);
   });
 
   test('PlatformDispatcher.onError writes an entry and reports handled', () {

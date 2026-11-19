@@ -14,6 +14,9 @@ import 'package:storize_domain/storize_domain.dart';
 /// indented `error:` and `stack:` lines when present. Timestamps come from
 /// the injected [Clock].
 ///
+/// Line breaks inside the message, error or stack never start a new entry:
+/// continuation lines are prefixed with `  | `.
+///
 /// [log] never throws, and nothing reaches the file or the console before
 /// [Redactor.redact] has run over the message, tag, error and stack trace.
 final class FileDiagnosticLog implements DiagnosticLog {
@@ -59,16 +62,16 @@ final class FileDiagnosticLog implements DiagnosticLog {
         ..write(' [')
         ..write(Redactor.redact(tag).replaceAll(RegExp(r'\s'), '_'))
         ..write('] ')
-        ..write(Redactor.redact(message));
+        ..write(_indent(Redactor.redact(message)));
       if (error != null) {
         buffer
           ..write('\n  error: ')
-          ..write(Redactor.redact(_describe(error)));
+          ..write(_indent(Redactor.redact(_describe(error))));
       }
       if (stack != null) {
         buffer
           ..write('\n  stack: ')
-          ..write(Redactor.redact(stack.toString()).trimRight());
+          ..write(_indent(Redactor.redact(stack.toString()).trimRight()));
       }
       final line = buffer.toString();
       _file.append(line);
@@ -77,6 +80,15 @@ final class FileDiagnosticLog implements DiagnosticLog {
       // Logging must never throw.
     }
   }
+
+  static final RegExp _lineBreak = RegExp(
+    '\r\n|[\n\r\u000B\u000C\u0085\u2028\u2029]',
+  );
+
+  /// Turns every line break inside one field into `\n  | `, so injected text
+  /// can never start a new entry at column 0 (log forging). Stack traces stay
+  /// readable: one frame per continuation line.
+  static String _indent(String text) => text.replaceAll(_lineBreak, '\n  | ');
 
   static String _describe(Object error) {
     try {

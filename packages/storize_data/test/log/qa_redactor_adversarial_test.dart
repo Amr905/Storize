@@ -1,8 +1,8 @@
 // Test-only: lint noise from dense adversarial inputs is suppressed on purpose.
 // ignore_for_file: cascade_invocations, lines_longer_than_80_chars, prefer_interpolation_to_compose_strings, unnecessary_raw_strings, use_raw_strings
-// QA (T-011): adversarial redaction tests. Tests marked `skip` describe a
-// secret that currently LEAKS; they state the desired behaviour and fail if
-// un-skipped. See docs/05-reviews/T-011.md for severities.
+// QA (T-011): adversarial redaction tests. The former known-gap tests (GAP)
+// were un-skipped in round 2 once the leaks were closed.
+// See docs/05-reviews/T-011.md.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/log/redactor.dart';
 
@@ -77,27 +77,22 @@ void main() {
     test(
       'GAP (minor): double-encoded separator sessionid%253D',
       () => _gone('x sessionid%253D$_s1'),
-      skip: 'known leak: only one level of %3D is recognised',
     );
     test(
       'GAP (minor): unicode-escaped key {"\\u0073essionid":...}',
       () => _gone(r'{"\u0073essionid":"' + _s1 + '"}'),
-      skip: 'known leak: JSON \\u escapes in the KEY are not decoded',
     );
     test(
       'GAP (minor): \\u003d as separator',
       () => _gone(r'sessionid\u003d' + _s1),
-      skip: 'known leak: \\u003d separator not recognised',
     );
     test(
       'GAP (minor): HTML entity separator',
       () => _gone('sessionid&#61;$_s1'),
-      skip: 'known leak',
     );
     test(
       'GAP (minor): doubly escaped JSON {\\\\"sessionid\\\\":...}',
       () => _gone(r'{\\"sessionid\\":\\"' + _s1 + r'\\"}'),
-      skip: 'known leak: only one backslash before the quote is tolerated',
     );
     test(
       'GAP (minor): zero-width char inside key / fullwidth key',
@@ -105,7 +100,6 @@ void main() {
         _gone('sessionid\u200b=$_s1');
         _gone('ｓｅｓｓｉｏｎｉｄ=$_s1');
       },
-      skip: 'known leak: no Unicode normalisation',
     );
     test(
       'DOCUMENTED LIMIT: base64 of a cookie cannot be recognised',
@@ -177,9 +171,6 @@ void main() {
       () => _gone(
         'https%3A%2F%2Fscontent.cdninstagram.com%2Fa.jpg%3Foh%3D$_s1%26oe%3D$_s2',
       ),
-      skip:
-          'known leak: percent-encoded URLs are not recognised, and the '
-          'lookbehind on `oh` fails because it follows `%3F`',
     );
   });
 
@@ -276,7 +267,6 @@ void main() {
         _gone('userPin=$_s1');
         _gone('pincode=$_s1');
       },
-      skip: 'known leaks: only the listed key spellings are matched',
     );
     test(
       'GAP (minor): session_id / session-id / sessionId spellings',
@@ -284,12 +274,10 @@ void main() {
         _gone('session_id=$_s1');
         _gone('session-id=$_s1');
       },
-      skip: 'known leak; not an Instagram cookie name, so low risk',
     );
     test(
       'GAP (minor): bare `sessionid <value>` with no separator',
       () => _gone('sessionid $_s1'),
-      skip: 'known leak: a separator is required',
     );
   });
 }

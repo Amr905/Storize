@@ -45,6 +45,8 @@ final class RotatingLogFile {
   /// The most files kept, including the current one.
   final int maxFiles;
 
+  bool _strayChecked = false;
+
   /// The current (newest) file.
   File get current => File('${directory.path}/$baseName');
 
@@ -67,6 +69,10 @@ final class RotatingLogFile {
         bytes = Uint8List.fromList([...bytes.sublist(0, maxBytes - 1), 0x0A]);
       }
       if (!directory.existsSync()) directory.createSync(recursive: true);
+      if (!_strayChecked) {
+        _strayChecked = true;
+        _deleteStray();
+      }
       final file = current;
       final size = file.existsSync() ? file.lengthSync() : 0;
       if (size > 0 && size + bytes.length > maxBytes) _rotate();
@@ -88,7 +94,32 @@ final class RotatingLogFile {
     }
   }
 
+  /// Deletes `<baseName>.N` files with N >= [maxFiles] (left by an older
+  /// configuration), so the cap holds for everything in the directory.
+  void _deleteStray() {
+    try {
+      final pattern = RegExp('^${RegExp.escape(baseName)}\\.(\\d+)\$');
+      for (final entity in directory.listSync(followLinks: false)) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        final m = pattern.firstMatch(name);
+        if (m == null) continue;
+        final index = int.tryParse(m[1]!);
+        if (index == null || index >= maxFiles) {
+          try {
+            entity.deleteSync();
+          } on Object {
+            // Best effort.
+          }
+        }
+      }
+    } on Object {
+      // Best effort.
+    }
+  }
+
   void _rotate() {
+    _deleteStray();
     final last = _file(maxFiles - 1);
     if (last.existsSync()) last.deleteSync();
     for (var i = maxFiles - 2; i >= 0; i--) {

@@ -31,8 +31,16 @@ final class CrashRecorder {
   final Clock clock;
 
   /// Logs [error] at ERROR level under tag `crash`, with [source] naming the
-  /// hook, and writes the crash marker. Never throws.
-  void record(Object error, StackTrace? stack, {required String source}) {
+  /// hook. With [fatal] true (the default) it also writes the crash marker;
+  /// non-fatal errors (such as `FlutterError.onError`, where the app keeps
+  /// running) are only logged. Never throws, and the marker is written even
+  /// if logging throws.
+  void record(
+    Object error,
+    StackTrace? stack, {
+    required String source,
+    bool fatal = true,
+  }) {
     try {
       log.log(
         LogLevel.error,
@@ -41,6 +49,11 @@ final class CrashRecorder {
         error: error,
         stack: stack,
       );
+    } on Object {
+      // A crash handler must not crash.
+    }
+    if (!fatal) return;
+    try {
       marker.write(error, clock.now());
     } on Object {
       // A crash handler must not crash.
@@ -85,7 +98,10 @@ final class CrashHooks {
   CrashRecorder get recorder => _recorder;
 
   /// Sets `FlutterError.onError` and `PlatformDispatcher.onError` to record
-  /// through [recorder].
+  /// through [recorder]. Only `PlatformDispatcher.onError` (and `runGuarded`)
+  /// write the APP_CRASH marker; `FlutterError.onError` errors (a layout
+  /// overflow, a failed image decode) are logged at ERROR but the app keeps
+  /// running, so they leave no marker.
   ///
   /// Framework errors are also shown on the console in debug builds only
   /// (the console copy is not redacted, so release builds never print it).
@@ -107,6 +123,7 @@ final class CrashHooks {
         details.exception,
         details.stack,
         source: 'FlutterError.onError',
+        fatal: false,
       );
       if (kDebugMode) FlutterError.presentError(details);
     }

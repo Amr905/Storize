@@ -52,6 +52,18 @@ void main() {
     },
   );
 
+  test('fatal-only: FlutterError logs without marker, dispatcher marks', () {
+    d.installCrashHooks();
+    FlutterError.onError!(FlutterErrorDetails(exception: StateError('ui')));
+    expect(logText(), contains('FlutterError.onError'));
+    expect(d.marker.file.existsSync(), isFalse);
+    PlatformDispatcher.instance.onError!(
+      StateError('fatal'),
+      StackTrace.current,
+    );
+    expect(d.marker.read()!.type, 'StateError');
+  });
+
   test('uninstall restores the exact previous handlers', () {
     void prevFlutter(FlutterErrorDetails _) {}
     bool prevDispatcher(Object _, StackTrace __) => false;
@@ -137,19 +149,18 @@ void main() {
       () => rec.record(StateError('x'), null, source: 't'),
       returnsNormally,
     );
-    // Marker is not written when logging threw first (single try block).
-    // Documenting: a throwing log loses the marker too.
-    expect(d.marker.read(), isNull);
+    // F4: the marker is written even though logging threw.
+    expect(d.marker.read(), isNotNull);
   });
 
-  test('FINDING: log throwing prevents the marker from being written', () {
+  test('F4: log throwing does not prevent the marker', () {
     final rec = CrashRecorder(
       log: _ThrowingLog(),
       marker: d.marker,
       clock: clock,
     );
     rec.record(StateError('x'), null, source: 't');
-    expect(d.marker.file.existsSync(), isFalse);
+    expect(d.marker.file.existsSync(), isTrue);
   });
 
   test('recursive error inside the logger terminates (no infinite loop)', () {

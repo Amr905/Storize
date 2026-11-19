@@ -109,16 +109,19 @@ void main() {
     expect(f.current.readAsStringSync(), contains('next-line'));
   });
 
-  test('stray extra file (storize.log.3) is not counted or touched', () {
-    // Documents behaviour: only indexes 0..maxFiles-1 are managed.
+  test('stray extra files (storize.log.3, .7) are deleted (F9)', () {
     final dir = Directory('${tmp.path}/l')..createSync();
     File('${dir.path}/storize.log.3').writeAsStringSync('stray\n');
+    File('${dir.path}/storize.log.7').writeAsStringSync('stray\n');
+    File('${dir.path}/other.log.9').writeAsStringSync('not ours\n');
     final f = RotatingLogFile(dir, maxBytes: 50);
     for (var i = 0; i < 30; i++) {
       f.append('filling-line-number-$i');
     }
     expect(f.files.length, 3);
-    expect(File('${dir.path}/storize.log.3').existsSync(), isTrue);
+    expect(File('${dir.path}/storize.log.3').existsSync(), isFalse);
+    expect(File('${dir.path}/storize.log.7').existsSync(), isFalse);
+    expect(File('${dir.path}/other.log.9').existsSync(), isTrue);
   });
 
   test('append never throws when the directory is deleted between writes', () {
@@ -222,23 +225,19 @@ void main() {
       expect(file.current.readAsLinesSync().length, 1);
     });
 
-    test(
-      'GAP (minor): message newline can forge a whole log line',
-      () {
-        log.log(
-          LogLevel.info,
-          'net',
-          'status 200\n2026-11-19T00:00:00.000Z ERROR [crash] forged',
-        );
-        final lines = file.current.readAsLinesSync();
-        expect(
-          lines.where((l) => l.startsWith('2026-')).length,
-          1,
-          reason: 'forged line starts at column 0: $lines',
-        );
-      },
-      skip: 'known: message/error newlines are written raw; only tag is sanitised',
-    );
+    test('message newline cannot forge a whole log line (F2)', () {
+      log.log(
+        LogLevel.info,
+        'net',
+        'status 200\n2026-11-19T00:00:00.000Z ERROR [crash] forged',
+      );
+      final lines = file.current.readAsLinesSync();
+      expect(
+        lines.where((l) => l.startsWith('2026-')).length,
+        1,
+        reason: 'forged line starts at column 0: $lines',
+      );
+    });
   });
 }
 

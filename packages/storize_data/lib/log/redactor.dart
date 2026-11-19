@@ -28,13 +28,20 @@ abstract final class Redactor {
 
   /// Key names whose value is secret, matched after `:`, `=` or `%3D`.
   static const String _secretKeys =
-      'set-cookie|cookie|proxy-authorization|authorization|sessionid|'
-      'csrftoken|csrfmiddlewaretoken|csrf_?token|csrf|ds_user_id|rur|mid|'
-      'ig_did|datr|shbid|shbts|ig_nrcb|fb_dtsg|dtsg|jazoest|lsd|'
-      'access_?token|refresh_?token|id_?token|api_?key|secret|token|'
-      '(?:x-)?ig-[a-z0-9-]+|x-csrftoken|x-fb-[a-z0-9-]+|'
-      '(?:new_?|old_?|current_?|confirm_?)?pin(?:_?hash|_?salt)?|'
-      'passcode|passwd|password|enc_password';
+      'set-cookie|cookie|proxy-authorization|authorization|'
+      'session[-_]?id|csrf[-_]?token|csrfmiddlewaretoken|csrf|'
+      'ds[-_]?user[-_]?id|rur|mid|'
+      'ig[-_]?did|datr|shbid|shbts|ig[-_]?nrcb|fb[-_]?dtsg|dtsg|jazoest|lsd|'
+      'access[-_]?token|refresh[-_]?token|id[-_]?token|api[-_]?key|secret|'
+      'token|(?:x-)?ig-[a-z0-9-]+|x-csrftoken|x-fb-[a-z0-9-]+|'
+      '(?:(?:new|old|current|confirm|user)[-_]?)?pin'
+      '(?:[-_]?(?:hash|salt|code))?|'
+      'pass[-_]?code|passwd|password|enc[-_]?password';
+
+  /// Keys that are unambiguous cookie / token names. A value may follow them
+  /// after whitespace only (`sessionid <value>`).
+  static const String _bareKeys =
+      'session[-_]?id|csrf[-_]?token|ds[-_]?user[-_]?id|enc[-_]?password';
 
   /// URL query parameters that are signatures. Matched only before `=`.
   static const String _signedParams = 'oh|oe|efg|sig|signature|_nc_[a-z0-9_]*';
@@ -42,7 +49,7 @@ abstract final class Redactor {
   // After a key: optional closing (possibly escaped) quote, separator, and an
   // optional opening (possibly escaped) quote.
   static const String _sep =
-      r'''(?:\\?["'])?\s*(?:[:=]|%3[Dd]|%3[Aa])\s*(?:\\?["'])?''';
+      r'''(?:\\*["'])?\s*(?:[:=]|%3[Dd]|%3[Aa])\s*(?:\\*["'])?''';
 
   // Whole `Name: value` header lines: everything to the end of the line.
   static final RegExp _headerLine = RegExp(
@@ -54,7 +61,7 @@ abstract final class Redactor {
   // `key: "value with spaces"` (JSON or Dart, either quote). Runs first so
   // quoted secrets containing spaces or `;` are removed whole.
   static final RegExp _quoted = RegExp(
-    '(?<![A-Za-z0-9])((?:$_secretKeys)["\']?\\s*[:=]\\s*)'
+    '(?<![A-Za-z0-9])((?:$_secretKeys)(?:\\\\*["\'])?\\s*[:=]\\s*)'
     r'''(["'])(?:(?!\2)[^\\]|\\.)*\2''',
     caseSensitive: false,
   );
@@ -78,7 +85,30 @@ abstract final class Redactor {
   );
 
   // PIN hashes and the cooldown counter share the `v1:` prefix.
-  static final RegExp _pinHash = RegExp(r'''(?<![A-Za-z0-9])v1:[^\s"'\\]+''');
+  static final RegExp _pinHash = RegExp(
+    r'''(?<![A-Za-z0-9])v1:[^\s"'\\]+''',
+    caseSensitive: false,
+  );
+
+  // `sessionid <value>`: unambiguous cookie name, whitespace, token-like value.
+  static final RegExp _bareKey = RegExp(
+    '(?<![A-Za-z0-9])((?:$_bareKeys)[ \t]+)[A-Za-z0-9%._~+/=-]{6,}',
+    caseSensitive: false,
+  );
+
+  // Encodings undone before matching (see [_normalize]).
+  static final RegExp _invisible = RegExp(
+    '[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]',
+  );
+  static final RegExp _fullwidth = RegExp('[\uFF01-\uFF5E]');
+  static final RegExp _percent = RegExp('%([0-9A-Fa-f]{2})');
+  static final RegExp _unicodeEscape = RegExp(r'\\u([0-9A-Fa-f]{4})');
+  static final RegExp _htmlEntity = RegExp(
+    '&#(?:[xX]([0-9A-Fa-f]{1,4})|([0-9]{1,4}));',
+  );
+
+  /// How many rounds of decoding are tried (covers `%253D`, `%25253D`).
+  static const int _decodePasses = 3;
 
   // Any URL, including JSON-escaped ones (`https:\/\/host\/path`).
   static final RegExp _url = RegExp(
@@ -92,21 +122,78 @@ abstract final class Redactor {
   );
 
   /// Returns [input] with every known secret pattern replaced by [mask] and
-  /// cut to [maxLength]. Safe to call on any text; applying it twice gives the
-  /// same result.
+  /// cut to [maxLength]. Safe to call on any text and never throws; applying
+  /// it twice gives the same result.
+  ///
+  /// The text is matched in a decoded form too (percent, `\uXXXX`, HTML
+  /// entities, zero-width and fullwidth characters, up to [_decodePasses]
+  /// rounds). If a secret is found there, the decoded and redacted text is
+  /// returned; otherwise the text is redacted as it was written.
   static String redact(String input) {
+    String s;
+    try {
+      final normal = _normalize(input);
+      s = _scrub(normal);
+      if (s == normal && normal != input) s = _scrub(input);
+    } on Object {
+      s = mask; // Fail closed.
+    }
+    if (s.length > maxLength) {
+      s = '${s.substring(0, maxLength)}...[cut ${s.length - maxLength}]';
+    }
+    return s;
+  }
+
+  static String _scrub(String input) {
     var s = input;
     s = s.replaceAllMapped(_url, _stripCdnQuery);
     s = s.replaceAllMapped(_headerLine, (m) => '${m[1]}: $mask');
     s = s.replaceAllMapped(_quoted, (m) => '${m[1]}${m[2]}$mask${m[2]}');
     s = s.replaceAllMapped(_keyValue, (m) => '${m[1]}$mask');
+    s = s.replaceAllMapped(_bareKey, (m) => '${m[1]}$mask');
     s = s.replaceAllMapped(_signedParam, (m) => '${m[1]}$mask');
     s = s.replaceAllMapped(_bearer, (m) => '${m[1]} $mask');
     s = s.replaceAllMapped(_pinHash, (_) => 'v1:$mask');
-    if (s.length > maxLength) {
-      s = '${s.substring(0, maxLength)}...[cut ${s.length - maxLength}]';
+    return s;
+  }
+
+  /// Undoes encodings that hide a key or separator. Only printable ASCII is
+  /// ever produced by decoding (so decoding cannot inject control characters),
+  /// and invalid sequences such as `%zz` or `%4` are left as they are.
+  static String _normalize(String input) {
+    var s = input;
+    for (var i = 0; i < _decodePasses; i++) {
+      var t = s;
+      if (t.contains(_invisible)) t = t.replaceAll(_invisible, '');
+      if (t.contains(_fullwidth)) {
+        t = t.replaceAllMapped(
+          _fullwidth,
+          (m) => String.fromCharCode(m[0]!.codeUnitAt(0) - 0xFEE0),
+        );
+      }
+      if (t.contains(r'\u')) {
+        t = t.replaceAllMapped(_unicodeEscape, (m) => _ascii(m, 1, 16));
+      }
+      if (t.contains('&#')) {
+        t = t.replaceAllMapped(
+          _htmlEntity,
+          (m) => m[1] != null ? _ascii(m, 1, 16) : _ascii(m, 2, 10),
+        );
+      }
+      if (t.contains('%')) {
+        t = t.replaceAllMapped(_percent, (m) => _ascii(m, 1, 16));
+      }
+      if (t == s) break;
+      s = t;
     }
     return s;
+  }
+
+  // The decoded character if printable ASCII, else the text as written.
+  static String _ascii(Match m, int group, int radix) {
+    final code = int.tryParse(m[group]!, radix: radix);
+    if (code == null || code < 0x20 || code > 0x7E) return m[0]!;
+    return String.fromCharCode(code);
   }
 
   /// Redacts the first line of [input] only, cut to [maxChars]. Used for the
