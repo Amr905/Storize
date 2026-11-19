@@ -14,6 +14,7 @@ const String latestReleaseUrl =
 
 final RegExp _numericRe = RegExp(r'^\d+$');
 final RegExp _identifiersRe = RegExp(r'^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$');
+const String _releasePathPrefix = '/Amr905/Storize/releases/';
 final RegExp _sha256Re = RegExp(r'^[0-9a-fA-F]{64}$');
 
 /// A semantic version `MAJOR.MINOR.PATCH[-pre-release][+build]`.
@@ -73,13 +74,17 @@ final class SemanticVersion implements Comparable<SemanticVersion> {
       pre = s.substring(dash + 1);
       s = s.substring(0, dash);
       if (!_identifiersRe.hasMatch(pre)) return null;
+      final preParts = pre.split('.');
+      for (final id in preParts) {
+        if (_numericRe.hasMatch(id) && _hasLeadingZero(id)) return null;
+      }
     }
 
     final parts = s.split('.');
     if (parts.length != 3) return null;
     final numbers = <int>[];
     for (final part in parts) {
-      if (!_numericRe.hasMatch(part)) return null;
+      if (!_numericRe.hasMatch(part) || _hasLeadingZero(part)) return null;
       final value = int.tryParse(part);
       if (value == null) return null;
       numbers.add(value);
@@ -115,6 +120,9 @@ final class SemanticVersion implements Comparable<SemanticVersion> {
     }
     return prerelease.length.compareTo(other.prerelease.length);
   }
+
+  static bool _hasLeadingZero(String digits) =>
+      digits.length > 1 && digits.startsWith('0');
 
   static int _comparePreIdentifier(String a, String b) {
     final aNumeric = _numericRe.hasMatch(a);
@@ -279,8 +287,8 @@ class UpdateChecker {
     if (remote == null) return UpdateState.none;
     if (remote.compareTo(current) <= 0) return UpdateState.none;
 
-    final url = Uri.tryParse(html);
-    if (url == null || url.scheme != 'https') return UpdateState.none;
+    final url = _releaseUrl(html);
+    if (url == null) return UpdateState.none;
 
     final body = release['body'];
     final bodyText = body is String ? body : null;
@@ -313,6 +321,28 @@ class UpdateChecker {
       return rest.split(RegExp(r'\s+')).first;
     }
     return null;
+  }
+
+  /// Returns [raw] as a [Uri] only when it points at this project's release
+  /// pages: https, host `github.com`, no userinfo, no port, and a path that
+  /// starts with `/Amr905/Storize/releases/`. Otherwise returns `null`.
+  ///
+  /// The host is compared after Dart lowercases it, so `GITHUB.COM` is
+  /// accepted (DNS names are case-insensitive). The path is case-sensitive.
+  /// `Uri` hides an explicit default port (`:443`) and an empty userinfo
+  /// (`@`), so the raw authority is checked for both.
+  static Uri? _releaseUrl(String raw) {
+    final uri = Uri.tryParse(raw);
+    if (uri == null || uri.scheme != 'https') return null;
+    if (uri.host != 'github.com') return null;
+    if (!uri.path.startsWith(_releasePathPrefix)) return null;
+    final schemeSep = raw.indexOf('://');
+    if (schemeSep < 0) return null;
+    final rest = raw.substring(schemeSep + 3);
+    final end = rest.indexOf(RegExp('[/?#]'));
+    final authority = end < 0 ? rest : rest.substring(0, end);
+    if (authority.contains('@') || authority.contains(':')) return null;
+    return uri;
   }
 
   static String? _parseSha256(String? value) {

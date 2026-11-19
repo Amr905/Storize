@@ -129,10 +129,19 @@ void main() {
       });
     }
 
-    test('leading zeros are accepted today (SemVer forbids them)', () async {
-      // Documents current behavior; reported as a Low finding.
-      expect(SemanticVersion.tryParse('v01.2.3'), isNotNull);
-      expect(SemanticVersion.tryParse('v01.2.3')!.major, 1);
+    test('leading zeros are rejected per SemVer', () {
+      expect(SemanticVersion.tryParse('v01.2.3'), isNull);
+      expect(SemanticVersion.tryParse('1.02.3'), isNull);
+      expect(SemanticVersion.tryParse('1.2.03'), isNull);
+      expect(SemanticVersion.tryParse('1.2.3-01'), isNull);
+      expect(SemanticVersion.tryParse('1.2.3-beta.02'), isNull);
+    });
+
+    test('zero and alphanumeric identifiers with zeros are still valid', () {
+      expect(SemanticVersion.tryParse('0.0.0'), isNotNull);
+      expect(SemanticVersion.tryParse('1.2.3-0'), isNotNull);
+      expect(SemanticVersion.tryParse('1.2.3-alpha.01a'), isNotNull);
+      expect(SemanticVersion.tryParse('1.2.3+build.007'), isNotNull);
     });
 
     test('huge current version is rejected without throwing', () async {
@@ -156,36 +165,100 @@ void main() {
   group('html_url security', () {
     Future<UpdateState> withUrl(String u) => _run(_rel(html: u));
 
+    const ok = 'https://github.com/Amr905/Storize/releases/tag/v0.2.0';
+
+    test('the project release URL is accepted', () async {
+      final r = await withUrl(ok);
+      expect(r, isA<UpdateAvailable>());
+      expect((r as UpdateAvailable).url, Uri.parse(ok));
+    });
+
     test('http and non-web schemes are rejected', () async {
       for (final u in [
         'http://github.com/Amr905/Storize/releases/tag/v0.2.0',
+        'HTTP://github.com/Amr905/Storize/releases/tag/v0.2.0',
         'javascript:alert(1)',
         'intent://evil#Intent;end',
         'file:///etc/passwd',
         'market://details?id=x',
-        '//github.com/x',
-        '/relative',
+        '//github.com/Amr905/Storize/releases/x',
+        '/Amr905/Storize/releases/x',
         '',
       ]) {
         expect(await withUrl(u), same(UpdateState.none), reason: u);
       }
     });
 
+    test('a foreign host is rejected', () async {
+      for (final u in [
+        'https://evil.example/Amr905/Storize/releases/tag/v0.2.0',
+        'https://github.com.evil.example/Amr905/Storize/releases/tag/v0.2.0',
+        'https://gist.github.com/Amr905/Storize/releases/tag/v0.2.0',
+        'https://github.com./Amr905/Storize/releases/tag/v0.2.0',
+        'https://api.github.com/Amr905/Storize/releases/tag/v0.2.0',
+      ]) {
+        expect(await withUrl(u), same(UpdateState.none), reason: u);
+      }
+    });
+
+    test('userinfo lookalike hosts are rejected', () async {
+      for (final u in [
+        'https://github.com@evil.example/Amr905/Storize/releases/x',
+        'https://github.com:x@evil.example/Amr905/Storize/releases/x',
+        'https://@github.com/Amr905/Storize/releases/tag/v0.2.0',
+        'https://:@github.com/Amr905/Storize/releases/tag/v0.2.0',
+        'https://user@github.com/Amr905/Storize/releases/tag/v0.2.0',
+      ]) {
+        expect(await withUrl(u), same(UpdateState.none), reason: u);
+      }
+    });
+
+    test('an explicit port is rejected, including the default 443', () async {
+      for (final u in [
+        'https://github.com:443/Amr905/Storize/releases/tag/v0.2.0',
+        'https://github.com:8443/Amr905/Storize/releases/tag/v0.2.0',
+        'https://github.com:/Amr905/Storize/releases/tag/v0.2.0',
+      ]) {
+        expect(await withUrl(u), same(UpdateState.none), reason: u);
+      }
+    });
+
     test(
-      'FINDING: any https host is accepted (not restricted to github.com)',
+      'uppercase host GITHUB.COM is accepted (DNS is case-insensitive)',
       () async {
-        // Documents current behavior. Recommendation: pin the host/path.
-        final r = await withUrl('https://evil.example/phish');
+        final r = await withUrl(
+          'https://GITHUB.COM/Amr905/Storize/releases/tag/v0.2.0',
+        );
         expect(r, isA<UpdateAvailable>());
-        expect((r as UpdateAvailable).url.host, 'evil.example');
+        expect((r as UpdateAvailable).url.host, 'github.com');
       },
     );
 
-    test('FINDING: userinfo lookalike host is accepted', () async {
-      final r = await withUrl('https://github.com@evil.example/x');
-      expect(r, isA<UpdateAvailable>());
-      expect((r as UpdateAvailable).url.host, 'evil.example');
+    test('a release path for a different repo is rejected', () async {
+      for (final u in [
+        'https://github.com/Someone/Storize/releases/tag/v0.2.0',
+        'https://github.com/Amr905/Other/releases/tag/v0.2.0',
+        'https://github.com/Amr905/Storize-fork/releases/tag/v0.2.0',
+        'https://github.com/Amr905/Storize',
+        'https://github.com/Amr905/Storize/issues/1',
+        'https://github.com/',
+        'https://github.com',
+      ]) {
+        expect(await withUrl(u), same(UpdateState.none), reason: u);
+      }
     });
+
+    test(
+      'path is case-sensitive: a different-case repo path is rejected',
+      () async {
+        expect(
+          await withUrl(
+            'https://github.com/amr905/storize/releases/tag/v0.2.0',
+          ),
+          same(UpdateState.none),
+        );
+      },
+    );
   });
 
   group('sha256 / min-supported body parsing', () {
