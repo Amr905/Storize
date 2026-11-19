@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/debug/address_bar.dart';
 import 'package:storize_app/debug/hook_message.dart';
 import 'package:storize_app/debug/inspector_log.dart';
 
@@ -132,44 +133,63 @@ class _DebugInspectorScreenState extends State<DebugInspectorScreen> {
   }
 }
 
-class _InspectorWebView extends StatelessWidget {
+class _InspectorWebView extends StatefulWidget {
   const _InspectorWebView({required this.hookSource, required this.log});
 
   final String hookSource;
   final InspectorLog log;
 
   @override
+  State<_InspectorWebView> createState() => _InspectorWebViewState();
+}
+
+class _InspectorWebViewState extends State<_InspectorWebView> {
+  InAppWebViewController? _controller;
+
+  @override
   Widget build(BuildContext context) {
     final script = UserScript(
       source:
           "window.__STORIZE_HOOK_CONFIG = {handler: '$hookHandlerName', "
-          'includeBody: false};\n$hookSource',
+          'includeBody: false};\n${widget.hookSource}',
       injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
       allowedOriginRules: {allowedHookOrigin},
     );
-    return InAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri('$allowedHookOrigin/')),
-      initialUserScripts: UnmodifiableListView([script]),
-      initialSettings: InAppWebViewSettings(
-        allowFileAccess: false,
-        allowContentAccess: false,
-      ),
-      onWebViewCreated: (controller) {
-        controller.addJavaScriptHandler(
-          handlerName: hookHandlerName,
-          callback: (JavaScriptHandlerFunctionData data) {
-            // Origin of the frame that posted, as reported by the native
-            // side (not by the page).
-            final o = data.origin;
-            final parsed = parseHookMessage(
-              data.args,
-              pageOrigin: '${o.scheme}://${o.host}',
-            );
-            if (parsed != null) log.add(parsed);
-            return null;
-          },
-        );
-      },
+    return Column(
+      children: [
+        InspectorAddressBar(
+          onGo: (uri) => _controller?.loadUrl(
+            urlRequest: URLRequest(url: WebUri.uri(uri)),
+          ),
+        ),
+        Expanded(
+          child: InAppWebView(
+            initialUrlRequest: URLRequest(url: WebUri('$allowedHookOrigin/')),
+            initialUserScripts: UnmodifiableListView([script]),
+            initialSettings: InAppWebViewSettings(
+              allowFileAccess: false,
+              allowContentAccess: false,
+            ),
+            onWebViewCreated: (controller) {
+              _controller = controller;
+              controller.addJavaScriptHandler(
+                handlerName: hookHandlerName,
+                callback: (JavaScriptHandlerFunctionData data) {
+                  // Origin of the frame that posted, as reported by the
+                  // native side (not by the page).
+                  final o = data.origin;
+                  final parsed = parseHookMessage(
+                    data.args,
+                    pageOrigin: '${o.scheme}://${o.host}',
+                  );
+                  if (parsed != null) widget.log.add(parsed);
+                  return null;
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

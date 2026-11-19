@@ -27,7 +27,7 @@ Be gentle with the account: do each step once, wait a few seconds between pages,
 ## 1. Desktop Chrome: set up DevTools
 
 4. Open Chrome, go to `https://www.instagram.com/`, and **log in with the test account** yourself.
-5. Press **F12** to open DevTools and click the **Network** tab. Tick **Preserve log** and **Disable cache**. Click the **Fetch/XHR** filter.
+5. Press **F12** to open DevTools and click the **Network** tab. Tick **Preserve log** and **Disable cache**. Click the **All** filter (not Fetch/XHR: the page's own HTML must be in the HAR too, because Instagram sometimes embeds its data there).
 
 ## 2. Visit the pages, one HAR each
 
@@ -50,7 +50,8 @@ right-click any request → **Save all as HAR with content** → save into `D:\c
 7. Still on a post page:
    1. Right-click an **image** → **Copy image address**. Open a **new Incognito window** (Ctrl+Shift+N), paste it in the address bar, press Enter. Write down: **loads / downloads? yes or no** (and "403" or "expired" if it says so).
    2. For a **video**: right-click it → **Copy video address**. If Chrome gives a `blob:` link, that is normal (the page streams it): instead, in the Network tab filter **Media**, right-click the `.mp4` request → **Copy** → **Copy URL**. Paste into Incognito. Write down **yes or no**. If the URL has `bytestart=` or `byteend=`, also try it once with those two parameters deleted and note which worked.
-   3. Do both within a few minutes (links expire). Close the Incognito window afterwards.
+   3. Repeat both for a **story**: open `https://www.instagram.com/stories/<test_target>/`, right-click the story image (or, for a video story, use the Network tab **Media** filter as above), and test the link in Incognito. Write down **story image: yes / no** and **story video: yes / no**.
+   4. Do all of these within a few minutes (links expire). Close the Incognito window afterwards.
 
 ## 4. Sanitize on your PC (before sharing anything)
 
@@ -68,25 +69,33 @@ dart packages\storize_instagram\tool\sanitize_har.dart D:\capture\raw\reel.har D
 - It prints `Wrote N files to ...` on success.
 - If it prints **`REFUSING TO WRITE`**, it found something that looks like a secret and wrote nothing. Do not send that HAR. Tell the Lead which finding it printed (it prints only the kind, never the secret).
 - Use plain `dart <file>` as shown. It needs no package setup, so it works with the Dart SDK alone. (`dart run <file>` also works from the repo root if Flutter is installed, but may fail on a Dart-only PC because it first resolves the workspace, which lists Flutter packages.)
-- Open `D:\capture\out\story\report.md` in Notepad. Check: the candidate table lists what it saw, and **no real name, caption or number from your account is visible** in `bodies\*.json` (skim one). If you see something personal, don't send it.
+- The tool keeps the **shape** of every response and hides its **content**: all text becomes `<str:12>` (the number is only the length), links become `<url host=... path_shape=...>`, ids become `user_1` / `media_1`. Request bodies are not copied at all. So the files will look empty of words; that is expected.
+- Open `D:\capture\out\story\report.md` in Notepad. Check: the candidate table lists what it saw, and skim one file in `bodies\`: if you can read any real name, caption, email, phone number or link, don't send it and tell the Lead.
+- If a path contains spaces, put it in double quotes, for example `"D:\my capture\story.har"`.
 
 ## 5. Optional: phone check (about 10 minutes)
 
 9. (Optional, skip if short on time.) This proves the page-mode hook sees the same JSON inside Storize's own WebView.
    1. Phone: enable USB debugging and connect it.
    2. In the repo folder: `cd app` then `flutter run --flavor dev -t lib\main_debug_inspector.dart` (needs Flutter).
-   3. The app shows Instagram on top and a live list below. **Log in yourself** with the test account, then open `https://www.instagram.com/stories/<test_target>/` (type it in the page's address route or tap the story).
+   3. The app shows an address bar and Instagram on top, and a live list below. **Log in yourself** with the test account, then type `/stories/<test_target>/` into the address bar and tap **Go** (only instagram.com addresses are accepted).
    4. Look at the list: you should see lines such as `200 www.instagram.com/api/v1/feed/reels_media/` with their top-level keys. Write down which API paths appear and whether the keys match the desktop `report.md`.
    5. Optional: on the PC open `chrome://inspect` to inspect the WebView.
-   The list shows paths, status, size and key names only, never bodies or cookies. If you send a screenshot, blur the username and ids.
+   The list shows paths (without query strings), status, size and key names only, never bodies or cookies. If you send a screenshot, blur the username and ids.
+
+## Not covered in this round
+
+TECH_SPEC §4.1 step 6 (does `HeadlessInAppWebView` run inside the background workmanager isolate on two phones) is **deferred to T-014**. Nothing in this guide tests it.
 
 ## 6. What to send back
 
 10. Send **only**:
     - The **sanitized folders** in `D:\capture\out\` (`story`, `profile`, `post_photo`, `post_video`, `post_carousel`, `reel`): zip that folder.
     - A short text with the **yes/no answers**:
-      - Image link in Incognito: yes / no (+ error)
-      - Video link in Incognito: yes / no (+ error, and whether `bytestart`/`byteend` mattered)
+      - Post image link in Incognito: yes / no (+ error)
+      - Post video link in Incognito: yes / no (+ error, and whether `bytestart`/`byteend` mattered)
+      - Story image link in Incognito: yes / no
+      - Story video link in Incognito: yes / no
       - Phone check (if done): which API paths showed up, same keys as desktop yes / no
       - Anything odd: login challenge, "try again later" message, rate limit
 

@@ -111,17 +111,27 @@ void main() {
     }
   });
 
-  test('every CDN URL query is truncated to ?<redacted>', () {
+  test('every URL value becomes <url host=... path_shape=...>: no path '
+      'segments, no query', () {
     final text = outcome.files['bodies/003_feed_user.json']!;
-    final urls = RegExp(r'https://[^"\s<]+').allMatches(text);
+    expect(text, isNot(contains('http')));
+    expect(text, isNot(contains('?')));
+    final urls = RegExp('<url [^>]*>').allMatches(text).map((m) => m[0]!);
     expect(urls, isNotEmpty);
-    final withQuery = RegExp(r'https://[^"\s]*\?[^"\s]*')
-        .allMatches(text)
-        .map((m) => m[0]!);
-    expect(withQuery, isNotEmpty);
-    for (final u in withQuery) {
-      expect(u, contains('?<redacted>'));
+    for (final u in urls) {
+      expect(
+        u,
+        matches(RegExp(r'^<url host=[a-z0-9.-]+ path_shape=\d+seg(\.\w+)?>$')),
+      );
     }
+    expect(
+      text,
+      contains('<url host=scontent-xxx.cdninstagram.com path_shape=3seg.jpg>'),
+    );
+    expect(
+      text,
+      contains('<url host=scontent-xxx.cdninstagram.com path_shape=6seg.mp4>'),
+    );
   });
 
   test('JSON structure, types, dimensions and media fields are preserved', () {
@@ -170,8 +180,8 @@ void main() {
     final profUser = (profile['data'] as Map)['user'] as Map;
     for (final u in [storyUser, postUser, profUser]) {
       expect(u['pk'], 'user_1');
-      expect(u['username'], 'username_1');
-      expect(u['full_name'], 'name_1');
+      expect(u['username'], '<str:14>');
+      expect(u['full_name'], '<str:10>');
     }
     // Compound media id keeps both parts consistent.
     final firstStory =
@@ -183,10 +193,10 @@ void main() {
         .map((i) => (i as Map)['pk'])
         .toSet();
     expect(pks, hasLength(4));
-    // Captions become numbered placeholders.
+    // Captions are default-deny placeholders carrying only the length.
     final caption =
         ((posts['items'] as List<dynamic>).first as Map)['caption'] as Map;
-    expect(caption['text'], matches(RegExp(r'^<caption \d+>$')));
+    expect(caption['text'], matches(RegExp(r'^<str:\d+>$')));
     // Viewer is a different user.
     final viewer = (body('bodies/004')['user'] as Map)['pk'];
     expect(viewer, isNot('user_1'));
@@ -227,7 +237,7 @@ void main() {
     final ig1 = rows[0];
     expect(ig1['method'], 'GET');
     expect(ig1['path'], '/api/v1/users/web_profile_info/');
-    expect(ig1['query'], {'username': 'username_1'});
+    expect(ig1['query'], {'username': '<v>'});
     final ig2 = rows[1];
     expect(ig2['query'], {
       'reel_ids': ['user_1', 'user_2'],
@@ -245,11 +255,14 @@ void main() {
       'x-ig-app-id',
       'accept',
     });
-    // POST body: doc_id kept, variables reduced to key names, lsd replaced.
-    final post = rows[4]['postParams'] as Map;
-    expect(post['doc_id'], '1234567890123');
-    expect(post['variables'], '<json keys: id,first>');
-    expect(post['lsd'], '<v>');
+    // POST body is never copied: only mime type, size, param names on the
+    // allowlist, and the (public) doc_id.
+    final post = rows[4]['postData'] as Map;
+    expect(post['paramCount'], 3);
+    expect(post['paramNames'], ['doc_id', 'variables']);
+    expect(post['docId'], '1234567890123');
+    expect(post['size'], greaterThan(0));
+    expect(jsonEncode(rows[4]), isNot(contains('lsd')));
   });
 
   test('report.md detects candidates, unknown requests and media fields', () {
@@ -272,7 +285,7 @@ void main() {
     }
     expect(r, contains('feed, clips'));
     // HTML page that embeds media markers is flagged without copying HTML.
-    expect(r, contains('/stories/username_1/'));
+    expect(r, contains('/stories/<seg>/'));
   });
 
   test('responses with no body are reported, not crashed on', () {
@@ -303,11 +316,13 @@ void main() {
   });
 
   group('fails closed', () {
+    // Strings are default-deny, so the only way a secret reaches the output
+    // is somewhere the walker keeps verbatim: an object KEY. The independent
+    // final scan must still catch it.
     final leaky = jsonEncode(
       _har([
         _entry('https://www.instagram.com/api/v1/x/', {
-          'debug_note':
-              'retry later with Zx9Kq2Lm8Vb3Nc7Xa1Sd5Fg4Hj6Kl0Qw2Er9Ty8 ok',
+          'sessionid=Zx9Kq2Lm8Vb3Nc7X': 1,
         }),
       ]),
     );
@@ -316,7 +331,7 @@ void main() {
       final out = sanitizeHar(leaky);
       expect(out.ok, isFalse);
       expect(out.files, isEmpty);
-      expect(out.leaks.single, contains('long hex/base64 token'));
+      expect(out.leaks.single, contains('cookie/session/auth value'));
       expect(out.leaks.single, isNot(contains('Zx9Kq2')));
     });
 
@@ -339,11 +354,13 @@ void main() {
 
     test('findLeaks flags cookies, signed URLs and long tokens', () {
       expect(findLeaks('x sessionid=abc123def; y'), isNotEmpty);
+      expect(findLeaks('x sessionid%3Dabc123def; y'), isNotEmpty);
       expect(findLeaks('csrftoken=<redacted>'), isEmpty);
       expect(findLeaks('{"sessionid": "abc"}'), isNotEmpty);
       expect(findLeaks('{"sessionid": "<redacted>"}'), isEmpty);
       expect(findLeaks('https://a.example.net/x.jpg?oh=1&oe=2'), isNotEmpty);
-      expect(findLeaks('https://a.example.net/x.jpg?<redacted>'), isEmpty);
+      expect(findLeaks('https://a.example.net/x.jpg?<redacted>'), isNotEmpty);
+      expect(findLeaks('https://a.example.net/x.jpg'), isEmpty);
       expect(findLeaks('see //a.example.net/x?_nc_sig=1'), isNotEmpty);
       expect(findLeaks('a' * 10), isEmpty);
       expect(findLeaks('0123456789abcdef0123456789abcdef'), isNotEmpty);

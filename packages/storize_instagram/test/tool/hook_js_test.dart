@@ -55,14 +55,23 @@ void main() {
     },
   );
 
-  // Finding QA-7 (low): the reported url keeps the query string.
+  // QA-7: the reported url carries no query string unless includeBody.
   test(
     'QA-7 reported url should not carry the query string',
-    skip: 'QA-7: hook.js sends the full URL incl. query (signed params)',
     () async {
       final sent = await _run(false);
       final msg = (sent.single as Map)['msg'] as Map;
       expect('${msg['url']}', isNot(contains('?')));
+    },
+  );
+
+  test(
+    'includeBody=true (T-014) keeps the full URL, for the mapper',
+    skip: hasNode ? null : 'node not installed',
+    () async {
+      final sent = await _run(true);
+      final msg = (sent.single as Map)['msg'] as Map;
+      expect('${msg['url']}', contains('?'));
     },
   );
 }

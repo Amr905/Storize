@@ -22,28 +22,27 @@ import 'dart:io';
 /// Marker for removed secret values.
 const String redacted = '<redacted>';
 
-/// Query keys whose values are structural and safe to keep.
-const Set<String> _safeQueryKeys = {
-  'count',
-  'doc_id',
-  'query_hash',
-  'first',
-  'edit',
-  '__a',
-  '__d',
+// ---------------------------------------------------------------------------
+// Policy tables. The body sanitizer is DEFAULT-DENY: every string value is
+// replaced unless its key is on an explicit allowlist of structural keys.
+// ---------------------------------------------------------------------------
+
+/// String values kept (if they also match a short pattern) for these keys.
+const Set<String> _allowedStringKeys = {
+  'media_type',
+  'product_type',
+  'audience',
+  'status',
+  '__typename',
+  'mime_type',
+  'content_type',
+  'type',
+  'kind',
+  'reel_type',
 };
 
-/// Query keys that carry user IDs (replaced by consistent placeholders).
-const Set<String> _idQueryKeys = {
-  'reel_ids',
-  'user_id',
-  'user_ids',
-  'id',
-  'ids',
-};
-
-/// Query keys that carry usernames.
-const Set<String> _usernameQueryKeys = {'username', 'user', 'q'};
+final RegExp _structValue = RegExp(r'^[A-Za-z0-9_\-]{1,40}$');
+final RegExp _mimeValue = RegExp(r'^[A-Za-z0-9_\-]+/[A-Za-z0-9_.+\-]+$');
 
 /// Request header values we keep (everything else: name only).
 const Set<String> _keptHeaderValues = {
@@ -53,10 +52,12 @@ const Set<String> _keptHeaderValues = {
   'accept',
 };
 
-/// JSON keys whose value is a secret or device/session identifier.
+/// JSON keys whose value is a secret or device/session identifier. The value
+/// (any type) is replaced even if it is an object.
 const Set<String> _secretKeys = {
   'sessionid',
   'csrftoken',
+  'x-csrftoken',
   'csrf_token',
   'ds_user_id',
   'mid',
@@ -69,7 +70,11 @@ const Set<String> _secretKeys = {
   'cookie',
   'set-cookie',
   'authorization',
+  'ig-set-authorization',
   'x-ig-www-claim',
+  'x-instagram-ajax',
+  'x-asbd-id',
+  'x-fb-lsd',
   'password',
   'enc_password',
   'access_token',
@@ -84,53 +89,84 @@ const Set<String> _secretKeys = {
   'uuid',
 };
 
-const Set<String> _usernameKeys = {
-  'username',
-  'ig_username',
-  'owner_username',
-  'viewer_username',
-  'fb_username',
-};
-
-/// Pagination cursors are opaque and can encode IDs.
-const Set<String> _cursorKeys = {
-  'next_max_id',
-  'max_id',
-  'end_cursor',
-  'cursor',
-  'next_cursor',
-  'paging_token',
-};
-
 const Set<String> _geoKeys = {'lat', 'lng', 'latitude', 'longitude'};
-const Set<String> _redactKeys = {'external_url', 'address', 'city'};
+
+/// Numeric keys that stay as they are even when they have 13+ digits.
+final RegExp _timeKey = RegExp(
+  r'(time|_at$|^at$|_ms$|_us$|date|latest_reel_media|duration|expir)',
+);
 
 /// ID-like keys that are public constants, not per-user identifiers.
 const Set<String> _notIdKeys = {'app_id', 'ig_app_id', 'doc_id'};
 
-/// Top-level paths on instagram.com that are not usernames.
-const Set<String> _knownTopPaths = {
+/// Path segments that are known API structure. Everything else is `<seg>`.
+const Set<String> _allowedSegments = {
   'api',
-  'graphql',
-  'p',
-  'reel',
+  'v1',
+  'v2',
+  'feed',
+  'reels_media',
   'reels',
-  'stories',
-  'explore',
+  'reel',
+  'reels_tray',
+  'user',
+  'users',
+  'web_profile_info',
+  'info',
   'accounts',
+  'current_user',
+  'graphql',
+  'query',
+  'stories',
+  'story',
+  'highlights',
+  'p',
   'tv',
-  'direct',
+  'friendships',
+  'show',
+  'usernameinfo',
+  'username',
+  'media',
+  'tray',
+  'explore',
   'web',
-  'static',
+  'search',
+  'topsearch',
+  'clips',
+  'timeline',
+  'seen',
+  'comments',
+  'tags',
+  'locations',
+  'location',
   'ajax',
-  'challenge',
-  'oauth',
-  'emailsignup',
-  'logging',
-  'rsrc.php',
-  'data',
   'async',
+  'data',
+  'logging',
   'qp',
+  'direct_v2',
+  'inbox',
+  'bulk-route-definitions',
+};
+
+/// Query/param names whose value shape is structural.
+const Set<String> _idQueryKeys = {
+  'reel_ids',
+  'user_id',
+  'user_ids',
+  'id',
+  'ids',
+};
+
+/// POST/form parameter names we are willing to list.
+const Set<String> _allowedParamNames = {
+  'doc_id',
+  'query_hash',
+  'variables',
+  'count',
+  'first',
+  '__a',
+  '__d',
 };
 
 /// Fields the developers look for in every body.
@@ -198,28 +234,44 @@ final List<_Candidate> _candidates = [
 ];
 
 // ---------------------------------------------------------------------------
-// Leak scanner (independent last line of defence)
+// Leak scanner (independent last line of defence). Scans the raw text, a
+// URL-decoded copy and a JSON-unescaped copy (and both), case-insensitively.
 // ---------------------------------------------------------------------------
 
-final RegExp _cookieAssign = RegExp(
-  r'\b(sessionid|csrftoken|ds_user_id|ig_did|rur|mid|fbsr_[A-Za-z0-9_]*)='
-  r'(?!<redacted>)[^\s;&"\x27<>]+',
+/// A cookie/session/auth name followed by a separator and a real value.
+/// Header-name lists ("x-csrftoken",) and placeholders (`<v>`, `<redacted>`)
+/// do not match.
+final RegExp _secretAssign = RegExp(
+  '(?<![a-z0-9_])'
+  '(sessionid|csrftoken|x-csrftoken|csrf_token|ds_user_id|ig_did|rur|'
+  'fbsr_[a-z0-9_]*|authorization|ig-set-authorization|mid)'
+  r'''["']?\s*(?:=|:)\s*["']?(?!<)[^\s"'&;,<>]''',
+  caseSensitive: false,
 );
-final RegExp _secretJsonKey = RegExp(
-  '"(sessionid|csrftoken|ds_user_id|ig_did|rur|mid|fbsr_[A-Za-z0-9_]*|'
-  r'authorization|set-cookie|cookie)"\s*:\s*(?!"<redacted>")\S',
+final RegExp _bearer = RegExp(
+  r'\bbearer\s+[A-Za-z0-9._~+/=-]{8,}',
   caseSensitive: false,
 );
 final RegExp _setCookieText = RegExp(
   r'set-cookie\s*[:=]',
   caseSensitive: false,
 );
-final RegExp _signedUrl = RegExp(
-  r'(?:https?:)?//[^\s"\x27<>]*\?(?!<redacted>)[^\s"\x27<>]+',
+final RegExp _urlWithQuery = RegExp(
+  r'(?:https?:)?//[^\s"<>]*\?',
+  caseSensitive: false,
 );
 final RegExp _signedParam = RegExp(
   '[?&;](?:oh|oe|_nc_[a-z0-9]+|sig|signature|ccb|efg)=',
   caseSensitive: false,
+);
+final RegExp _email = RegExp(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}');
+final RegExp _phoneIntl = RegExp(r'\+\d[\d\s().-]{8,}\d');
+final RegExp _phoneGroups = RegExp(
+  r'\(?\d{2,4}\)?[\s.-]\d{3,4}[\s.-]\d{3,4}',
+);
+final RegExp _quotedLongDigits = RegExp(r'"\d{10,}"');
+final RegExp _allowedConstants = RegExp(
+  r'"(?:doc_id|docId|query_hash|x-ig-app-id)"\s*:\s*"[A-Za-z0-9]{1,40}"',
 );
 final RegExp _tokenRun = RegExp('[A-Za-z0-9+_=-]{32,}');
 
@@ -233,19 +285,50 @@ bool looksLikeSecretToken(String run) {
   return hasUpper && hasLower && hasDigit;
 }
 
-/// Finds anything in [text] that still looks like a secret. Returns kinds
-/// only (never the matched text), so the report itself cannot leak.
+String _urlDecode(String s) => s.replaceAllMapped(
+  RegExp('%([0-9a-fA-F]{2})'),
+  (m) => String.fromCharCode(int.parse(m[1]!, radix: 16)),
+);
+
+String _jsonUnescape(String s) => s
+    .replaceAllMapped(
+      RegExp(r'\\u([0-9a-fA-F]{4})'),
+      (m) => String.fromCharCode(int.parse(m[1]!, radix: 16)),
+    )
+    .replaceAll(r'\"', '"')
+    .replaceAll(r'\/', '/')
+    .replaceAll(r'\\', r'\');
+
+/// Finds anything in [text] that still looks like a secret or personal data.
+/// Returns kinds only (never the matched text), so the report cannot leak.
 List<String> findLeaks(String text) {
-  final kinds = <String>[];
-  if (_cookieAssign.hasMatch(text)) kinds.add('cookie assignment');
-  if (_secretJsonKey.hasMatch(text)) kinds.add('cookie/session JSON key');
-  if (_setCookieText.hasMatch(text)) kinds.add('Set-Cookie');
-  if (_signedUrl.hasMatch(text)) kinds.add('URL with unredacted query');
-  if (_signedParam.hasMatch(text)) kinds.add('signed URL parameter');
-  if (_tokenRun.allMatches(text).any((m) => looksLikeSecretToken(m[0]!))) {
-    kinds.add('long hex/base64 token');
+  final kinds = <String>{};
+  final base = text.replaceAll(_allowedConstants, '"<const>"');
+  final unescaped = _jsonUnescape(base);
+  final variants = <String>{
+    base,
+    _urlDecode(base),
+    unescaped,
+    _urlDecode(unescaped),
+    _urlDecode(_urlDecode(unescaped)),
+  };
+  for (final v in variants) {
+    if (_secretAssign.hasMatch(v)) kinds.add('cookie/session/auth value');
+    if (_bearer.hasMatch(v)) kinds.add('bearer token');
+    if (_setCookieText.hasMatch(v)) kinds.add('Set-Cookie');
+    if (_urlWithQuery.hasMatch(v)) kinds.add('URL with a query string');
+    if (_signedParam.hasMatch(v)) kinds.add('signed URL parameter');
+    if (_email.hasMatch(v)) kinds.add('email address');
+    if (_phoneIntl.hasMatch(v) ||
+        _phoneGroups.hasMatch(v) ||
+        _quotedLongDigits.hasMatch(v)) {
+      kinds.add('phone-like number');
+    }
+    if (_tokenRun.allMatches(v).any((m) => looksLikeSecretToken(m[0]!))) {
+      kinds.add('long hex/base64 token');
+    }
   }
-  return kinds;
+  return kinds.toList();
 }
 
 // ---------------------------------------------------------------------------
@@ -280,8 +363,7 @@ class _FieldStat {
 
 class _Ctx {
   final Map<String, String> _ids = {};
-  final Map<String, String> _names = {};
-  final Map<String, String> _namedTexts = {};
+  final Map<String, String> _keys = {};
   final Map<String, int> counts = {};
   final Set<String> knownUsers = {};
   final Set<String> knownMedia = {};
@@ -290,17 +372,11 @@ class _Ctx {
   final Map<int, Set<String>> fieldsByRequest = {};
   int currentRequest = 0;
 
-  int _next(String kind) => counts[kind] = (counts[kind] ?? 0) + 1;
+  int bump(String kind) => counts[kind] = (counts[kind] ?? 0) + 1;
 
-  /// Consistent placeholder for [raw] in namespace [kind].
-  String named(String kind, String raw) =>
-      _names.putIfAbsent('$kind|$raw', () => '${kind}_${_next(kind)}');
-
-  /// Consistent `<label n>` placeholder for free text.
-  String text(String label, String raw) => _namedTexts.putIfAbsent(
-    '$label|$raw',
-    () => '<$label ${_next(label)}>',
-  );
+  /// Consistent `key_N` placeholder for an unsafe object key.
+  String keyName(String raw) =>
+      _keys.putIfAbsent(raw, () => 'key_${_keys.length + 1}');
 
   /// Placeholder name (`user_1` / `media_1`) for numeric ID [digits].
   String idName(String digits, String hint) => _ids.putIfAbsent(digits, () {
@@ -309,21 +385,19 @@ class _Ctx {
         : knownMedia.contains(digits)
         ? 'media'
         : hint;
-    return '${kind}_${_next(kind)}';
+    return '${kind}_${bump(kind)}';
   });
 }
 
 final RegExp _digitsId = RegExp(r'^\d{5,}$');
 final RegExp _compoundId = RegExp(r'^(\d{5,})_(\d{5,})$');
+final RegExp _idKey = RegExp(r'(^|_)(pk|id|ids|user_id|media_id|owner)$');
 
 bool _isIdKey(String lk) {
   if (_notIdKeys.contains(lk)) return false;
-  return lk == 'pk' ||
-      lk == 'id' ||
+  return _idKey.hasMatch(lk) ||
       lk == 'fbid' ||
-      lk.endsWith('_id') ||
-      lk.endsWith('_ids') ||
-      lk.endsWith('_pk') ||
+      lk == 'ds_user_id' ||
       lk.endsWith('id__') ||
       lk.endsWith('fbid') ||
       lk.endsWith('fbid_v2');
@@ -338,11 +412,12 @@ String _hintFor(String lk, String parentKey) {
   return 'media';
 }
 
-/// Replaces an ID value, keeping its JSON type (int stays int).
+/// Replaces an ID value, keeping its JSON type (int stays int). Returns null
+/// if [v] is not an ID-shaped value.
 Object? _mapId(_Ctx c, String key, Object? v, String hint) {
-  if (v is int && v.toString().length >= 5) {
+  if (v is int && v.abs().toString().length >= 5) {
     c.idTypes.putIfAbsent(key, () => {}).add('int');
-    final name = c.idName(v.toString(), hint);
+    final name = c.idName(v.abs().toString(), hint);
     final n = int.parse(name.split('_').last);
     return (name.startsWith('user') ? 7000000000 : 8000000000) + n;
   }
@@ -357,100 +432,73 @@ Object? _mapId(_Ctx c, String key, Object? v, String hint) {
       return '${c.idName(m[1]!, 'media')}_${c.idName(m[2]!, 'user')}';
     }
   }
-  return v;
+  return null;
 }
 
 // ---------------------------------------------------------------------------
-// String scrubbing
+// Default-deny value rules
 // ---------------------------------------------------------------------------
-
-final RegExp _urlRe = RegExp(
-  r'(?:https?:)?//[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}(?::\d+)?'
-  r'(?:/[^\s"\x27<>\\]*)?',
-);
 
 bool _isIgHost(String host) =>
     host == 'instagram.com' || host.endsWith('.instagram.com');
 
-String _scrubSegments(
-  _Ctx c,
-  List<String> segs, {
-  required bool igPage,
-}) {
-  final out = <String>[];
-  for (var i = 0; i < segs.length; i++) {
-    final seg = segs[i];
-    final prev = i > 0 ? segs[i - 1] : '';
-    final next = i + 1 < segs.length ? segs[i + 1] : '';
-    if (seg.isEmpty) {
-      out.add(seg);
-    } else if (igPage && const ['p', 'reel', 'reels', 'tv'].contains(prev)) {
-      out.add(c.named('code', seg));
-    } else if (igPage && prev == 'stories' && seg != 'highlights') {
-      out.add(
-        _digitsId.hasMatch(seg)
-            ? c.idName(seg, 'user')
-            : c.named('username', seg),
-      );
-    } else if (_digitsId.hasMatch(seg)) {
-      out.add(c.idName(seg, prev == 'media' ? 'media' : 'user'));
-    } else if (igPage && i == 0 && !_knownTopPaths.contains(seg)) {
-      out.add(c.named('username', seg));
-    } else if (igPage && prev == 'user' && next == 'username') {
-      out.add(c.named('username', seg));
-    } else if (!igPage) {
-      final dot = seg.lastIndexOf('.');
-      final hasExt = dot > 0 && seg.length - dot <= 5;
-      final base = hasExt ? seg.substring(0, dot) : seg;
-      final ext = hasExt ? seg.substring(dot) : '';
-      if (base.length > 20 || RegExp(r'\d{6,}').hasMatch(base)) {
-        out.add('<seg>$ext');
-      } else {
-        out.add(seg);
-      }
-    } else {
-      out.add(seg);
-    }
-  }
-  return out.join('/');
+bool _isUrlKey(String lk) =>
+    lk == 'url' ||
+    lk == 'uri' ||
+    lk == 'src' ||
+    lk.endsWith('_url') ||
+    lk.endsWith('_uri') ||
+    lk.startsWith('url_');
+
+final RegExp _wholeUrl = RegExp(
+  r'^(?:https?:)?//([^/?#\s]+)([^?#\s]*)(?:[?#]\S*)?$',
+);
+
+/// `<url host=H path_shape=3seg.jpg>` for a whole-string URL, else null.
+String? _urlPlaceholder(String s) {
+  final m = _wholeUrl.firstMatch(s.trim());
+  if (m == null) return null;
+  var host = m[1]!.toLowerCase();
+  final at = host.lastIndexOf('@');
+  if (at >= 0) host = host.substring(at + 1);
+  host = host.split(':').first;
+  if (!RegExp(r'^[a-z0-9.-]{1,80}$').hasMatch(host)) host = 'unknown';
+  // Only hosts that matter for the spike are named; anything else (bio
+  // links, external sites) is just "external".
+  const known = [
+    'instagram.com',
+    'cdninstagram.com',
+    'fbcdn.net',
+    'facebook.com',
+    'fbsbx.com',
+  ];
+  if (!known.any((k) => host == k || host.endsWith('.$k'))) host = 'external';
+  final segs = m[2]!.split('/').where((p) => p.isNotEmpty).toList();
+  final ext = segs.isEmpty
+      ? ''
+      : (RegExp(r'\.[A-Za-z0-9]{1,5}$').firstMatch(segs.last)?[0] ?? '');
+  return '<url host=$host path_shape=${segs.length}seg$ext>';
 }
 
-/// Rewrites every URL inside [s]: path IDs hashed, query -> `?<redacted>`.
-String _scrubUrls(_Ctx c, String s) {
-  return s.replaceAllMapped(_urlRe, (m) {
-    final raw = m[0]!;
-    final schemeEnd = raw.indexOf('//');
-    final scheme = raw.substring(0, schemeEnd);
-    var rest = raw.substring(schemeEnd + 2);
-    final hash = rest.indexOf('#');
-    if (hash >= 0) rest = rest.substring(0, hash);
-    final q = rest.indexOf('?');
-    final hasQuery = q >= 0;
-    final beforeQuery = hasQuery ? rest.substring(0, q) : rest;
-    final slash = beforeQuery.indexOf('/');
-    final host = slash < 0 ? beforeQuery : beforeQuery.substring(0, slash);
-    final path = slash < 0 ? '' : beforeQuery.substring(slash);
-    final hostOnly = host.split(':').first.toLowerCase();
-    final cleanPath = path.isEmpty
-        ? ''
-        : '/${_scrubSegments(c, path.substring(1).split('/'), igPage: _isIgHost(hostOnly))}';
-    return '$scheme//$host$cleanPath${hasQuery ? '?<redacted>' : ''}';
-  });
-}
-
-String _scrubString(_Ctx c, String s) {
-  var out = s.replaceAllMapped(
-    RegExp(
-      r'\b(sessionid|csrftoken|ds_user_id|ig_did|rur|mid|fbsr_[A-Za-z0-9_]*)='
-      r'[^\s;&"\x27<>]+',
-    ),
-    (m) => '${m[1]}=$redacted',
-  );
-  out = _scrubUrls(c, out);
-  if (!out.contains(RegExp(r'\s')) && looksLikeSecretToken(out)) {
-    return '<token>';
+/// Default-deny for one string value under key [lk].
+String _denyString(_Ctx c, String lk, String s) {
+  if (lk.contains('dash_manifest')) {
+    c.bump('dash');
+    return '<dash:${s.length}>';
   }
-  return out;
+  final u = _urlPlaceholder(s);
+  if (u != null && (_isUrlKey(lk) || !s.contains(RegExp(r'\s')))) {
+    c.bump('url');
+    return u;
+  }
+  if (_allowedStringKeys.contains(lk)) {
+    final ok = (lk == 'mime_type' || lk == 'content_type')
+        ? _mimeValue.hasMatch(s)
+        : _structValue.hasMatch(s);
+    if (ok) return s;
+  }
+  c.bump('str');
+  return '<str:${s.length}>';
 }
 
 // ---------------------------------------------------------------------------
@@ -488,9 +536,13 @@ void _collectKnown(_Ctx c, Object? node) {
         if (m != null) c.knownUsers.add(m[2]!);
       }
     }
-    node.values.forEach((v) => _collectKnown(c, v));
+    for (final v in node.values) {
+      _collectKnown(c, v);
+    }
   } else if (node is List<Object?>) {
-    node.forEach((v) => _collectKnown(c, v));
+    for (final v in node) {
+      _collectKnown(c, v);
+    }
   }
 }
 
@@ -502,8 +554,9 @@ String _mapKey(_Ctx c, String k, String parentKey) {
     }
     return c.idName(k, _hintFor(parentKey, ''));
   }
-  if (looksLikeSecretToken(k) && !k.contains(RegExp(r'\s'))) {
-    return c.named('token_key', k);
+  final printable = RegExp(r'^[\x21-\x7E]{1,80}$').hasMatch(k);
+  if (!printable || k.contains('@') || looksLikeSecretToken(k)) {
+    return c.keyName(k);
   }
   return k;
 }
@@ -522,6 +575,30 @@ void _recordField(_Ctx c, String lk, String path, Object? v) {
     stat.values.add('$v');
   }
   c.fieldsByRequest.putIfAbsent(c.currentRequest, () => {}).add(label);
+}
+
+/// Sanitizes one scalar under key `lk` (already lower-cased).
+Object? _scalar(_Ctx c, String lk, Object? v, String parentKey) {
+  if (v == null || v is bool) return v;
+  if (v is num) {
+    if (lk.contains('phone') || _geoKeys.contains(lk)) {
+      c.bump('num');
+      return 0;
+    }
+    if (_timeKey.hasMatch(lk)) return v;
+    if (v is int && (_isIdKey(lk) || v.abs().toString().length >= 13)) {
+      return _mapId(c, lk, v, _hintFor(lk, parentKey)) ?? v;
+    }
+    return v;
+  }
+  if (v is String) {
+    if (_isIdKey(lk)) {
+      final m = _mapId(c, lk, v, _hintFor(lk, parentKey));
+      if (m != null) return m;
+    }
+    return _denyString(c, lk, v);
+  }
+  return v;
 }
 
 Object? _walk(
@@ -543,65 +620,22 @@ Object? _walk(
         out[newKey] = null;
       } else if (_secretKeys.contains(lk) || lk.startsWith('fbsr_')) {
         out[newKey] = redacted;
-      } else if (_redactKeys.contains(lk)) {
-        out[newKey] = v is String || v is num ? redacted : v;
-      } else if (v is num && _geoKeys.contains(lk)) {
-        out[newKey] = 0;
-      } else if (v is String && _cursorKeys.contains(lk)) {
-        out[newKey] = '<cursor>';
-      } else if (v is String && _usernameKeys.contains(lk)) {
-        out[newKey] = c.named('username', v);
-      } else if (v is String && lk == 'full_name') {
-        out[newKey] = c.named('name', v);
-      } else if (v is String && (lk == 'biography' || lk == 'bio')) {
-        out[newKey] = c.text('bio', v);
-      } else if (v is String && (lk == 'caption' || lk == 'title')) {
-        out[newKey] = c.text(lk == 'caption' ? 'caption' : 'title', v);
-      } else if (v is String && lk == 'text') {
-        out[newKey] = c.text(
-          key.toLowerCase() == 'caption' ? 'caption' : 'text',
-          v,
-        );
-      } else if (v is String && lk == 'accessibility_caption') {
-        out[newKey] = c.text('alt', v);
-      } else if (v is String &&
-          (lk == 'code' || lk == 'shortcode') &&
-          RegExp(r'^[A-Za-z0-9_-]{8,16}$').hasMatch(v)) {
-        out[newKey] = c.named('code', v);
-      } else if ((v is String || v is int) && _isIdKey(lk)) {
-        out[newKey] = _mapId(c, lk, v, _hintFor(lk, key));
-      } else if (v is String) {
-        out[newKey] = _scrubString(c, v);
       } else if (v is Map<String, Object?> || v is List<Object?>) {
-        out[newKey] = _walk(
-          c,
-          v,
-          key: k,
-          parentKey: key,
-          path: childPath,
-        );
+        out[newKey] = _walk(c, v, key: k, parentKey: key, path: childPath);
       } else {
-        out[newKey] = v;
+        out[newKey] = _scalar(c, lk, v, key);
       }
     });
     return out;
   }
   if (node is List<Object?>) {
+    final lk = key.toLowerCase();
     return [
       for (final e in node)
         if (e is Map<String, Object?> || e is List<Object?>)
           _walk(c, e, key: key, parentKey: parentKey, path: '$path[]')
-        else if ((e is String || e is int) && _isIdKey(key.toLowerCase()))
-          _mapId(
-            c,
-            key.toLowerCase(),
-            e,
-            _hintFor(key.toLowerCase(), parentKey),
-          )
-        else if (e is String)
-          _scrubString(c, e)
         else
-          e,
+          _scalar(c, lk, e, parentKey),
     ];
   }
   return node;
@@ -618,15 +652,8 @@ Map<String, Object?>? _asMap(Object? v) => v is Map<String, Object?>
 List<Object?> _asList(Object? v) => v is List ? v.cast<Object?>() : const [];
 
 Object? _decodeBody(Map<String, Object?> content) {
-  var text = content['text'];
-  if (text is! String || text.isEmpty) return null;
-  if ('${content['encoding']}'.toLowerCase() == 'base64') {
-    try {
-      text = utf8.decode(base64.decode(text), allowMalformed: true);
-    } on FormatException {
-      return null;
-    }
-  }
+  final text = _bodyText(content);
+  if (text.isEmpty) return null;
   var t = text.trim();
   if (t.startsWith('for (;;);')) t = t.substring(9);
   try {
@@ -649,50 +676,69 @@ String _bodyText(Map<String, Object?> content) {
   return text;
 }
 
-String _describeParam(_Ctx c, String key, String value) {
+/// Path with only allowlisted segments kept. Long numeric IDs become the
+/// same `user_N` / `media_N` placeholders used in bodies. Everything else
+/// is `<seg>`.
+String _allowPath(_Ctx c, List<String> segs) {
+  final out = <String>[];
+  for (var i = 0; i < segs.length; i++) {
+    final s = segs[i];
+    final prev = i > 0 ? segs[i - 1] : '';
+    if (s.isEmpty || _allowedSegments.contains(s)) {
+      out.add(s);
+    } else if (_digitsId.hasMatch(s)) {
+      out.add(c.idName(s, prev == 'media' ? 'media' : 'user'));
+    } else {
+      out.add('<seg>');
+    }
+  }
+  return out.join('/');
+}
+
+String _safeName(String n) =>
+    RegExp(r'^[A-Za-z0-9_\-\[\].]{1,60}$').hasMatch(n) ? n : '<name>';
+
+/// Query value policy: keys stay, values become `<v>` except numeric
+/// count/first, doc_id/query_hash (public constants that identify GraphQL
+/// calls), true/false, and numeric IDs (hashed placeholders).
+String _queryValue(_Ctx c, String key, String value) {
   final lk = key.toLowerCase();
-  if (_safeQueryKeys.contains(lk)) return value;
+  if ((lk == 'count' || lk == 'first') &&
+      RegExp(r'^\d{1,4}$').hasMatch(value)) {
+    return value;
+  }
+  if ((lk == 'doc_id' || lk == 'query_hash') &&
+      RegExp(r'^[A-Za-z0-9]{1,40}$').hasMatch(value)) {
+    return value;
+  }
+  if (value == 'true' || value == 'false') return value;
   if (_idQueryKeys.contains(lk)) {
     return value
         .split(',')
-        .map(
-          (p) => _digitsId.hasMatch(p) ? c.idName(p, 'user') : '<v>',
-        )
+        .map((p) => _digitsId.hasMatch(p) ? c.idName(p, 'user') : '<v>')
         .join(',');
   }
-  if (_usernameQueryKeys.contains(lk)) return c.named('username', value);
   return '<v>';
 }
 
-Map<String, Object?> _describeParams(
+Map<String, Object?> _describeQuery(
   _Ctx c,
   List<MapEntry<String, String>> kv,
 ) {
   final out = <String, Object?>{};
   for (final e in kv) {
-    final shown = e.key.toLowerCase() == 'variables'
-        ? '<json keys: ${_jsonKeys(e.value)}>'
-        : _describeParam(c, e.key, e.value);
-    final prev = out[e.key];
+    final name = _safeName(e.key);
+    final shown = _queryValue(c, e.key, e.value);
+    final prev = out[name];
     if (prev == null) {
-      out[e.key] = shown;
+      out[name] = shown;
     } else if (prev is List<Object?>) {
       prev.add(shown);
     } else {
-      out[e.key] = <Object?>[prev, shown];
+      out[name] = <Object?>[prev, shown];
     }
   }
   return out;
-}
-
-String _jsonKeys(String raw) {
-  try {
-    final v = jsonDecode(raw);
-    if (v is Map) return v.keys.join(',');
-  } on FormatException {
-    // fall through
-  }
-  return 'unparseable';
 }
 
 List<MapEntry<String, String>> _parseForm(String s) {
@@ -707,17 +753,62 @@ List<MapEntry<String, String>> _parseForm(String s) {
         MapEntry(Uri.decodeQueryComponent(k), Uri.decodeQueryComponent(v)),
       );
     } on FormatException {
-      out.add(MapEntry(k, '<v>'));
+      out.add(MapEntry(k, ''));
     }
   }
   return out;
+}
+
+/// POST body: never copied. Only mimeType, size and allowlisted names.
+Map<String, Object?> _describePost(Map<String, Object?> post) {
+  final mt = '${post['mimeType']}'.toLowerCase();
+  final text = post['text'];
+  final names = <String>[];
+  String? docId;
+  if (text is String && mt.contains('x-www-form-urlencoded')) {
+    for (final e in _parseForm(text)) {
+      names.add(e.key);
+      if (e.key == 'doc_id' && RegExp(r'^\d{1,20}$').hasMatch(e.value)) {
+        docId = e.value;
+      }
+    }
+  } else if (post['params'] is List) {
+    for (final p in _asList(post['params'])) {
+      final m = _asMap(p);
+      if (m == null) continue;
+      names.add('${m['name']}');
+      if ('${m['name']}' == 'doc_id' &&
+          RegExp(r'^\d{1,20}$').hasMatch('${m['value']}')) {
+        docId = '${m['value']}';
+      }
+    }
+  } else if (text is String && mt.contains('json')) {
+    try {
+      final j = jsonDecode(text);
+      if (j is Map) names.addAll(j.keys.map((k) => '$k'));
+    } on FormatException {
+      // ignore
+    }
+  }
+  return {
+    'mimeType': RegExp(r'^[A-Za-z0-9_.+\-/;= ]{1,80}$').hasMatch(mt)
+        ? mt
+        : '<str>',
+    'size': text is String ? text.length : 0,
+    'paramCount': names.length,
+    'paramNames': [
+      for (final n in names)
+        if (_allowedParamNames.contains(n)) n,
+    ],
+    'docId': ?docId,
+  };
 }
 
 String _slug(String sanitizedPath) {
   final segs = sanitizedPath
       .split('/')
       .where((s) => RegExp(r'^[a-z]+(_[a-z]+)*$').hasMatch(s))
-      .where((s) => s != 'api' && s != 'v1')
+      .where((s) => s != 'api' && s != 'v1' && s != 'v2')
       .toList();
   final tail = segs.length > 2 ? segs.sublist(segs.length - 2) : segs;
   final slug = tail.join('_');
@@ -726,6 +817,12 @@ String _slug(String sanitizedPath) {
 }
 
 String _mdCell(String s) => s.replaceAll('|', r'\|').replaceAll('\n', ' ');
+
+String _safeHeaderValue(String v) {
+  final ok =
+      RegExp(r'^[\x20-\x7E]{0,300}$').hasMatch(v) && findLeaks(v).isEmpty;
+  return ok ? v : '<str:${v.length}>';
+}
 
 /// Sanitizes a HAR document and returns the files to write.
 SanitizeOutcome sanitizeHar(String harText) {
@@ -744,7 +841,6 @@ SanitizeOutcome sanitizeHar(String harText) {
   var noBody = 0;
   var unparseable = 0;
   final parsed = <Object?>[];
-  final prepared = <Map<String, Object?>>[];
   for (final raw in entries) {
     final e = _asMap(raw);
     if (e == null) continue;
@@ -757,9 +853,9 @@ SanitizeOutcome sanitizeHar(String harText) {
     final mime = '${content['mimeType']}'.toLowerCase();
     final looksJson =
         mime.contains('json') ||
-        (_bodyText(content)
-            .trimLeft()
-            .startsWith(RegExp(r'[{\[]|for \(;;\);')));
+        (_bodyText(
+          content,
+        ).trimLeft().startsWith(RegExp(r'[{\[]|for \(;;\);')));
     if (!looksJson) {
       if (mime.contains('html')) {
         final text = _bodyText(content);
@@ -788,9 +884,10 @@ SanitizeOutcome sanitizeHar(String harText) {
       parsed.add(body);
     }
     selected.add((entry: e, body: body, uri: uri));
-    prepared.add(e);
   }
-  parsed.forEach((b) => _collectKnown(c, b));
+  for (final b in parsed) {
+    _collectKnown(c, b);
+  }
 
   // Pass 2: sanitize.
   final files = <String, String>{};
@@ -811,12 +908,8 @@ SanitizeOutcome sanitizeHar(String harText) {
     final method = '${req['method']}'.toUpperCase();
     final rawPath = s.uri.path;
 
-    // URL path with IDs hashed; query keys kept, values replaced.
     final segs = rawPath.isEmpty ? <String>[] : rawPath.substring(1).split('/');
-    final cleanPath = '/${_scrubSegments(c, segs, igPage: true)}'.replaceAll(
-      '//',
-      '/',
-    );
+    final cleanPath = '/${_allowPath(c, segs)}'.replaceAll('//', '/');
     final query = _parseForm(s.uri.hasQuery ? s.uri.query : '');
     final headers = _asList(req['headers']);
     final names = <String>[];
@@ -824,27 +917,16 @@ SanitizeOutcome sanitizeHar(String harText) {
     for (final h in headers) {
       final m = _asMap(h);
       if (m == null) continue;
-      final name = '${m['name']}'.toLowerCase();
+      final raw = '${m['name']}'.toLowerCase();
+      final name = RegExp(r'^[a-z0-9:_\-]{1,60}$').hasMatch(raw)
+          ? raw
+          : '<hdr>';
       if (!names.contains(name)) names.add(name);
       if (_keptHeaderValues.contains(name)) {
-        kept[name] = _scrubString(c, '${m['value']}');
+        kept[name] = _safeHeaderValue('${m['value']}');
       }
     }
     final post = _asMap(req['postData']);
-    List<MapEntry<String, String>>? postParams;
-    if (post != null) {
-      final mt = '${post['mimeType']}'.toLowerCase();
-      final pt = post['text'];
-      if (pt is String && mt.contains('x-www-form-urlencoded')) {
-        postParams = _parseForm(pt);
-      } else if (post['params'] is List) {
-        postParams = [
-          for (final p in _asList(post['params']))
-            if (_asMap(p) != null)
-              MapEntry('${_asMap(p)!['name']}', '${_asMap(p)!['value']}'),
-        ];
-      }
-    }
     final size = (content['size'] as num?)?.toInt() ?? 0;
     final textLen = _bodyText(content).length;
 
@@ -865,17 +947,20 @@ SanitizeOutcome sanitizeHar(String harText) {
       }
     }
 
+    final mimeRaw = '${content['mimeType']}';
     final row = <String, Object?>{
       'n': n,
-      'method': method,
+      'method': RegExp(r'^[A-Z]{3,10}$').hasMatch(method) ? method : '<str>',
       'host': s.uri.host,
       'path': cleanPath,
-      'query': _describeParams(c, query),
-      if (postParams != null) 'postParams': _describeParams(c, postParams),
+      'query': _describeQuery(c, query),
+      if (post != null) 'postData': _describePost(post),
       'requestHeaderNames': names,
       'requestHeaders': kept,
       'status': status,
-      'mimeType': '${content['mimeType']}',
+      'mimeType': RegExp(r'^[A-Za-z0-9_.+\-/;= ]{1,80}$').hasMatch(mimeRaw)
+          ? mimeRaw
+          : '<str>',
       'responseSize': size > 0 ? size : textLen,
       'bodyFile': bodyFile,
       'bodyNote': s.body == null
@@ -988,7 +1073,7 @@ SanitizeOutcome sanitizeHar(String harText) {
     for (final h in htmlHits) {
       final hs = h.path.isEmpty ? <String>[] : h.path.substring(1).split('/');
       b.writeln(
-        '| `/${_mdCell(_scrubSegments(c, hs, igPage: true))}` | ${h.status} | '
+        '| `/${_mdCell(_allowPath(c, hs))}` | ${h.status} | '
         '${h.markers.isEmpty ? '-' : h.markers.join(', ')} |',
       );
     }

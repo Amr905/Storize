@@ -9,6 +9,7 @@ import '../../tool/sanitize_har.dart';
 
 const _tool = 'tool/sanitize_har.dart';
 const _fx = 'test/tool/fixtures';
+const _syn = 'test/fixtures/synthetic.har';
 
 /// Strings that exist only in the fake fixtures. None may reach the output.
 const _markers = [
@@ -127,17 +128,128 @@ void main() {
     },
   );
 
-  test('POST bodies / query holding csrftoken or sessionid fail closed '
-      '(false positive: documented, safe)', () {
-    expect(
-      _out(File('$_fx/adv_post_body.har').readAsStringSync()),
-      isNull,
+  test('QA-8 POST bodies / query params named csrftoken or sessionid are '
+      'not copied, so the HAR is no longer refused', () {
+    for (final f in ['adv_post_body', 'adv_extra']) {
+      final out = _out(File('$_fx/$f.har').readAsStringSync());
+      expect(out, isNotNull, reason: f);
+      expect(out!.toLowerCase(), isNot(contains('zzfake')), reason: f);
+    }
+  });
+
+  test('default-deny: every adversarial fixture and synthetic.har run through '
+      'the CLI exit 0 and pass the hardened scanner (raw, URL-decoded, '
+      'JSON-unescaped)', () async {
+    for (final name in [..._fixtures.map((n) => '$_fx/$n.har'), _syn]) {
+      final out = Directory('${tmp.path}/all_${name.hashCode}');
+      final r = await _cli(name, out);
+      expect(r.exitCode, 0, reason: '$name: ${r.stderr}');
+      final text = _allOutput(out);
+      expect(findLeaks(text), isEmpty, reason: name);
+      expect(findLeaks(Uri.decodeFull(text)), isEmpty, reason: name);
+      expect(text.toLowerCase(), isNot(contains('zzfake')), reason: name);
+      expect(text, isNot(contains('http')), reason: '$name: no raw URLs');
+    }
+  });
+
+  test('every string value in a body is a <str:N> / <url ...> / <dash:N> '
+      'placeholder unless its key is on the structural allowlist', () {
+    final o = sanitizeHar(
+      _har({
+        'a': 'free text',
+        'user': {'username': 'zzfakeu', 'full_name': 'ZZFAKE N'},
+        'list': ['x', 'y'],
+        'product_type': 'clips',
+        'status': 'ok',
+        'type': 'has space',
+        'mime_type': 'video/mp4',
+        'video_dash_manifest': '<MPD>zzfake</MPD>',
+        'image': {'url': 'https://scontent-x.cdninstagram.com/a/b/c.jpg?oh=1'},
+      }),
     );
+    final j = jsonDecode(
+      o.files.entries.firstWhere((e) => e.key.startsWith('bodies/')).value,
+    ) as Map<String, dynamic>;
+    expect(j['a'], '<str:9>');
+    expect((j['user'] as Map)['username'], '<str:7>');
+    expect(j['list'], ['<str:1>', '<str:1>']);
+    expect(j['product_type'], 'clips');
+    expect(j['status'], 'ok');
+    expect(j['type'], '<str:9>', reason: 'allowlisted key, bad pattern');
+    expect(j['mime_type'], 'video/mp4');
+    expect(j['video_dash_manifest'], '<dash:17>');
     expect(
-      _out(File('$_fx/adv_extra.har').readAsStringSync()),
-      isNull,
+      (j['image'] as Map)['url'],
+      '<url host=scontent-x.cdninstagram.com path_shape=3seg.jpg>',
     );
   });
+
+  test('keys are never removed and array lengths/nesting are unchanged', () {
+    final body = {
+      'a': [
+        {
+          'b': 'x',
+          'c': [1, 2, 3],
+        },
+        {'b': 'y', 'c': <int>[]},
+      ],
+      'd': {'e': null},
+    };
+    final o = sanitizeHar(_har(body));
+    final j = jsonDecode(
+      o.files.entries.firstWhere((e) => e.key.startsWith('bodies/')).value,
+    ) as Map<String, dynamic>;
+    expect(((j['a'] as List)[0] as Map).keys, ['b', 'c']);
+    expect(((j['a'] as List)[0] as Map)['c'] as List, [1, 2, 3]);
+    expect(((j['a'] as List)[1] as Map)['c'] as List, isEmpty);
+    expect((j['d'] as Map).containsKey('e'), isTrue);
+  });
+
+  test('QA-1 variants: URL-encoded name inside a KEY and double-encoded', () {
+    final o = sanitizeHar(
+      _har({
+        'sessionid%3DZZFAKEkey1': 1,
+      }),
+    );
+    // The key survives (keys are structure) but the scanner must refuse.
+    expect(o.ok, isFalse);
+    expect(o.files, isEmpty);
+    expect(o.leaks.join(), isNot(contains('ZZFAKE')));
+  });
+
+  test(
+    'scanner flags email, phone, bearer and URL-with-query in any output',
+    () {
+      expect(
+        findLeaks('{"a": "zzfake@example.com"}'),
+        contains('email address'),
+      );
+      expect(
+        findLeaks('call +20 100 123 4567 now'),
+        contains('phone-like number'),
+      );
+      expect(findLeaks('{"a": "01001234567"}'), contains('phone-like number'));
+      expect(findLeaks('Authorization: Bearer ZZFAKEabcdef12345'), isNotEmpty);
+      expect(findLeaks('see https://x.example.net/a?b=1'), isNotEmpty);
+      expect(findLeaks(r'{\"sessionid\":\"ZZFAKEq\"}'), isNotEmpty);
+      expect(findLeaks('SessionID%3DZZFAKEq'), isNotEmpty);
+      // not flagged: header NAME lists, placeholders, timestamps, short ints
+      expect(
+        findLeaks('{"h": ["cookie", "x-csrftoken", "authorization"]}'),
+        isEmpty,
+      );
+      expect(
+        findLeaks('{"csrftoken": "<v>", "sessionid": "<redacted>"}'),
+        isEmpty,
+      );
+      expect(
+        findLeaks(
+          '{"taken_at": 1700000000, "device_timestamp": 1700000000000000}',
+        ),
+        isEmpty,
+      );
+    },
+  );
 
   test('unknown base64 blobs: redacted or fail closed', () {
     final o = _out(File('$_fx/adv_base64.har').readAsStringSync());
@@ -179,13 +291,13 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Probes that currently LEAK. They assert the CORRECT behaviour and are
-  // skipped so CI stays green. Un-skip once the sanitizer is fixed.
+  // QA leak probes (QA-1..QA-6, all un-skipped). They assert the CORRECT
+  // behaviour. They failed against the denylist sanitizer.
   // Contract for each: the fake value must not appear in the output (either
   // redacted, or the run fails closed = null).
   // -------------------------------------------------------------------------
-  void noLeak(String name, Object? body, {String? url, String? skip}) {
-    test(name, skip: skip, () {
+  void noLeak(String name, Object? body, {String? url}) {
+    test(name, () {
       final out = _out(_har(body, url: url ?? _u));
       if (out != null) {
         expect(out.toLowerCase(), isNot(contains('zzfake')));
@@ -193,48 +305,43 @@ void main() {
     });
   }
 
-  group('known leaks (QA-1..QA-6) - un-skip when fixed', () {
-    const s1 = 'QA-1 URL-encoded sessionid%3D not redacted nor detected';
+  group('QA leak probes (QA-1..QA-6)', () {
     noLeak('QA-1 sessionid%3D<value> in prose', {
       'a': 'redirect to login with sessionid%3D$_sid now',
-    }, skip: s1);
+    });
     noLeak('QA-1 sessionid%3d lowercase escape', {
       'a': 'x sessionid%3dZZFAKEenc1 y',
-    }, skip: s1);
+    });
     noLeak('QA-1 next= url with sessionid%3D', {
       'a': 'https://www.instagram.com/accounts/login/?next=/&sessionid%3DZZFAKEq1 z',
-    }, skip: s1);
+    });
 
-    const s2 = 'QA-2 sessionid inside a JSON-in-a-string not redacted';
     noLeak('QA-2 JSON text in a string (unescaped quotes)', {
       'a': '{"sessionid":"$_sid", "x": 1}',
-    }, skip: s2);
+    });
     noLeak('QA-2 JSON text inside string, doubly escaped', {
       'a': r'{\"sessionid\":\"' + _sid + r'\", \"x\": 1}',
-    }, skip: s2);
+    });
     noLeak('QA-2 short value', {
       'a': '{"sessionid":"ZZFAKEjis1", "x": 1}',
-    }, skip: s2);
+    });
 
-    const s3 = 'QA-3 cookie names matched case-sensitively';
     noLeak('QA-3 SessionID= uppercase', {
       'a': 'Cookie: SessionID=$_sid x',
-    }, skip: s3);
+    });
 
-    const s4 = 'QA-4 username / unknown token in non-whitelisted IG path';
     for (final p in [
       '/api/v1/users/zzfakenm/usernameinfo/',
       '/api/v1/feed/user/zzfakenm/',
       '/api/v1/users/zzfakenm/info/',
       '/api/v1/friendships/show/zzfakenm/',
     ]) {
-      test('QA-4 path $p', skip: s4, () {
+      test('QA-4 path $p', () {
         final out = _out(_har({'a': 1}, url: 'https://i.instagram.com$p'));
         if (out != null) expect(out, isNot(contains('zzfakenm')));
       });
     }
 
-    const s5 = 'QA-5 PII keys not in redaction lists';
     noLeak('QA-5 business_email / phone / public_email', {
       'user': {
         'business_email': 'zzfake@example.com',
@@ -243,19 +350,19 @@ void main() {
         'contact_phone_number': 'ZZFAKE',
         'business_address_json': '{"city_name":"ZZFAKE"}',
       },
-    }, skip: s5);
+    });
     noLeak('QA-5 biography_with_entities.raw_text', {
       'user': {
         'biography_with_entities': {'raw_text': 'ZZFAKE bio raw'},
       },
-    }, skip: s5);
+    });
     noLeak('QA-5 bio_links[].url on non-IG host path', {
       'user': {
         'bio_links': [
           {'url': 'https://linktr.ee/ZZFAKEme'},
         ],
       },
-    }, skip: s5);
+    });
     noLeak('QA-5 hashtag name / location name in story stickers', {
       'story_hashtags': [
         {
@@ -267,18 +374,17 @@ void main() {
           'location': {'name': 'ZZFAKE Cairo', 'short_name': 'ZZFAKEs'},
         },
       ],
-    }, skip: s5);
+    });
     noLeak('QA-5 sticker question text (poll/question)', {
       'story_polls': [
         {
           'poll_sticker': {'question': 'ZZFAKE question?'},
         },
       ],
-    }, skip: s5);
+    });
 
-    const s6 = 'QA-6 CSRF header names as JSON keys not in secret keys';
-    noLeak('QA-6 X-CSRFToken key', {'X-CSRFToken': 'ZZFAKEcsrfK'}, skip: s6);
-    noLeak('QA-6 x-csrftoken key', {'x-csrftoken': 'ZZFAKEcsrfK'}, skip: s6);
+    noLeak('QA-6 X-CSRFToken key', {'X-CSRFToken': 'ZZFAKEcsrfK'});
+    noLeak('QA-6 x-csrftoken key', {'x-csrftoken': 'ZZFAKEcsrfK'});
   });
 
   group('sanity: things that must keep working (regression guard)', () {

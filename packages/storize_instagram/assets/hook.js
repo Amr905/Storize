@@ -3,7 +3,8 @@
  *
  * Injected at document start. Wraps fetch and XMLHttpRequest and reports a
  * SUMMARY of every instagram.com JSON response to a flutter_inappwebview
- * handler: {url, status, bodyLength, topLevelKeys, origin, via}.
+ * handler: {url, status, bodyLength, topLevelKeys, origin, via}
+ * (url has no query string unless includeBody is true).
  * It never reads cookies and, by default, never sends response bodies.
  *
  * Configure BEFORE this script runs with:
@@ -45,7 +46,9 @@
         keys = ['<array:' + parsed.length + '>'];
       }
       var msg = {
-        url: absolute,
+        // Query strings can carry signed params or ids: only T-014 (which sets
+        // includeBody) gets the full URL.
+        url: includeBody ? absolute : absolute.split('?')[0],
         status: status,
         bodyLength: text.length,
         topLevelKeys: keys,
