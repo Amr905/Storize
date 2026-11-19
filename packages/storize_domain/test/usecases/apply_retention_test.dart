@@ -1,4 +1,3 @@
-import 'package:storize_domain/src/usecases/apply_retention.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 import 'package:test/test.dart';
