@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **18 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · next checkpoint after 20 done.
+- Tasks done: **18 / 37 (49%)** (+1 Could; +2 follow-ups T-019a, T-024b tracked separately) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · next checkpoint after 20 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
