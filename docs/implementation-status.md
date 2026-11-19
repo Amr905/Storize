@@ -28,14 +28,16 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| — | — | — | — |
+| T-003 | backend-developer (haiku) | `packages/storize_model/**` | 03:10 |
+| T-024 | frontend-developer (sonnet) | `app/lib/ui/**`, `app/test/ui/**` (incl. goldens). **No pubspec changes** (ask the Lead) | 03:10 |
+| T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
 | ID | Title | Complexity | Model | Specialist | Depends on | Status | Attempts | Verified by / evidence |
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
 | T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
-| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | todo | — | — |
-| T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | todo | — | — |
+| T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | in_progress | 1 | — |
+| T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | in_progress | 1 | — |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | todo | — | — |
 | T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
@@ -56,7 +58,7 @@
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | todo | — | — |
-| T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | todo | — | — |
+| T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | in_progress | 1 | — |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | todo | — | — |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | todo | — | — |
@@ -85,3 +87,4 @@
 - 2026-11-19 02:50 — T-001 delegated to backend-developer (sonnet, Medium).
 - 2026-11-19 02:55 — QA: PASS (AC3 pending; Gradle hosts are blocked in the workspace). CI run 1 failed at the APK build (AGP 9 resValues) → returned to the developer.
 - 2026-11-19 03:05 — Round 2 fixed; CI run 2 all green (APK + gitleaks). **T-001 done**, merged to main. Note: APK builds are verified via GitHub Actions on `t-*` branches.
+- 2026-11-19 03:10 — Wave 2 started in parallel (separate worktrees): T-003 (haiku), T-024 (sonnet), T-002 prep (sonnet; the capture itself needs the user's Instagram test account).
