@@ -250,6 +250,8 @@ App files (private):        files/logs/storize.log(.1,.2) · storize.sqlite
 ```
 - The folder name is the username **when the file is downloaded**. If someone renames their account, new files go into a new
   folder; old files stay where they were, and the library still groups everything by the stable user ID (EC-5).
+- **Videos:** if MediaStore refuses `Pictures/` for a video (some Android 10 builds do), the plugin saves it under `Movies/Storize/<username>/` instead and returns that `relativePath`. `media_file.relative_path` stores what the plugin returned (T-009).
+- **Final file name:** the plugin returns the final `displayName`, which MediaStore may have renamed to `name (1).ext`; store it in `media_file.display_name`.
 - **Android 10+:** no storage permission needed. Storize owns the files it inserts, so it can delete them without a system prompt (BR-9).
 - **Android 8–9:** `WRITE_EXTERNAL_STORAGE` (maxSdk 28), a direct file write plus a MediaScanner scan (UX S-03 card).
 - **After reinstall:** the files stay in the gallery, but Storize no longer owns or indexes them (EC-19, out of scope).

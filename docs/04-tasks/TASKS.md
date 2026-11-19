@@ -201,8 +201,8 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   2. `delete(uri)` removes an app-owned file with no system prompt on API 29+.
   3. `exists`, `size`, `videoThumbnail` (webp) work.
   4. `openBatterySettings(oem)` opens the best matching screen or falls back to app details; `isIgnoringBatteryOptimizations` works.
-  5. `lastStopReasons()` returns WorkInfo stop reasons on API 31+ (empty below).
-  6. Instrumentation tests pass on API 28 (or emulator), 29 and 34+.
+  5. *(amended 2026-11-19, Lead)* `lastStopReasons()` returns process-exit reasons via `ApplicationExitInfo` on API 30+ (empty below), avoiding a `work-runtime` dependency. Per-worker `WorkInfo.stopReason` is out of scope; T-021 logs worker outcomes itself.
+  6. *(amended 2026-11-19, Lead)* Kotlin JVM unit tests run in CI (`:storize_platform_android:testDebugUnitTest`). Instrumentation tests are written for API 28, 29 and 34+ and are run by the user on their phone (P-4).
   7. Plugin channels aren't reachable from other apps.
 
 ### T-010 — GalleryStore + MediaCache
