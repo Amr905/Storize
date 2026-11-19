@@ -103,3 +103,62 @@ The 17 leak probes are committed as **skipped** tests (`QA-1`..`QA-6`, `QA-7`) s
 
 ## Re-verify when fixed
 Un-skip the `QA-1`..`QA-7` tests, re-run `melos run test`, and re-run the probes via the CLI. Add a copy of each new leak the developer finds to the probe table.
+
+---
+
+# Round 3 re-verification (commit 5d188ec)
+
+## Verdict: **FAIL** (one blocker: QA-10, username-like object keys survive)
+
+All round-1 leaks (QA-1..QA-8) are fixed, but the new default-deny design only covers string **values**. Object **keys** are still kept verbatim unless they look like IDs, so any map keyed by a username leaks it.
+
+## 1. Previous probes
+- All QA-1..QA-7 probes are un-skipped in `sanitize_har_adversarial_test.dart` (0 `skip:` left; the 3 remaining in `hook_js_test.dart` only skip when Node is missing). I checked the diff: the only removed assertions are the old "POST fails closed" test (no longer applicable, `postData` is not copied) and the skip wrappers; no expectation was weakened.
+- CLI on all 10 `adv_*.har` and `synthetic.har`: all exit 0; a marker grep (`zzfake`, fake IDs, CJK/Cyrillic/Greek/Arabic names, `FAKE_SESSION`, `fakeuser`, `FAKEOH`) over every output file found nothing.
+- `flutter test test/tool`: `+62: All tests passed!`.
+
+## 2-4. New probes (`test/tool/sanitize_har_round3_test.dart`, in-process)
+
+| Input (FAKE) | Expected | Actual |
+|--------------|----------|--------|
+| `users: {"zzfake_nour.k": {...}}` | key replaced | **LEAK** (QA-10) |
+| `friendship_statuses: {"zzfake_someone": ...}` | key replaced | **LEAK** (QA-10) |
+| `reels: {"zzfake_reeluser": ...}` | key replaced | **LEAK** (QA-10) |
+| `{"ZZFAKE_Nour": 1}`, `{"zzfake": 1}`, nested unknown keys, `zzfake_name`, `zzfake9` | key replaced | **LEAK** (QA-10) |
+| key is a URL without query `https://linktr.ee/zzfake` | replaced | **LEAK** (QA-10) |
+| `friendship_statuses` keyed by numeric id; `reels` keyed by `highlight:<id>` | `user_N` / safe | clean |
+| key is an email | replaced | clean |
+| key is a phone number | replaced or fail closed | fail closed (exit 1, nothing written) |
+| key is a URL with a query | replaced or fail closed | fail closed |
+| key contains `sessionid=...`, `sessionid%3D...`, or JSON with sessionid | no value | clean (first and third fail closed) |
+| key with spaces (display name), unicode username key | replaced | clean |
+| usernames as array values | `<str:N>` | clean |
+| `doc_id=<40 char mixed-case token>`, `query_hash=sessionid%3D...`, `doc_id=sessionid=...`, `csrftoken%3D...`, `doc_id=<email>` | not copied | clean (not echoed) |
+| `doc_id=zzfakeuser&query_hash=zzfake2` | digits/hex only | **LEAK** (QA-11): any short word is kept verbatim in `summary.json` |
+| `external_url`/`bio_links` on `zzfakename.linktr.ee`, userinfo URL, `*.tumblr.com`, `//*.carrd.co`, mixed-case host, IP+port, IDN host, URL inside prose | no identity | clean: every non-Instagram host becomes `<url host=external path_shape=Nseg>`; prose becomes `<str:N>` |
+| `status`/`product_type`/`media_type`/`type`/`__typename`/`audience` with arbitrary string | `<str:N>` | kept verbatim (QA-12, low) |
+| request query key names (`?zzfake_user=1`), request header names, response `mimeType`, `user-agent` | n/a | kept verbatim by design (QA-13, low/info) |
+
+The 7 leak probes (QA-10 x6, QA-11) are committed **skipped**; I confirmed they fail when un-skipped (`-7`).
+
+## 5. Usefulness
+Sanitized `synthetic.har` story body keeps: `media_type`, `product_type: "story"`, `taken_at`, `expiring_at`, `has_audio`, `video_duration`, `video_versions[]` (count 2, `type`, width/height), `image_versions2.candidates[]` (count and dimensions), `original_width/height`, ID type (`user_N`/`media_N_user_N`), and `<url host=cdn path_shape=6seg.mp4>`. The posts body keeps `carousel_media`. The structure is **sufficient** for the extraction doc. No finding. (Cosmetic: `path_shape` loses the `stp=`/query parameter names that would help decide which CDN variant is which; request them from the user's answers if needed.)
+
+## 6. Standard checks (real output)
+```
+dart format --output=none --set-exit-if-changed .  -> Formatted 26 files (0 changed), exit 0
+flutter analyze                                    -> No issues found!
+melos run test                                     -> all packages pass; storize_instagram +81 ~7 (7 = QA-10/QA-11 skipped probes)
+```
+
+## Findings (round 3)
+
+| ID | Severity | Where | Problem and fix |
+|----|----------|-------|-----------------|
+| QA-10 | **Blocker** | `sanitize_har.dart` key mapping (`_mapKey` / key handling in `_walk`) | Object keys are kept verbatim unless ID-like. Instagram uses username-keyed maps in several responses (for example `friendship_statuses`, `users`, and `reels` for some endpoints), so third-party usernames reach `bodies/*.json`. Repro: `{"users":{"zzfake_nour.k":{"pk":"1234567890"}}}`. Fix: default-deny for keys too: keep a key only if it is in an allowlist of known field names (the fields in TECH_SPEC 4.1, `_mediaFieldKeys`, plus keys seen in `synthetic.har`) or matches the existing safe-word rule AND is not a map key whose siblings are all unknown; replace the rest with `key_N` (consistent per HAR), and let the report list how many keys were replaced. Also replace URL/email/phone-shaped keys. |
+| QA-11 | Medium | `_safeQueryKeys` handling of `doc_id`, `query_hash` | Values are kept without checking their shape, so a short word (a username, say) passes. Fix: keep only `^\d{6,20}$` for `doc_id` and `^[0-9a-f]{16,64}$` for `query_hash`; else `<v>`. |
+| QA-12 | Low | enum-like keys (`status`, `product_type`, `media_type`, `type`, `audience`, `__typename`) | Arbitrary strings pass. Restrict to `^[a-z_]{1,24}$` plus digits, or an allowlist of known values. |
+| QA-13 | Low | `summary.json` | Request query key names, request header names and `user-agent` are kept as is. Query key names could carry a username in unusual endpoints. Fix: keep only keys matching a known list or a short pattern; the guide already tells users to skim. |
+
+## Re-verify when fixed
+Un-skip the QA-10/QA-11 tests in `sanitize_har_round3_test.dart`, run the full suite, and also re-run the CLI on all `adv_*.har`.
