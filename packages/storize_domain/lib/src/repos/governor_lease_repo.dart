@@ -13,6 +13,8 @@ import 'package:storize_domain/src/entities/governor_lease.dart';
 /// that can never block, whatever the clock does.
 abstract interface class GovernorLeaseRepo {
   /// Tries to take the lease of [accountId] for [holder] for [ttl].
+  /// All holders of one account must use the same [ttl] (the governor's
+  /// single `leaseTtl`); a shorter ttl would treat a longer lease as skewed.
   ///
   /// Succeeds, returning the lease, when no lease exists, the old one has
   /// expired (`expiresAt <= now`, or `expiresAt > now + ttl` after a clock
