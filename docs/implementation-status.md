@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 20 / 42 tasks done (48%)** — original plan 16 / 37 (43%) + follow-ups 4 / 5 (T-010a, T-012a, T-019a, T-024b done; T-024a in progress). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 21 / 42 tasks done (50%)** — original plan 16 / 37 (43%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-024a | frontend-developer (haiku) | `app/lib/ui/theme/**`, `app/test/ui/**` (incl. goldens), `app/test/features/**/goldens/**` + golden tests that need regeneration, `docs/02-design/UX.md` (colour token table only) | 23:15 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -62,7 +61,7 @@
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
-| T-024a | Primary colour #D9481F → #C93F17 (WCAG AA, UD-1) | Low | haiku | Frontend Developer | T-024 | in_progress | 1 | — |
+| T-024a | Primary colour #D9481F → #C93F17 (WCAG AA, UD-1) | Low | haiku | Frontend Developer | T-024 | **done** | 1 | QA PASS + CI [44608881787](https://github.com/Amr905/Storize/actions/runs/44608881787) · `05-reviews/T-024a.md` |
 | T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | **done** | 1 | QA PASS + CI [44584045847](https://github.com/Amr905/Storize/actions/runs/44584045847) · `05-reviews/T-024b.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
@@ -154,3 +153,4 @@
 - 2026-11-19 22:45 — T-019a round 2 QA PASS + CI → **done**, merged; main green (data 1423, domain 210, app 458). **20/41 (49%)** → Checkpoint 4 started. No further unblocked tasks: the rest wait on T-002 (UD-2) or P-5.
 - 2026-11-19 23:05 — **Checkpoint 4 GREEN** (`05-reviews/CHECKPOINT-4.md`): two identical full runs, gitleaks clean over full history, CI green, counts up (domain 210, data 1423, app 458). F-1: a slow CI runner hit the 5 s ReDoS/linearity budget once → Lead raised log timing budgets to 15 s (catastrophic backtracking would still fail). The 4 data skips are the accepted documented limits (T-010 F-3, T-011 N6/N7/N8). **Idle: all remaining work waits on UD-2 (T-002) or P-5 (T-036).**
 - 2026-11-19 23:15 — **User decisions:** UD-2 → T-002 stays on Sonnet with the QA fix spec (prep round 4: QA-10 key default-deny, QA-11 doc_id/query_hash shape, QA-12 enums, QA-13 summary keys). UD-1 → primary #C93F17 (follow-up T-024a, haiku). Note: after the sanitizer passes, the T-002 spike itself still needs the user's capture session with the test account (P-3).
+- 2026-11-20 00:10 — T-024a QA PASS + CI → **done** (UD-1 resolved, primary #C93F17), merged; main green. **21/42 (50%)**. T-002 prep round 4 delivered → QA.
