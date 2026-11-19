@@ -70,7 +70,7 @@ dart packages\storize_instagram\tool\sanitize_har.dart D:\capture\raw\reel.har D
 - If it prints **`REFUSING TO WRITE`**, it found something that looks like a secret and wrote nothing. Do not send that HAR. Tell the Lead which finding it printed (it prints only the kind, never the secret).
 - Use plain `dart <file>` as shown. It needs no package setup, so it works with the Dart SDK alone. (`dart run <file>` also works from the repo root if Flutter is installed, but may fail on a Dart-only PC because it first resolves the workspace, which lists Flutter packages.)
 - The tool keeps the **shape** of every response and hides its **content**: all text becomes `<str:12>` (the number is only the length), links become `<url host=... path_shape=...>`, ids become `user_1` / `media_1`. Request bodies are not copied at all. So the files will look empty of words; that is expected.
-- Open `D:\capture\out\story\report.md` in Notepad. Check: the candidate table lists what it saw, and skim one file in `bodies\`: if you can read any real name, caption, email, phone number or link, don't send it and tell the Lead.
+- Open `D:\capture\out\story\report.md` in Notepad. Check: the candidate table lists what it saw, and the "Replacement counts" section says how many object keys were replaced by `key_N` (usernames used as keys are replaced; this is expected). Then skim one file in `bodies\`: if you can read any real name, caption, email, phone number or link, don't send it and tell the Lead.
 - If a path contains spaces, put it in double quotes, for example `"D:\my capture\story.har"`.
 
 ## 5. Optional: phone check (about 10 minutes)

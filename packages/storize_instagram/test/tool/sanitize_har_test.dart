@@ -208,9 +208,9 @@ void main() {
       jsonEncode(
         _har([
           _entry('https://www.instagram.com/api/v1/x/', {
-            'a': {'pk': 12345678901, 'username': 'someone'},
-            'b': {'user_id': 12345678901, 'taken_at': 1700000000},
-            'c': {'user_id': 99999999999},
+            'user': {'pk': 12345678901, 'username': 'someone'},
+            'owner': {'user_id': 12345678901, 'taken_at': 1700000000},
+            'viewer': {'user_id': 99999999999},
           }),
         ]),
       ),
@@ -219,12 +219,12 @@ void main() {
     final j = jsonDecode(
       out.files.entries.firstWhere((e) => e.key.startsWith('bodies/')).value,
     ) as Map<String, dynamic>;
-    final a = (j['a'] as Map)['pk'];
+    final a = (j['user'] as Map)['pk'];
     expect(a, isA<int>());
     expect(a, greaterThanOrEqualTo(7000000000));
-    expect((j['b'] as Map)['user_id'], a);
-    expect((j['b'] as Map)['taken_at'], 1700000000);
-    expect((j['c'] as Map)['user_id'], isNot(a));
+    expect((j['owner'] as Map)['user_id'], a);
+    expect((j['owner'] as Map)['taken_at'], 1700000000);
+    expect((j['viewer'] as Map)['user_id'], isNot(a));
     expect(out.files['report.md'], contains('int'));
   });
 
@@ -316,14 +316,16 @@ void main() {
   });
 
   group('fails closed', () {
-    // Strings are default-deny, so the only way a secret reaches the output
-    // is somewhere the walker keeps verbatim: an object KEY. The independent
-    // final scan must still catch it.
+    // Strings and keys are default-deny. The one field copied with only a
+    // character-class check is the response mimeType, so a secret hidden there
+    // proves the independent final scan still blocks all output.
     final leaky = jsonEncode(
       _har([
-        _entry('https://www.instagram.com/api/v1/x/', {
-          'sessionid=Zx9Kq2Lm8Vb3Nc7X': 1,
-        }),
+        _entry(
+          'https://www.instagram.com/api/v1/x/',
+          {'a': 1},
+          mime: 'application/json; sessionid=Zx9Kq2Lm8Vb3Nc7X',
+        ),
       ]),
     );
 

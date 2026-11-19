@@ -184,25 +184,26 @@ void main() {
     );
   });
 
-  test('keys are never removed and array lengths/nesting are unchanged', () {
+  test('known keys are kept and array lengths/nesting are unchanged', () {
     final body = {
-      'a': [
+      'items': [
         {
-          'b': 'x',
-          'c': [1, 2, 3],
+          'code': 'x',
+          'candidates': [1, 2, 3],
         },
-        {'b': 'y', 'c': <int>[]},
+        {'code': 'y', 'candidates': <int>[]},
       ],
-      'd': {'e': null},
+      'user': {'status': null},
     };
     final o = sanitizeHar(_har(body));
     final j = jsonDecode(
       o.files.entries.firstWhere((e) => e.key.startsWith('bodies/')).value,
     ) as Map<String, dynamic>;
-    expect(((j['a'] as List)[0] as Map).keys, ['b', 'c']);
-    expect(((j['a'] as List)[0] as Map)['c'] as List, [1, 2, 3]);
-    expect(((j['a'] as List)[1] as Map)['c'] as List, isEmpty);
-    expect((j['d'] as Map).containsKey('e'), isTrue);
+    final items = j['items'] as List;
+    expect((items[0] as Map).keys, ['code', 'candidates']);
+    expect((items[0] as Map)['candidates'] as List, [1, 2, 3]);
+    expect((items[1] as Map)['candidates'] as List, isEmpty);
+    expect((j['user'] as Map).containsKey('status'), isTrue);
   });
 
   test('QA-1 variants: URL-encoded name inside a KEY and double-encoded', () {
@@ -211,10 +212,10 @@ void main() {
         'sessionid%3DZZFAKEkey1': 1,
       }),
     );
-    // The key survives (keys are structure) but the scanner must refuse.
-    expect(o.ok, isFalse);
-    expect(o.files, isEmpty);
-    expect(o.leaks.join(), isNot(contains('ZZFAKE')));
+    // QA-10: the unknown key is replaced by key_N, so nothing leaks.
+    expect(o.ok, isTrue, reason: o.leaks.join());
+    expect(o.files.values.join().toLowerCase(), isNot(contains('zzfake')));
+    expect(o.files['report.md'], contains('object keys replaced'));
   });
 
   test(

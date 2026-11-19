@@ -74,34 +74,33 @@ void main() {
     });
   });
 
-  group('QA-10 username-like object keys (BLOCKER, skipped until fixed)', () {
-    const s = 'QA-10: non-ID object keys are kept verbatim';
+  group('QA-10 username-like object keys', () {
     keyNoLeak('users keyed by username', {
       'users': {
         'zzfake_nour.k': {'pk': '1234567890'},
       },
-    }, skip: s);
+    });
     keyNoLeak('friendship_statuses keyed by username', {
       'friendship_statuses': {
         'zzfake_someone': {'following': true},
       },
-    }, skip: s);
+    });
     keyNoLeak('reels keyed by username', {
       'reels': {
         'zzfake_reeluser': {'items': <Object?>[]},
       },
-    }, skip: s);
-    keyNoLeak('uppercase username key', {'ZZFAKE_Nour': 1}, skip: s);
+    });
+    keyNoLeak('uppercase username key', {'ZZFAKE_Nour': 1});
     keyNoLeak('nested unknown keys', {
       'a': {
         'zzfakeinner': {'zzfakeinner2': 1},
       },
-    }, skip: s);
+    });
     keyNoLeak('URL as key (host+path, no query)', {
       'm': {
         'https://linktr.ee/zzfake': {'a': 1},
       },
-    }, skip: s);
+    });
   });
 
   group('doc_id / query_hash exemption', () {
@@ -125,7 +124,6 @@ void main() {
     );
     test(
       'QA-11 doc_id/query_hash must be digits or hex only',
-      skip: 'QA-11: any short word is kept verbatim (e.g. a username)',
       () {
         final out = _out({
           'a': 1,

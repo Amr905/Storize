@@ -41,8 +41,76 @@ const Set<String> _allowedStringKeys = {
   'reel_type',
 };
 
-final RegExp _structValue = RegExp(r'^[A-Za-z0-9_\-]{1,40}$');
+/// Enum-like values (QA-12): identifier shape, 32 chars at most. `__typename`
+/// values such as `XDTGraphImage` pass.
+final RegExp _structValue = RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,31}$');
 final RegExp _mimeValue = RegExp(r'^[A-Za-z0-9_\-]+/[A-Za-z0-9_.+\-]+$');
+
+/// Object keys that are kept verbatim (QA-10, default-deny for keys).
+///
+/// Rationale: only names that are fixed by the Instagram/GraphQL schema may
+/// appear. Sources: TECH_SPEC 4.1 key fields (IG-1..IG-5), [_mediaFieldKeys],
+/// keys of `synthetic.har`, the GraphQL envelope (`data`, `edges`, `node`,
+/// `page_info`, `__typename`, `extensions`, `errors`), the friendship and
+/// counter flags, and the ID fields. Dynamic keys (usernames, IDs, display
+/// names) are never in this list.
+const Set<String> _allowedKeys = {
+  // TECH_SPEC 4.1 IG-1..IG-5
+  'id', 'username', 'full_name', 'is_private', 'followed_by_viewer',
+  'blocked_by_viewer', 'profile_pic_url', 'user', 'users', 'pk', 'reels',
+  'items', 'taken_at', 'expiring_at', 'media_type', 'image_versions2',
+  'candidates', 'video_versions', 'video_duration', 'audience',
+  'story_link_stickers', 'code', 'product_type', 'carousel_media', 'caption',
+  'text', 'width', 'height', 'url', 'count', 'more_available', 'next_max_id',
+  'num_results', 'status', 'message', 'require_login', 'spam',
+  // synthetic.har
+  'biography', 'dimensions', 'edge_media_to_caption',
+  'edge_owner_to_timeline_media', 'edges', 'external_url', 'has_audio',
+  'node', 'original_height', 'original_width', 'shortcode', 'type',
+  'video_dash_manifest', 'video_url', 'display_url', 'is_video',
+  'taken_at_timestamp', 'phone_number', 'profile_pic_id',
+  // GraphQL / web envelope
+  'data', '__typename', 'extensions', 'errors', 'page_info', 'has_next_page',
+  'end_cursor', 'edge_followed_by', 'edge_follow', 'edge_sidecar_to_children',
+  'display_resources', 'config_width', 'config_height', 'src', 'viewer',
+  'owner', 'reel', 'reels_media', 'tray', 'latest_reel_media', 'seen',
+  'ranked_position', 'can_reply', 'can_reshare', 'story_cta', 'strong_id__',
+  'pk_id', 'media_id', 'user_id', 'owner_id', 'fbid', 'is_verified',
+  'is_bestie', 'friendship_status', 'friendship_statuses', 'following',
+  'followed_by', 'blocking', 'outgoing_request', 'incoming_request',
+  'like_count', 'comment_count', 'view_count', 'play_count', 'usertags',
+  'in', 'video_codec', 'is_dash_eligible', 'number_of_qualities', 'mime_type',
+  'content_type', 'kind', 'reel_type', 'accessibility_caption',
+  'clips_metadata', 'original_sound_info', 'is_paid_partnership',
+  'media_overlay_info', 'timestamp', 'app_id', 'doc_id', 'query_hash',
+  'variables', 'ig_app_id', 'edit', 'shortcode_media',
+};
+
+/// GraphQL root fields under `data` (for example
+/// `xdt_api__v1__feed__user_timeline_graphql_connection`). They are schema
+/// names the extractor has to know, and they only count directly under `data`.
+final RegExp _graphqlRootField = RegExp(r'^(xdt|xig)_[a-z0-9_]{1,100}$');
+
+/// Parents whose own keys are dynamic (usernames or IDs). Every key under
+/// them that is not an ID becomes `key_N`, whatever it looks like.
+const Set<String> _idMapParents = {
+  'users',
+  'friendship_statuses',
+  'reels',
+  'user_map',
+  'profiles',
+  'friendships',
+  'statuses',
+};
+
+/// Safe-word shape: lower-case snake_case, at most 40 chars. Allowed for an
+/// unknown key only when a sibling key is on the allowlist.
+final RegExp _safeWordKey = RegExp(r'^[a-z][a-z0-9]*(_[a-z0-9]+)*$');
+
+bool _isKnownKey(String k) =>
+    _allowedKeys.contains(k) ||
+    _mediaFieldKeys.contains(k) ||
+    _secretKeys.contains(k.toLowerCase());
 
 /// Request header values we keep (everything else: name only).
 const Set<String> _keptHeaderValues = {
@@ -372,6 +440,12 @@ class _Ctx {
   final Map<int, Set<String>> fieldsByRequest = {};
   int currentRequest = 0;
 
+  /// Object keys replaced by `key_N` (occurrences).
+  int keysReplaced = 0;
+
+  /// Distinct original keys replaced by `key_N`.
+  int get distinctKeysReplaced => _keys.length;
+
   int bump(String kind) => counts[kind] = (counts[kind] ?? 0) + 1;
 
   /// Consistent `key_N` placeholder for an unsafe object key.
@@ -546,7 +620,13 @@ void _collectKnown(_Ctx c, Object? node) {
   }
 }
 
-String _mapKey(_Ctx c, String k, String parentKey) {
+String _mapKey(
+  _Ctx c,
+  String k,
+  String parentKey, {
+  required bool dynamicMap,
+  required bool hasKnownSibling,
+}) {
   if (_digitsId.hasMatch(k) || _compoundId.hasMatch(k)) {
     final m = _compoundId.firstMatch(k);
     if (m != null) {
@@ -554,11 +634,23 @@ String _mapKey(_Ctx c, String k, String parentKey) {
     }
     return c.idName(k, _hintFor(parentKey, ''));
   }
-  final printable = RegExp(r'^[\x21-\x7E]{1,80}$').hasMatch(k);
-  if (!printable || k.contains('@') || looksLikeSecretToken(k)) {
-    return c.keyName(k);
-  }
-  return k;
+  // Default-deny (QA-10). URL-, email- and phone-shaped keys, usernames and
+  // display names fail both the allowlist and the safe-word shape, so they
+  // always end up as key_N.
+  final reserved = RegExp(r'^key_\d+$').hasMatch(k);
+  final keep =
+      !dynamicMap &&
+      !reserved &&
+      !k.toLowerCase().startsWith('fbsr_') &&
+      (_isKnownKey(k) ||
+          (parentKey == 'data' && _graphqlRootField.hasMatch(k)) ||
+          (hasKnownSibling &&
+              k.length <= 40 &&
+              _safeWordKey.hasMatch(k) &&
+              !looksLikeSecretToken(k)));
+  if (keep) return k;
+  c.keysReplaced++;
+  return c.keyName(k);
 }
 
 void _recordField(_Ctx c, String lk, String path, Object? v) {
@@ -570,9 +662,14 @@ void _recordField(_Ctx c, String lk, String path, Object? v) {
   stat.requests.add(c.currentRequest);
   stat.types.add(_typeOf(v));
   if ((lk == 'product_type' || lk == 'media_type' || lk == 'has_audio') &&
-      (v is String || v is int || v is bool) &&
       stat.values.length < 8) {
-    stat.values.add('$v');
+    // Only enum-shaped values reach report.md (QA-12); anything else would
+    // be copied from the raw HAR.
+    if (v is int || v is bool) {
+      stat.values.add('$v');
+    } else if (v is String) {
+      stat.values.add(_structValue.hasMatch(v) ? v : '<v>');
+    }
   }
   c.fieldsByRequest.putIfAbsent(c.currentRequest, () => {}).add(label);
 }
@@ -607,18 +704,29 @@ Object? _walk(
   required String key,
   required String parentKey,
   required String path,
+  bool inList = false,
 }) {
   if (node is Map<String, Object?>) {
     final out = <String, Object?>{};
+    final dynamicMap = !inList && _idMapParents.contains(key.toLowerCase());
+    final hasKnownSibling = node.keys.any(_isKnownKey);
     node.forEach((k, v) {
-      final lk = k.toLowerCase();
-      final newKey = _mapKey(c, k, key);
-      final idKey = newKey != k;
-      final childPath = '$path.${idKey ? '*' : newKey}';
+      final rawLk = k.toLowerCase();
+      final newKey = _mapKey(
+        c,
+        k,
+        key,
+        dynamicMap: dynamicMap,
+        hasKnownSibling: hasKnownSibling,
+      );
+      final replaced = newKey != k;
+      // A replaced key carries no meaning, so its value is judged as unnamed.
+      final lk = replaced ? '' : rawLk;
+      final childPath = '$path.${replaced ? '*' : newKey}';
       _recordField(c, lk, childPath, v);
       if (v == null) {
         out[newKey] = null;
-      } else if (_secretKeys.contains(lk) || lk.startsWith('fbsr_')) {
+      } else if (_secretKeys.contains(rawLk) || rawLk.startsWith('fbsr_')) {
         out[newKey] = redacted;
       } else if (v is Map<String, Object?> || v is List<Object?>) {
         out[newKey] = _walk(c, v, key: k, parentKey: key, path: childPath);
@@ -633,7 +741,14 @@ Object? _walk(
     return [
       for (final e in node)
         if (e is Map<String, Object?> || e is List<Object?>)
-          _walk(c, e, key: key, parentKey: parentKey, path: '$path[]')
+          _walk(
+            c,
+            e,
+            key: key,
+            parentKey: parentKey,
+            path: '$path[]',
+            inList: true,
+          )
         else
           _scalar(c, lk, e, parentKey),
     ];
@@ -695,9 +810,6 @@ String _allowPath(_Ctx c, List<String> segs) {
   return out.join('/');
 }
 
-String _safeName(String n) =>
-    RegExp(r'^[A-Za-z0-9_\-\[\].]{1,60}$').hasMatch(n) ? n : '<name>';
-
 /// Query value policy: keys stay, values become `<v>` except numeric
 /// count/first, doc_id/query_hash (public constants that identify GraphQL
 /// calls), true/false, and numeric IDs (hashed placeholders).
@@ -707,9 +819,11 @@ String _queryValue(_Ctx c, String key, String value) {
       RegExp(r'^\d{1,4}$').hasMatch(value)) {
     return value;
   }
-  if ((lk == 'doc_id' || lk == 'query_hash') &&
-      RegExp(r'^[A-Za-z0-9]{1,40}$').hasMatch(value)) {
-    return value;
+  if (lk == 'doc_id') {
+    return RegExp(r'^\d{6,20}$').hasMatch(value) ? value : '<v>';
+  }
+  if (lk == 'query_hash') {
+    return RegExp(r'^[0-9a-f]{16,64}$').hasMatch(value) ? value : '<v>';
   }
   if (value == 'true' || value == 'false') return value;
   if (_idQueryKeys.contains(lk)) {
@@ -768,7 +882,7 @@ Map<String, Object?> _describePost(Map<String, Object?> post) {
   if (text is String && mt.contains('x-www-form-urlencoded')) {
     for (final e in _parseForm(text)) {
       names.add(e.key);
-      if (e.key == 'doc_id' && RegExp(r'^\d{1,20}$').hasMatch(e.value)) {
+      if (e.key == 'doc_id' && RegExp(r'^\d{6,20}$').hasMatch(e.value)) {
         docId = e.value;
       }
     }
@@ -778,7 +892,7 @@ Map<String, Object?> _describePost(Map<String, Object?> post) {
       if (m == null) continue;
       names.add('${m['name']}');
       if ('${m['name']}' == 'doc_id' &&
-          RegExp(r'^\d{1,20}$').hasMatch('${m['value']}')) {
+          RegExp(r'^\d{6,20}$').hasMatch('${m['value']}')) {
         docId = '${m['value']}';
       }
     }
@@ -818,9 +932,139 @@ String _slug(String sanitizedPath) {
 
 String _mdCell(String s) => s.replaceAll('|', r'\|').replaceAll('\n', ' ');
 
-String _safeHeaderValue(String v) {
-  final ok =
-      RegExp(r'^[\x20-\x7E]{0,300}$').hasMatch(v) && findLeaks(v).isEmpty;
+/// Query parameter and header names that are known to be structural.
+const Set<String> _knownQueryNames = {
+  'username',
+  'reel_ids',
+  'user_id',
+  'user_ids',
+  'id',
+  'ids',
+  'count',
+  'first',
+  'after',
+  'max_id',
+  'edit',
+  'doc_id',
+  'query_hash',
+  'variables',
+  'surface',
+  'page_size',
+  'include_chaining',
+  'include_reel',
+  'include_suggested_users',
+  'include_logged_out_extras',
+  'include_live_status',
+  'include_highlight_reels',
+  'is_prefetch',
+  'is_pull_to_refresh',
+  'reason',
+  'source',
+  'device_id',
+  '__a',
+  '__d',
+  'fb_api_req_friendly_name',
+};
+final RegExp _shortQueryName = RegExp(r'^_{0,2}[a-z][a-z_]{0,23}$');
+final RegExp _shortHeaderName = RegExp(r'^[a-z]+(-[a-z]+){0,4}$');
+const Set<String> _knownHeaderNames = {
+  'accept',
+  'accept-encoding',
+  'accept-language',
+  'content-type',
+  'content-length',
+  'cookie',
+  'origin',
+  'referer',
+  'user-agent',
+  'x-csrftoken',
+  'x-ig-app-id',
+  'x-ig-www-claim',
+  'x-asbd-id',
+  'x-instagram-ajax',
+  'x-requested-with',
+  'x-fb-lsd',
+  'x-fb-friendly-name',
+  'x-web-device-id',
+  'x-bloks-version-id',
+  'sec-fetch-dest',
+  'sec-fetch-mode',
+  'sec-fetch-site',
+  'sec-ch-ua',
+  'sec-ch-ua-mobile',
+  'sec-ch-ua-platform',
+  'sec-ch-prefers-color-scheme',
+  'authorization',
+  'range',
+  'dpr',
+  'viewport-width',
+  'priority',
+  'connection',
+  'host',
+  ':authority',
+  ':method',
+  ':path',
+  ':scheme',
+};
+
+/// Request header name for summary.json (QA-13).
+String _headerName(String raw) {
+  final n = raw.toLowerCase();
+  if (_knownHeaderNames.contains(n) || _shortHeaderName.hasMatch(n)) {
+    return n.length <= 40 ? n : '<hdr>';
+  }
+  return '<hdr>';
+}
+
+/// Query parameter name for summary.json (QA-13).
+String _safeName(String n) =>
+    (_knownQueryNames.contains(n) || _shortQueryName.hasMatch(n))
+    ? n
+    : '<name>';
+
+/// Reduces a User-Agent to browser/app family, major version and OS family
+/// (QA-13). No device model, build ID or minor version survives.
+String coarseUserAgent(String ua) {
+  const families = <(String, String)>[
+    ('Instagram', r'Instagram[ /](\d{1,4})'),
+    ('Edge', r'Edg[AiOS]*/(\d{1,4})'),
+    ('Opera', r'OPR/(\d{1,4})'),
+    ('Firefox', r'Firefox/(\d{1,4})'),
+    ('Chrome', r'(?:Chrome|CriOS)/(\d{1,4})'),
+    ('Safari', r'Version/(\d{1,4})[^)]*Safari'),
+  ];
+  String? fam;
+  for (final f in families) {
+    final m = RegExp(f.$2).firstMatch(ua);
+    if (m != null) {
+      fam = '${f.$1}/${m[1]}';
+      break;
+    }
+  }
+  if (fam == null) return '<ua>';
+  final os = ua.contains('Android')
+      ? 'Android'
+      : RegExp('iPhone|iPad|iOS').hasMatch(ua)
+      ? 'iOS'
+      : ua.contains('Windows')
+      ? 'Windows'
+      : ua.contains('Mac OS X')
+      ? 'macOS'
+      : ua.contains('Linux')
+      ? 'Linux'
+      : 'other';
+  final wv = RegExp(r'; wv\)').hasMatch(ua) ? ', WebView' : '';
+  return '$fam ($os$wv)';
+}
+
+final RegExp _mimeList = RegExp(r'^[A-Za-z0-9_.+\-/;=*, ]{0,120}$');
+
+String _safeHeaderValue(String name, String v) {
+  if (name == 'user-agent') return coarseUserAgent(v);
+  if (name == 'x-ig-app-id') {
+    return RegExp(r'^\d{6,20}$').hasMatch(v) ? v : '<v>';
+  }
+  final ok = _mimeList.hasMatch(v) && findLeaks(v).isEmpty;
   return ok ? v : '<str:${v.length}>';
 }
 
@@ -917,13 +1161,11 @@ SanitizeOutcome sanitizeHar(String harText) {
     for (final h in headers) {
       final m = _asMap(h);
       if (m == null) continue;
-      final raw = '${m['name']}'.toLowerCase();
-      final name = RegExp(r'^[a-z0-9:_\-]{1,60}$').hasMatch(raw)
-          ? raw
-          : '<hdr>';
+      final raw = '${m['name']}';
+      final name = _headerName(raw);
       if (!names.contains(name)) names.add(name);
       if (_keptHeaderValues.contains(name)) {
-        kept[name] = _safeHeaderValue('${m['value']}');
+        kept[name] = _safeHeaderValue(name, '${m['value']}');
       }
     }
     final post = _asMap(req['postData']);
@@ -1100,7 +1342,11 @@ SanitizeOutcome sanitizeHar(String harText) {
   b
     ..writeln()
     ..writeln('## Replacement counts')
-    ..writeln();
+    ..writeln()
+    ..writeln(
+      '- object keys replaced with key_N: ${c.keysReplaced} '
+      '(${c.distinctKeysReplaced} distinct)',
+    );
   final ck = c.counts.keys.toList()..sort();
   for (final k in ck) {
     b.writeln('- $k: ${c.counts[k]}');
