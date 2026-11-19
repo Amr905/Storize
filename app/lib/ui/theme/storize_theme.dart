@@ -9,11 +9,11 @@ abstract final class StorizeTheme {
   /// (secondary*, extra surface containers, errorContainer) are derived.
   static const ColorScheme lightScheme = ColorScheme(
     brightness: Brightness.light,
-    primary: Color(0xFFD9481F),
+    primary: Color(0xFFC93F17),
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFFFE3D8),
     onPrimaryContainer: Color(0xFF5A1D07),
-    secondary: Color(0xFFD9481F),
+    secondary: Color(0xFFC93F17),
     onSecondary: Color(0xFFFFFFFF),
     secondaryContainer: Color(0xFFFFE3D8),
     onSecondaryContainer: Color(0xFF5A1D07),
@@ -67,7 +67,7 @@ abstract final class StorizeTheme {
     scrim: Color(0xFF000000),
     inverseSurface: Color(0xFFECE6E1),
     onInverseSurface: Color(0xFF1E1E21),
-    inversePrimary: Color(0xFFD9481F),
+    inversePrimary: Color(0xFFC93F17),
   );
 
   /// Light theme.

@@ -572,7 +572,7 @@ Notation: ASCII wireframes at phone width. `[ ]` = button, `( )` = chip, `▢` =
 ### 5.2 Foundations (Material 3, Jetpack Compose-friendly)
 | Token | Light | Dark | Use |
 |-------|-------|------|-----|
-| `primary` | `#D9481F` (ember) | `#FF8A5C` | Main actions, active tab, "new" ring |
+| `primary` | `#C93F17` (ember, WCAG AA; UD-1) | `#FF8A5C` | Main actions, active tab, "new" ring |
 | `onPrimary` | `#FFFFFF` | `#3A0E00` | |
 | `primaryContainer` | `#FFE3D8` | `#5A1D07` | Selected chips, highlight |
 | `surface` | `#FBF8F5` | `#121214` | Background |

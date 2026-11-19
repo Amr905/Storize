@@ -72,7 +72,7 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       onContainer: Color(0xFF5E5852),
     ),
     info: StorizeTone(
-      color: Color(0xFFD9481F),
+      color: Color(0xFFC93F17),
       container: Color(0xFFFFE3D8),
       onContainer: Color(0xFF8A2E10),
     ),
