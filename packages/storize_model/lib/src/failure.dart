@@ -1,17 +1,15 @@
-// Every class here is immutable: final fields and unmodifiable collections.
-// The lint cannot see that without @immutable from package:meta, which this
-// package does not depend on (T-003 rules out new dependencies).
-// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
-
+import 'package:meta/meta.dart';
 import 'package:storize_model/src/enums.dart';
 
 /// Why an operation failed. Each subclass maps to a row of the failure table
 /// in TECH_SPEC §4.1 and §7.
+@immutable
 sealed class Failure {
   const Failure();
 }
 
 /// The request could not be completed (socket, DNS or timeout).
+@immutable
 final class NetworkFailure extends Failure {
   /// Creates a network failure.
   const NetworkFailure();
@@ -27,6 +25,7 @@ final class NetworkFailure extends Failure {
 }
 
 /// Instagram asked us to slow down. [retryAfter] is the server's hint, if any.
+@immutable
 final class RateLimited extends Failure {
   /// Creates a rate-limit failure.
   const RateLimited(this.retryAfter);
@@ -46,6 +45,7 @@ final class RateLimited extends Failure {
 }
 
 /// The stored session can no longer be used.
+@immutable
 final class SessionInvalid extends Failure {
   /// Creates a session failure with the [reason].
   const SessionInvalid(this.reason);
@@ -65,6 +65,7 @@ final class SessionInvalid extends Failure {
 }
 
 /// The account is restricted (feedback required or disabled).
+@immutable
 final class AccountRestricted extends Failure {
   /// Creates an account-restricted failure.
   const AccountRestricted();
@@ -80,6 +81,7 @@ final class AccountRestricted extends Failure {
 }
 
 /// The tracked username or user ID no longer exists.
+@immutable
 final class TargetNotFound extends Failure {
   /// Creates a target-not-found failure.
   const TargetNotFound();
@@ -95,6 +97,7 @@ final class TargetNotFound extends Failure {
 }
 
 /// The target exists but is private and not followed, or blocked.
+@immutable
 final class TargetNotVisible extends Failure {
   /// Creates a target-not-visible failure.
   const TargetNotVisible();
@@ -110,6 +113,7 @@ final class TargetNotVisible extends Failure {
 }
 
 /// An expected field is missing from a response. [where] names the place.
+@immutable
 final class SchemaChanged extends Failure {
   /// Creates a schema-changed failure located at [where].
   const SchemaChanged(this.where);
@@ -129,6 +133,7 @@ final class SchemaChanged extends Failure {
 }
 
 /// Anything not covered above. Keeps the HTTP [code] and a short [message].
+@immutable
 final class UnknownFailure extends Failure {
   /// Creates an unknown failure.
   const UnknownFailure(this.code, this.message);

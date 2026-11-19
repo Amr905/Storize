@@ -1,13 +1,10 @@
-// Every class here is immutable: final fields and unmodifiable collections.
-// The lint cannot see that without @immutable from package:meta, which this
-// package does not depend on (T-003 rules out new dependencies).
-// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
-
+import 'package:meta/meta.dart';
 import 'package:storize_model/src/failure.dart';
 import 'package:storize_model/src/internal/deep_equality.dart';
 
 /// The outcome of an operation that can fail: an [Ok] carrying a value, or an
 /// [Err] carrying a [Failure]. Errors are values (TECH_SPEC §7).
+@immutable
 sealed class Result<T> {
   const Result();
 
@@ -46,6 +43,7 @@ sealed class Result<T> {
 }
 
 /// A successful result holding [value].
+@immutable
 final class Ok<T> extends Result<T> {
   /// Creates a successful result.
   const Ok(this.value);
@@ -66,6 +64,7 @@ final class Ok<T> extends Result<T> {
 }
 
 /// A failed result holding [failure].
+@immutable
 final class Err<T> extends Result<T> {
   /// Creates a failed result.
   const Err(this.failure);

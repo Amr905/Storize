@@ -36,75 +36,74 @@ RemoteContent content({
 
 void main() {
   group('RemoteUser', () {
+    RemoteUser user({
+      String remoteUserId = '1',
+      String username = 'sample_user',
+      String? displayName = 'Sample',
+      bool isPrivate = false,
+      bool followedByViewer = true,
+      bool blockedByViewer = false,
+      String? avatarUrl = 'https://cdn.example.test/p.jpg',
+    }) => RemoteUser(
+      remoteUserId: remoteUserId,
+      username: username,
+      displayName: displayName,
+      isPrivate: isPrivate,
+      followedByViewer: followedByViewer,
+      blockedByViewer: blockedByViewer,
+      avatarUrl: avatarUrl,
+    );
+
     test('equal fields are equal and hash alike', () {
-      const a = RemoteUser(remoteUserId: '1', username: 'sample_user');
-      const b = RemoteUser(remoteUserId: '1', username: 'sample_user');
-      expect(a, b);
-      expect(a.hashCode, b.hashCode);
+      expect(user(), user());
+      expect(user().hashCode, user().hashCode);
     });
 
-    test('each field affects equality', () {
-      const base = RemoteUser(
-        remoteUserId: '1',
-        username: 'sample_user',
-        displayName: 'Sample',
-        avatarUrl: 'https://cdn.example.test/p.jpg',
-      );
+    test('remoteUserId affects equality', () {
+      expect(user(), isNot(user(remoteUserId: '2')));
+    });
+
+    test('username affects equality', () {
+      expect(user(), isNot(user(username: 'other')));
+    });
+
+    test('displayName affects equality', () {
+      expect(user(), isNot(user(displayName: null)));
+    });
+
+    test('isPrivate affects equality', () {
+      expect(user(), isNot(user(isPrivate: true)));
+    });
+
+    test('followedByViewer affects equality (BR-2)', () {
+      expect(user(), isNot(user(followedByViewer: false)));
       expect(
-        base,
-        isNot(
-          const RemoteUser(
-            remoteUserId: '2',
-            username: 'sample_user',
-            displayName: 'Sample',
-            avatarUrl: 'https://cdn.example.test/p.jpg',
-          ),
-        ),
-      );
-      expect(
-        base,
-        isNot(
-          const RemoteUser(
-            remoteUserId: '1',
-            username: 'other',
-            displayName: 'Sample',
-            avatarUrl: 'https://cdn.example.test/p.jpg',
-          ),
-        ),
-      );
-      expect(
-        base,
-        isNot(
-          const RemoteUser(
-            remoteUserId: '1',
-            username: 'sample_user',
-            displayName: 'Sample',
-            avatarUrl: 'https://cdn.example.test/p.jpg',
-            isPrivate: true,
-          ),
-        ),
-      );
-      expect(
-        base,
-        isNot(
-          const RemoteUser(
-            remoteUserId: '1',
-            username: 'sample_user',
-            displayName: 'Sample',
-            avatarUrl: 'https://cdn.example.test/q.jpg',
-          ),
-        ),
+        user(followedByViewer: false).hashCode,
+        user(followedByViewer: false).hashCode,
       );
     });
 
-    test('toString omits the signed avatar URL', () {
-      const user = RemoteUser(
-        remoteUserId: '1',
-        username: 'sample_user',
+    test('blockedByViewer affects equality (EC-4)', () {
+      expect(user(), isNot(user(blockedByViewer: true)));
+      expect(
+        user(blockedByViewer: true).hashCode,
+        user(blockedByViewer: true).hashCode,
+      );
+    });
+
+    test('avatarUrl affects equality', () {
+      expect(user(), isNot(user(avatarUrl: null)));
+    });
+
+    test('toString shows the viewer flags and omits the signed avatar URL', () {
+      final u = user(
+        blockedByViewer: true,
         avatarUrl: 'https://cdn.example.test/p.jpg?oh=SECRETSIG',
       );
-      expect(user.toString(), isNot(contains('SECRETSIG')));
-      expect(user.toString(), contains('sample_user'));
+      expect(u.toString(), isNot(contains('SECRETSIG')));
+      expect(u.toString(), contains('sample_user'));
+      expect(u.toString(), contains('followedByViewer: true'));
+      expect(u.toString(), contains('blockedByViewer: true'));
     });
   });
 

@@ -1,14 +1,14 @@
-// Every class here is immutable: final fields and unmodifiable collections.
-// The lint cannot see that without @immutable from package:meta, which this
-// package does not depend on (T-003 rules out new dependencies).
-// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
+import 'package:meta/meta.dart';
 
 /// A user as Instagram reports it, before it is stored as a target.
+@immutable
 final class RemoteUser {
   /// Creates a remote user.
   const RemoteUser({
     required this.remoteUserId,
     required this.username,
+    required this.followedByViewer,
+    required this.blockedByViewer,
     this.displayName,
     this.isPrivate = false,
     this.avatarUrl,
@@ -26,6 +26,14 @@ final class RemoteUser {
   /// Whether the account is private.
   final bool isPrivate;
 
+  /// Whether the logged-in account follows this user (IG-1
+  /// `followed_by_viewer`). With [isPrivate], this decides visibility (BR-2).
+  final bool followedByViewer;
+
+  /// Whether the logged-in account is blocked by this user (IG-1
+  /// `blocked_by_viewer`). A blocked target is not visible (EC-4).
+  final bool blockedByViewer;
+
   /// The profile picture URL. It is a signed CDN URL, so it is left out of
   /// [toString].
   final String? avatarUrl;
@@ -38,6 +46,8 @@ final class RemoteUser {
           other.username == username &&
           other.displayName == displayName &&
           other.isPrivate == isPrivate &&
+          other.followedByViewer == followedByViewer &&
+          other.blockedByViewer == blockedByViewer &&
           other.avatarUrl == avatarUrl);
 
   @override
@@ -46,11 +56,14 @@ final class RemoteUser {
     username,
     displayName,
     isPrivate,
+    followedByViewer,
+    blockedByViewer,
     avatarUrl,
   );
 
   @override
   String toString() =>
       'RemoteUser(remoteUserId: $remoteUserId, username: $username, '
-      'isPrivate: $isPrivate)';
+      'isPrivate: $isPrivate, followedByViewer: $followedByViewer, '
+      'blockedByViewer: $blockedByViewer)';
 }

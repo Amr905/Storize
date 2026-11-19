@@ -1,12 +1,9 @@
-// Every class here is immutable: final fields and unmodifiable collections.
-// The lint cannot see that without @immutable from package:meta, which this
-// package does not depend on (T-003 rules out new dependencies).
-// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
-
+import 'package:meta/meta.dart';
 import 'package:storize_model/src/enums.dart';
 import 'package:storize_model/src/internal/deep_equality.dart';
 
 /// One media file of a remote story or post (a carousel has several).
+@immutable
 final class RemoteMedia {
   /// Creates a remote media item.
   const RemoteMedia({
@@ -57,6 +54,7 @@ final class RemoteMedia {
 }
 
 /// A story or a post as Instagram reports it.
+@immutable
 final class RemoteContent {
   /// Creates remote content. Lists and maps are copied into unmodifiable forms.
   RemoteContent({
