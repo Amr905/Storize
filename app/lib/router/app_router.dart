@@ -64,6 +64,10 @@ GoRouter createRouter({
     navigatorKey: rootKey,
     initialLocation: initialLocation ?? Routes.libraryPath,
     refreshListenable: refreshListenable,
+    // Any location that matches no route (`/unknown`, `/library//`, `http://`
+    // links, an unsafe `from`) lands on the Library, and the URL becomes
+    // `/library`.
+    onException: (_, _, router) => router.go(Routes.libraryPath),
     redirect: (context, state) => _redirect(
       state.uri,
       isOnboardingComplete: isOnboardingComplete(),
