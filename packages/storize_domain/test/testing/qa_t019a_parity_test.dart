@@ -54,4 +54,16 @@ void main() {
     expect(cache.thumbnailBytes(2), isNotNull);
     expect(cache.thumbnailBytes(3), isNull);
   });
+
+  test(
+    'thumbnail sweep never removes parts; empty live set removes all',
+    () async {
+      await cache.append(1, Stream.value([1]));
+      await cache.writeThumbnail(1, [1]);
+      await cache.writeThumbnail(2, [1]);
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 2);
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+      expect(await cache.partialLength(1), 1);
+    },
+  );
 }

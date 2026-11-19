@@ -215,4 +215,79 @@ void main() {
       expect(await cache.cleanupOrphanThumbnails(<int>{-1}), 0);
     });
   });
+
+  group('round 2: separation of the two sweeps', () {
+    File p(String name) => File('${cacheDir.path}/part/$name');
+
+    setUp(() => Directory('${cacheDir.path}/part').createSync());
+
+    test('a .tmp of a LIVE id is kept, of a dead id is swept', () async {
+      t('5.webp.tmp').writeAsBytesSync([1]);
+      t('6.webp.tmp').writeAsBytesSync([1]);
+      t('5.webp').writeAsBytesSync([1]);
+      expect(await cache.cleanupOrphanThumbnails({5}), 1);
+      expect(t('5.webp.tmp').existsSync(), isTrue);
+      expect(t('5.webp').existsSync(), isTrue);
+      expect(t('6.webp.tmp').existsSync(), isFalse);
+    });
+
+    test('malformed .tmp names are kept', () async {
+      const kept = [
+        '05.webp.tmp',
+        '+5.webp.tmp',
+        '5.WEBP.tmp',
+        '5.tmp',
+        '5.webp.tmp.tmp',
+        '99999999999999999999.webp.tmp',
+      ];
+      for (final n in kept) {
+        t(n).writeAsBytesSync([1]);
+      }
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+      for (final n in kept) {
+        expect(t(n).existsSync(), isTrue, reason: n);
+      }
+    });
+
+    test('cleanupOrphans never touches anything in thumbs', () async {
+      t('1.webp').writeAsBytesSync([1]);
+      t('1.webp.tmp').writeAsBytesSync([1]);
+      t('2.part').writeAsBytesSync([1]);
+      p('3.part').writeAsBytesSync([1]);
+      expect(await cache.cleanupOrphans(<int>{}), 1);
+      expect(t('1.webp').existsSync(), isTrue);
+      expect(t('1.webp.tmp').existsSync(), isTrue);
+      expect(t('2.part').existsSync(), isTrue);
+    });
+
+    test('cleanupOrphanThumbnails never touches the part dir', () async {
+      p('1.part').writeAsBytesSync([1]);
+      p('1.webp').writeAsBytesSync([1]);
+      p('1.webp.tmp').writeAsBytesSync([1]);
+      t('2.webp').writeAsBytesSync([1]);
+      t('3.part').writeAsBytesSync([1]);
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 1);
+      expect(p('1.part').existsSync(), isTrue);
+      expect(p('1.webp').existsSync(), isTrue);
+      expect(p('1.webp.tmp').existsSync(), isTrue);
+      expect(t('3.part').existsSync(), isTrue, reason: 'not a thumbnail');
+    });
+
+    test('a .tmp symlink or directory is not followed or deleted', () async {
+      final target = File('${outside.path}/precious')..writeAsBytesSync([9]);
+      Link('${thumbs.path}/5.webp.tmp').createSync(target.path);
+      final d = Directory('${thumbs.path}/6.webp.tmp')..createSync();
+      File('${d.path}/x').writeAsBytesSync([1]);
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+      expect(target.existsSync(), isTrue);
+      expect(File('${d.path}/x').existsSync(), isTrue);
+    });
+
+    test('both sweeps tolerate a missing directory', () async {
+      Directory('${cacheDir.path}/part').deleteSync(recursive: true);
+      thumbs.deleteSync(recursive: true);
+      expect(await cache.cleanupOrphans(<int>{}), 0);
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+    });
+  });
 }
