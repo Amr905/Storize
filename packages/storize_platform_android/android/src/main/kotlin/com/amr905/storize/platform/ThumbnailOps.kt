@@ -39,8 +39,10 @@ class ThumbnailOps(private val context: Context) {
                 retriever.setDataSource(path)
             } else {
                 val uri = Uri.parse(uriString)
-                if (uri.scheme != "content" || !UriPolicy.isManaged(uri.scheme, uri.authority)) {
-                    throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Only MediaStore content URIs are accepted")
+                if (uri.scheme != "content" || !UriPolicy.isManaged(uri.scheme, uri.authority) ||
+                    UriPolicy.mediaItemId(uriString) == null
+                ) {
+                    throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Only MediaStore item URIs are accepted")
                 }
                 if (guard.classify(uri) != RowCheck.ALLOWED) {
                     throw PluginException(ErrorCodes.INVALID_ARGUMENT, "URI is not a Storize file")

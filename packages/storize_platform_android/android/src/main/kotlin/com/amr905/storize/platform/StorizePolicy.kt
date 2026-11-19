@@ -10,6 +10,38 @@ import java.io.File
 object StorizePolicy {
     private val topDirs = setOf("Pictures", "Movies")
 
+    /** `RELATIVE_PATH` prefixes (API 29+) a delete may touch. */
+    val relativePrefixes: List<String> = listOf("Pictures/Storize/", "Movies/Storize/")
+
+    /** `DATA` prefixes (API <= 28) for the given Storize roots, each ending in `/`. */
+    fun dataPrefixes(roots: List<File>): List<String> = roots.map { it.absolutePath.trimEnd('/') + "/" }
+
+    /** A SQL selection and its arguments. */
+    data class Selection(val selection: String, val args: List<String>)
+
+    /**
+     * Selection for deleting one Storize row: `idColumn = id` AND [pathColumn] starts with one
+     * of [prefixes]. The prefix test is a plain range comparison (`>= prefix` and `< prefix` with
+     * the trailing `/` bumped to `0`), so there are no `LIKE` wildcards and `StorizeX/` cannot match.
+     */
+    fun deleteSelection(
+        idColumn: String,
+        pathColumn: String,
+        id: Long,
+        prefixes: List<String>,
+    ): Selection {
+        require(id > 0) { "id must be positive" }
+        require(prefixes.isNotEmpty() && prefixes.all { it.endsWith("/") && it.length > 1 }) { "bad prefixes" }
+        val args = mutableListOf(id.toString())
+        val clauses =
+            prefixes.map {
+                args += it
+                args += it.dropLast(1) + "0"
+                "($pathColumn >= ? AND $pathColumn < ?)"
+            }
+        return Selection("$idColumn = ? AND (${clauses.joinToString(" OR ")})", args)
+    }
+
     /**
      * API 29+: the `RELATIVE_PATH` column, e.g. `Pictures/Storize/nour_k/`.
      * Segments are compared exactly, so `Pictures/StorizeX/` does not match.

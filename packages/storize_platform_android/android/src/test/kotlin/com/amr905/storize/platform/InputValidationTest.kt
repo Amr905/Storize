@@ -222,4 +222,104 @@ class InputValidationTest {
             parent.deleteRecursively()
         }
     }
+
+    @Test
+    fun mediaItemIdAcceptsItemUris() {
+        assertEquals(5L, UriPolicy.mediaItemId("content://media/external/images/media/5"))
+        assertEquals(42L, UriPolicy.mediaItemId("content://media/external_primary/video/media/42"))
+        assertEquals(7L, UriPolicy.mediaItemId("content://media/1a2b-3c4d/images/media/7"))
+        assertEquals(1234567890123L, UriPolicy.mediaItemId("content://media/external/video/media/1234567890123"))
+    }
+
+    @Test
+    fun mediaItemIdRejectsCollectionsAndBadIds() {
+        val bad =
+            listOf(
+                null, "", "content://media/external/images/media", "content://media/external/images/media/",
+                "content://media/external/images/media/0", "content://media/external/images/media/-1",
+                "content://media/external/images/media/abc", "content://media/external/images/media/05",
+                "content://media/external/images/media/+5", "content://media/external/images/media/5 ",
+                "content://media/external/images/media/99999999999999999999",
+                "content://media/external/images/media/\u0665",
+            )
+        for (v in bad) assertEquals("for $v", null, UriPolicy.mediaItemId(v))
+    }
+
+    @Test
+    fun mediaItemIdRejectsQueryFragmentAndOddShapes() {
+        val bad =
+            listOf(
+                "content://media/external/images/media/5?limit=1", "content://media/external/images/media/5?",
+                "content://media/external/images/media/5#x", "content://media/external/images/media?x=1/5",
+                "content://media/external/files/5", "content://media/external/file/5",
+                "content://media/external/audio/media/5", "content://media/external/images/thumbnails/5",
+                "content://media/external/images/media/5/extra", "content://media/external/images/media/5/",
+                "content://media/external/images/5", "content://media/images/media/5",
+                "content://media//images/media/5", "content://media/ex ternal/images/media/5",
+                "content://media/../images/media/5", "content://media/external/images/media/../5",
+                "content://com.other.provider/external/images/media/5", "content://user@media/external/images/media/5",
+                "content://media@evil/external/images/media/5", "content://MEDIA/external/images/media/5",
+                "CONTENT://media/external/images/media/5", "file://media/external/images/media/5",
+                "http://media/external/images/media/5", "content:/media/external/images/media/5",
+            )
+        for (v in bad) assertEquals("for $v", null, UriPolicy.mediaItemId(v))
+    }
+
+    @Test
+    fun deleteSelectionIsScopedToOneIdAndPrefixes() {
+        val sel = StorizePolicy.deleteSelection("_id", "relative_path", 5L, StorizePolicy.relativePrefixes)
+        assertEquals(
+            "_id = ? AND ((relative_path >= ? AND relative_path < ?) OR (relative_path >= ? AND relative_path < ?))",
+            sel.selection,
+        )
+        assertEquals(listOf("5", "Pictures/Storize/", "Pictures/Storize0", "Movies/Storize/", "Movies/Storize0"), sel.args)
+        assertEquals(sel.args.size, sel.selection.count { it == '?' })
+    }
+
+    @Test
+    fun deleteSelectionHasNoLikeWildcardsOrFunctions() {
+        val sel = StorizePolicy.deleteSelection("_id", "_data", 9L, listOf("/storage/emulated/0/Pictures/Storize/"))
+        assertEquals("_id = ? AND ((_data >= ? AND _data < ?))", sel.selection)
+        assertEquals(listOf("9", "/storage/emulated/0/Pictures/Storize/", "/storage/emulated/0/Pictures/Storize0"), sel.args)
+        assertFalse(sel.selection.contains("LIKE", ignoreCase = true))
+        assertFalse(sel.selection.contains("%"))
+        assertFalse(sel.selection.contains("substr", ignoreCase = true))
+        // Values travel as arguments, never inside the SQL text.
+        assertFalse(sel.selection.contains("Storize"))
+    }
+
+    @Test
+    fun deleteSelectionRangeExcludesSiblingsAndIncludesChildren() {
+        val sel = StorizePolicy.deleteSelection("_id", "relative_path", 1L, listOf("Pictures/Storize/"))
+        val lo = sel.args[1]
+        val hi = sel.args[2]
+        fun inRange(v: String) = v >= lo && v < hi
+        assertTrue(inRange("Pictures/Storize/nour_k/"))
+        assertTrue(inRange("Pictures/Storize/a/b/"))
+        assertFalse(inRange("Pictures/StorizeX/a/"))
+        assertFalse(inRange("Pictures/Storize2/a/"))
+        assertFalse(inRange("Pictures/Storize"))
+        assertFalse(inRange("Pictures/"))
+        assertFalse(inRange("DCIM/Camera/"))
+    }
+
+    @Test
+    fun deleteSelectionRejectsBadInput() {
+        for (id in listOf(0L, -1L)) {
+            assertThrows(IllegalArgumentException::class.java) {
+                StorizePolicy.deleteSelection("_id", "p", id, StorizePolicy.relativePrefixes)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) { StorizePolicy.deleteSelection("_id", "p", 1L, emptyList()) }
+        assertThrows(IllegalArgumentException::class.java) { StorizePolicy.deleteSelection("_id", "p", 1L, listOf("Pictures/Storize")) }
+    }
+
+    @Test
+    fun dataPrefixesEndWithSlash() {
+        val roots = listOf(java.io.File("/storage/emulated/0/Pictures/Storize"), java.io.File("/storage/emulated/0/Movies/Storize/"))
+        assertEquals(
+            listOf("/storage/emulated/0/Pictures/Storize/", "/storage/emulated/0/Movies/Storize/"),
+            StorizePolicy.dataPrefixes(roots),
+        )
+    }
 }

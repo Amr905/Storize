@@ -98,6 +98,28 @@ object FileNames {
 
 /** Which URIs the plugin will touch: only MediaStore rows (and our own files on API <= 28). */
 object UriPolicy {
+    private const val ITEM_PREFIX = "content://media/"
+    private val volume = Regex("[A-Za-z0-9_-]+")
+    private val id = Regex("[1-9][0-9]*")
+
     fun isManaged(scheme: String?, authority: String?): Boolean =
         (scheme == "content" && authority == "media") || scheme == "file"
+
+    /**
+     * The row id of a MediaStore item URI, or null for anything else. Accepts only
+     * `content://media/<volume>/(images|video)/media/<id>` with a positive integer id and no
+     * query string or fragment. Collection URIs (no id) are rejected so that a delete can
+     * never reach more than one row.
+     */
+    fun mediaItemId(raw: String?): Long? {
+        if (raw == null || !raw.startsWith(ITEM_PREFIX)) return null
+        if (raw.contains('?') || raw.contains('#')) return null
+        val parts = raw.substring(ITEM_PREFIX.length).split("/")
+        if (parts.size != 4) return null
+        if (!volume.matches(parts[0])) return null
+        if (parts[1] != "images" && parts[1] != "video") return null
+        if (parts[2] != "media") return null
+        if (!id.matches(parts[3])) return null
+        return parts[3].toLongOrNull()
+    }
 }

@@ -27,6 +27,11 @@ Errors come back as `PlatformException` codes and map to `StorizePlatformExcepti
   per-work `WorkInfo.stopReason`, because that needs a `work-runtime` dependency.
 - **`openBatterySettings`:** tries the ignore-optimizations request (skipped if already exempt), then the OEM screens,
   then app details. Returns `request_ignore`, `oem_<name>`, `app_details` or `none`. OEM class names are best effort.
+- Callers must only pass URIs returned by `insert`. For `content://` the plugin accepts only
+  `content://media/<volume>/(images|video)/media/<id>` with a positive integer id and no query string or fragment;
+  anything else (collection URIs, `.../media/0`, `?limit=1`, `#x`, other providers) fails with `INVALID_ARGUMENT`.
+  `delete` is one selection-scoped call on that item (`_id` = id AND the path is under `Pictures/Storize/` or
+  `Movies/Storize/`, compared as a plain range, no `LIKE`), so it can never touch another row.
 - `delete`, `exists`, `size` and `videoThumbnail(uri)` only act on rows under `Pictures/Storize/` or `Movies/Storize/`
   (`RELATIVE_PATH` on API 29+, `DATA` on API <= 28). A foreign row gives `PERMISSION_DENIED` for delete, `false` for exists,
   `null` for size, `INVALID_ARGUMENT` for the thumbnail. `videoThumbnail(path)` accepts only the Storize folders or the app cache.

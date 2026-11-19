@@ -180,4 +180,58 @@ class MediaStoreOpsInstrumentedTest {
         assertEquals(name, first["displayName"])
         assertTrue(second["displayName"] as String != name)
     }
+
+    @Test
+    fun collectionUriDeleteIsRejected() {
+        val keep = insertImage("keep_${System.nanoTime()}.jpg")["uri"] as String
+        val collections =
+            listOf(
+                "content://media/external/images/media",
+                "content://media/external/video/media",
+                "content://media/external/images/media/0",
+                "content://media/external/images/media/-1",
+            )
+        for (c in collections) {
+            val code = assertThrows(PluginException::class.java) { ops.delete(c) }.code
+            assertEquals(c, ErrorCodes.INVALID_ARGUMENT, code)
+        }
+        assertTrue(ops.exists(keep))
+    }
+
+    @Test
+    fun queryStringAndFragmentUrisAreRejected() {
+        val uri = insertImage("q_${System.nanoTime()}.jpg")["uri"] as String
+        for (bad in listOf("$uri?limit=1", "$uri#x")) {
+            assertEquals(ErrorCodes.INVALID_ARGUMENT, assertThrows(PluginException::class.java) { ops.delete(bad) }.code)
+            assertEquals(ErrorCodes.INVALID_ARGUMENT, assertThrows(PluginException::class.java) { ops.exists(bad) }.code)
+            assertEquals(ErrorCodes.INVALID_ARGUMENT, assertThrows(PluginException::class.java) { ops.size(bad) }.code)
+        }
+        assertTrue(ops.exists(uri))
+    }
+
+    @Test
+    fun deletingANonStorizeRowLeavesItIntact() {
+        org.junit.Assume.assumeTrue(Build.VERSION.SDK_INT >= 29)
+        val values =
+            android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "foreign_${System.nanoTime()}.jpg")
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/StorizeX_test/")
+            }
+        val uri =
+            context.contentResolver.insert(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                values,
+            )!!
+        try {
+            val code = assertThrows(PluginException::class.java) { ops.delete(uri.toString()) }.code
+            assertEquals(ErrorCodes.PERMISSION_DENIED, code)
+            val rows =
+                context.contentResolver.query(uri, arrayOf(android.provider.MediaStore.MediaColumns._ID), null, null, null)
+                    ?.use { it.count } ?: 0
+            assertEquals(1, rows)
+        } finally {
+            context.contentResolver.delete(uri, null, null)
+        }
+    }
 }

@@ -188,18 +188,45 @@ class MediaStoreOps(private val context: Context) {
             if (deleted) scan(file, null)
             return deleted
         }
-        when (guard.classify(uri)) {
-            RowCheck.MISSING -> return false
+        val id = requireNotNull(UriPolicy.mediaItemId(uriString))
+        // One delete, scoped to this id and to the Storize folders: it cannot touch any other row.
+        val deleted =
+            try {
+                scopedDelete(uri, id)
+            } catch (e: SecurityException) {
+                throw PluginException(ErrorCodes.PERMISSION_DENIED, "This file is not owned by the app")
+            } catch (e: IllegalArgumentException) {
+                0
+            }
+        if (deleted > 0) return true
+        return when (guard.classify(uri)) {
             RowCheck.FOREIGN -> throw PluginException(ErrorCodes.PERMISSION_DENIED, "This file is not in the Storize folder")
-            RowCheck.ALLOWED -> Unit
+            RowCheck.MISSING, RowCheck.ALLOWED -> false
         }
-        return try {
-            resolver.delete(uri, null, null) > 0
-        } catch (e: SecurityException) {
-            throw PluginException(ErrorCodes.PERMISSION_DENIED, "This file is not owned by the app")
-        } catch (e: IllegalArgumentException) {
-            false
-        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun scopedDelete(
+        uri: Uri,
+        id: Long,
+    ): Int {
+        val selection =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                StorizePolicy.deleteSelection(
+                    MediaStore.MediaColumns._ID,
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    id,
+                    StorizePolicy.relativePrefixes,
+                )
+            } else {
+                StorizePolicy.deleteSelection(
+                    MediaStore.MediaColumns._ID,
+                    MediaStore.MediaColumns.DATA,
+                    id,
+                    StorizePolicy.dataPrefixes(guard.roots()),
+                )
+            }
+        return resolver.delete(uri, selection.selection, selection.args.toTypedArray())
     }
 
     fun exists(uriString: String?): Boolean {
@@ -263,6 +290,8 @@ class MediaStoreOps(private val context: Context) {
             if (path.isNullOrEmpty() || !guard.fileAllowed(File(path))) {
                 throw PluginException(ErrorCodes.INVALID_ARGUMENT, "File is outside the Storize folder")
             }
+        } else if (UriPolicy.mediaItemId(value) == null) {
+            throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Not a MediaStore item URI returned by insert")
         }
         return uri
     }
