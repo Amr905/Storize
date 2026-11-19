@@ -1,5 +1,5 @@
 import 'package:storize_app/features/lock/biometric_auth.dart';
-import 'package:storize_data/security/pin_vault.dart';
+import 'package:storize_data/storize_data.dart';
 import 'package:storize_domain/storize_domain.dart';
 
 /// Why the lock cannot be used right now, if it cannot.

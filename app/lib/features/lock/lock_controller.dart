@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_service.dart';
-import 'package:storize_data/security/pin_vault.dart';
+import 'package:storize_data/storize_data.dart';
 
 Never _unwired(String name) => throw UnimplementedError(
   '$name is not wired yet. Override it in main() or in the test.',

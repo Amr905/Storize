@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **12 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 **GREEN** (51932bc, CI 44513898175) · next checkpoint after 15 done.
+- Tasks done: **16 / 37** (+1 Could) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · **Checkpoint 3 running** (after 15 done).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,10 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
-| T-012a | backend-developer (sonnet) | `packages/storize_domain/lib/src/repos/governor_lease_repo.dart` (docs only), `packages/storize_domain/lib/src/testing/fake_governor_lease_repo.dart`, `packages/storize_data/lib/db/daos/governor_lease_dao.dart` (+`.g.dart`), `packages/storize_data/lib/repo/drift_governor_lease_repo.dart`, `packages/storize_data/test/repo/contract/check_run_lease_contract.dart`, new `packages/storize_data/test/repo/*lease*`/`test/db/*lease*` tests, `packages/storize_domain/test/testing/repos_test.dart`, `packages/storize_domain/test/testing/qa_contract_test.dart`, `packages/storize_instagram/lib/governor/**`, `packages/storize_instagram/test/governor/**` | 15:20 |
-| T-010a | backend-developer (sonnet) | `packages/storize_platform_android/**` (storageStats only), `packages/storize_data/lib/files/**`, `packages/storize_data/test/files/**`, `packages/storize_domain/lib/src/ports/gallery_store.dart`, `packages/storize_domain/lib/src/ports/storage_info.dart` (docs only), `packages/storize_domain/lib/src/testing/fake_gallery_store.dart`, `packages/storize_domain/test/testing/stores_test.dart` | 15:20 |
-| T-023 | backend-developer (haiku) | new `packages/storize_data/lib/update/**`, new `packages/storize_data/test/update/**` | 15:20 |
-| T-034 | frontend-developer (sonnet) | `app/lib/features/lock/**`, `app/lib/core/gates.dart`, `app/lib/router/**` (lock-gate wiring only), `app/lib/features/settings/**` (App lock row only), `app/lib/l10n/app_en.arb` (+ generated), `app/test/features/lock/**`, `app/test/router/**` (lock tests), `app/android/app/src/main/kotlin/**/MainActivity.kt`, `app/android/app/src/main/AndroidManifest.xml` (USE_BIOMETRIC), new `packages/storize_data/lib/security/pin_vault.dart` + `packages/storize_data/test/security/pin_vault*` | 15:20 |
 | T-002 | backend-developer (sonnet) | `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/CAPTURE_GUIDE.md`, `packages/storize_instagram/tool/**`, `packages/storize_instagram/test/fixtures/**`, `packages/storize_instagram/test/tool/**`, `packages/storize_instagram/assets/hook.js`, `app/lib/debug/**`, `app/lib/main_debug_inspector.dart`, `app/pubspec.yaml` + root `pubspec.lock` (**dependency owner this round**), `packages/storize_instagram/pubspec.yaml` | 03:10 |
 
 ## Task board
@@ -48,10 +44,10 @@
 | T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | **done** | 2 | QA PASS + CI [44465551564](https://github.com/Amr905/Storize/actions/runs/44465551564) · `05-reviews/T-008.md` |
 | T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | **done** (device checks → P-4) | 4 | QA PASS + CI [44510544819](https://github.com/Amr905/Storize/actions/runs/44510544819) · `05-reviews/T-009.md` |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | **done** | 2 | QA PASS (+108 tests) + CI [44514083877](https://github.com/Amr905/Storize/actions/runs/44514083877) · `05-reviews/T-010.md` |
-| T-010a | StorageInfo via plugin `storageStats` + T-010 minor fixes | Medium | sonnet | Backend Developer | T-010 | in_progress | 1 | — |
+| T-010a | StorageInfo via plugin `storageStats` + T-010 minor fixes | Medium | sonnet | Backend Developer | T-010 | **done** | 1 | QA PASS + CI [44523285849](https://github.com/Amr905/Storize/actions/runs/44523285849) · `05-reviews/T-010a.md` |
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | **done** | 2 | QA PASS r2 (+92 tests) + CI [44513670058](https://github.com/Amr905/Storize/actions/runs/44513670058) · `05-reviews/T-012.md` |
-| T-012a | Lease clock-skew in repos + limit-record retry | Medium | sonnet | Backend Developer | T-012, T-006 | in_progress | 1 | — |
+| T-012a | Lease clock-skew in repos + limit-record retry | Medium | sonnet | Backend Developer | T-012, T-006 | **done** | 1 | QA PASS + CI [44517651587](https://github.com/Amr905/Storize/actions/runs/44517651587) · `05-reviews/T-012a.md` |
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | todo | — | — |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | todo | — | — |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | Medium | sonnet | Backend Developer | T-013, T-014 | todo | — | — |
@@ -62,7 +58,7 @@
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
-| T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | in_progress | 1 | — |
+| T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
@@ -73,7 +69,7 @@
 | T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | todo | — | — |
 | T-032 | Activity S-11 | Medium | sonnet | Frontend Developer | T-025, T-020 | todo | — | — |
 | T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | todo | — | — |
-| T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | in_progress | 1 | — |
+| T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | **done** | 2 | QA PASS r2 (3 majors fixed) + CI [44523291566](https://github.com/Amr905/Storize/actions/runs/44523291566) · `05-reviews/T-034.md` |
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
 | T-036 | Release pipeline (`release.yml`) + README install guide | Medium | sonnet | Backend Developer | T-001, P-5 | todo | — | — |
 | T-037 | End-to-end tests + device soak checklist | Medium | sonnet | QA Engineer | T-021…T-034 | todo | — | — |
@@ -147,3 +143,4 @@
 - 2026-11-19 14:45 — **Checkpoint 2 GREEN** (`05-reviews/CHECKPOINT-2.md`): format/analyze/gen clean, all suites pass twice (no flakes), no count regressions, CI green. Info only: host `app/android` shell is outside the plugin (expected). T-010 round 2 → QA. T-012a started.
 - 2026-11-19 15:05 — T-012 round 2 QA PASS + CI green → **T-012 done** (11/37), merged; Lead exported the governor from `storize_instagram.dart`; main green (instagram 92). Lead added deps `cryptography` (data, app) and `local_auth` (app) for T-034. T-010 → QA.
 - 2026-11-19 15:20 — T-010 QA PASS (0 blocker/major, 4 minor) + CI green → **T-010 done** (12/37), merged; Lead exported `files/files.dart`; main green (data 750, domain 116). Lead added dep `dio` (storize_data) for T-023. Started T-012a, T-010a, T-023, T-034.
+- 2026-11-19 16:40 — T-012a QA PASS + CI → **done**. T-023 QA PASS, r2 fixed html_url host pinning (Medium) → CI → **done**. T-010a QA PASS, Kotlin verified in CI → **done**. T-034 QA found 3 majors (fail-open default, AppCompat theme, reset state) → r2 → QA PASS + CI (APK) → **done**. All merged; Lead exported `update/update.dart` and `security/pin_vault.dart`; main green (data 1064, domain 118, instagram 108, model 73, plugin 69, app 422). **16/37 → Checkpoint 3.**

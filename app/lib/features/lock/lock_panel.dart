@@ -7,7 +7,7 @@ import 'package:storize_app/features/lock/lock_service.dart';
 import 'package:storize_app/features/lock/pin_setup_panel.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
-import 'package:storize_data/security/pin_vault.dart';
+import 'package:storize_data/storize_data.dart';
 
 /// Asks the user to prove who they are: the fingerprint prompt opens
 /// automatically, the PIN pad is the fallback, a cooldown follows 5 wrong
