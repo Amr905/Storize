@@ -8,6 +8,7 @@ export 'files/files.dart';
 export 'repo/repo.dart';
 export 'security/security.dart';
 export 'settings/settings.dart';
+export 'update/update.dart';
 
 /// Package version marker.
 const String storizeDataVersion = '0.1.0';
