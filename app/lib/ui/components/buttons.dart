@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 class _Spinner extends StatelessWidget {
@@ -14,7 +14,7 @@ class _Spinner extends StatelessWidget {
       child: CircularProgressIndicator(
         strokeWidth: 2,
         color: color,
-        semanticsLabel: StorizeStrings.loading,
+        semanticsLabel: AppLocalizations.of(context).loading,
       ),
     );
   }

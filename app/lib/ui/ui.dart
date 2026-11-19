@@ -20,6 +20,5 @@ export 'package:storize_app/ui/components/status_badge.dart';
 export 'package:storize_app/ui/components/step_card.dart';
 export 'package:storize_app/ui/components/story_thumb.dart';
 export 'package:storize_app/ui/components/target_row.dart';
-export 'package:storize_app/ui/storize_strings.dart';
 export 'package:storize_app/ui/theme/theme.dart';
 export 'package:storize_app/ui/utils/bidi.dart';

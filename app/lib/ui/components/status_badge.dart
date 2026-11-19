@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Health states shown by [StatusBadge] (UX §5.3).
@@ -26,16 +26,17 @@ class StatusBadge extends StatelessWidget {
   /// Optional replacement text.
   final String? label;
 
-  static String defaultLabel(StorizeStatus status) => switch (status) {
-    StorizeStatus.active => StorizeStrings.statusActive,
-    StorizeStatus.checking => StorizeStrings.statusChecking,
-    StorizeStatus.paused => StorizeStrings.statusPaused,
-    StorizeStatus.notVisible => StorizeStrings.statusNotVisible,
-    StorizeStatus.unavailable => StorizeStrings.statusUnavailable,
-    StorizeStatus.error => StorizeStrings.statusError,
-    StorizeStatus.needsRelogin => StorizeStrings.statusNeedsRelogin,
-    StorizeStatus.restricted => StorizeStrings.statusRestricted,
-  };
+  static String defaultLabel(AppLocalizations l10n, StorizeStatus status) =>
+      switch (status) {
+        StorizeStatus.active => l10n.statusActive,
+        StorizeStatus.checking => l10n.statusChecking,
+        StorizeStatus.paused => l10n.statusPaused,
+        StorizeStatus.notVisible => l10n.statusNotVisible,
+        StorizeStatus.unavailable => l10n.statusUnavailable,
+        StorizeStatus.error => l10n.statusError,
+        StorizeStatus.needsRelogin => l10n.statusNeedsRelogin,
+        StorizeStatus.restricted => l10n.statusRestricted,
+      };
 
   static IconData iconFor(StorizeStatus status) => switch (status) {
     StorizeStatus.active => Icons.check_circle_rounded,
@@ -62,7 +63,7 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = toneFor(StorizeColors.of(context), status);
-    final text = label ?? defaultLabel(status);
+    final text = label ?? defaultLabel(AppLocalizations.of(context), status);
     return Semantics(
       container: true,
       label: text,

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 import 'package:storize_app/ui/utils/bidi.dart';
 
@@ -95,7 +95,8 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
       },
       child: Semantics(
         container: true,
-        label: StorizeStrings.pinProgress(widget.filled, widget.length),
+        label: AppLocalizations.of(context)
+            .pinProgress(widget.filled, widget.length),
         excludeSemantics: true,
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -120,7 +121,8 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
     );
 
     final message = _locked
-        ? StorizeStrings.pinCooldown(formatDuration(widget.cooldown!))
+        ? AppLocalizations.of(context)
+              .pinCooldown(formatDuration(widget.cooldown!))
         : widget.errorText;
 
     Widget key(int? digit) {
@@ -191,7 +193,8 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
                         ? const SizedBox.square(dimension: 72)
                         : _Key(
                             enabled: !_locked,
-                            semanticLabel: StorizeStrings.pinBiometric,
+                            semanticLabel: AppLocalizations.of(context)
+                                .pinBiometric,
                             onPressed: widget.onBiometric!,
                             child: const Icon(Icons.fingerprint_rounded),
                           ),
@@ -208,7 +211,7 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
                     ),
                     child: _Key(
                       enabled: !_locked,
-                      semanticLabel: StorizeStrings.pinDelete,
+                      semanticLabel: AppLocalizations.of(context).pinDelete,
                       onPressed: widget.onBackspace,
                       child: const Icon(Icons.backspace_outlined),
                     ),

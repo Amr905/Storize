@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
 
 /// Loads the real Roboto and Material icon fonts that ship inside the Flutter
@@ -65,6 +66,8 @@ Widget themed(
 }) {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     theme: brightness == Brightness.light
         ? StorizeTheme.light()
         : StorizeTheme.dark(),

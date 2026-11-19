@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:storize_app/ui/storize_strings.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// Which session problem the banner reports.
@@ -43,13 +43,13 @@ class SessionBanner extends StatelessWidget {
     final headline =
         title ??
         (relogin
-            ? StorizeStrings.bannerReloginTitle
-            : StorizeStrings.bannerRestrictedTitle);
+            ? AppLocalizations.of(context).bannerReloginTitle
+            : AppLocalizations.of(context).bannerRestrictedTitle);
     final body =
         message ??
         (relogin
-            ? StorizeStrings.bannerReloginBody
-            : StorizeStrings.bannerRestrictedBody);
+            ? AppLocalizations.of(context).bannerReloginBody
+            : AppLocalizations.of(context).bannerRestrictedBody);
     return Semantics(
       container: true,
       liveRegion: true,
@@ -99,7 +99,7 @@ class SessionBanner extends StatelessWidget {
                   foregroundColor: tone.onContainer,
                   textStyle: theme.textTheme.titleMedium,
                 ),
-                child: Text(fixLabel ?? StorizeStrings.bannerFix),
+                child: Text(fixLabel ?? AppLocalizations.of(context).bannerFix),
               ),
             ],
           ),

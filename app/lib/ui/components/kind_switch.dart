@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
 /// The two library kinds.
@@ -91,7 +92,9 @@ class _Segment extends StatelessWidget {
       button: true,
       selected: selected,
       inMutuallyExclusiveGroup: true,
-      label: count == null ? label : '$label, $count',
+      label: count == null
+          ? label
+          : AppLocalizations.of(context).kindSwitchSemantics(label, count!),
       onTap: onTap,
       excludeSemantics: true,
       child: GestureDetector(

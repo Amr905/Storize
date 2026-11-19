@@ -130,20 +130,104 @@
     "description": "Session banner action."
   },
   "bannerReloginTitle": "Instagram login needs attention",
+  "@bannerReloginTitle": {
+    "description": "Session banner headline when the Instagram login needs attention."
+  },
   "bannerReloginBody": "Checks are paused.",
+  "@bannerReloginBody": {
+    "description": "Session banner second line when the login needs attention."
+  },
   "bannerRestrictedTitle": "Instagram account restricted",
+  "@bannerRestrictedTitle": {
+    "description": "Session banner headline when the Instagram account is restricted."
+  },
   "bannerRestrictedBody": "Checks are paused.",
+  "@bannerRestrictedBody": {
+    "description": "Session banner second line when the account is restricted."
+  },
   "thumbNew": "new",
+  "@thumbNew": {
+    "description": "Corner text marking a thumbnail as new (not yet viewed)."
+  },
   "thumbBroken": "Can't load",
+  "@thumbBroken": {
+    "description": "Placeholder text on a thumbnail whose media failed to load."
+  },
   "thumbSelected": "selected",
+  "@thumbSelected": {
+    "description": "Semantics suffix for a selected thumbnail."
+  },
   "stepDone": "Done",
+  "@stepDone": {
+    "description": "Setup step status when the step is complete."
+  },
   "stepPending": "To do",
+  "@stepPending": {
+    "description": "Setup step status when the step is not complete."
+  },
+  "stepSemantics": "Step {number}, {title}, {status}",
+  "@stepSemantics": {
+    "description": "Screen reader label of a setup step: number, title and status.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "statTileSemantics": "{label}: {value}",
+  "@statTileSemantics": {
+    "description": "Screen reader label of a stat tile: caption then value.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "kindSwitchSemantics": "{label}, {count}",
+  "@kindSwitchSemantics": {
+    "description": "Screen reader label of a kind switch segment with a count.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "all": "All",
+  "@all": {
+    "description": "Account filter chip that clears the selection."
+  },
   "loading": "Loading",
+  "@loading": {
+    "description": "Screen reader label for loading indicators and skeletons."
+  },
   "expand": "Expand",
+  "@expand": {
+    "description": "Semantics label of a control that expands a section."
+  },
   "collapse": "Collapse",
+  "@collapse": {
+    "description": "Semantics label of a control that collapses a section."
+  },
   "pinDelete": "Delete",
+  "@pinDelete": {
+    "description": "PIN pad backspace key semantics label."
+  },
   "pinBiometric": "Use biometrics",
+  "@pinBiometric": {
+    "description": "PIN pad fingerprint key semantics label."
+  },
   "pinProgress": "{filled} of {length} digits entered",
   "@pinProgress": {
     "description": "PIN pad semantics label.",
