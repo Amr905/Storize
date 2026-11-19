@@ -2,6 +2,7 @@ import 'package:storize_domain/src/entities/content.dart';
 import 'package:storize_domain/src/entities/content_filter.dart';
 import 'package:storize_domain/src/entities/content_with_media.dart';
 import 'package:storize_domain/src/entities/media_file.dart';
+import 'package:storize_domain/src/exceptions.dart';
 import 'package:storize_domain/src/repos/content_repo.dart';
 import 'package:storize_domain/src/testing/change_feed.dart';
 import 'package:storize_domain/src/testing/fake_target_repo.dart';
@@ -27,7 +28,7 @@ final class FakeContentRepo implements ContentRepo {
         .where((c) => c.targetId == targetId)
         .map((c) => c.id)
         .toList();
-    _remove(ids);
+    if (_remove(ids)) _feed.notify();
   }
 
   bool _remove(Iterable<int> ids) {
@@ -177,6 +178,19 @@ final class FakeContentRepo implements ContentRepo {
   Future<void> updateContent(Content content) async {
     if (!_contents.containsKey(content.id)) {
       throw StateError('No content with id ${content.id}');
+    }
+    final clash = _contents.values.any(
+      (c) =>
+          c.id != content.id &&
+          c.targetId == content.targetId &&
+          c.kind == content.kind &&
+          c.remoteId == content.remoteId,
+    );
+    if (clash) {
+      throw const DuplicateEntityException(
+        'content',
+        '(target_id, kind, remote_id)',
+      );
     }
     _contents[content.id] = content;
     _feed.notify();
