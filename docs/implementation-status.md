@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **5 / 37** (+1 Could) · Checkpoint 1 **GREEN** · next checkpoint after 10 done.
+- Tasks done: **7 / 37** (+1 Could) · Checkpoint 1 GREEN · next checkpoint after 10 done (3 to go).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,8 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-005 | backend-developer (sonnet) | `packages/storize_data/lib/db/**`, `packages/storize_data/test/db/**`, `packages/storize_data/drift_schemas/**`, `packages/storize_data/build.yaml` | 07:30 |
-| T-025 | frontend-developer (sonnet) | `app/lib/**` except `app/lib/ui/**` and `app/lib/debug/**` and `main_debug_inspector.dart`; `app/l10n.yaml`; `app/test/**` except `app/test/ui/**` and `app/test/debug/**`; `app/pubspec.yaml` **only** the `flutter: generate: true` line | 07:30 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 | T-008 | backend-developer (sonnet) | `packages/storize_data/lib/security/**`, `packages/storize_data/test/security/**` | 08:55 |
 | T-009 | backend-developer (sonnet) | `packages/storize_platform_android/**` (Kotlin + Dart API + tests; no pubspec dependency changes without the Lead) | 08:55 |
@@ -42,11 +40,11 @@
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | **blocked (UD-2: 2 failed QA rounds on a High task → user decides Sonnet vs Opus)** | 4 | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | **done** | 3 | QA PASS + CI [44455784605](https://github.com/Amr905/Storize/actions/runs/44455784605) · `05-reviews/T-003.md` |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | **done** | 2 | QA PASS + CI [44458434199](https://github.com/Amr905/Storize/actions/runs/44458434199) · `05-reviews/T-004.md` |
-| T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | in_review | 1 | — |
+| T-005 | drift schema v1 + DAOs + migration harness | High | sonnet | Backend Developer | T-004 | **done** | 1 | QA PASS + CI [44463661224](https://github.com/Amr905/Storize/actions/runs/44463661224) · `05-reviews/T-005.md` |
 | T-006 | Repository implementations (streams) | Medium | sonnet | Backend Developer | T-005 | todo | — | — |
 | T-007 | SettingsRepo (shared_preferences, allowed values) | Low | haiku | Backend Developer | T-004 | **done** | 2 | QA PASS (after F-1 fix) + CI [44461140658](https://github.com/Amr905/Storize/actions/runs/44461140658) · `05-reviews/T-007.md` |
-| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | in_progress | 1 | — |
-| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | in_progress | 1 | — |
+| T-008 | SessionVault (flutter_secure_storage) | High | sonnet | Backend Developer | T-004 | in_review | 2 | — |
+| T-009 | Native plugin `storize_platform_android` | High | sonnet | Backend Developer | T-001, P-4 | in_review | 1 | — |
 | T-010 | GalleryStore + MediaCache (Dart side) | Medium | sonnet | Backend Developer | T-009, T-004 | todo | — | — |
 | T-011 | DiagnosticLog + redaction + crash hooks | Medium | sonnet | Backend Developer | T-004 | todo | — | — |
 | T-012 | RequestGovernor + `governor_lease` | High | sonnet | Backend Developer | T-005 | todo | — | — |
@@ -62,7 +60,7 @@
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | todo | — | — |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
-| T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | in_review | 1 | — |
+| T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | todo | — | — |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
@@ -82,7 +80,12 @@
 - **T-006:** keep target updates short / consider partial updates for watermark & last-checked (T-004 F-2); add `watchUnviewedCounts()` if NFR-12 needs it (F-3).
 - **T-016/T-030:** validate ≥1 track flag in the use case and UI (F-1).
 - **T-020:** DetectGaps de-dups GAP events itself via ActivityRepo.
-- **T-025:** UI guidance — call `watchX()` once per consumer (single-subscription streams, F-4).
+- **T-025 (done):** UI guidance — call `watchX()` once per consumer (single-subscription streams, F-4).
+- **T-006:** DAO→domain mapping duties from T-005 QA: leave `id` absent in companions; UTC ms dates; JSON encode `extras`/`payload`; `StateError` on 0-row updates; map SQLite extended code 2067 (UNIQUE) → `DuplicateEntityException`; derive `ActivityDao.watchRecent` `since` from the Clock (F-4); debounce/page the library stream (F-1).
+- **T-021:** call `DartPluginRegistrant.ensureInitialized()` before `StorizeDatabase.open()` in the background isolate; `close()` at the end of the task; device-test `open()`.
+- **T-034:** `resetOnError` in flutter_secure_storage wipes **all** entries incl. the PIN hash → treat "appLock = true but no PIN hash" as a reset state (force new PIN / clear flag + tell the user); never unlock silently (T-008 QA N-1).
+- **T-010 / T-026:** request `WRITE_EXTERNAL_STORAGE` at runtime on API ≤ 28 (S-03 card); store `relativePath` from `insert` (video may fall back to `Movies/Storize/<dir>/` if MediaStore rejects `Pictures/` for video — T-009).
+- **T-024b (new follow-up, Low):** move `app/lib/ui/storize_strings.dart` labels into ARB/AppLocalizations; delete the class; update `app/test/ui` goldens to use the l10n delegates (T-025 QA F-4).
 
 ## Pending user decisions
 | ID | Decision | Options | Blocks |
@@ -122,3 +125,5 @@
 - 2026-11-19 08:30 — T-007 QA FAIL (F-1 timestamp overflow) → round 2 fixed → CI green → **T-007 done**, merged; Lead wired `storize_data` barrel. T-005 and T-025 delivered → QA. **Checkpoint 1 started.**
 - 2026-11-19 08:50 — **Checkpoint 1 GREEN** (commit ef64e0c): no regressions, +21 integration tests, CI green. Merged.
 - 2026-11-19 08:55 — T-008 (vault) and T-009 (native gallery plugin) started (sonnet, High). T-009's on-device check (P-4) is deferred to the user.
+- 2026-11-19 09:40 — T-005 QA PASS (41 QA tests, perf OK) → **done**. T-025 QA PASS → round 2 (unknown-route fallback, tab back) → **done**. Both merged; Lead wired `db/db.dart` into the storize_data barrel; main full suite green (795 tests). UX.md + TECH_SPEC §3 notes updated.
+- 2026-11-19 09:40 — T-008 QA PASS (leak hunt clean) with Low F-1 (capturedAt range) → round 2 fixed + Lead-approved shared `SessionStore.requiredCookies` (fake parity). T-009 delivered; CI compiled the Kotlin first time → QA started.

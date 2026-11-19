@@ -229,6 +229,7 @@ result (OK|PARTIAL|SKIPPED_SESSION|RATE_LIMITED|FAILED), mode (DIRECT|PAGE), tar
 
 ### `activity_event`
 `id, at, type, severity, target_id?, check_run_id?, count, payload_json` — INDEX (at DESC), pruned after 7 days (FR-52).
+FKs (as built in T-005): `target_id` → `target.id` ON DELETE SET NULL, `check_run_id` → `check_run.id` ON DELETE SET NULL. An extra index `idx_target_status` exists on `target(status)`.
 Types: `CHECK_DONE`, `DOWNLOADED_STORIES`, `DOWNLOADED_POSTS`, `REMOVED_BEFORE_DOWNLOAD`, `GAP`, `RATE_LIMITED`, `SESSION_PROBLEM`,
 `PLATFORM_CHANGED`, `PAGE_MODE_USED`, `STORAGE_LOW`, `STORAGE_PAUSED`, `TARGET_STATUS`, `FILE_MISSING`, `APP_CRASH`.
 

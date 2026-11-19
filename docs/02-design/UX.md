@@ -113,7 +113,8 @@ App start
 Global: Session banner (on S-04, S-07, S-11) → S-13
 Deep links: "new stories" notification → S-06 · "new posts" notification → S-15 · "login needed" notification → S-13
 ```
-- Back follows Android's system back gesture. The bottom nav keeps a separate back stack for each tab.
+- Back follows Android's system back gesture. The bottom nav keeps a separate back stack for each tab. Back from the root of Targets, Activity or Settings goes to Library; back from the Library root exits (T-025).
+- *Implementation note (T-025, Lead-approved):* S-09 Target detail opens inside the Targets tab, so the bottom bar stays visible. This keeps the per-tab back stack.
 - **Why Library is home:** the main ongoing activity is browsing what was saved (G-3). Setup is one-time.
 
 ---
