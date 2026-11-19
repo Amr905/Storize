@@ -2,11 +2,11 @@
 
 > Maintained by the **Lead Orchestrator**. Updated after every delegation, review, and checkpoint.
 > Source of truth for task state. `TASKS.md` holds the specs; this file holds progress.
-> Last update: 2026-11-19 02:45 (Cairo)
+> Last update: 2026-11-19 03:05 (Cairo)
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- Tasks done: **0 / 37** (+1 Could) · Next checkpoint: after 5 verified tasks.
+- Tasks done: **1 / 37** (+1 Could) · Next checkpoint: after 5 verified tasks (4 to go).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,12 +28,12 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-001 | backend-developer (sonnet) | `pubspec.yaml`, `analysis_options.yaml`, `melos.yaml` (if used), `app/**`, `packages/*/**` (skeleton files only), `.github/workflows/ci.yml`, `.gitignore`, `README.md` (dev section only) | 02:50 |
+| — | — | — | — |
 
 ## Task board
 | ID | Title | Complexity | Model | Specialist | Depends on | Status | Attempts | Verified by / evidence |
 |----|-------|-----------|-------|------------|------------|--------|----------|------------------------|
-| T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | in_progress | 1 | — |
+| T-001 | Workspace scaffold + CI | Medium | sonnet | Backend Developer | P-2 | **done** | 2 | QA PASS + CI [44431856003](https://github.com/Amr905/Storize/actions/runs/44431856003) · `05-reviews/T-001.md` |
 | T-002 | Extraction spike: watch the real pages | High | sonnet | Backend Developer | T-001, P-3 | todo | — | — |
 | T-003 | `storize_model`: entities, enums, Result/Failure | Low | haiku | Backend Developer | T-001 | todo | — | — |
 | T-004 | `storize_domain` ports + test fakes | Medium | sonnet | Backend Developer | T-003 | todo | — | — |
@@ -82,3 +82,6 @@
   Environment check: no Flutter toolchain in the cloud workspace (pub.dev unreachable), device shell unavailable (disk space),
   repo connection denied → T-001 marked **blocked (ENV)**. No code written.
 - 2026-11-19 02:45 — User allowed network + connected GitHub. Flutter 3.50.0 installed in the workspace; smoke test (pub get, analyze, test) passed. The repo was empty, so `main` is seeded with the approved docs and agent definitions. `gh` CLI has no auth, so CI results can't be read from here; **verification runs locally in the workspace**, and CI is an extra gate.
+- 2026-11-19 02:50 — T-001 delegated to backend-developer (sonnet, Medium).
+- 2026-11-19 02:55 — QA: PASS (AC3 pending; Gradle hosts are blocked in the workspace). CI run 1 failed at the APK build (AGP 9 resValues) → returned to the developer.
+- 2026-11-19 03:05 — Round 2 fixed; CI run 2 all green (APK + gitleaks). **T-001 done**, merged to main. Note: APK builds are verified via GitHub Actions on `t-*` branches.
