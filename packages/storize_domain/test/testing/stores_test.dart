@@ -183,6 +183,45 @@ void main() {
       expect(store.files, hasLength(1));
     });
 
+    test('typed save failures fire once each', () async {
+      store.failNextSaveWithPermissionDenied();
+      await expectLater(save(), throwsA(isA<GalleryPermissionDenied>()));
+      store.failNextSaveWithStorageFull();
+      await expectLater(save(), throwsA(isA<GalleryStorageFull>()));
+      store.failNextSaveWithWriteFailed('INSERT_FAILED');
+      await expectLater(
+        save(),
+        throwsA(
+          isA<GalleryWriteFailed>().having(
+            (e) => e.code,
+            'code',
+            'INSERT_FAILED',
+          ),
+        ),
+      );
+      expect(store.files, isEmpty);
+      await save();
+      expect(store.files, hasLength(1));
+    });
+
+    test('failNextDelete fires once and keeps the file', () async {
+      final f = await save();
+      store.failNextDelete(const GalleryPermissionDenied());
+      await expectLater(
+        store.delete(f.uri),
+        throwsA(isA<GalleryPermissionDenied>()),
+      );
+      expect(await store.exists(f.uri), isTrue);
+      expect(await store.delete(f.uri), isTrue);
+    });
+
+    test('gallery exceptions are domain exceptions with a code', () {
+      expect(const GalleryPermissionDenied().code, 'PERMISSION_DENIED');
+      expect(const GalleryStorageFull().code, 'STORAGE_FULL');
+      expect(const GalleryWriteFailed('X').toString(), 'GalleryWriteFailed(X)');
+      expect(const GalleryStorageFull(), isA<DomainException>());
+    });
+
     test('each save gets a distinct URI', () async {
       final a = await save();
       final b = await save();

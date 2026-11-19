@@ -84,3 +84,52 @@ final class MediaStreamFailure extends MediaStreamException {
   String toString() =>
       'MediaStreamFailure(statusCode: $statusCode, message: $message)';
 }
+
+/// Why `GalleryStore` could not save or delete a file.
+///
+/// It extends the sealed [DomainException] family, so a `switch` over
+/// [GalleryStoreException] is exhaustive over its three subtypes. None of them
+/// carries a path, URI or file name: only a native error [code].
+@immutable
+sealed class GalleryStoreException extends DomainException {
+  /// Creates the exception with the native [code].
+  const GalleryStoreException(this.code);
+
+  /// The native error code, for example `PERMISSION_DENIED`.
+  final String code;
+}
+
+/// The gallery refused the operation (`PERMISSION_DENIED`).
+///
+/// On Android 8-9 (API <= 28) the caller should ask for the runtime permission
+/// `WRITE_EXTERNAL_STORAGE` (S-03 card) and retry. On a delete it means the
+/// row is not owned by Storize (for example after a reinstall).
+@immutable
+final class GalleryPermissionDenied extends GalleryStoreException {
+  /// Creates the exception.
+  const GalleryPermissionDenied() : super('PERMISSION_DENIED');
+
+  @override
+  String toString() => 'GalleryPermissionDenied()';
+}
+
+/// The device has no space left for the file (`STORAGE_FULL`).
+@immutable
+final class GalleryStorageFull extends GalleryStoreException {
+  /// Creates the exception.
+  const GalleryStorageFull() : super('STORAGE_FULL');
+
+  @override
+  String toString() => 'GalleryStorageFull()';
+}
+
+/// Any other gallery failure. Only the [code] is kept, so the message cannot
+/// leak a path.
+@immutable
+final class GalleryWriteFailed extends GalleryStoreException {
+  /// Creates the exception with the native [code].
+  const GalleryWriteFailed(super.code);
+
+  @override
+  String toString() => 'GalleryWriteFailed($code)';
+}

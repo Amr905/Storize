@@ -1,4 +1,3 @@
-import 'package:storize_data/files/gallery_exceptions.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 import 'package:storize_platform_android/storize_platform_android.dart';

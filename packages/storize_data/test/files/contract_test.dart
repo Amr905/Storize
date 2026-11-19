@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/files/files.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 
 import 'fake_native_media.dart';
@@ -12,9 +14,35 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   galleryStoreContract('PluginGalleryStore', () async {
-    return PluginGalleryStore(FakeNativeMedia().api);
+    final native = FakeNativeMedia();
+    PlatformException error(GalleryFailure f) => PlatformException(
+      code: switch (f) {
+        GalleryFailure.permissionDenied => 'PERMISSION_DENIED',
+        GalleryFailure.storageFull => 'STORAGE_FULL',
+        GalleryFailure.other => 'IO_ERROR',
+      },
+      message: '/data/user/0/app/cache/part/1.part',
+    );
+    return GalleryHarness(
+      store: PluginGalleryStore(native.api),
+      failNextSave: (f) => native.failNext = error(f),
+      failNextDelete: (f) => native.failNext = error(f),
+    );
   });
-  galleryStoreContract('FakeGalleryStore', () async => FakeGalleryStore());
+  galleryStoreContract('FakeGalleryStore', () async {
+    final fake = FakeGalleryStore();
+    return GalleryHarness(
+      store: fake,
+      failNextSave: (f) => switch (f) {
+        GalleryFailure.permissionDenied =>
+          fake.failNextSaveWithPermissionDenied(),
+        GalleryFailure.storageFull => fake.failNextSaveWithStorageFull(),
+        GalleryFailure.other => fake.failNextSaveWithWriteFailed(),
+      },
+      failNextDelete: (f) =>
+          fake.failNextDelete(const GalleryPermissionDenied()),
+    );
+  });
 
   mediaCacheContract('FileMediaCache', () async {
     final root = Directory.systemTemp.createTempSync('storize_cc_');

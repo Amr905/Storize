@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/files/files.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 import 'package:storize_platform_android/storize_platform_android.dart';
 
