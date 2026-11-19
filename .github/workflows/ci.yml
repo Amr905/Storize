@@ -42,6 +42,10 @@ jobs:
         working-directory: app
         run: flutter build apk --debug --flavor dev
 
+      - name: Kotlin unit tests (native plugin)
+        working-directory: app/android
+        run: ./gradlew :storize_platform_android:testDebugUnitTest --no-daemon
+
   gitleaks:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
