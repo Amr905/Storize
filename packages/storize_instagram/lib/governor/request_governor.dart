@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/governor/governor_config.dart';
 import 'package:storize_instagram/governor/governor_exceptions.dart';
@@ -15,6 +16,10 @@ typedef Delay = Future<void> Function(Duration duration);
 /// Receives one log line. Lines carry only the account id, cost, wait time
 /// and outcome, never URLs, headers or cookies.
 typedef GovernorLog = void Function(String message);
+
+/// Zone key: the set of account ids with a `run` call in progress in this
+/// zone. Used to refuse a nested `run` for the same account.
+final Object _runningKey = Object();
 
 Future<void> _realDelay(Duration duration) => Future<void>.delayed(duration);
 
@@ -66,11 +71,20 @@ class RequestGovernor {
   /// Calls of one account run strictly one at a time, in the order of the
   /// `run` calls. If [call] throws, the error is rethrown after the slot is
   /// freed. If [call] throws or returns a `RateLimited` (also inside an
-  /// `Err`), the account is paused and backed off; do not report it again.
+  /// `Err`), the account is paused and backed off. The limit is always
+  /// recorded, and the original error or result is always the one returned.
+  ///
+  /// The lease is held only while a call runs and is released after each
+  /// call (and during waits), so another isolate can interleave. The
+  /// persisted bucket keeps the budget shared.
   ///
   /// Throws [GovernorPaused] while the account is paused and [GovernorBusy]
   /// when another isolate holds the lease for `acquireTimeout`. In both cases
   /// [call] was not made and no token was used.
+  ///
+  /// **Do not nest.** Calling `run` for the same account from inside [call]
+  /// would wait behind itself forever, so it throws a [StateError]. Run a
+  /// page-mode fallback after the direct `run` has returned.
   Future<T> run<T>({
     required int accountId,
     required RequestCost cost,
@@ -84,16 +98,29 @@ class RequestGovernor {
         'costs $weight tokens, more than the burst of ${_config.burst}',
       );
     }
+    final running = Zone.current[_runningKey] as Set<int>?;
+    if (running != null && running.contains(accountId)) {
+      throw StateError(
+        'RequestGovernor.run is not re-entrant: a nested run for account '
+        '$accountId would wait for itself. Call it after the outer run '
+        'returns.',
+      );
+    }
     return _exclusive(accountId, (state) async {
       final queuedAt = _clock.now();
       await _prepare(accountId, state, weight);
       final waited = _clock.now().difference(queuedAt);
       T result;
       try {
-        result = await call();
+        result = await runZoned(
+          call,
+          zoneValues: {
+            _runningKey: <int>{...?running, accountId},
+          },
+        );
       } on Object catch (error) {
         final limited = error is RateLimited ? error : null;
-        await _finish(accountId, state, limited);
+        await _finishSafely(accountId, state, limited);
         _logLine(
           accountId,
           cost,
@@ -103,7 +130,7 @@ class RequestGovernor {
         rethrow;
       }
       final limited = _rateLimitOf(result);
-      await _finish(accountId, state, limited);
+      await _finishSafely(accountId, state, limited);
       _logLine(
         accountId,
         cost,
@@ -114,11 +141,17 @@ class RequestGovernor {
     });
   }
 
-  /// Records a rate limit that the caller saw outside [run] (for example a
-  /// 429 on a request made through another path). Do not call it for an
-  /// outcome that [run] already handled.
+  /// Records a rate limit that the caller saw outside [run].
   ///
-  /// Queued behind running calls of the account. May throw [GovernorBusy].
+  /// Normal code never needs it: [run] records the limit of its own call, and
+  /// the extractors go through [run] (TECH_SPEC section 4.1). It exists for
+  /// tests.
+  ///
+  /// Safe against double reports: a limit that arrives while the account is
+  /// already paused is the same event and is ignored (no x4, no longer
+  /// pause). The limit is never dropped: this waits as long as it takes to
+  /// get the lease, queued behind running calls of the account.
+  @visibleForTesting
   Future<void> reportRateLimited(int accountId, RateLimited limited) =>
       _exclusive(accountId, (state) async {
         await _finish(accountId, state, limited);
@@ -166,7 +199,7 @@ class RequestGovernor {
   // ---------------------------------------------------------------- queue
 
   /// Runs [body] as the only operation of [accountId] in this isolate, FIFO.
-  /// Frees the lease when the queue runs empty.
+  /// Frees the lease after each operation so other isolates can interleave.
   Future<R> _exclusive<R>(
     int accountId,
     Future<R> Function(_AccountState state) body,
@@ -182,14 +215,17 @@ class RequestGovernor {
     } finally {
       state.pending--;
       try {
-        if (state.pending == 0 && state.leaseHeld) {
-          state.leaseHeld = false;
-          await _leases.release(accountId: accountId, holder: _holder);
-        }
+        await _releaseLease(accountId, state);
       } finally {
         gate.complete();
       }
     }
+  }
+
+  Future<void> _releaseLease(int accountId, _AccountState state) async {
+    if (!state.leaseHeld) return;
+    state.leaseHeld = false;
+    await _leases.release(accountId: accountId, holder: _holder);
   }
 
   // ------------------------------------------------------------- the gate
@@ -198,12 +234,39 @@ class RequestGovernor {
   /// Holds the lease on return.
   Future<void> _prepare(int accountId, _AccountState state, int weight) async {
     final gap = _drawGap();
-    final startedAt = _clock.now();
+    DateTime? readyAt; // When the jitter gap is satisfied.
     while (true) {
-      final lease = await _acquire(accountId, state, startedAt);
+      final lease = await _acquire(
+        accountId,
+        state,
+        _clock.now(),
+        timeout: _config.acquireTimeout,
+      );
       final now = _clock.now();
       final bucket = _refill(lease.bucket, now);
 
+      // Repair state that a clock jump made impossible, once, so that the
+      // jitter reference below is real and the wait ends.
+      final raw = lease.bucket;
+      if (raw.lastRefillAt.isAfter(now) ||
+          raw.backoffUntil != bucket.backoffUntil) {
+        final repaired = await _leases.writeBucket(
+          accountId: accountId,
+          holder: _holder,
+          bucket: GovernorBucket(
+            tokens: raw.tokens,
+            lastRefillAt: raw.lastRefillAt.isAfter(now)
+                ? now
+                : raw.lastRefillAt,
+            backoffUntil: bucket.backoffUntil,
+            backoffMultiplier: raw.backoffMultiplier,
+          ),
+        );
+        if (!repaired) {
+          state.leaseHeld = false;
+          continue;
+        }
+      }
       final until = bucket.backoffUntil;
       if (until != null && now.isBefore(until)) {
         _logLine(accountId, null, Duration.zero, 'paused');
@@ -214,13 +277,27 @@ class RequestGovernor {
         );
       }
 
+      // Same repair for this isolate's own memory (once, or the clamp would
+      // move forward with `now` and the wait would never end).
+      final own = state.lastCallEnd;
+      if (own != null && own.isAfter(now)) state.lastCallEnd = now;
+      final last = _lastActivity(state, raw.lastRefillAt, now);
+      // The first look draws the random gap. If another isolate called while
+      // we slept, we only owe it the minimum gap, so a busy peer cannot push
+      // us back by a fresh random gap each time.
+      final ready = readyAt == null
+          ? last.add(gap)
+          : _later(readyAt, last.add(_config.jitterMin));
+      readyAt = ready;
+      final jitter = ready.difference(now);
       final wait = _maxDuration(
-        _jitterWait(state, lease.bucket, gap, now),
+        jitter.isNegative ? Duration.zero : jitter,
         _tokenWait(bucket, weight),
       );
       if (wait > Duration.zero) {
-        // Wake up well inside the lease ttl so the next acquire renews it.
-        await _delay(_minDuration(wait, _config.leaseTtl ~/ 2));
+        // Do not hold the lease while sleeping: another isolate may call.
+        await _releaseLease(accountId, state);
+        await _delay(wait);
         continue;
       }
 
@@ -240,12 +317,14 @@ class RequestGovernor {
   }
 
   /// Takes (or renews) the lease, polling with back-off while another holder
-  /// has it. Throws [GovernorBusy] after `acquireTimeout`.
+  /// has it. Throws [GovernorBusy] after [timeout]; null waits for as long as
+  /// it takes.
   Future<GovernorLease> _acquire(
     int accountId,
     _AccountState state,
-    DateTime startedAt,
-  ) async {
+    DateTime startedAt, {
+    Duration? timeout,
+  }) async {
     var poll = _config.leasePollInitial;
     while (true) {
       final now = _clock.now();
@@ -264,37 +343,68 @@ class RequestGovernor {
         return lease;
       }
       final waited = _clock.now().difference(startedAt);
-      if (waited >= _config.acquireTimeout) {
+      if (timeout != null && waited >= timeout) {
         _logLine(accountId, null, waited, 'busy');
         throw GovernorBusy(accountId: accountId, waited: waited);
       }
-      await _delay(_minDuration(poll, _config.acquireTimeout - waited));
+      await _delay(
+        timeout == null ? poll : _minDuration(poll, timeout - waited),
+      );
       poll = _minDuration(poll * 2, _config.leasePollMax);
+    }
+  }
+
+  /// [_finish] for use after a call: it must never replace the call's own
+  /// result or error, so nothing escapes from here.
+  Future<void> _finishSafely(
+    int accountId,
+    _AccountState state,
+    RateLimited? limited,
+  ) async {
+    try {
+      await _finish(accountId, state, limited);
+    } on Object {
+      _logLine(accountId, null, Duration.zero, 'record_failed');
     }
   }
 
   /// Stores the outcome of a call: refills, stamps the call end (the jitter
   /// reference) and applies a back-off when [limited] is set.
+  ///
+  /// A rate limit is never dropped: its write waits for the lease without a
+  /// timeout. Without a limit the write is best effort and gives up with
+  /// [GovernorBusy] swallowed after `acquireTimeout`.
   Future<void> _finish(
     int accountId,
     _AccountState state,
     RateLimited? limited,
   ) async {
-    while (true) {
-      final lease = await _acquire(accountId, state, _clock.now());
-      final now = _clock.now();
-      var bucket = _refill(lease.bucket, now);
-      if (limited != null) bucket = _withBackoff(bucket, limited, now);
-      final stored = await _leases.writeBucket(
-        accountId: accountId,
-        holder: _holder,
-        bucket: bucket,
-      );
-      if (stored) {
-        state.lastCallEnd = now;
-        return;
+    try {
+      while (true) {
+        final lease = await _acquire(
+          accountId,
+          state,
+          _clock.now(),
+          timeout: limited == null ? _config.acquireTimeout : null,
+        );
+        final now = _clock.now();
+        var bucket = _refill(lease.bucket, now);
+        if (limited != null) {
+          bucket = _withBackoff(accountId, bucket, limited, now);
+        }
+        final stored = await _leases.writeBucket(
+          accountId: accountId,
+          holder: _holder,
+          bucket: bucket,
+        );
+        if (stored) {
+          state.lastCallEnd = now;
+          return;
+        }
+        state.leaseHeld = false;
       }
-      state.leaseHeld = false;
+    } on GovernorBusy {
+      return; // Only reachable without a limit to record.
     }
   }
 
@@ -309,18 +419,25 @@ class RequestGovernor {
     return _refill(bucket, now);
   }
 
+  /// Refills up to [now] and repairs state that a clock jump made
+  /// impossible: a `lastRefillAt` in the future counts as [now], and a
+  /// `backoffUntil` further away than `maxPause` is cut to `now + maxPause`
+  /// (the multiplier window follows it).
   GovernorBucket _refill(GovernorBucket bucket, DateTime now) {
-    final elapsed = now.difference(bucket.lastRefillAt);
+    final last = bucket.lastRefillAt.isAfter(now) ? now : bucket.lastRefillAt;
+    final elapsed = now.difference(last);
     // Multiply before dividing so whole-minute refills are exact.
-    final added = elapsed.isNegative
-        ? 0
-        : elapsed.inMicroseconds *
-              _config.callsPerHour /
-              Duration.microsecondsPerHour;
+    final added =
+        elapsed.inMicroseconds *
+        _config.callsPerHour /
+        Duration.microsecondsPerHour;
+    var until = bucket.backoffUntil;
+    final latest = now.add(_config.maxPause);
+    if (until != null && until.isAfter(latest)) until = latest;
     return GovernorBucket(
       tokens: min(_config.burst.toDouble(), bucket.tokens + added),
       lastRefillAt: now,
-      backoffUntil: bucket.backoffUntil,
+      backoffUntil: until,
       backoffMultiplier: bucket.backoffMultiplier,
     );
   }
@@ -339,33 +456,39 @@ class RequestGovernor {
     return Duration(microseconds: min + (_random.nextDouble() * span).round());
   }
 
-  /// The jitter gap is measured from the end of the previous call: in memory
-  /// for this isolate, and from the bucket stamp for calls of other isolates.
-  Duration _jitterWait(
-    _AccountState state,
-    GovernorBucket stored,
-    Duration gap,
-    DateTime now,
-  ) {
-    var last = stored.lastRefillAt;
+  /// The end of the previous call: in memory for this isolate, and from the
+  /// bucket stamp for calls of other isolates. A time in the future (clock
+  /// moved back) counts as [now].
+  DateTime _lastActivity(_AccountState state, DateTime stamp, DateTime now) {
+    var last = stamp.isAfter(now) ? now : stamp;
     final own = state.lastCallEnd;
-    if (own != null && own.isAfter(last)) last = own;
-    final remaining = last.add(gap).difference(now);
-    return remaining.isNegative ? Duration.zero : remaining;
+    if (own != null && own.isAfter(last)) last = own.isAfter(now) ? now : own;
+    return last;
   }
 
+  static DateTime _later(DateTime a, DateTime b) => a.isAfter(b) ? a : b;
+
+  /// Applies a rate limit. Ignored while the account is already paused: a
+  /// limit that arrives then is the same event seen twice (for example a
+  /// failure fed back after the governor handled it), and counting it would
+  /// jump the multiplier to x4. No call runs during a pause, so a second real
+  /// limit cannot happen inside one.
   GovernorBucket _withBackoff(
+    int accountId,
     GovernorBucket bucket,
     RateLimited limited,
     DateTime now,
   ) {
+    final previous = bucket.backoffUntil;
+    if (previous != null && now.isBefore(previous)) return bucket;
     final hint = limited.retryAfter;
-    final pause = hint != null && hint > Duration.zero
+    var pause = hint != null && hint > Duration.zero
         ? hint
         : _config.defaultRetryAfter;
-    var until = now.add(pause);
-    final previous = bucket.backoffUntil;
-    if (previous != null && previous.isAfter(until)) until = previous;
+    if (pause > _config.maxPause) {
+      pause = _config.maxPause;
+      _logLine(accountId, null, Duration.zero, 'pause_capped');
+    }
     final isRepeat =
         previous != null &&
         bucket.backoffMultiplier > 1 &&
@@ -373,7 +496,7 @@ class RequestGovernor {
     return GovernorBucket(
       tokens: bucket.tokens,
       lastRefillAt: bucket.lastRefillAt,
-      backoffUntil: until,
+      backoffUntil: now.add(pause),
       backoffMultiplier: isRepeat
           ? _config.repeatMultiplier
           : _config.firstMultiplier,

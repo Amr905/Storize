@@ -27,6 +27,7 @@ final class GovernorConfig {
     this.leasePollInitial = const Duration(milliseconds: 250),
     this.leasePollMax = const Duration(seconds: 5),
     this.defaultRetryAfter = const Duration(minutes: 15),
+    this.maxPause = const Duration(hours: 24),
     this.firstMultiplier = 2,
     this.repeatMultiplier = 4,
     this.multiplierDuration = const Duration(hours: 2),
@@ -69,6 +70,10 @@ final class GovernorConfig {
 
   /// Pause used when a rate limit carries no usable `retryAfter` (15 min).
   final Duration defaultRetryAfter;
+
+  /// Longest pause a rate limit can cause, whatever `retryAfter` says
+  /// (default 24 h). Also bounds a stored pause after a clock jump.
+  final Duration maxPause;
 
   /// Interval multiplier after a rate limit (default 2).
   final double firstMultiplier;

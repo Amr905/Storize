@@ -108,7 +108,9 @@ void main() {
         expect(await g.remainingTokens(1), 0);
 
         var done = false;
-        final seventh = h.run(g, () async => 7).then((_) => done = true);
+        final seventh = g
+            .run(accountId: 1, cost: RequestCost.api, call: () async => 7)
+            .then((_) => done = true);
         await h.time.elapse(const Duration(seconds: 59));
         expect(done, isFalse);
         await h.time.elapse(const Duration(seconds: 1));
@@ -138,8 +140,8 @@ void main() {
       expect(await g.remainingTokens(1), 0);
 
       var done = false;
-      final third = h
-          .run(g, () async => 1, cost: RequestCost.pageLoad)
+      final third = g
+          .run(accountId: 1, cost: RequestCost.pageLoad, call: () async => 1)
           .then((_) => done = true);
       await h.time.elapse(const Duration(minutes: 2, seconds: 59));
       expect(done, isFalse);
@@ -450,22 +452,21 @@ void main() {
       expect((await h.repo.read(1))!.isHeldAt(h.now), isFalse);
     });
 
-    test('the lease is renewed while a call waits for tokens', () async {
+    test('the lease is not held while a call waits for tokens', () async {
       // 1 token per 10 minutes: the second call waits 10 minutes.
       final config = _config(callsPerHour: 6, burst: 1);
       final g = h.governor('ui', config: config);
       await h.run(g, () async => 1);
 
       var done = false;
-      final second = h.run(g, () async => 2).then((_) => done = true);
+      final second = g
+          .run(accountId: 1, cost: RequestCost.api, call: () async => 2)
+          .then((_) => done = true);
       await h.time.elapse(const Duration(minutes: 6));
-      final lease = (await h.repo.read(1))!;
-      expect(lease.isHeldAt(h.now), isTrue);
-      expect(
-        lease.expiresAt.isAfter(h.now.add(const Duration(minutes: 8))),
-        isTrue,
-      );
+      expect((await h.repo.read(1))!.isHeldAt(h.now), isFalse);
       expect(done, isFalse);
+      await h.time.elapse(const Duration(minutes: 5));
+      expect(done, isTrue);
       await second;
     });
 
@@ -518,7 +519,9 @@ void main() {
       }
       expect(await a.remainingTokens(1), 0);
       var done = false;
-      final next = h.run(a, () async => 1).then((_) => done = true);
+      final next = a
+          .run(accountId: 1, cost: RequestCost.api, call: () async => 1)
+          .then((_) => done = true);
       await h.time.elapse(const Duration(seconds: 59));
       expect(done, isFalse);
       await h.time.elapse(const Duration(seconds: 1));
@@ -680,13 +683,15 @@ void main() {
       expect(await g.effectiveIntervalMultiplier(1), 1);
     });
 
-    test('a repeat while still paused is a repeat (x4)', () async {
+    test('a limit reported while already paused is the same event', () async {
       final g = h.governor('ui');
       await limit(g, const Duration(minutes: 5));
-      await g.reportRateLimited(1, const RateLimited(Duration(minutes: 1)));
-      expect(await g.effectiveIntervalMultiplier(1), 4);
-      // The longer pause is kept.
-      expect(await g.pausedUntil(1), start.add(const Duration(minutes: 5)));
+      final until = start.add(const Duration(minutes: 5));
+      h.time.clock.advance(const Duration(minutes: 1));
+      await g.reportRateLimited(1, const RateLimited(Duration(minutes: 30)));
+      await g.reportRateLimited(1, const RateLimited(null));
+      expect(await g.effectiveIntervalMultiplier(1), 2, reason: 'not x4');
+      expect(await g.pausedUntil(1), until, reason: 'pause not extended');
     });
 
     test(
@@ -738,7 +743,9 @@ void main() {
       expect(await g.remainingTokens(1), 0);
 
       var done = false;
-      final third = h.run(g, () async => 1).then((_) => done = true);
+      final third = g
+          .run(accountId: 1, cost: RequestCost.api, call: () async => 1)
+          .then((_) => done = true);
       await h.time.elapse(const Duration(seconds: 29));
       expect(done, isFalse, reason: '120/h is one token per 30 s');
       await h.time.elapse(const Duration(seconds: 1));
@@ -776,6 +783,269 @@ void main() {
     });
   });
 
+  group('round 2: never lose a limit, clock skew, maxPause, fairness', () {
+    final start = DateTime.utc(2026);
+
+    test(
+      'QA-F1: a reported limit waits for a lease held > acquireTimeout',
+      () async {
+        final cfg = _config(acquireTimeout: _minute);
+        final a = h.governor('a', config: cfg);
+        final b = h.governor('b', config: cfg);
+        final hang = Completer<void>();
+        final aDone = a.run(
+          accountId: 1,
+          cost: RequestCost.api,
+          call: () => hang.future,
+        );
+        await h.time.pump();
+        Object? reportError;
+        var reported = false;
+        final report = b
+            .reportRateLimited(1, const RateLimited(null))
+            .then((_) => reported = true)
+            .then<void>((_) {}, onError: (Object e) => reportError = e);
+        await h.time.elapse(const Duration(minutes: 5));
+        expect(reportError, isNull, reason: 'no GovernorBusy after 1 min');
+        expect(reported, isFalse);
+        hang.complete();
+        await h.time.drive(Future.wait([aDone, report]));
+        expect(reported, isTrue);
+        expect(await a.isPaused(1), isTrue);
+      },
+    );
+
+    test('QA-F1: a takeover cannot mask the original error', () async {
+      final a = h.governor('a', config: _config(acquireTimeout: _minute));
+      final b = h.governor('b', config: _config(acquireTimeout: _hour));
+      final hangA = Completer<int>();
+      final hangB = Completer<int>();
+      Object? aError;
+      final aDone = a
+          .run(accountId: 1, cost: RequestCost.api, call: () => hangA.future)
+          .then<void>((_) {}, onError: (Object e) => aError = e);
+      await h.time.pump();
+      final bDone = b.run(
+        accountId: 1,
+        cost: RequestCost.api,
+        call: () => hangB.future,
+      );
+      // b takes over after the 10 minute ttl and keeps the lease.
+      await h.time.elapse(const Duration(minutes: 11));
+      hangA.completeError(StateError('original'));
+      await h.time.elapse(const Duration(minutes: 3));
+      expect(aError, isA<StateError>(), reason: 'not GovernorBusy');
+      expect((aError! as StateError).message, 'original');
+      hangB.complete(1);
+      await h.time.drive(bDone);
+      await h.time.drive(aDone);
+    });
+
+    test('QA-F1: a takeover cannot lose a thrown rate limit', () async {
+      final a = h.governor('a', config: _config(acquireTimeout: _minute));
+      final b = h.governor('b', config: _config(acquireTimeout: _hour));
+      final hangA = Completer<int>();
+      final hangB = Completer<int>();
+      Object? aError;
+      final aDone = a
+          .run(accountId: 1, cost: RequestCost.api, call: () => hangA.future)
+          .then<void>((_) {}, onError: (Object e) => aError = e);
+      await h.time.pump();
+      final bDone = b.run(
+        accountId: 1,
+        cost: RequestCost.api,
+        call: () => hangB.future,
+      );
+      await h.time.elapse(const Duration(minutes: 11));
+      hangA.completeError(const RateLimited(Duration(minutes: 7)));
+      await h.time.elapse(const Duration(minutes: 3));
+      expect(aError, isNull, reason: 'a keeps waiting to record the limit');
+      hangB.complete(1);
+      await h.time.drive(Future.wait([aDone, bDone]));
+      expect(aError, const RateLimited(Duration(minutes: 7)));
+      expect(await a.isPaused(1), isTrue);
+      expect(await b.effectiveIntervalMultiplier(1), 2);
+    });
+
+    test(
+      'QA-F2: a lastRefillAt in the future is repaired, not waited out',
+      () async {
+        final g = h.governor('ui');
+        final future = start.add(const Duration(hours: 5));
+        await h.repo.acquire(
+          accountId: 1,
+          holder: 'old',
+          ttl: _minute,
+          initialBucket: GovernorBucket(tokens: 3, lastRefillAt: future),
+        );
+        await h.repo.release(accountId: 1, holder: 'old');
+        expect(
+          await g.remainingTokens(1),
+          3,
+          reason: 'no refill from the future',
+        );
+        await h.run(g, () async => 1);
+        expect(h.now.difference(start), lessThan(const Duration(minutes: 1)));
+        expect(
+          (await h.repo.read(1))!.bucket.lastRefillAt.isAfter(h.now),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'QA-F2: a jitter reference in the future ends within one gap',
+      () async {
+        final g = h.governor('ui', config: const GovernorConfig());
+        await h.run(g, () async => 1);
+        h.time.clock.advance(const Duration(hours: -1));
+        final t0 = h.now;
+        await h.run(g, () async => 1);
+        expect(h.now.difference(t0), const Duration(milliseconds: 3750));
+      },
+    );
+
+    test('QA-F2: a stored pause beyond maxPause is cut to maxPause', () async {
+      final g = h.governor('ui');
+      final far = start.add(const Duration(days: 30));
+      await h.repo.acquire(
+        accountId: 1,
+        holder: 'old',
+        ttl: _minute,
+        initialBucket: GovernorBucket(
+          tokens: 6,
+          lastRefillAt: start,
+          backoffUntil: far,
+          backoffMultiplier: 2,
+        ),
+      );
+      await h.repo.release(accountId: 1, holder: 'old');
+      expect(await g.pausedUntil(1), start.add(const Duration(hours: 24)));
+      // A run refuses the call and stores the cut pause for good.
+      final error = await h.time.drive(
+        _errorOf(
+          g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
+        ),
+      );
+      expect(error, isA<GovernorPaused>());
+      h.time.clock.advance(_hour);
+      expect(await g.pausedUntil(1), start.add(const Duration(hours: 24)));
+      // And the multiplier window follows the cut pause (24 h + 2 h).
+      h.time.clock.set(start.add(const Duration(hours: 25, minutes: 59)));
+      expect(await g.effectiveIntervalMultiplier(1), 2);
+      h.time.clock.set(start.add(const Duration(hours: 26)));
+      expect(await g.effectiveIntervalMultiplier(1), 1);
+    });
+
+    test('QA-F3: retryAfter is capped by maxPause (default 24 h)', () async {
+      expect(const GovernorConfig().maxPause, const Duration(hours: 24));
+      final g = h.governor('ui');
+      await h.run<Object>(g, () async => const RateLimited(Duration(days: 30)));
+      expect(await g.pausedUntil(1), start.add(const Duration(hours: 24)));
+      expect(h.logs, contains(contains('outcome=pause_capped')));
+    });
+
+    test('QA-F3: maxPause is a config value', () async {
+      final g = h.governor('ui', config: _config(maxPause: _hour));
+      await h.run<Object>(g, () async => const RateLimited(Duration(hours: 3)));
+      expect(await g.pausedUntil(1), start.add(_hour));
+    });
+
+    test('QA-F4: the lease is free between the calls of a queue', () async {
+      final g = h.governor('ui', config: const GovernorConfig());
+      final leases = <bool>[];
+      final futures = [
+        for (var i = 0; i < 3; i++)
+          g.run(
+            accountId: 1,
+            cost: RequestCost.api,
+            call: () async {
+              leases.add((await h.repo.read(1))!.isHeldAt(h.now));
+              return i;
+            },
+          ),
+      ];
+      // The first call is done; the second waits out its jitter gap.
+      await h.time.pump();
+      expect((await h.repo.read(1))!.isHeldAt(h.now), isFalse);
+      await h.time.drive(Future.wait(futures));
+      expect(leases, [true, true, true]);
+    });
+
+    test('QA-F4: another isolate interleaves with a long queue', () async {
+      const config = GovernorConfig();
+      final a = h.governor('a', config: config);
+      final b = h.governor('b', config: config);
+      var aDone = 0;
+      final queue = [
+        for (var i = 0; i < 5; i++)
+          a.run(accountId: 1, cost: RequestCost.api, call: () async => aDone++),
+      ];
+      await h.time.pump();
+      final t0 = h.now;
+      int? aDoneWhenBRan;
+      DateTime? bRan;
+      final bDone = b.run(
+        accountId: 1,
+        cost: RequestCost.api,
+        call: () async {
+          bRan = h.now;
+          aDoneWhenBRan = aDone;
+          return 1;
+        },
+      );
+      await h.time.drive(bDone);
+      expect(
+        bRan!.difference(t0),
+        lessThanOrEqualTo(const Duration(seconds: 8)),
+      );
+      expect(aDoneWhenBRan, lessThan(5), reason: 'b did not wait for a');
+      await h.time.drive(Future.wait(queue));
+    });
+
+    test('QA-F6: a handled failure fed back as a report is ignored', () async {
+      final g = h.governor('ui');
+      await h.run(g, () async => const Err<int>(RateLimited(null)));
+      final error = await h.time.drive(
+        _errorOf(
+          g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
+        ),
+      );
+      expect(error, isA<GovernorPaused>());
+      // An adapter maps the refusal to a failure and reports it again.
+      await g.reportRateLimited(1, (error! as GovernorPaused).toFailure());
+      expect(await g.effectiveIntervalMultiplier(1), 2);
+      expect(await g.pausedUntil(1), start.add(const Duration(minutes: 15)));
+    });
+
+    test('QA-F5: a nested run for the same account is refused', () async {
+      final g = h.governor('ui');
+      Object? nested;
+      final result = await h.run(g, () async {
+        try {
+          await g.run(accountId: 1, cost: RequestCost.api, call: () async => 1);
+          // The governor reports misuse with a StateError; the test checks it.
+          // ignore: avoid_catching_errors
+        } on StateError catch (e) {
+          nested = e;
+        }
+        return 'outer done';
+      });
+      expect(result, 'outer done');
+      expect(nested, isA<StateError>());
+      expect(nested.toString(), contains('not re-entrant'));
+    });
+
+    test('QA-F5: a nested run for another account is allowed', () async {
+      final g = h.governor('ui');
+      final result = await h.run(g, () async {
+        return g.run(accountId: 2, cost: RequestCost.api, call: () async => 5);
+      });
+      expect(result, 5);
+      expect(await h.run(g, () async => 6), 6);
+    });
+  });
+
   group('logging', () {
     test('logs account, cost, wait and outcome, nothing else', () async {
       final g = h.governor('ui');
@@ -794,6 +1064,7 @@ GovernorConfig _config({
   int callsPerHour = 60,
   int burst = 6,
   Duration leaseTtl = const Duration(minutes: 10),
+  Duration maxPause = const Duration(hours: 24),
   Duration acquireTimeout = const Duration(minutes: 2),
   Duration jitterMin = Duration.zero,
   Duration jitterMax = Duration.zero,
@@ -801,6 +1072,7 @@ GovernorConfig _config({
   callsPerHour: callsPerHour,
   burst: burst,
   leaseTtl: leaseTtl,
+  maxPause: maxPause,
   acquireTimeout: acquireTimeout,
   jitterMin: jitterMin,
   jitterMax: jitterMax,
