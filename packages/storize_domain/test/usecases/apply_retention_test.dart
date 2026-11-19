@@ -186,29 +186,127 @@ void main() {
       expect(await exists(old), isFalse);
     });
 
-    test('content detected in the future (clock went back): skipped', () async {
-      final fut = await h.addContent(
+    test(
+      'F2: future-dated content is excluded and counted, the rest goes',
+      () async {
+        final fut = await h.addContent(
+          t,
+          remoteId: 'f',
+          postedAt: now.subtract(window * 2),
+          detectedAt: now.add(const Duration(days: 400)),
+        );
+        final r = await h.retention();
+        expect(r.skipped, isNull);
+        expect(r.skippedFutureDated, 1);
+        expect(await exists(fut), isTrue);
+        expect(await exists(old), isFalse);
+      },
+    );
+
+    test(
+      'F2: media downloaded in the future is excluded and counted',
+      () async {
+        final fut = await h.addContent(
+          t,
+          remoteId: 'f',
+          postedAt: now.subtract(window * 2),
+          downloadedAt: now.add(const Duration(minutes: 5)),
+        );
+        final r = await h.retention();
+        expect(r.skippedFutureDated, 1);
+        expect(await exists(fut), isTrue);
+        expect(await exists(old), isFalse);
+      },
+    );
+  });
+
+  group('F1: age is how long Storize has had the item', () {
+    test(
+      'posted long ago but detected and downloaded recently: kept',
+      () async {
+        final id = await h.addContent(
+          t,
+          remoteId: 'late',
+          kind: ContentKind.post,
+          postedAt: now.subtract(window * 2),
+          detectedAt: now,
+          downloadedAt: now,
+        );
+        final r = await h.retention();
+        expect(r.deletion!.deletedContentIds, isEmpty);
+        expect(await exists(id), isTrue);
+      },
+    );
+
+    test('detected long ago but one slide downloaded recently: kept', () async {
+      final id = await h.addContent(
         t,
-        remoteId: 'f',
+        remoteId: 'redl',
         postedAt: now.subtract(window * 2),
-        detectedAt: now.add(const Duration(days: 1)),
+        detectedAt: now.subtract(window * 2),
+        downloadedAt: now.subtract(const Duration(days: 1)),
       );
-      final r = await h.retention();
-      expect(r.skipped, RetentionSkip.clockSkew);
-      expect(await exists(fut), isTrue);
-      expect(await exists(old), isTrue);
+      await h.retention();
+      expect(await exists(id), isTrue);
     });
 
-    test('media downloaded in the future: skipped', () async {
-      await h.addContent(
-        t,
-        remoteId: 'f',
-        postedAt: now.subtract(window * 2),
-        downloadedAt: now.add(const Duration(minutes: 5)),
-      );
-      expect((await h.retention()).skipped, RetentionSkip.clockSkew);
-      expect(await exists(old), isTrue);
-    });
+    test(
+      'isRetentionEligible: boundaries and narrowing of olderThan',
+      () async {
+        final cutoff = now.subtract(window);
+        var seq = 0;
+        Future<ContentWithMedia> item({
+          required DateTime posted,
+          required DateTime detected,
+          DateTime? downloaded,
+        }) async {
+          final id = await h.addContent(
+            t,
+            remoteId: 'x${seq++}',
+            postedAt: posted,
+            detectedAt: detected,
+            downloadedAt: downloaded,
+          );
+          return (await h.content.getById(id))!;
+        }
+
+        const ms = Duration(milliseconds: 1);
+        final old = cutoff.subtract(ms);
+        expect(
+          isRetentionEligible(await item(posted: old, detected: old), cutoff),
+          isTrue,
+        );
+        expect(
+          isRetentionEligible(
+            await item(posted: cutoff, detected: cutoff, downloaded: cutoff),
+            cutoff,
+          ),
+          isFalse,
+        );
+        expect(
+          isRetentionEligible(
+            await item(posted: old, detected: old, downloaded: cutoff),
+            cutoff,
+          ),
+          isFalse,
+        );
+        expect(
+          isRetentionEligible(
+            await item(posted: old, detected: cutoff),
+            cutoff,
+          ),
+          isFalse,
+        );
+        // postedAt newer than the cutoff is never eligible.
+        expect(
+          isRetentionEligible(
+            await item(posted: cutoff, detected: old),
+            cutoff,
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 
   test('BR-4: expiry and remote removal never delete anything', () async {

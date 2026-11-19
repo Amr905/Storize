@@ -89,8 +89,8 @@ void main() {
   });
 
   group('retention age basis (finding F1)', () {
-    test('CHARACTERIZATION: item posted 10d ago but downloaded just now is '
-        'deleted at once with N=7 (age = postedAt)', () async {
+    test('F1 fixed: item posted 10d ago but downloaded just now is kept with '
+        'N=7 (age = how long Storize has had it)', () async {
       await h.settings.update((s) => s.copyWith(retentionDays: 7));
       final id = await h.addContent(
         t,
@@ -101,14 +101,15 @@ void main() {
         downloadedAt: now,
       );
       final r = await h.retention();
-      expect(r.deletion!.deletedContentIds, [id]);
-      expect(h.gallery.files, isEmpty);
+      expect(r.deletion!.deletedContentIds, isEmpty);
+      expect(await h.content.getById(id), isNotNull);
+      expect(h.gallery.files, hasLength(1));
     });
   });
 
   group('skew guard liveness (findings F2, F3)', () {
-    test('CHARACTERIZATION: one future-dated candidate blocks ALL other '
-        'expired items', () async {
+    test('F2 fixed: a stale future-dated candidate is excluded and counted, '
+        'other expired items are deleted', () async {
       await h.settings.update((s) => s.copyWith(retentionDays: 7));
       final fine = await h.addContent(
         t,
@@ -122,12 +123,14 @@ void main() {
         detectedAt: now.add(const Duration(days: 400)),
       );
       final r = await h.retention();
-      expect(r.skipped, RetentionSkip.clockSkew);
-      expect(await h.content.getById(fine), isNotNull);
-      // Still blocked a day later: nothing ever clears it until real time
-      // passes the stale detectedAt.
+      expect(r.skipped, isNull);
+      expect(r.skippedFutureDated, 1);
+      expect(await h.content.getById(fine), isNull);
+      // Still excluded a day later, and still not blocking anything.
       h.clock.advance(const Duration(days: 1));
-      expect((await h.retention()).skipped, RetentionSkip.clockSkew);
+      final again = await h.retention();
+      expect(again.skipped, isNull);
+      expect(again.skippedFutureDated, 1);
     });
 
     test('CHARACTERIZATION: all targets paused for >30 days disables '
@@ -247,8 +250,8 @@ void main() {
   });
 
   group('RemoveTarget races (finding F4)', () {
-    test('CHARACTERIZATION: content added while delete-media runs is '
-        'cascaded away and its gallery file is orphaned', () async {
+    test('F4 fixed: content added while delete-media runs is deleted too, '
+        'then the target goes', () async {
       final a = await h.addContent(t, remoteId: 'a');
       final hook = HookGallery(h.spy, () async {
         await h.addContent(t, remoteId: 'late-arrival');
@@ -265,8 +268,54 @@ void main() {
       final r = await rt(t.id, deleteMedia: true);
       expect(r.targetRemoved, isTrue);
       expect(await h.content.getById(a), isNull);
-      // The late file still sits in the gallery with no row owning it.
-      expect(h.gallery.files, hasLength(1));
+      expect(h.gallery.files, isEmpty);
+      expect(await h.targets.getById(t.id), isNull);
+    });
+
+    test('F4: a target that keeps receiving content stops after maxPasses '
+        'and is kept', () async {
+      await h.addContent(t, remoteId: 'a');
+      var n = 0;
+      late final HookGallery hook;
+      Future<void> arrive() async {
+        await h.addContent(t, remoteId: 'late-${n++}');
+        hook.onDelete = arrive;
+      }
+
+      hook = HookGallery(h.spy, arrive);
+      final rt = RemoveTarget(
+        targets: h.targets,
+        content: h.content,
+        deleteContent: DeleteContent(
+          content: h.content,
+          gallery: hook,
+          cache: h.cache,
+        ),
+      );
+      final r = await rt(t.id, deleteMedia: true);
+      expect(r.targetRemoved, isFalse);
+      expect(r.isComplete, isFalse);
+      expect(await h.targets.getById(t.id), isNotNull);
+      expect(n, RemoveTarget.maxPasses);
+      // A re-run once the stream of new content stops finishes the job.
+      hook.onDelete = null;
+      final again = await rt(t.id, deleteMedia: true);
+      expect(again.targetRemoved, isTrue);
+      expect(h.gallery.files, isEmpty);
+    });
+
+    test('F4: a failed item is not retried within one call', () async {
+      await h.addContent(t, remoteId: 'bad');
+      await h.addContent(t, remoteId: 'ok');
+      h.gallery.failNextDelete(const GalleryPermissionDenied());
+      final r = await h.removeTarget(t.id, deleteMedia: true);
+      expect(r.targetRemoved, isFalse);
+      expect(r.deletion!.failures, hasLength(1));
+      expect(
+        await h.content.getById(r.deletion!.failures.single.contentId),
+        isNotNull,
+      );
+      expect(r.deletion!.deletedContentIds, hasLength(1));
     });
 
     test('keep media: activity-less cascade removes rows, files stay, other '

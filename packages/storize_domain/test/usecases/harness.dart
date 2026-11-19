@@ -154,7 +154,9 @@ final class Harness {
       remoteId: remoteId,
       kind: kind,
       postedAt: postedAt,
-      detectedAt: detectedAt,
+      // Unless set, the item was detected when it was posted (it is as old
+      // for Storize as for Instagram).
+      detectedAt: detectedAt ?? postedAt,
       status: ContentStatus.done,
     );
     final c = expiresAt == null ? base : base.copyWith(expiresAt: expiresAt);
