@@ -252,3 +252,76 @@ Fields IG-1..IG-5 (`id, username, full_name, is_private, followed_by_viewer, blo
 
 ## Re-verify when fixed
 Un-skip QA-14/15 (and QA-20) in `sanitize_har_round4_qa_test.dart`, re-run the CLI on all `adv_*.har`, and add the two unknown-map shapes (`viewers` with `count`, `seen_by` with a user named `user`) to a fixture.
+
+---
+
+# Round 5 verification (commit c08a711)
+
+## Verdict: **PASS** (no blocker; one Low usefulness issue and two Low/Info residuals, listed below)
+
+QA-14 and QA-15 are closed. No username-shaped key survives unless it is exactly an allowlisted word or the user opted it in. All round 1-4 probes that were skipped for QA-14..QA-23 are un-skipped and pass (I re-checked that no assertion was weakened; the adversarial test edits only rename keys such as `a` to `text`, because arbitrary keys are now replaced by design).
+
+## 1. Strict key rule (tests in `test/tool/sanitize_har_round5_qa_test.dart`)
+
+| Probe | Result |
+|-------|--------|
+| snake_case username next to an allowlisted sibling (`pk`) | replaced (`key_N`) |
+| mixed value types, 4 of 5 keys allowlisted, one username | replaced |
+| dynamic map with exactly 2 keys (all objects) | replaced |
+| 2 keys, one allowlisted, same scalar type | username replaced |
+| exactly half allowlisted (2 of 4), same scalar type or all objects | usernames replaced (the rule does not rely on the dynamic-map test: the strict allowlist replaces them anyway) |
+| `viewers` with `count` (round-4 repro), `seen_by` with a user named `user` | usernames replaced |
+| usernames inside list elements; nested under a replaced key; ID lists under a username key | clean |
+| case variants (`Username`, `PK`, `User`) | replaced |
+| a key literally named `key_1` / `key_2` | replaced, no collision |
+| report.md | lists placeholders, counts, in-dynamic-map flag and placeholder paths; no original key appears |
+
+**Residual (Low, accepted):** a username that is itself an allowlisted word survives as a key when the map is not detected as dynamic. For example two accounts named `user` and `owner` (2 of 2 keys allowlisted) or a one-key map `{"text": {...}}`. Only that exact word leaks, never an arbitrary username, and a one-key map cannot be told apart from a schema object. The allowlist has about 200 short words (`user`, `id`, `in`, `edit`, `data`, `code`, `seen`, `kind`, `url`, `text`, `count`, ...). A real account called `in` or `code` is possible, so a handful of public-word handles could be recorded. I rate this Low: the word is generic, and the exposure requires the unknown map to contain only allowlisted words.
+
+**QA-24 (Low, usefulness):** the dynamic-map rule also fires on all-bool (or all-string) objects where most keys are not allowlisted, replacing schema keys. Example: `{is_private, is_verified, is_new_to_instagram, is_embeds_disabled, is_joined_recently}` (all bool, 1 of 5 allowlisted) loses `is_private`. §4.1 fields sit in mixed-type objects, so the survival test still passes. Mitigation: `--keep-key` (counted as allowlisted in the half test), or raise the key set. Skipped test documents it.
+
+## 2. Host residual
+`host` is copied verbatim for any `instagram.com` or `*.instagram.com` host. Instagram does **not** use username subdomains (profiles live at `instagram.com/<user>`; hosts seen in practice are `www`, `i`, `graph`, `edge-chat`, `z-p*.www`, `l`). CDN hosts (`cdninstagram.com`, `fbcdn.net`) are not copied at all (they are not instagram.com). Userinfo and port are dropped. Non-Instagram hosts are dropped. A crafted `<name>.instagram.com` does leak the label (**QA-25**, Low/Info; a signature-like label is blocked by the final scan, a word-shaped label is not). Recommendation: cheap and worthwhile before the real capture, because it removes the last copied-verbatim network string: keep the labels `www`, `i`, `graph`, `l`, `edge-chat`, `b`, and replace other labels with `<label>`. Not a blocker.
+
+## 3. Opt-in path
+- Invalid `--keep-key` (cookie assignment, spaces, email, dot, leading digit, URL, 61 chars, mixed-case 32-char token, 32-char hex): exit 2, nothing written, the value is never echoed (only `line N` for files). The invalid line in a `--keep-keys` file is reported as `line 3` without content.
+- A plain username-shaped entry (`zzfake_nour`) is **accepted by design** (shape is valid, the leak scan cannot know it is a name). It then keeps that exact key in the body, and its name also appears in the report.md "Seen at" paths. CLI stdout and stderr do not echo it. The guidance in `keep_keys.txt` and CAPTURE_GUIDE is the only protection. Severity: user error, Low.
+- An opted-in secret key name (`sessionid`) stays redacted; `fbsr_*` and `key_N` names stay replaced; opt-in does not widen value rules (values still `<str:N>`).
+- Shipped `tool/keep_keys.txt` has zero entries (tested).
+
+## 4. Usefulness
+- The §4.1 survival tests on `synthetic.har` and my IG-1..IG-5 field set still pass (all listed fields present; `audience` and `product_type` values survive).
+- Failure-map values kept: `login_required`, `checkpoint_required`, `feedback_required`, `challenge_required`, `consent_required`, `rate_limited` under `message` and `error_type`; `status` `ok`/`fail`; `require_login` and `spam` booleans.
+- **QA-26 (Low), missing known values** that Instagram returns in practice and that the failure map may need: `user_has_logged_out`, `sentry_block`, `rate_limit_error`, `unauthorized`, `Not authorized to view user`, `Invalid parameters`, and the 429 text variants. They show as `<str:N>`; the length still helps, and the status code carries the main signal. Also not allowlisted keys the failure map references: `checkpoint_url`, `challenge`, `lock`, `error_title`, `error_body`, `feedback_*`, `logout_reason`, and `profile_pic_url_hd`. They become `key_N` and can be opted in through `keep_keys.txt` after the first capture.
+- Numbers: ints of 10 or more digits are now mapped to placeholders unless the key is time-like; no §4.1 field is affected.
+
+## 5. Re-run
+- CLI on 10 `adv_*.har` plus `synthetic.har`: exit 0 on all 11; marker grep over all outputs: none. synthetic report: `object keys replaced with key_N: 2 (2 distinct)`, `keep-list entries used: 0 of 0`.
+- gitleaks `dir .`: no leaks found. gitleaks `git .`: no leaks found.
+- `dart format --output=none --set-exit-if-changed .`: 315 files, 0 changed.
+- `flutter analyze`: No issues found.
+- `melos run test`:
+  - storize_data `+1423 ~4`
+  - storize_app `+471 ~1`
+  - storize_domain `+210`
+  - storize_model `+73`
+  - storize_platform_android `+69`
+  - storize_instagram `+325 ~8` (all pass; the 8 skipped are my documented residual probes QA-24, QA-25, QA-26 x6, and my round 5 file counts `+41 ~8`)
+- CI for c08a711: run 44612974327, completed, conclusion **success**.
+- Guardrails: no real values in tests (FAKE names only), no Instagram imports in domain/model, governor untouched.
+
+## Tests added
+`packages/storize_instagram/test/tool/sanitize_har_round5_qa_test.dart`: 41 active, 8 skipped (QA-24, QA-25, QA-26 x6). I confirmed each skipped probe fails when un-skipped.
+
+## Findings (round 5)
+
+| ID | Severity | Problem |
+|----|----------|---------|
+| (none) | Blocker/High/Medium | QA-14, QA-15, QA-20 and QA-16..QA-23 are verified fixed |
+| QA-25 | Low/Info | Instagram host labels copied verbatim; recommend a label allowlist (`www`, `i`, `graph`, `l`, `edge-chat`, `b`) |
+| QA-24 | Low | Dynamic-map rule can strip schema keys from bool/string-only objects with a minority of allowlisted keys |
+| QA-26 | Low | A few real failure messages and keys are not in the known sets |
+| residual | Low | A username equal to an allowlisted word survives in a non-dynamic map |
+| residual | Low | A username-shaped `--keep-key` is accepted (user responsibility) |
+
+Recommended before the real capture: apply the QA-25 label allowlist, and capture once with an empty keep list, review report.md placeholders, then opt in the legitimate field names. Nothing here blocks T-002 prep.
