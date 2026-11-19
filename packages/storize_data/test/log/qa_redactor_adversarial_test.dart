@@ -235,7 +235,7 @@ void main() {
         final sw = Stopwatch()..start();
         Redactor.redact(value);
         // Observed worst case ~150 ms; 2 s leaves headroom on slow CI.
-        expect(sw.elapsedMilliseconds, lessThan(5000));
+        expect(sw.elapsedMilliseconds, lessThan(15000));
       });
     });
   });

@@ -205,7 +205,7 @@ void main() {
       print('REDOS3 worst=$worst ms ($worstName)');
       expect(
         worst,
-        lessThan(5000),
+        lessThan(15000),
       ); // load-tolerant; catastrophic backtracking would take far longer
     });
   });

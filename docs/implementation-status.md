@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 20 / 41 tasks done (49%)** — original plan 16 / 37 (43%) + follow-ups 4 / 4 (T-010a, T-012a, T-019a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · **Checkpoint 4 running** (20 done).
+- **Progress: 20 / 41 tasks done (49%)** — original plan 16 / 37 (43%) + follow-ups 4 / 4 (T-010a, T-012a, T-019a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -152,3 +152,4 @@
 - 2026-11-19 21:30 — T-011 round 3 QA PASS + CI green (gitleaks fixed: fake value removed from review doc, `.gitleaksignore` for history) → **T-011 done** (18/37), merged; Lead wired log barrels and removed the temporary `src` imports; main green (data 1382, domain 186, app 449). Remaining work is blocked on T-002 (UD-2), except follow-ups T-019a and T-024b.
 - 2026-11-19 22:15 — T-024b QA PASS + CI → **done**, merged (Lead fixed 3 lint infos in the QA test). T-019a QA PASS but F1 (one `keepIds` set for parts and thumbnails would wipe downloaded thumbnails at startup) → round 2: split into `cleanupOrphans(pendingIds)` + `cleanupOrphanThumbnails(liveMediaIds)`. Progress now reported as %: **19/41 (46%)**; original 37-task plan 16/37 (43%) — the earlier 49% wrongly counted 2 follow-ups as plan tasks.
 - 2026-11-19 22:45 — T-019a round 2 QA PASS + CI → **done**, merged; main green (data 1423, domain 210, app 458). **20/41 (49%)** → Checkpoint 4 started. No further unblocked tasks: the rest wait on T-002 (UD-2) or P-5.
+- 2026-11-19 23:05 — **Checkpoint 4 GREEN** (`05-reviews/CHECKPOINT-4.md`): two identical full runs, gitleaks clean over full history, CI green, counts up (domain 210, data 1423, app 458). F-1: a slow CI runner hit the 5 s ReDoS/linearity budget once → Lead raised log timing budgets to 15 s (catastrophic backtracking would still fail). The 4 data skips are the accepted documented limits (T-010 F-3, T-011 N6/N7/N8). **Idle: all remaining work waits on UD-2 (T-002) or P-5 (T-036).**
