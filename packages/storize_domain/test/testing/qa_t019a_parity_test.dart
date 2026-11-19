@@ -27,15 +27,31 @@ void main() {
     expect(cache.thumbnailBytes(2), [2]);
   });
 
-  test('cleanupOrphans counts parts plus thumbnails, keeps keepIds', () async {
-    await cache.append(1, Stream.value([1]));
+  test(
+    'cleanupOrphans removes parts only and leaves thumbnails alone',
+    () async {
+      await cache.append(1, Stream.value([1]));
+      await cache.writeThumbnail(1, [1]);
+      await cache.append(2, Stream.value([1]));
+      await cache.writeThumbnail(2, [1]);
+      await cache.writeThumbnail(3, [1]);
+      expect(await cache.cleanupOrphans({2}), 1);
+      expect(await cache.cleanupOrphans({2}), 0);
+      expect(cache.thumbnailBytes(1), isNotNull, reason: 'thumb of 1 survives');
+      expect(cache.thumbnailBytes(3), isNotNull, reason: 'thumb of 3 survives');
+      expect(await cache.partialLength(2), 1);
+    },
+  );
+
+  test('cleanupOrphanThumbnails keeps every live media id (F1)', () async {
+    // Item 1 is downloaded (no part), item 2 is pending (part and thumb).
     await cache.writeThumbnail(1, [1]);
     await cache.append(2, Stream.value([1]));
     await cache.writeThumbnail(2, [1]);
     await cache.writeThumbnail(3, [1]);
-    expect(await cache.cleanupOrphans({2}), 3);
-    expect(await cache.cleanupOrphans({2}), 0);
+    expect(await cache.cleanupOrphanThumbnails({1, 2}), 1);
+    expect(cache.thumbnailBytes(1), isNotNull);
     expect(cache.thumbnailBytes(2), isNotNull);
-    expect(await cache.partialLength(2), 1);
+    expect(cache.thumbnailBytes(3), isNull);
   });
 }

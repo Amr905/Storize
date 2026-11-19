@@ -98,13 +98,7 @@ final class FileMediaCache implements MediaCache {
   }
 
   @override
-  Future<int> cleanupOrphans(Set<int> keepIds) async {
-    final parts = await _cleanupParts(keepIds);
-    final thumbs = await _cleanupThumbnails(keepIds);
-    return parts + thumbs;
-  }
-
-  Future<int> _cleanupParts(Set<int> keepIds) async {
+  Future<int> cleanupOrphans(Set<int> pendingIds) async {
     final dir = await _partDir();
     if (!dir.existsSync()) return 0;
     var removed = 0;
@@ -115,7 +109,7 @@ final class FileMediaCache implements MediaCache {
       final id = int.tryParse(
         name.substring(0, name.length - _partSuffix.length),
       );
-      if (id != null && keepIds.contains(id)) continue;
+      if (id != null && pendingIds.contains(id)) continue;
       try {
         await entity.delete();
         removed++;
@@ -126,16 +120,17 @@ final class FileMediaCache implements MediaCache {
     return removed;
   }
 
-  /// Deletes `<id>.webp` regular files whose ID is not in [keepIds]. Other
-  /// names, links and directories are left alone.
-  Future<int> _cleanupThumbnails(Set<int> keepIds) async {
+  @override
+  Future<int> cleanupOrphanThumbnails(Set<int> liveMediaIds) async {
     final dir = await _thumbDir();
     if (!dir.existsSync()) return 0;
     var removed = 0;
     await for (final entity in dir.list(followLinks: false)) {
       if (entity is! File) continue;
-      final id = _thumbnailIdOf(entity.uri.pathSegments.last);
-      if (id == null || keepIds.contains(id)) continue;
+      final name = entity.uri.pathSegments.last;
+      final id =
+          _idOf(name, _thumbSuffix) ?? _idOf(name, '$_thumbSuffix$_tempSuffix');
+      if (id == null || liveMediaIds.contains(id)) continue;
       try {
         await entity.delete();
         removed++;
@@ -182,11 +177,12 @@ final class FileMediaCache implements MediaCache {
     }
   }
 
-  /// The media file ID of a thumbnail named `<id>.webp`, or null for any other
-  /// name. The name must round-trip, so `+1.webp` and `01.webp` do not match.
-  static int? _thumbnailIdOf(String name) {
-    if (!name.endsWith(_thumbSuffix)) return null;
-    final stem = name.substring(0, name.length - _thumbSuffix.length);
+  /// The media file ID in a file name of the form `<id><suffix>`, or null when
+  /// [name] has another form. The ID must round-trip, so `+1.webp`, `01.webp`
+  /// and `1.5.webp` do not match.
+  static int? _idOf(String name, String suffix) {
+    if (!name.endsWith(suffix)) return null;
+    final stem = name.substring(0, name.length - suffix.length);
     final id = int.tryParse(stem);
     return id != null && '$id' == stem ? id : null;
   }

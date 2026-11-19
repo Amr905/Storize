@@ -118,25 +118,42 @@ void mediaCacheContract(String label, Future<CacheHarness> Function() create) {
       expect(await cache.cleanupOrphans(<int>{}), 0);
     });
 
+    test('cleanupOrphans leaves thumbs untouched', () async {
+      await cache.writeThumbnail(7, [1, 2, 3]);
+      await cache.append(8, Stream.value([1]));
+      expect(await cache.cleanupOrphans(<int>{}), 1);
+      expect(await h.thumbBytes(7), [1, 2, 3]);
+      expect(await cache.partialLength(8), 0);
+    });
+
+    test('cleanupOrphanThumbnails works with nothing stored', () async {
+      expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
+    });
+
     test(
-      'cleanupOrphans removes thumbs not in keepIds and counts them with parts',
+      'cleanupOrphanThumbnails removes thumbs not live, counts them',
       () async {
-        await cache.writeThumbnail(7, [1, 2, 3]);
-        await cache.append(8, Stream.value([1]));
-        expect(await cache.cleanupOrphans(<int>{}), 2);
-        expect(await h.thumbBytes(7), isNull);
-        expect(await cache.partialLength(8), 0);
+        await cache.writeThumbnail(1, [1]);
+        await cache.writeThumbnail(2, [2]);
+        await cache.append(3, Stream.value([3]));
+        expect(await cache.cleanupOrphanThumbnails({2}), 1);
+        expect(await h.thumbBytes(1), isNull);
+        expect(await h.thumbBytes(2), [2]);
+        expect(await cache.partialLength(3), 1);
+        expect(await cache.cleanupOrphanThumbnails({2}), 0);
       },
     );
 
-    test('cleanupOrphans keeps thumbs whose id is in keepIds', () async {
-      await cache.writeThumbnail(1, [1]);
-      await cache.writeThumbnail(2, [2]);
-      expect(await cache.cleanupOrphans({2}), 1);
-      expect(await h.thumbBytes(1), isNull);
-      expect(await h.thumbBytes(2), [2]);
-      expect(await cache.cleanupOrphans({2}), 0);
-    });
+    test(
+      'a parts-only sweep keeps the thumb of a downloaded item (F1)',
+      () async {
+        await cache.writeThumbnail(1, [1]);
+        await cache.append(2, Stream.value([1]));
+        await cache.writeThumbnail(2, [1]);
+        expect(await cache.cleanupOrphans({2}), 0);
+        expect(await h.thumbBytes(1), [1]);
+      },
+    );
 
     test('writeThumbnail stores and replaces', () async {
       final path = await cache.writeThumbnail(4, [1, 2]);

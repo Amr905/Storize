@@ -198,7 +198,7 @@ final class DeleteContent {
     try {
       await _cache.deleteThumbnail(mediaFileId);
     } on Object {
-      // Best effort: an orphan thumbnail is removed by cleanupOrphans.
+      // Best effort: an orphan thumbnail is removed by cleanupOrphanThumbnails.
     }
   }
 }

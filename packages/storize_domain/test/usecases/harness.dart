@@ -53,7 +53,12 @@ final class ThrowingCache implements MediaCache {
       inner.append(mediaFileId, bytes);
 
   @override
-  Future<int> cleanupOrphans(Set<int> keepIds) => inner.cleanupOrphans(keepIds);
+  Future<int> cleanupOrphans(Set<int> pendingIds) =>
+      inner.cleanupOrphans(pendingIds);
+
+  @override
+  Future<int> cleanupOrphanThumbnails(Set<int> liveMediaIds) =>
+      inner.cleanupOrphanThumbnails(liveMediaIds);
 
   @override
   Future<String> completedPath(int mediaFileId) =>
@@ -105,7 +110,12 @@ final class SpyThumbCache implements MediaCache {
       inner.append(mediaFileId, bytes);
 
   @override
-  Future<int> cleanupOrphans(Set<int> keepIds) => inner.cleanupOrphans(keepIds);
+  Future<int> cleanupOrphans(Set<int> pendingIds) =>
+      inner.cleanupOrphans(pendingIds);
+
+  @override
+  Future<int> cleanupOrphanThumbnails(Set<int> liveMediaIds) =>
+      inner.cleanupOrphanThumbnails(liveMediaIds);
 
   @override
   Future<String> completedPath(int mediaFileId) =>

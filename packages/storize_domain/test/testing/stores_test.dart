@@ -358,15 +358,27 @@ void main() {
       expect(cache.thumbnailBytes(6), isNull);
     });
 
-    test('cleanupOrphans also removes thumbnails not in keepIds', () async {
+    test('cleanupOrphans removes parts only, never thumbnails', () async {
       await cache.writeThumbnail(1, [1]);
-      await cache.writeThumbnail(2, [2]);
       await cache.append(3, Stream.value([3]));
 
-      expect(await cache.cleanupOrphans({2}), 2);
-      expect(cache.thumbnailBytes(1), isNull);
-      expect(cache.thumbnailBytes(2), [2]);
+      expect(await cache.cleanupOrphans({}), 1);
+      expect(cache.thumbnailBytes(1), [1]);
       expect(cache.partIds, isEmpty);
     });
+
+    test(
+      'cleanupOrphanThumbnails removes thumbnails not live, keeps live',
+      () async {
+        await cache.writeThumbnail(1, [1]);
+        await cache.writeThumbnail(2, [2]);
+        await cache.append(3, Stream.value([3]));
+
+        expect(await cache.cleanupOrphanThumbnails({2}), 1);
+        expect(cache.thumbnailBytes(1), isNull);
+        expect(cache.thumbnailBytes(2), [2]);
+        expect(cache.partIds, {3}, reason: 'parts are not swept here');
+      },
+    );
   });
 }
