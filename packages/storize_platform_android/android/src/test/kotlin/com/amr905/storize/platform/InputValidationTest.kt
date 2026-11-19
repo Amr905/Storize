@@ -1,5 +1,6 @@
 package com.amr905.storize.platform
 
+import kotlin.io.path.createTempDirectory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
@@ -78,7 +79,7 @@ class InputValidationTest {
 
     @Test
     fun insideCheckRejectsEscapes() {
-        val root = createTempDir("storize")
+        val root = createTempDirectory("storize").toFile()
         try {
             assertTrue(FileNames.isInside(root, java.io.File(root, "a/b.jpg")))
             assertFalse(FileNames.isInside(root, java.io.File(root, "../x.jpg")))
@@ -150,7 +151,7 @@ class InputValidationTest {
 
     @Test
     fun isInsideSiblingPrefixAndSymlink() {
-        val parent = createTempDir("p")
+        val parent = createTempDirectory("p").toFile()
         try {
             val root = java.io.File(parent, "Storize").apply { mkdirs() }
             assertFalse(FileNames.isInside(root, java.io.File(parent, "StorizeEvil/x.jpg")))
@@ -189,7 +190,7 @@ class InputValidationTest {
 
     @Test
     fun dataPathPolicyIsCanonicalAndSiblingSafe() {
-        val parent = createTempDir("storage")
+        val parent = createTempDirectory("storage").toFile()
         try {
             val pictures = java.io.File(parent, "Pictures/Storize").apply { mkdirs() }
             val movies = java.io.File(parent, "Movies/Storize").apply { mkdirs() }
@@ -209,7 +210,7 @@ class InputValidationTest {
 
     @Test
     fun thumbnailPathPolicyAllowsStorizeAndCacheOnly() {
-        val parent = createTempDir("t")
+        val parent = createTempDirectory("t").toFile()
         try {
             val storize = java.io.File(parent, "Pictures/Storize").apply { mkdirs() }
             val cache = java.io.File(parent, "cache").apply { mkdirs() }
