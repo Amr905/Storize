@@ -314,6 +314,26 @@ void runContentRepoContract(RepoHarness Function() create) {
       expect((await repo.getById(id))!.content, changed);
     });
 
+    test("updateContent onto another row's (target, kind, remoteId) is a "
+        'DuplicateEntityException and changes nothing', () async {
+      final a = await add(aContent(t1, remoteId: 'a'));
+      await add(aContent(t1, remoteId: 'b'));
+      final clash = Content(
+        id: a,
+        targetId: t1,
+        kind: ContentKind.story,
+        remoteId: 'b',
+        postedAt: t0,
+        slideCount: 1,
+        detectedAt: t0,
+      );
+      await expectLater(
+        repo.updateContent(clash),
+        throwsA(isA<DuplicateEntityException>()),
+      );
+      expect((await repo.getById(a))!.content.remoteId, 'a');
+    });
+
     test('updateContent of an unknown id is a StateError', () async {
       await expectLater(
         repo.updateContent(aContent(t1).copyWith(id: 4321)),
@@ -418,6 +438,16 @@ void runContentRepoContract(RepoHarness Function() create) {
 
       w.mark();
       await repo.deleteByIds([id]);
+      await w.until((l) => l.isEmpty);
+    });
+
+    test('re-emits when a target delete cascades', () async {
+      await add(aContent(t1));
+      final w = Watch(repo.watchLibrary(ContentFilter()));
+      addTearDown(w.cancel);
+      await w.until((l) => l.length == 1);
+      w.mark();
+      await h.targets.delete(t1);
       await w.until((l) => l.isEmpty);
     });
 

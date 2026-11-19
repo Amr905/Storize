@@ -60,34 +60,6 @@ void _differences(RepoHarness Function() create, {required bool isDrift}) {
     expect(event.single.targetId, isDrift ? isNull : target.id);
   });
 
-  // 3. Updating a target onto another target's (platform, remoteUserId): drift
-  // maps the UNIQUE violation; the fake does not check on update.
-  test('target update onto a taken key', () async {
-    await h.targets.insert(aTarget());
-    final other = await h.targets.insert(
-      aTarget(remoteUserId: 'u-2', username: 'b'),
-    );
-    final clash = Target(
-      id: other.id,
-      platform: PlatformId.instagram,
-      remoteUserId: 'u-1',
-      username: 'b',
-      category: TargetCategory.public,
-      postsWatermarkAt: t0,
-      addedAt: t0,
-    );
-    if (isDrift) {
-      await expectLater(
-        h.targets.update(clash),
-        throwsA(isA<DuplicateEntityException>()),
-      );
-      expect((await h.targets.getById(other.id))!.remoteUserId, 'u-2');
-    } else {
-      await h.targets.update(clash);
-      expect((await h.targets.getById(other.id))!.remoteUserId, 'u-1');
-    }
-  });
-
   // 4. Time precision: drift stores epoch milliseconds in UTC. The fake keeps
   // the DateTime object it was given (microseconds, local zone).
   test('dates: sub-millisecond precision and non-UTC input', () async {
@@ -167,28 +139,6 @@ void _differences(RepoHarness Function() create, {required bool isDrift}) {
       expect(emissionsAfterInitial, lessThan(6));
     } else {
       expect(emissionsAfterInitial, 6);
-    }
-  });
-
-  // 8. Library stream after a target delete. drift re-emits (the cascade
-  // changes `content`); FakeContentRepo deletes the rows on a target delete
-  // but does not notify its own watchers, so an open library stream goes
-  // stale. A fake gap to report to the Lead (fake files are not in this
-  // task's lock).
-  test('library stream after the cascade of a target delete', () async {
-    final target = await h.targets.insert(aTarget());
-    await h.content.insertIfNew(aContent(target.id), [aMedia()]);
-    final w = Watch(h.content.watchLibrary(ContentFilter()));
-    addTearDown(w.cancel);
-    await w.until((l) => l.length == 1);
-    w.mark();
-    await h.targets.delete(target.id);
-    if (isDrift) {
-      await w.until((l) => l.isEmpty);
-    } else {
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(w.values.skip(1), isEmpty, reason: 'fake does not re-emit');
-      expect(await h.content.listByTarget(target.id), isEmpty);
     }
   });
 }

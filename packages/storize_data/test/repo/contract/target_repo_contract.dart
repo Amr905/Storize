@@ -94,6 +94,30 @@ void runTargetRepoContract(RepoHarness Function() create) {
       },
     );
 
+    test("update onto another target's (platform, remoteUserId) is a "
+        'DuplicateEntityException and changes nothing', () async {
+      await repo.insert(aTarget());
+      final other = await repo.insert(
+        aTarget(remoteUserId: 'u-2', username: 'b'),
+      );
+      final clash = Target(
+        id: other.id,
+        platform: PlatformId.instagram,
+        remoteUserId: 'u-1',
+        username: 'b',
+        category: TargetCategory.public,
+        postsWatermarkAt: t0,
+        addedAt: t0,
+      );
+      await expectLater(
+        repo.update(clash),
+        throwsA(isA<DuplicateEntityException>()),
+      );
+      expect((await repo.getById(other.id))!.remoteUserId, 'u-2');
+      // Updating a row to its own key is fine.
+      await repo.update(other.copyWith(username: 'renamed'));
+    });
+
     test('update of an unknown id is a StateError', () async {
       await expectLater(
         repo.update(aTarget(id: 777)),

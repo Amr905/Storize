@@ -68,6 +68,18 @@ final class FakeTargetRepo implements TargetRepo {
     if (!_rows.containsKey(target.id)) {
       throw StateError('No target with id ${target.id}');
     }
+    final clash = _rows.values.any(
+      (t) =>
+          t.id != target.id &&
+          t.platform == target.platform &&
+          t.remoteUserId == target.remoteUserId,
+    );
+    if (clash) {
+      throw const DuplicateEntityException(
+        'target',
+        '(platform, remote_user_id)',
+      );
+    }
     _rows[target.id] = target;
     _feed.notify();
   }
