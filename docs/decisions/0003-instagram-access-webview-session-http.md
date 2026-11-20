@@ -33,3 +33,9 @@ Option 3:
 - Two extractors share one mapper and one RequestGovernor.
 - Fixtures must be sanitized because the repo is public.
 - The ban risk remains (R-1). Page mode generates more traffic, so it's rate-limited by the same governor.
+
+## Addendum (2026-11-20, after T-002 / T-013 / T-014)
+- **The web app uses GraphQL, not the planned REST calls.** IG-1…IG-5 were not observed in the T-002 capture. Direct mode defaults to the observed GraphQL queries (`doc_id` and page tokens discovered at runtime, never hard-coded); a REST transport is used only where the T-013 live probe proves it (`restProven=true`).
+- **Viewing a story through the web page marks it seen** (`PolarisStoriesV3SeenMutation`). Decision UD-3 (Lead default, reversible by the user): page mode **always blocks** this mutation in the injected hook, for every request shape; configuration can add names to the block list but never remove it. A captured reply to a blocked name is treated as a block failure (`seen_block_leak`) and trips a breaker. Page mode never interacts with the story viewer UI.
+- **Fail closed without document-start injection.** If the WebView cannot inject the hook at document start, page mode refuses to load (`page_hook_unsupported`) rather than race the page.
+- **WebView lease.** Page mode wipes the app-wide WebView cookie jar after each run, so it must never run while the S-02 login WebView is open. A cross-isolate `WebViewLease` (T-015) is held by S-02 for its lifetime; page mode only `tryAcquire`s it and returns `webview_busy` otherwise.
