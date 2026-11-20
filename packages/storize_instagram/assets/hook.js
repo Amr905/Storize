@@ -334,8 +334,28 @@
   }
 
   // -------------------------------------------------------------------- XHR
+  // The own properties answerLocally() puts on an XHR to fake a finished
+  // request. open() deletes them (R2-F1): a page may reuse the same XHR for a
+  // later, real request, and an own property would shadow the prototype
+  // accessors, so the page (and report()) would keep reading the fake reply.
+  var FAKE_XHR_KEYS = [
+    'readyState',
+    'status',
+    'statusText',
+    'response',
+    'responseText',
+    'responseURL',
+    'getAllResponseHeaders',
+    'getResponseHeader',
+  ];
   var origOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url) {
+    try {
+      for (var i = 0; i < FAKE_XHR_KEYS.length; i++) {
+        var key = FAKE_XHR_KEYS[i];
+        if (Object.prototype.hasOwnProperty.call(this, key)) delete this[key];
+      }
+    } catch (e) {}
     try {
       this.__storizeUrl = String(url);
       this.__storizeHeaders = [];
@@ -381,6 +401,7 @@
   function answerLocally(xhr, url) {
     var type = xhr.responseType;
     var fields = {
+      // Keep in step with FAKE_XHR_KEYS.
       readyState: 4,
       status: 200,
       statusText: 'OK',

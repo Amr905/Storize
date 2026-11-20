@@ -395,9 +395,8 @@ void main() {
       });
     }
 
-    test('NOTE: another bad character (non-ASCII in a cookie) is not caught '
-        'early; the platform refuses it and the result is NetworkFailure '
-        'with no text', () async {
+    test('N1 (fixed in T-015): non-ASCII in a cookie is caught early: '
+        'SessionInvalid, nothing sent, nothing logged', () async {
       final rig = Rig(
         responder: (_) => throw const TransportException('socket'),
         withSession: false,
@@ -415,7 +414,12 @@ void main() {
         ),
       );
       final r = await rig.run(rig.extractor.verifySession());
-      expect(r.failureOrNull, const NetworkFailure());
+      expect(
+        r.failureOrNull,
+        const SessionInvalid(SessionReason.loginRequired),
+      );
+      expect(rig.http.requests, isEmpty);
+      expect('${r.failureOrNull}${rig.allLogs}', isNot(contains('ZZFAKE')));
     });
   });
 

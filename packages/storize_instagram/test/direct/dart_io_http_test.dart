@@ -42,6 +42,16 @@ void main() {
               ..statusCode = 429
               ..headers.set('retry-after', '45')
               ..write('{"message":"x"}');
+          case '/limited-huge':
+            req.response
+              ..statusCode = 429
+              ..headers.set('retry-after', '18446744073769')
+              ..write('{"message":"x"}');
+          case '/limited-negative':
+            req.response
+              ..statusCode = 429
+              ..headers.set('retry-after', '-5')
+              ..write('{"message":"x"}');
           case '/redirect':
             req.response
               ..statusCode = 302
@@ -108,6 +118,16 @@ void main() {
     final reply = await DartIoHttp().send(get('/limited'));
     expect(reply.status, 429);
     expect(reply.retryAfter, const Duration(seconds: 45));
+  });
+
+  test('N4: a Retry-After of about 2^64 microseconds does not wrap', () async {
+    // Duration(seconds: 18446744073769) wraps to under a minute.
+    final reply = await DartIoHttp().send(get('/limited-huge'));
+    expect(reply.retryAfter, const Duration(hours: 24));
+    expect(
+      (await DartIoHttp().send(get('/limited-negative'))).retryAfter,
+      isNull,
+    );
   });
 
   test(

@@ -1,6 +1,7 @@
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/governor/governor.dart';
+import 'package:storize_instagram/media/cdn_policy.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// What the probe recorded for one REST candidate. Status and top-level key
@@ -229,7 +230,7 @@ final class IgProbe {
   Future<List<CdnEntry>> checkCdn(Map<String, RemoteMedia> files) async {
     final out = <CdnEntry>[];
     for (final MapEntry(key: label, value: media) in files.entries) {
-      final uri = _cdnUri(media.url);
+      final uri = allowedCdnUri(media.url);
       if (uri == null) {
         // Never requested: only https on an Instagram CDN host is allowed.
         out.add(CdnEntry(label: label, outcome: 'rejected'));
@@ -311,21 +312,6 @@ final class IgProbe {
       status: reply.status,
       topLevelKeys: _keysOf(reply.json),
     );
-  }
-
-  static const List<String> _cdnDomains = ['cdninstagram.com', 'fbcdn.net'];
-
-  /// The URL when it is https, has no credentials and a host under an
-  /// Instagram CDN domain; otherwise null.
-  static Uri? _cdnUri(String url) {
-    final uri = Uri.tryParse(url);
-    if (uri == null || uri.scheme != 'https' || uri.userInfo.isNotEmpty) {
-      return null;
-    }
-    if (uri.hasPort && uri.port != 443) return null;
-    final host = uri.host.toLowerCase();
-    final ok = _cdnDomains.any((d) => host == d || host.endsWith('.$d'));
-    return ok ? uri : null;
   }
 
   String _safeKey(String key) {

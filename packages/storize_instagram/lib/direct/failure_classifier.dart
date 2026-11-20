@@ -1,6 +1,27 @@
 import 'package:storize_instagram/direct/ig_http.dart';
 import 'package:storize_model/storize_model.dart';
 
+/// The default longest `Retry-After` the failure map passes on: the
+/// governor's default `maxPause` (24 h).
+const Duration defaultMaxRetryAfter = Duration(hours: 24);
+
+/// Turns an integer `Retry-After` (seconds) into a [Duration] without
+/// overflow (T-013 N4).
+///
+/// `Duration(seconds: n)` wraps for huge `n` (about 2^64 microseconds gave
+/// 59 s), so [seconds] is clamped **before** the conversion. Negative gives
+/// null (no usable hint); more than [max] gives [max].
+///
+/// An `IgHttp` that reads the header must call this for the integer form.
+Duration? clampedRetryAfter(
+  int seconds, {
+  Duration max = defaultMaxRetryAfter,
+}) {
+  if (seconds < 0) return null;
+  if (seconds >= max.inSeconds) return max;
+  return Duration(seconds: seconds);
+}
+
 /// Turns a reply into the `Failure` of the TECH_SPEC 4.1 failure map, or null
 /// when the reply is a usable JSON object.
 ///
@@ -23,9 +44,15 @@ import 'package:storize_model/storize_model.dart';
 /// true, or `data` is null next to an `errors[]` list. The `errors[]` messages
 /// are read only when `data` is null, so a non-fatal `errors[]` next to
 /// complete data is never a failure (AC8).
+///
+/// A `RateLimited` hint is cut to [maxRetryAfter] (and a negative one is
+/// dropped), whatever the reply says; pass the governor's `maxPause`.
 final class FailureClassifier {
   /// Creates the classifier.
-  const FailureClassifier();
+  const FailureClassifier({this.maxRetryAfter = defaultMaxRetryAfter});
+
+  /// The longest `retryAfter` of a `RateLimited` result.
+  final Duration maxRetryAfter;
 
   /// Classifies [reply].
   Failure? classify(IgReply reply) {
@@ -63,7 +90,7 @@ final class FailureClassifier {
     if (reply.status == 429 ||
         text.contains('please wait') ||
         text.contains('too many requests')) {
-      return RateLimited(reply.retryAfter);
+      return RateLimited(_cappedHint(reply.retryAfter));
     }
     if (text.contains('not authorized to view')) {
       return const TargetNotVisible();
@@ -73,6 +100,11 @@ final class FailureClassifier {
       return UnknownFailure(reply.status, 'http_${reply.status}');
     }
     return const UnknownFailure(null, 'status_fail');
+  }
+
+  Duration? _cappedHint(Duration? hint) {
+    if (hint == null || hint.isNegative) return null;
+    return hint > maxRetryAfter ? maxRetryAfter : hint;
   }
 
   /// Whether a 2xx body is really a failure.

@@ -179,15 +179,15 @@ void main() {
     }, skip: noNode);
   });
 
-  group('QA2-F9 RESIDUAL: a reused XHR keeps the fake reply', () {
+  group('QA2-F9 / R2-F1 (fixed in T-015): a reused XHR is not poisoned', () {
     test(
-      'after a blocked send, the NEXT real request reads the fake reply',
+      'after a blocked send, the NEXT real request reads the real reply',
       () {
         final x = r['xhr_reused_blocked_then_ok'] as Map;
         expect(x['requests'], 1, reason: 'the second request was sent');
-        // WANTED would be true: the page reads the real reply. The fake
-        // own-properties shadow the prototype accessors for the instance.
-        expect(x['secondStatusReal'], isFalse);
+        // open() deletes the fake own-properties, so the prototype accessors
+        // answer again.
+        expect(x['secondStatusReal'], isTrue);
       },
       skip: noNode,
     );
@@ -476,12 +476,17 @@ void main() {
       expect(p, isA<Ok<RemoteUser>>());
     });
 
-    test('there is no reset method: it stays tripped until restart', () {
+    test('T-015 (R2-F5): only an explicit reset clears the breaker; a '
+        'refresh never does', () async {
       final g = SeenGuard()..trip();
       expect(g.tripped, isTrue);
+      expect(await g.refresh(), isTrue);
+      expect(g.tripped, isTrue);
+      await g.reset();
+      expect(g.tripped, isFalse);
       final src = File('lib/page/webview_lease.dart').readAsStringSync();
-      expect(src, isNot(contains('void reset')));
-      expect(src, isNot(contains('_tripped = false;\n  }')));
+      // `_tripped = false`: the field initializer and reset(), nothing else.
+      expect(RegExp('_tripped = false').allMatches(src), hasLength(2));
     });
 
     test('the leak trips the guard from a PROFILE load too', () async {
