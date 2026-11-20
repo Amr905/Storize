@@ -28,6 +28,7 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
+| T-027 | frontend-developer (sonnet) | `app/lib/features/library/**`, `app/test/features/library/**` (incl. goldens), `app/lib/l10n/app_en.arb` (+ generated), `app/lib/core/providers.dart` (new library providers only) | 11:55 |
 | T-014 | backend-developer (sonnet) | new `packages/storize_instagram/lib/page/**`, `packages/storize_instagram/assets/hook.js`, new `test/page/**`, new `test/fixtures/page/**` (fake data only), `packages/storize_instagram/pubspec.yaml` (assets + flutter_inappwebview, Lead-approved) | 02:15 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
@@ -65,7 +66,7 @@
 | T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | **done** | 1 | QA PASS + CI [44584045847](https://github.com/Amr905/Storize/actions/runs/44584045847) · `05-reviews/T-024b.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
-| T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | todo | — | — |
+| T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | in_progress | 1 | — |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | todo | — | — |
@@ -160,3 +161,4 @@
 - 2026-11-20 01:00 — T-002 prep rounds 5–6 QA PASS + CI green: sanitizer tooling **approved** for the real capture (residuals QA-24/27/28 Low/Info, accepted). T-002 now waits on the user's capture session with the test account (P-3), per `docs/03-specs/CAPTURE_GUIDE.md` on branch `t-002-spike`. Progress 21/42 (50%).
 - 2026-11-20 01:20 — **T-002 done** (22/42, 52%): Lead ran the capture in the user's browser pane (in-page hook, no headers/cookies). First write-up leaked metadata (CDN edge label, location floats) on the public branch → user approved a branch-history rewrite → R2 fixes → QA PASS, 0 leaks. Merged; main green (instagram 417, app 481). AC2/AC4 → T-013 step 0; AC5 → T-014 (TASKS.md updated). Raw capture deleted. UD-3 (seen side effect) and UD-4 (GitHub purge) raised. Next: T-013.
 - 2026-11-20 02:15 — **T-013 done** (23/42, 55%): QA R1 found 13 issues (2 Medium) → R2 fixed all → QA PASS, CI green, merged; Lead exported direct/mapper/probe from the instagram barrel; main green (instagram 680). T-014 started; UD-3 still unanswered → default applied: **block the seen mutation** in page mode (Lead recommendation, reversible).
+- 2026-11-20 11:55 — Resumed after the usage-limit pause (limit hit ~03:00, reset 04:50; user resumed 11:50). T-014 round 2 restarted with a new developer (previous session lost) on its partial work. T-027 (Library) started in parallel — its deps T-025 and T-019 are done.
