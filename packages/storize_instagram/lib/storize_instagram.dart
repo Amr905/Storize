@@ -4,6 +4,7 @@ library;
 export 'direct/direct.dart';
 export 'governor/governor.dart';
 export 'mapper/mapper.dart';
+export 'page/page.dart';
 export 'probe/probe.dart';
 
 /// Package version marker.
