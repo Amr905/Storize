@@ -12,28 +12,33 @@ const Set<String> allowedPageOrigins = {
 /// Configuration of `hook.js` for page mode.
 ///
 /// [blockedFriendlyNames] are GraphQL `fb_api_req_friendly_name` values the
-/// hook answers locally and never sends (UD-3). The default is the story
-/// "seen" mutation. Passing a list replaces the default.
+/// hook answers locally and never sends (UD-3). The list is the **union** of
+/// [defaultBlockedFriendlyNames] and the names passed in: a config can add
+/// names but can never remove the story "seen" mutation.
 final class PageHookConfig {
-  /// Creates the config.
+  /// Creates the config. [blockedFriendlyNames] are added to the default.
   PageHookConfig({
-    this.blockedFriendlyNames = defaultBlockedFriendlyNames,
+    List<String> blockedFriendlyNames = const [],
     this.handlerName = pageHookHandlerName,
-  }) {
+  }) : blockedFriendlyNames = List.unmodifiable({
+         ...defaultBlockedFriendlyNames,
+         ...blockedFriendlyNames,
+       }) {
     final pattern = RegExp(r'^[A-Za-z0-9_]{1,120}$');
-    for (final name in blockedFriendlyNames) {
+    for (final name in this.blockedFriendlyNames) {
       if (!pattern.hasMatch(name)) {
         throw ArgumentError.value(name, 'blockedFriendlyNames', 'bad name');
       }
     }
   }
 
-  /// `PolarisStoriesV3SeenMutation`: opening a story fires it (BR-8).
+  /// `PolarisStoriesV3SeenMutation`: opening a story fires it (BR-8). Always
+  /// blocked.
   static const List<String> defaultBlockedFriendlyNames = [
     'PolarisStoriesV3SeenMutation',
   ];
 
-  /// Names whose requests are never sent.
+  /// Names whose requests are never sent: the default plus the configured.
   final List<String> blockedFriendlyNames;
 
   /// The handler name.

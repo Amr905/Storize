@@ -12,12 +12,13 @@ sealed class PageEvent {
 }
 
 /// A message posted by `hook.js`. [pageOrigin] is the origin of the frame as
-/// reported by the native side, not by the page.
+/// reported by the plugin (on Android the bridge computes it inside the frame;
+/// the plugin allow-list repeats the check natively).
 final class HookEvent extends PageEvent {
   /// Creates the event.
   const HookEvent({required this.pageOrigin, required this.args});
 
-  /// `scheme://host` of the posting frame (native side).
+  /// `scheme://host` of the posting frame (as reported by the plugin).
   final String pageOrigin;
 
   /// The handler arguments (the payload is `args.first`).
@@ -102,11 +103,25 @@ final class PageSessionConfig {
   String toString() => 'PageSessionConfig(cookies: ${cookies.length})';
 }
 
+/// Thrown by a driver that cannot install the hook before the page's own
+/// scripts run (no document-start script support). The extractor then fails
+/// closed with `UnknownFailure('page_hook_unsupported')` and loads nothing:
+/// a hook that arrives late cannot stop the story "seen" mutation.
+final class PageHookUnsupportedException implements Exception {
+  /// Creates the exception.
+  const PageHookUnsupportedException();
+
+  @override
+  String toString() => 'PageHookUnsupportedException';
+}
+
 /// Opens page sessions.
 // ignore: one_member_abstracts, a port that tests replace.
 abstract interface class PageDriver {
   /// Opens a session with the cookies set and the hook installed. Must leave
-  /// no cookies behind if it throws.
+  /// no cookies behind if it throws, and must throw
+  /// [PageHookUnsupportedException] (before touching cookies or loading
+  /// anything) when the hook cannot run at document start.
   Future<PageSession> open(PageSessionConfig config);
 }
 

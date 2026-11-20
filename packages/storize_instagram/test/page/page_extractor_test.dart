@@ -196,6 +196,7 @@ void main() {
         final rig = Rig(
           onLoad: emitting([
             hookResponse(loadPage('reels_empty.json'), name: storiesName),
+            const LoadStopEvent(),
           ]),
         );
         final r = await rig.run(rig.extractor.fetchStories(['user_1']));
@@ -205,7 +206,11 @@ void main() {
 
     test('stories: landing on the profile page means no stories', () async {
       final rig = Rig(
-        onLoad: emitting([nav('/stories/$fakeUser/'), nav('/$fakeUser/')]),
+        onLoad: emitting([
+          nav('/stories/$fakeUser/'),
+          nav('/$fakeUser/'),
+          const LoadStopEvent(),
+        ]),
       );
       final r = await rig.run(rig.extractor.fetchStories(['user_1']));
       expect((r as Ok<Map<String, List<RemoteContent>>>).value, isEmpty);
@@ -325,6 +330,7 @@ void main() {
         usernames: const {'user_1': 'zzfake_a', 'user_2': 'zzfake_b'},
         onLoad: emitting([
           hookResponse(loadPage('reels_empty.json'), name: storiesName),
+          const LoadStopEvent(),
         ]),
       );
       await rig.run(rig.extractor.fetchStories(['user_1', 'user_2']));
@@ -468,7 +474,7 @@ void main() {
       expect(rig.extractor.blockedRequestCount, 0);
     });
 
-    test('the list is configurable and reaches the hook config', () async {
+    test('the list is the default plus the configured names', () async {
       final rig = Rig(
         hookConfig: PageHookConfig(blockedFriendlyNames: ['A_b', 'C1']),
         onLoad: emitting([
@@ -480,8 +486,7 @@ void main() {
       );
       await rig.run(rig.extractor.fetchStories(['user_1']));
       final src = rig.driver.sessions.single.config.hookSource;
-      expect(src, contains('"blockedFriendlyNames":["A_b","C1"]'));
-      expect(src, isNot(contains(seenName)));
+      expect(src, contains('"blockedFriendlyNames":["$seenName","A_b","C1"]'));
     });
 
     test('a name that is not a plain identifier is refused', () {
@@ -548,6 +553,7 @@ void main() {
           usernames: const {'a': 'zzfake_a', 'b': 'zzfake_b', 'c': 'zzfake_c'},
           onLoad: emitting([
             hookResponse(loadPage('reels_empty.json'), name: storiesName),
+            const LoadStopEvent(),
           ]),
         );
         final r = await rig.run(rig.extractor.fetchStories(['a', 'b', 'c']));

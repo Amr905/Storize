@@ -144,6 +144,7 @@ final class FakePageSession implements PageSession {
     driver.log.add('clear');
     cleared = true;
     if (driver.clearThrows) throw StateError('clear failed ZZFAKE_cookie');
+    if (driver.clearHangs) await Completer<void>().future;
   }
 
   @override
@@ -152,6 +153,7 @@ final class FakePageSession implements PageSession {
     disposed = true;
     driver.active--;
     await controller.close();
+    if (driver.disposeHangs) await Completer<void>().future;
   }
 }
 
@@ -162,11 +164,24 @@ final class FakePageDriver implements PageDriver {
     this.onLoad, {
     this.openThrows = false,
     this.clearThrows = false,
+    this.clearHangs = false,
+    this.disposeHangs = false,
+    this.documentStart = true,
+    this.openGate,
   });
 
   OnLoad onLoad;
   final bool openThrows;
   final bool clearThrows;
+  final bool clearHangs;
+  final bool disposeHangs;
+
+  /// False: `open` throws [PageHookUnsupportedException] like the real
+  /// adapter on a WebView without document-start scripts.
+  final bool documentStart;
+
+  /// When set, `open` waits for it before it returns the session.
+  final Completer<void>? openGate;
   Object? domResult;
   final List<String> log = [];
   final List<FakePageSession> sessions = [];
@@ -176,6 +191,9 @@ final class FakePageDriver implements PageDriver {
   @override
   Future<PageSession> open(PageSessionConfig config) async {
     log.add('open');
+    if (!documentStart) throw const PageHookUnsupportedException();
+    final gate = openGate;
+    if (gate != null) await gate.future;
     if (openThrows) throw StateError('no webview ZZFAKE_cookie');
     final s = FakePageSession(this, config);
     sessions.add(s);
@@ -221,8 +239,16 @@ final class Rig {
     this.runsInBackground = false,
     bool Function()? backgroundAllowed,
     bool withSession = true,
+    this.autoGrace = true,
     bool openThrows = false,
     bool clearThrows = false,
+    bool clearHangs = false,
+    bool disposeHangs = false,
+    bool documentStart = true,
+    Completer<void>? openGate,
+    Duration cleanupTimeout = const Duration(seconds: 5),
+    WebViewLease? webViewLease,
+    SeenGuard? seenGuard,
     Map<String, String> usernames = const {'user_1': fakeUser},
     PageHookConfig? hookConfig,
   }) {
@@ -239,6 +265,10 @@ final class Rig {
       onLoad,
       openThrows: openThrows,
       clearThrows: clearThrows,
+      clearHangs: clearHangs,
+      disposeHangs: disposeHangs,
+      documentStart: documentStart,
+      openGate: openGate,
     );
     if (withSession) unawaited(sessions.save(1, fakeSession()));
     final cache = InMemoryUsernameCache();
@@ -256,15 +286,28 @@ final class Rig {
       hookConfig: hookConfig,
       discovery: discovery,
       usernames: cache,
-      timer: (d, fire) {
-        final t = ManualTimer(d, fire);
-        timers.add(t);
-        return t;
-      },
+      timer: manualTimers,
+      cleanupTimeout: cleanupTimeout,
+      webViewLease: webViewLease,
+      seenGuard: seenGuard ?? SeenGuard(),
     );
   }
 
+  /// The timer factory of the rig: the open timer (10 s) goes to
+  /// [openTimers], every other one (run 20 s, grace, DOM settle) to [timers].
+  Timer manualTimers(Duration d, void Function() fire) {
+    final t = ManualTimer(d, fire);
+    (d == const Duration(seconds: 10) ? openTimers : timers).add(t);
+    if (autoGrace && d == const Duration(seconds: 2)) scheduleMicrotask(t.fire);
+    return t;
+  }
+
   final bool runsInBackground;
+
+  /// When true the "tentative answer" grace timer (2 s) fires by itself,
+  /// right after it is armed (a microtask later). Set false to fire it by
+  /// hand from `timers`.
+  final bool autoGrace;
   final FakeTime time = FakeTime();
   late final FakeGovernorLeaseRepo leases;
   late final RequestGovernor governor;
@@ -275,6 +318,7 @@ final class Rig {
   final FakeDiagnosticLog log = FakeDiagnosticLog();
   final List<String> governorLogs = [];
   final List<ManualTimer> timers = [];
+  final List<ManualTimer> openTimers = [];
 
   Future<T> run<T>(Future<T> future) => time.drive(future);
 
@@ -286,3 +330,23 @@ final class Rig {
 /// Emits [events] when the page loads.
 OnLoad emitting(List<PageEvent> events) =>
     (s, url) => events.forEach(s.emit);
+
+/// A lease with a scripted answer that records every call.
+final class FakeWebViewLease implements WebViewLease {
+  FakeWebViewLease({this.busy = false});
+
+  /// True: another owner holds the lease, `tryAcquire` says no.
+  bool busy;
+  final List<String> acquired = [];
+  final List<String> released = [];
+
+  @override
+  Future<bool> tryAcquire(String owner) async {
+    if (busy) return false;
+    acquired.add(owner);
+    return true;
+  }
+
+  @override
+  Future<void> release(String owner) async => released.add(owner);
+}

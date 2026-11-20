@@ -33,7 +33,7 @@ void main() {
     final exports = _read('lib/page/page.dart')
         .split('\n')
         .where((l) => l.startsWith('export'));
-    expect(exports.where((l) => l.contains('webview')), isEmpty);
+    expect(exports.where((l) => l.contains('webview.dart')), isEmpty);
   });
 
   test('the pin matches the app and the lock', () {

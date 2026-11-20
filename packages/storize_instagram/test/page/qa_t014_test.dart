@@ -1,6 +1,5 @@
-// QA (T-014), independent adversarial checks. Tests marked `skip:` assert the
-// WANTED behaviour and fail today; each names its finding (QA-Fn) in
-// docs/05-reviews/T-014.md. Plain tests pin what the code does today.
+// QA (T-014), independent adversarial checks (round 1), un-skipped in round 2.
+// Each test names its finding (QA-Fn) in docs/05-reviews/T-014.md.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -84,26 +83,25 @@ void main() {
       final x = r['fake_reply_shape_xhr'] as Map;
       expect(x['events'], ['readystatechange', 'load', 'loadend']);
       expect(x['ready'], 4);
-      // json responseType works; arraybuffer/blob get a STRING (QA-F9, Low)
+      // QA-F9: the reply has the type the page asked for
       expect(
         (r['xhr_json_response_type'] as Map)['response'],
         isA<Map<String, dynamic>>(),
       );
-      expect(
-        (r['xhr_blob_arraybuffer_response_type'] as Map)['responseType'],
-        'string',
-      );
+      final ab = r['xhr_blob_arraybuffer_response_type'] as Map;
+      expect(ab['responseType'], 'object');
+      expect(ab['response'], '[object ArrayBuffer]');
     }, skip: noNode);
   });
 
-  group('QA seen-mutation block: BYPASSES (pinned; wanted = blocked)', () {
+  group('QA-F1 seen-mutation block: every request shape fails closed', () {
     late Map<String, dynamic> r;
     setUpAll(() async {
       if (noNode == null) r = await _hookScenarios();
     });
     bool reached(String k) => (r[k] as Map)['reached'] as bool;
 
-    const bypasses = {
+    const shapes = {
       'fetch_request_object': 'fetch(new Request(url,{body}))',
       'fetch_url_object_input': 'fetch(new URL(..), {body})',
       'fetch_formdata_body': 'FormData body',
@@ -120,93 +118,162 @@ void main() {
       'beacon_formdata': 'sendBeacon FormData',
     };
 
-    test('documents today: the mutation still reaches the network', () {
-      for (final k in bypasses.keys) {
-        expect(reached(k), isTrue, reason: '${bypasses[k]} (QA-F1)');
-      }
-    }, skip: noNode);
-
-    for (final e in bypasses.entries) {
-      test(
-        'WANTED blocked: ${e.value}',
-        () => expect(reached(e.key), isFalse),
-        skip:
-            'QA-F1: hook inspects only string / URLSearchParams bodies '
-            'of fetch(url, init), XHR and beacon',
-      );
+    for (final e in shapes.entries) {
+      test('blocked: ${e.value}', () {
+        expect(reached(e.key), isFalse);
+        expect((r[e.key] as Map)['blockedNotices'], greaterThanOrEqualTo(1));
+      }, skip: noNode);
     }
   });
 
-  group('QA custom blocked list', () {
-    test('an empty or foreign list REPLACES the default (seen unblocked)', () {
-      expect(
-        PageHookConfig(blockedFriendlyNames: const []).prelude(),
-        contains('"blockedFriendlyNames":[]'),
-      );
-      final other = PageHookConfig(blockedFriendlyNames: const ['Other']);
-      expect(other.prelude(), isNot(contains(seenName)));
+  group('QA-F2 custom blocked list can only add names', () {
+    test('the seen mutation stays in the list whatever the config says', () {
+      for (final names in [
+        const <String>[],
+        const ['Other'],
+      ]) {
+        final cfg = PageHookConfig(blockedFriendlyNames: names);
+        expect(cfg.blockedFriendlyNames, contains(seenName));
+        expect(cfg.prelude(), contains(seenName));
+        expect(cfg.blockedFriendlyNames, containsAll(names));
+      }
     });
 
-    test('the hook sends the mutation with an empty or foreign list', () async {
-      final r = await _hookScenarios();
-      expect((r['config_empty_list'] as Map)['reached'], isTrue);
-      expect((r['config_other_list'] as Map)['reached'], isTrue);
-    }, skip: noNode);
+    test('the list cannot be changed after it is built', () {
+      final cfg = PageHookConfig();
+      final names = cfg.blockedFriendlyNames;
+      expect(names.clear, throwsUnsupportedError);
+    });
 
     test(
-      'WANTED: the seen mutation stays blocked whatever the list says',
-      () {
-        final cfg = PageHookConfig(blockedFriendlyNames: const ['Other']);
-        expect(cfg.prelude(), contains(seenName));
-        expect(
-          PageHookConfig(blockedFriendlyNames: const []).prelude(),
-          contains(seenName),
-        );
+      'hook.js blocks the seen mutation with an empty or foreign list',
+      () async {
+        final r = await _hookScenarios();
+        expect((r['config_empty_list'] as Map)['reached'], isFalse);
+        expect((r['config_other_list'] as Map)['reached'], isFalse);
       },
-      skip: 'QA-F2: default is replaced, not unioned',
+      skip: noNode,
     );
   });
 
-  group('QA no canary for a leaked seen mutation', () {
+  group('QA-F3 canary: a reply to a blocked name means the block failed', () {
+    OnLoad leak(Object? body, {String? name = seenName}) => emitting([
+      hookResponse(body, name: name),
+      hookResponse(loadReal('story', '003_graphql.json'), name: storiesName),
+    ]);
+
     test(
-      'a captured response of the seen mutation is silently accepted',
+      'a reply with the blocked name fails the run, counted, logged',
       () async {
         final rig = Rig(
-          onLoad: emitting([
-            hookResponse({
-              'data': {
-                'xdt_mark_story_reel_seen': {'status': 'ok'},
-              },
-            }, name: seenName),
-            hookResponse(
-              loadReal('story', '003_graphql.json'),
-              name: storiesName,
-            ),
-          ]),
+          onLoad: leak({
+            'data': {'xdt_mark_story_reel_seen': <String, Object?>{}},
+          }),
         );
         final r = await rig.run(rig.extractor.fetchStories(['user_1']));
-        expect(r, isA<Ok<Map<String, List<RemoteContent>>>>());
-        expect(rig.extractor.blockedRequestCount, 0);
-        expect(rig.allLogs, isNot(contains('leak')));
-        expect(rig.allLogs, isNot(contains('seen')));
+        expect(r.failureOrNull, const UnknownFailure(null, 'seen_block_leak'));
+        expect(rig.extractor.seenLeakCount, 1);
+        expect(rig.allLogs, contains('seen_block_leak'));
+        expect(rig.driver.sessions.single.disposed, isTrue);
       },
     );
 
-    test('WANTED: a seen-mutation reply is logged as a leak', () async {
+    test(
+      'a reply with the mutation data key and no name also counts',
+      () async {
+        final rig = Rig(
+          onLoad: leak({
+            'data': {'xdt_mark_story_reel_seen': <String, Object?>{}},
+          }, name: null),
+        );
+        final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+        expect(r.failureOrNull, const UnknownFailure(null, 'seen_block_leak'));
+      },
+    );
+
+    test('a configured extra name counts too', () async {
+      final rig = Rig(
+        hookConfig: PageHookConfig(blockedFriendlyNames: ['Extra_Name']),
+        onLoad: leak(<String, Object?>{'data': null}, name: 'Extra_Name'),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, const UnknownFailure(null, 'seen_block_leak'));
+    });
+
+    test('the log has the code but no value, id or username', () async {
+      final rig = Rig(
+        onLoad: leak({
+          'data': {
+            'xdt_mark_story_reel_seen': {'secret': fakeSessionId},
+          },
+        }),
+      );
+      await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(rig.allLogs, isNot(contains(fakeSessionId)));
+      expect(rig.allLogs, isNot(contains(fakeUser)));
+      expect(rig.allLogs, isNot(contains(fakeDocId)));
+    });
+
+    test('the breaker refuses later story loads, not profile loads', () async {
+      final guard = SeenGuard();
+      final rig = Rig(
+        seenGuard: guard,
+        onLoad: (s, u) {
+          if (u.path.startsWith('/stories/')) {
+            leak({
+              'data': {'xdt_mark_story_reel_seen': <String, Object?>{}},
+            })(s, u);
+          } else {
+            emitting([hookResponse(realProfile(), name: profileName)])(s, u);
+          }
+        },
+      );
+      await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(guard.tripped, isTrue);
+      final opened = rig.driver.sessions.length;
+      final again = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(
+        again.failureOrNull,
+        const UnknownFailure(null, 'seen_guard_tripped'),
+      );
+      expect(rig.driver.sessions, hasLength(opened), reason: 'nothing opened');
+      final profile = await rig.run(rig.extractor.resolveUser(fakeUser));
+      expect(profile, isA<Ok<RemoteUser>>());
+    });
+
+    test('the breaker is shared by extractors that share the guard', () async {
+      final guard = SeenGuard();
+      final a = Rig(
+        seenGuard: guard,
+        onLoad: leak({
+          'data': {'xdt_mark_story_reel_seen': <String, Object?>{}},
+        }),
+      );
+      await a.run(a.extractor.fetchStories(['user_1']));
+      final b = Rig(
+        seenGuard: guard,
+        onLoad: emitting(const []),
+      );
+      final r = await b.run(b.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, const UnknownFailure(null, 'seen_guard_tripped'));
+      expect(b.driver.log, isEmpty);
+    });
+
+    test('no leak on a normal run: no reply with a blocked name', () async {
       final rig = Rig(
         onLoad: emitting([
-          hookResponse({
-            'data': {'xdt_mark_story_reel_seen': <String, Object?>{}},
-          }, name: seenName),
+          hookBlocked(seenName),
           hookResponse(
             loadReal('story', '003_graphql.json'),
             name: storiesName,
           ),
         ]),
       );
-      await rig.run(rig.extractor.fetchStories(['user_1']));
-      expect(rig.allLogs, contains('seen_mutation_not_blocked'));
-    }, skip: 'QA-F3: no detection if the block is bypassed');
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r, isA<Ok<Map<String, List<RemoteContent>>>>());
+      expect(rig.extractor.seenLeakCount, 0);
+      expect(rig.extractor.blockedRequestCount, 1);
+    });
   });
 
   group('QA origin checks', () {
@@ -407,40 +474,56 @@ void main() {
     );
   });
 
-  group('QA native handler guard on the adapter', () {
+  group('QA native handler guard on the adapter (source guards)', () {
     final adapter = File('lib/page/webview.dart').readAsStringSync();
-    test('webview.dart does not set the plugin-level origin allow-list', () {
-      expect(adapter, isNot(contains('javaScriptHandlersOriginAllowList')));
-      expect(adapter, isNot(contains('javaScriptHandlersForMainFrameOnly')));
+    test('QA-F4: native allow-list is the two origins, main frame only', () {
+      expect(adapter, contains('javaScriptHandlersOriginAllowList'));
+      expect(adapter, contains('javaScriptHandlersForMainFrameOnly: true'));
     });
-    test(
-      'WANTED: native allow-list and main-frame-only are set',
-      () {
-        expect(adapter, contains('javaScriptHandlersOriginAllowList'));
-        expect(adapter, contains('javaScriptHandlersForMainFrameOnly'));
-      },
-      skip:
-          'QA-F4: the "native frame origin" is window.location.origin '
-          'computed by the plugin bridge JS inside the frame',
-    );
-    test(
-      'WANTED: fail closed when document-start scripts are unsupported',
-      () {
-        expect(adapter, contains('DOCUMENT_START_SCRIPT'));
-      },
-      skip:
-          'QA-F5: without the feature the plugin injects in onPageStarted '
-          '(race with the page) and re-injects at document end',
-    );
+    test('QA-F4: the allow-list patterns accept exactly the two origins', () {
+      final patterns = {
+        r'^https://www\.instagram\.com$',
+        r'^https://instagram\.com$',
+      };
+      expect(adapter, contains('pageHandlerOriginPatterns'));
+      for (final p in patterns) {
+        expect(adapter, contains(p));
+      }
+      bool ok(String o) => patterns.any((p) => RegExp(p).hasMatch(o));
+      expect(ok('https://www.instagram.com'), isTrue);
+      expect(ok('https://instagram.com'), isTrue);
+      for (final bad in [
+        'https://www.instagram.com.evil.test',
+        'https://evil.test/https://www.instagram.com',
+        'http://www.instagram.com',
+        'https://help.instagram.com',
+        'https://www.instagram.com:444',
+        'https://www.instagram.com\n',
+      ]) {
+        expect(ok(bad), isFalse, reason: bad);
+      }
+    });
+    test('QA-F5: the adapter checks DOCUMENT_START_SCRIPT before it opens', () {
+      expect(adapter, contains('WebViewFeature.DOCUMENT_START_SCRIPT'));
+      final check = adapter.indexOf('await _documentStartSupported()');
+      final wipe = adapter.indexOf('await _wipe();');
+      expect(check, isNonNegative);
+      expect(check, lessThan(wipe), reason: 'checked before any cookie work');
+      expect(adapter, contains('throw const PageHookUnsupportedException()'));
+    });
     test('the clean-up wipes the app-wide jar (S-02 conflict, QA-F7)', () {
       expect(adapter, contains('deleteAllCookies()'));
       expect(adapter, contains('deleteAllData()'));
       expect(adapter, contains('clearAllCache()'));
     });
-    test('the session never opens an unbounded wait before the timer', () {
-      // `await created.future` has no timeout (QA-F6)
-      expect(adapter, contains('await created.future;'));
-      expect(adapter, isNot(contains('.timeout(')));
+    test('QA-F10: open wipes leftover cookies BEFORE it sets the new ones', () {
+      final open = adapter.substring(
+        adapter.indexOf('Future<PageSession> open'),
+      );
+      final wipe = open.indexOf('await _wipe();');
+      final set = open.indexOf('cookies.setCookie');
+      expect(wipe, isNonNegative);
+      expect(set, greaterThan(wipe));
     });
   });
 
@@ -510,60 +593,6 @@ void main() {
       },
     );
 
-    test(
-      'an open() that never completes holds the governed call forever',
-      () async {
-        final never = Completer<PageSession>();
-        final rig = Rig(onLoad: byUrl());
-        final ex = PageExtractor(
-          accountId: 1,
-          governor: rig.governor,
-          sessions: rig.sessions,
-          driver: _HangingDriver(never),
-          hookSource: '',
-          usernames: _cache(),
-          timer: (d, f) {
-            final t = ManualTimer(d, f);
-            rig.timers.add(t);
-            return t;
-          },
-        );
-        var done = false;
-        unawaited(ex.fetchStories(['user_1']).whenComplete(() => done = true));
-        await rig.time.pump();
-        await rig.time.elapse(const Duration(minutes: 10));
-        expect(done, isFalse);
-        expect(
-          rig.timers,
-          isEmpty,
-          reason: 'the 20 s timer starts only after open',
-        );
-      },
-    );
-
-    test('WANTED: open() is bounded by the 20 s timeout', () async {
-      final never = Completer<PageSession>();
-      final rig = Rig(onLoad: byUrl());
-      final ex = PageExtractor(
-        accountId: 1,
-        governor: rig.governor,
-        sessions: rig.sessions,
-        driver: _HangingDriver(never),
-        hookSource: '',
-        usernames: _cache(),
-        timer: (d, f) {
-          final t = ManualTimer(d, f);
-          rig.timers.add(t);
-          return t;
-        },
-      );
-      final f = ex.fetchStories(['user_1']);
-      await rig.time.pump();
-      expect(rig.timers, isNotEmpty);
-      rig.timers.first.fire();
-      expect((await f).failureOrNull, isNotNull);
-    }, skip: 'QA-F6: open() and the clean-up awaits have no timeout');
-
     test('timeout then a late match: the first outcome stands', () async {
       final rig = Rig(onLoad: (s, u) {});
       final f = rig.extractor.fetchStories(['user_1']);
@@ -618,22 +647,6 @@ void main() {
         );
         final r = await rig.run(rig.extractor.fetchStories(['user_1']));
         expect(r.failureOrNull, isA<RateLimited>());
-      },
-    );
-
-    test(
-      'an empty reel list first, then the real one: the empty one wins (QA-F8)',
-      () async {
-        // A page may fire the reel query twice (tray, then the user). The first
-        // reply with an empty list ends the run as "no stories".
-        final rig = Rig(
-          onLoad: emitting([
-            hookResponse(loadPage('reels_empty.json'), name: storiesName),
-            hookResponse(story, name: storiesName),
-          ]),
-        );
-        final r = await rig.run(rig.extractor.fetchStories(['user_1']));
-        expect((r as Ok<Map<String, List<RemoteContent>>>).value, isEmpty);
       },
     );
 
@@ -810,17 +823,402 @@ void main() {
       }
     });
   });
+
+  // ----------------------------------------------------------------- round 2
+  NavigationEvent nav(String path) =>
+      NavigationEvent(host: 'www.instagram.com', path: path);
+  final story = loadReal('story', '003_graphql.json');
+  final emptyReels = loadPage('reels_empty.json');
+
+  group('QA-F5 fail closed without document-start support', () {
+    test('page_hook_unsupported, nothing loaded, lease released', () async {
+      final lease = FakeWebViewLease();
+      final rig = Rig(
+        documentStart: false,
+        webViewLease: lease,
+        onLoad: emitting([hookResponse(story, name: storiesName)]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(
+        r.failureOrNull,
+        const UnknownFailure(null, 'page_hook_unsupported'),
+      );
+      expect(rig.driver.sessions, isEmpty);
+      expect(rig.driver.log, ['open'], reason: 'no load, no clear');
+      expect(rig.timers, isEmpty);
+      expect(lease.released, lease.acquired);
+      expect(rig.allLogs, contains('page_hook_unsupported'));
+    });
+
+    test('it applies to every plan, not only stories', () async {
+      final rig = Rig(documentStart: false, onLoad: emitting(const []));
+      final r = await rig.run(rig.extractor.resolveUser(fakeUser));
+      expect(
+        r.failureOrNull,
+        const UnknownFailure(null, 'page_hook_unsupported'),
+      );
+    });
+  });
+
+  group('QA-F6 timeouts: the governed call always completes', () {
+    test('open() is bounded by 10 s: page_open_timeout', () async {
+      final gate = Completer<void>();
+      final lease = FakeWebViewLease();
+      final rig = Rig(
+        openGate: gate,
+        webViewLease: lease,
+        onLoad: emitting([hookResponse(story, name: storiesName)]),
+      );
+      final f = rig.extractor.fetchStories(['user_1']);
+      await rig.time.pump();
+      expect(rig.openTimers.single.duration, const Duration(seconds: 10));
+      expect(rig.timers, isEmpty, reason: 'the 20 s timer starts after open');
+      rig.openTimers.single.fire();
+      final r = await f;
+      expect(r.failureOrNull, const UnknownFailure(null, 'page_open_timeout'));
+      expect(lease.released, lease.acquired, reason: 'lease released');
+      expect(lease.acquired, hasLength(1));
+      // The governor lease is free again: the next call runs.
+      gate.complete();
+      await rig.time.pump();
+      final again = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(again.failureOrNull, isNull);
+    });
+
+    test(
+      'a session that opens after the timeout is cleaned in the background',
+      () async {
+        final gate = Completer<void>();
+        final rig = Rig(openGate: gate, onLoad: emitting(const []));
+        final f = rig.extractor.fetchStories(['user_1']);
+        await rig.time.pump();
+        rig.openTimers.single.fire();
+        await f;
+        expect(rig.driver.sessions, isEmpty);
+        gate.complete();
+        await rig.time.pump();
+        final late = rig.driver.sessions.single;
+        expect(late.cleared, isTrue);
+        expect(late.disposed, isTrue);
+        expect(late.loads, isEmpty, reason: 'a late session is never used');
+      },
+    );
+
+    test('open() that throws after the timeout is ignored', () async {
+      final gate = Completer<void>();
+      final rig = Rig(
+        openGate: gate,
+        openThrows: true,
+        onLoad: emitting(const []),
+      );
+      final f = rig.extractor.fetchStories(['user_1']);
+      await rig.time.pump();
+      rig.openTimers.single.fire();
+      expect(
+        (await f).failureOrNull,
+        const UnknownFailure(null, 'page_open_timeout'),
+      );
+      gate.complete();
+      await rig.time.pump();
+    });
+
+    test('a clearData that hangs is abandoned; dispose still runs', () async {
+      final rig = Rig(
+        clearHangs: true,
+        cleanupTimeout: const Duration(milliseconds: 30),
+        onLoad: emitting([hookResponse(story, name: storiesName)]),
+      );
+      final r = await rig.extractor.fetchStories(['user_1']);
+      expect(r, isA<Ok<Map<String, List<RemoteContent>>>>());
+      expect(rig.driver.sessions.single.disposed, isTrue);
+      expect(rig.allLogs, contains('cleanup_timeout step=clear_data'));
+    });
+
+    test('a dispose that hangs is abandoned; the result stands', () async {
+      final lease = FakeWebViewLease();
+      final rig = Rig(
+        disposeHangs: true,
+        webViewLease: lease,
+        cleanupTimeout: const Duration(milliseconds: 30),
+        onLoad: emitting([hookResponse(story, name: storiesName)]),
+      );
+      final r = await rig.extractor.fetchStories(['user_1']);
+      expect(r, isA<Ok<Map<String, List<RemoteContent>>>>());
+      expect(rig.allLogs, contains('cleanup_timeout step=dispose'));
+      expect(lease.released, lease.acquired, reason: 'lease still released');
+    });
+
+    test('a lease that never answers is bounded: webview_busy', () async {
+      final rig = Rig(
+        webViewLease: _HangingLease(),
+        cleanupTimeout: const Duration(milliseconds: 30),
+        onLoad: emitting(const []),
+      );
+      final r = await rig.extractor.fetchStories(['user_1']);
+      expect(r.failureOrNull, const UnknownFailure(null, 'webview_busy'));
+    });
+
+    test('the default timeouts are 10 s (open) and 5 s (clean-up)', () {
+      final rig = Rig(onLoad: emitting(const []));
+      expect(rig.extractor.openTimeout, const Duration(seconds: 10));
+      expect(rig.extractor.cleanupTimeout, const Duration(seconds: 5));
+      expect(rig.extractor.timeout, const Duration(seconds: 20));
+    });
+  });
+
+  group('QA-F7 WebView lease', () {
+    test('busy: webview_busy at once, nothing opened or wiped', () async {
+      final lease = FakeWebViewLease(busy: true);
+      final rig = Rig(webViewLease: lease, onLoad: emitting(const []));
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, const UnknownFailure(null, 'webview_busy'));
+      expect(rig.driver.log, isEmpty);
+      expect(rig.timers, isEmpty);
+      expect(rig.openTimers, isEmpty);
+      expect(lease.released, isEmpty, reason: 'never acquired, never released');
+      expect(rig.allLogs, contains('webview_busy'));
+    });
+
+    test('acquired for the run and released after success', () async {
+      final lease = FakeWebViewLease();
+      final rig = Rig(
+        webViewLease: lease,
+        onLoad: emitting([hookResponse(story, name: storiesName)]),
+      );
+      await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(lease.acquired, ['page_mode:1']);
+      expect(lease.released, ['page_mode:1']);
+      final order = rig.driver.log;
+      expect(order.first, 'open');
+    });
+
+    test('released after a failure and after an open that throws', () async {
+      final lease = FakeWebViewLease();
+      final bad = Rig(
+        webViewLease: lease,
+        openThrows: true,
+        onLoad: emitting(const []),
+      );
+      await bad.run(bad.extractor.fetchStories(['user_1']));
+      expect(lease.released, lease.acquired);
+      final fail = Rig(
+        webViewLease: lease,
+        onLoad: emitting([nav('/accounts/login/')]),
+      );
+      final r = await fail.run(fail.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, isA<SessionInvalid>());
+      expect(lease.released, lease.acquired);
+      expect(lease.acquired, hasLength(2));
+    });
+
+    test(
+      'the lease is taken for each load (three users, three leases)',
+      () async {
+        final lease = FakeWebViewLease();
+        final rig = Rig(
+          webViewLease: lease,
+          usernames: const {'a': 'zzfake_a', 'b': 'zzfake_b'},
+          onLoad: emitting([
+            hookResponse(emptyReels, name: storiesName),
+            const LoadStopEvent(),
+          ]),
+        );
+        await rig.run(rig.extractor.fetchStories(['a', 'b']));
+        expect(lease.acquired, hasLength(2));
+        expect(lease.released, hasLength(2));
+      },
+    );
+
+    test('the default lease is free (no-op)', () async {
+      const lease = NoopWebViewLease();
+      expect(await lease.tryAcquire('x'), isTrue);
+      await lease.release('x');
+    });
+
+    test(
+      'a lease that blocks the story load also blocks profile loads',
+      () async {
+        final lease = FakeWebViewLease(busy: true);
+        final rig = Rig(webViewLease: lease, onLoad: emitting(const []));
+        final r = await rig.run(rig.extractor.resolveUser(fakeUser));
+        expect(r.failureOrNull, const UnknownFailure(null, 'webview_busy'));
+      },
+    );
+  });
+
+  group('QA-F8 an empty reel reply does not end the run early', () {
+    test('empty first, the target reel second: the reel wins', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([
+          hookResponse(emptyReels, name: storiesName),
+          const LoadStopEvent(),
+          hookResponse(story, name: storiesName),
+        ]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(
+        (r as Ok<Map<String, List<RemoteContent>>>).value['user_1'],
+        isNotEmpty,
+      );
+    });
+
+    test('empty reply but no LoadStop yet: the run keeps waiting', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([hookResponse(emptyReels, name: storiesName)]),
+      );
+      var done = false;
+      final f = rig.extractor
+          .fetchStories(['user_1'])
+          .whenComplete(() => done = true);
+      await rig.time.pump();
+      expect(done, isFalse);
+      expect(rig.timers.single.duration, const Duration(seconds: 20));
+      // the 20 s timer ends with the tentative answer: no stories
+      rig.timers.single.fire();
+      final r = await f;
+      expect((r as Ok<Map<String, List<RemoteContent>>>).value, isEmpty);
+    });
+
+    test('empty reply, LoadStop, then the grace period: no stories', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([
+          hookResponse(emptyReels, name: storiesName),
+          const LoadStopEvent(),
+        ]),
+      );
+      var done = false;
+      final f = rig.extractor
+          .fetchStories(['user_1'])
+          .whenComplete(() => done = true);
+      await rig.time.pump();
+      expect(done, isFalse, reason: 'the grace period has not passed');
+      final grace = rig.timers.firstWhere(
+        (t) => t.duration == rig.extractor.emptyGrace,
+      );
+      expect(grace.duration, const Duration(seconds: 2));
+      grace.fire();
+      expect(
+        ((await f) as Ok<Map<String, List<RemoteContent>>>).value,
+        isEmpty,
+      );
+    });
+
+    test(
+      'a real reel that arrives during the grace period still wins',
+      () async {
+        final rig = Rig(
+          autoGrace: false,
+          onLoad: emitting([
+            hookResponse(emptyReels, name: storiesName),
+            const LoadStopEvent(),
+          ]),
+        );
+        final f = rig.extractor.fetchStories(['user_1']);
+        await rig.time.pump();
+        rig.driver.sessions.single.emit(hookResponse(story, name: storiesName));
+        final r = await f;
+        expect(
+          (r as Ok<Map<String, List<RemoteContent>>>).value['user_1'],
+          isNotEmpty,
+        );
+      },
+    );
+
+    test('landing on the profile path is tentative too', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([nav('/$fakeUser/'), const LoadStopEvent()]),
+      );
+      var done = false;
+      final f = rig.extractor
+          .fetchStories(['user_1'])
+          .whenComplete(() => done = true);
+      await rig.time.pump();
+      expect(done, isFalse);
+      rig.driver.sessions.single.emit(hookResponse(story, name: storiesName));
+      final r = await f;
+      expect(
+        (r as Ok<Map<String, List<RemoteContent>>>).value['user_1'],
+        isNotEmpty,
+      );
+    });
+
+    test('a failure still ends the run at once', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([
+          hookResponse(emptyReels, name: storiesName),
+          hookResponse(
+            loadSynthetic('failures/please_wait.json'),
+            name: storiesName,
+          ),
+        ]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, isA<RateLimited>());
+    });
+  });
+
+  group('QA-F11 story path: another user is a quick username_mismatch', () {
+    test('the reel list holds only other users', () async {
+      final rig = Rig(
+        onLoad: emitting([
+          hookResponse(loadPage('reels_other_user.json'), name: storiesName),
+          const LoadStopEvent(),
+        ]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, const UnknownFailure(null, 'username_mismatch'));
+    });
+
+    test("a redirect to another user's page", () async {
+      final rig = Rig(
+        onLoad: emitting([
+          nav('/stories/$fakeUser/'),
+          nav('/someone_else/'),
+          const LoadStopEvent(),
+        ]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, const UnknownFailure(null, 'username_mismatch'));
+    });
+
+    test(
+      'no capture for the target and a load that stops: not a timeout',
+      () async {
+        final rig = Rig(
+          onLoad: emitting([
+            nav('/someone_else/'),
+            hookResponse(<String, Object?>{'data': null}, name: 'Other'),
+            const LoadStopEvent(),
+          ]),
+        );
+        final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+        expect(r.failureOrNull, isNot(const SchemaChanged('page_timeout')));
+      },
+    );
+
+    test('the target reel arriving first still wins', () async {
+      final rig = Rig(
+        autoGrace: false,
+        onLoad: emitting([
+          nav('/someone_else/'),
+          const LoadStopEvent(),
+          hookResponse(story, name: storiesName),
+        ]),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r, isA<Ok<Map<String, List<RemoteContent>>>>());
+    });
+  });
 }
 
-InMemoryUsernameCache _cache() {
-  final c = InMemoryUsernameCache();
-  unawaited(c.remember('user_1', fakeUser));
-  return c;
-}
-
-final class _HangingDriver implements PageDriver {
-  _HangingDriver(this._c);
-  final Completer<PageSession> _c;
+final class _HangingLease implements WebViewLease {
   @override
-  Future<PageSession> open(PageSessionConfig config) => _c.future;
+  Future<bool> tryAcquire(String owner) => Completer<bool>().future;
+  @override
+  Future<void> release(String owner) async {}
 }

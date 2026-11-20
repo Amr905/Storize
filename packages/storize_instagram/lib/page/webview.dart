@@ -19,20 +19,44 @@ const String hookAssetPath = 'packages/storize_instagram/assets/hook.js';
 /// isolate the Flutter binding must be initialised first.
 Future<String> loadHookSource() => rootBundle.loadString(hookAssetPath);
 
+/// Anchored patterns for `javaScriptHandlersOriginAllowList`: exactly the two
+/// instagram origins of `allowedPageOrigins`.
+const Set<String> pageHandlerOriginPatterns = {
+  r'^https://www\.instagram\.com$',
+  r'^https://instagram\.com$',
+};
+
 /// A [PageDriver] over `HeadlessInAppWebView`.
 ///
 /// The cookie jar of the WebView is global to the app: this driver wipes it
 /// before it sets the session cookies and again when the session is cleared,
-/// so no page-mode cookie survives a run. (Do not run it while the login
-/// WebView of S-02 is open.)
+/// so no page-mode cookie survives a run. It must not run while the login
+/// WebView of S-02 is open: `PageExtractor` takes the `WebViewLease` first.
+///
+/// Fails closed (QA-F5): without `WebViewFeature.DOCUMENT_START_SCRIPT` the
+/// plugin injects the hook after the page has started, a race the story
+/// "seen" mutation can win. `open` then throws
+/// `PageHookUnsupportedException` before it touches cookies or loads anything.
 final class InAppPageDriver implements PageDriver {
-  /// Creates the driver.
-  const InAppPageDriver();
+  /// Creates the driver. `documentStartSupported` is replaceable for tests of
+  /// the decision; the default asks the WebView.
+  const InAppPageDriver({
+    this._documentStartSupported = _webViewHasDocumentStart,
+  });
+
+  final Future<bool> Function() _documentStartSupported;
 
   static final WebUri _siteUrl = WebUri('https://www.instagram.com/');
 
   @override
   Future<PageSession> open(PageSessionConfig config) async {
+    var supported = false;
+    try {
+      supported = await _documentStartSupported();
+    } on Object {
+      supported = false;
+    }
+    if (!supported) throw const PageHookUnsupportedException();
     await _wipe();
     try {
       final cookies = CookieManager.instance();
@@ -54,6 +78,9 @@ final class InAppPageDriver implements PageDriver {
     }
   }
 }
+
+Future<bool> _webViewHasDocumentStart() =>
+    WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT);
 
 Future<void> _wipe() async {
   await CookieManager.instance().deleteAllCookies();
@@ -94,13 +121,20 @@ final class _InAppPageSession implements PageSession {
         userAgent: _config.userAgent,
         allowFileAccess: false,
         allowContentAccess: false,
+        // The plugin bridge computes the frame origin inside the frame, so
+        // the same rule is also enforced natively (QA-F4): only the two
+        // instagram origins, only the main frame, may call the handler.
+        javaScriptHandlersOriginAllowList: pageHandlerOriginPatterns,
+        javaScriptHandlersForMainFrameOnly: true,
       ),
       onWebViewCreated: (controller) {
         _controller = controller;
         controller.addJavaScriptHandler(
           handlerName: _config.handlerName,
           callback: (JavaScriptHandlerFunctionData data) {
-            // Origin of the frame that posted, as the native side reports it.
+            // Origin of the frame that posted. On Android the plugin bridge
+            // computes it in the frame (not independent of the page), so
+            // `javaScriptHandlersOriginAllowList` repeats the check natively.
             final o = data.origin;
             _emit(
               HookEvent(

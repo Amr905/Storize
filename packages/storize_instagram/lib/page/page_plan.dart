@@ -18,9 +18,11 @@ final class PagePlan<T> {
     required this.url,
     this.matches = _never,
     this.parse = _noParse,
+    this.tentative,
     this.emptyOnPath,
     this.empty,
     this.collectOnLoad,
+    this.storyViewer = false,
   });
 
   /// The page to load.
@@ -33,11 +35,21 @@ final class PagePlan<T> {
   /// run with that failure (a `SchemaException` becomes `SchemaChanged`).
   final Result<T>? Function(Node body) parse;
 
-  /// Normalized lower-case path; navigating there ends the run with [empty].
+  /// Called when [parse] returns null. A non-null result is a *tentative*
+  /// answer (for example "no stories"): it ends the run only if no definitive
+  /// answer arrives after the page has loaded plus a short grace period (QA-F8,
+  /// QA-F11). A page may fire the query more than once.
+  final Result<T>? Function(Node body)? tentative;
+
+  /// Normalized lower-case path. Landing there is a *tentative* [empty]; a
+  /// different single-segment user path is a tentative `username_mismatch`.
   final String? emptyOnPath;
 
-  /// The answer for [emptyOnPath].
+  /// The tentative answer for [emptyOnPath].
   final Result<T>? empty;
+
+  /// Whether this plan opens a story page. A tripped `SeenGuard` refuses it.
+  final bool storyViewer;
 
   /// DOM plans only: reads the page once it has loaded.
   final Future<T> Function(PageSession page)? collectOnLoad;
@@ -70,25 +82,34 @@ abstract final class PagePlans {
     ),
   );
 
-  /// `/stories/<username>/`: the reel query. A reel list that lacks
-  /// [userId] is another reel (keep waiting); an empty list means no stories.
-  /// Landing on the profile page (a user without stories is sent there; this
-  /// is unverified, device test) also means no stories.
+  /// `/stories/<username>/`: the reel query.
+  ///
+  /// Definitive: the reel of [userId]. Tentative (decided after the page has
+  /// loaded plus a grace period, unless the real reel arrives first): an
+  /// empty reel list or a landing on the profile page means no stories; a
+  /// list holding only other users, or a landing on another user's page, means
+  /// `username_mismatch` (a renamed account whose old name is someone
+  /// else's now).
   static PagePlan<StoryReel> stories(String userId, String username) =>
       PagePlan(
         url: _https('/stories/$username/'),
         matches: (c) => c.friendlyName == GraphqlQuery.stories.friendlyName,
         parse: (body) {
+          final mine = const EnvelopeMapper().graphqlStories(body)[userId];
+          return mine == null ? null : Ok(mine);
+        },
+        tentative: (body) {
           final reels = const EnvelopeMapper().graphqlStories(body);
-          final mine = reels[userId];
-          if (mine != null) return Ok(mine);
           if (reels.isEmpty) {
             return Ok(StoryReel(userId: userId, items: const []));
           }
-          return null;
+          return reels.containsKey(userId)
+              ? null
+              : const Err(UnknownFailure(null, 'username_mismatch'));
         },
         emptyOnPath: '/${username.toLowerCase()}',
         empty: Ok(StoryReel(userId: userId, items: const [])),
+        storyViewer: true,
       );
 
   /// `/p/<shortcode>/`: the REST `media/<pk>/info/` reply.

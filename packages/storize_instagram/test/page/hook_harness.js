@@ -25,7 +25,7 @@ function makeContext(config) {
   const handled = [];
   const ctx = {
     location: { href: 'https://www.instagram.com/stories/zzfake_user/', origin: 'https://www.instagram.com' },
-    URL, URLSearchParams, Response, Event, EventTarget, Promise, JSON, Object, Array, String, setTimeout,
+    URL, URLSearchParams, Response, Request, Headers, Blob, FormData, ReadableStream, Uint8Array, ArrayBuffer, Event, EventTarget, Promise, JSON, Object, Array, String, setTimeout,
     flutter_inappwebview: { callHandler: (name, msg) => handled.push({ name, msg }) },
     __STORIZE_HOOK_CONFIG: config,
   };
@@ -93,7 +93,7 @@ async function scenario(name, config, fn) {
     return { handled: handled.map((h) => h.msg) };
   });
 
-  await scenario('custom_list_replaces_default', { blockedFriendlyNames: ['OtherMutation'] }, async ({ ctx, sent }) => {
+  await scenario('custom_list_adds_to_default', { blockedFriendlyNames: ['OtherMutation'] }, async ({ ctx, sent }) => {
     await ctx.fetch(GQL, { method: 'POST', body: form(SEEN).toString() });
     await ctx.fetch(GQL, { method: 'POST', body: form('OtherMutation').toString() });
     return { sent: sent.fetch.map((s) => s.body.includes(SEEN) ? 'seen' : 'other') };
@@ -127,6 +127,46 @@ async function scenario(name, config, fn) {
     const r1 = ctx.navigator.sendBeacon(GQL, form(SEEN).toString());
     const r2 = ctx.navigator.sendBeacon(GQL, form('Other').toString());
     return { r1, r2, sent: sent.beacon.length };
+  });
+
+  // Round 2 (QA-F1): ordinary queries are never blocked, whatever the shape.
+  const ORD = 'PolarisProfilePostsQuery';
+  await scenario('ordinary_shapes_pass', {}, async ({ ctx, sent }) => {
+    await ctx.fetch(GQL, { method: 'POST', body: form(ORD).toString() });
+    await ctx.fetch(GQL, { method: 'POST', body: form(ORD) });
+    await ctx.fetch(new ctx.Request(GQL, { method: 'POST', body: form(ORD).toString() }));
+    await ctx.fetch(new URL(GQL), { method: 'POST', body: new Blob([form(ORD).toString()]) });
+    const fd = new FormData(); fd.append('fb_api_req_friendly_name', ORD);
+    await ctx.fetch(GQL, { method: 'POST', body: fd });
+    await ctx.fetch(GQL, { method: 'POST', body: JSON.stringify({ name: ORD }) });
+    await ctx.fetch(GQL + '?x=1', { method: 'POST', headers: { 'x-fb-friendly-name': ORD }, body: '{}' });
+    ctx.navigator.sendBeacon(GQL, new Blob([form(ORD).toString()]));
+    await wait(30);
+    return { fetch: sent.fetch.length, beacon: sent.beacon.length };
+  });
+
+  await scenario('unreadable_stream_graphql_blocked', {}, async ({ ctx, sent, handled }) => {
+    const stream = new ReadableStream({ start(c) { c.enqueue(new Uint8Array([1])); c.close(); } });
+    const res = await ctx.fetch(GQL, { method: 'POST', body: stream, duplex: 'half' });
+    return { sent: sent.fetch.length, status: res.status, handled: handled.map((h) => h.msg) };
+  });
+
+  await scenario('unreadable_stream_non_graphql_passes', {}, async ({ ctx, sent }) => {
+    const stream = new ReadableStream({ start(c) { c.close(); } });
+    await ctx.fetch('https://www.instagram.com/ajax/other', { method: 'POST', body: stream, duplex: 'half' });
+    return { sent: sent.fetch.length };
+  });
+
+  await scenario('encoded_and_cased_name_blocked', {}, async ({ ctx, sent }) => {
+    await ctx.fetch(GQL, { method: 'POST', body: 'x=' + encodeURIComponent(SEEN.toLowerCase()) });
+    await ctx.fetch(GQL, { method: 'POST', body: 'x=' + SEEN.split('').map((c) => '%' + c.charCodeAt(0).toString(16)).join('') });
+    return { sent: sent.fetch.length };
+  });
+
+  await scenario('legacy_markers_blocked', {}, async ({ ctx, sent }) => {
+    await ctx.fetch('https://www.instagram.com/api/v1/stories/reel/seen/', { method: 'POST', body: 'x=1' });
+    await ctx.fetch(GQL, { method: 'POST', body: '{"xdt_mark_story_reel_seen":1}' });
+    return { sent: sent.fetch.length };
   });
 
   console.log(JSON.stringify(results));

@@ -90,8 +90,34 @@ void main() {
     expect(msg.containsKey('body'), isFalse);
   }, skip: noNode);
 
-  test('the blocked list is configurable and replaces the default', () {
-    expect(s('custom_list_replaces_default')['sent'], ['seen']);
+  test('the blocked list is configurable and ADDS to the default', () {
+    // Both the seen mutation (default) and the added name are blocked.
+    expect(s('custom_list_adds_to_default')['sent'], isEmpty);
+  }, skip: noNode);
+
+  test('QA-F1: ordinary queries pass in every request shape', () {
+    final r = s('ordinary_shapes_pass');
+    expect(r['fetch'], 7);
+    expect(r['beacon'], 1);
+  }, skip: noNode);
+
+  test('QA-F1: an unreadable body to a GraphQL path is blocked', () {
+    final r = s('unreadable_stream_graphql_blocked');
+    expect(r['sent'], 0);
+    expect(r['status'], 200);
+    expect(((r['handled'] as List).single as Map)['type'], 'blocked');
+  }, skip: noNode);
+
+  test('QA-F1: an unreadable body to another path passes', () {
+    expect(s('unreadable_stream_non_graphql_passes')['sent'], 1);
+  }, skip: noNode);
+
+  test('QA-F1: encoded and re-cased names are still blocked', () {
+    expect(s('encoded_and_cased_name_blocked')['sent'], 0);
+  }, skip: noNode);
+
+  test('QA-F1: the legacy seen markers are blocked', () {
+    expect(s('legacy_markers_blocked')['sent'], 0);
   }, skip: noNode);
 
   test('only instagram.com requests are blocked', () {
