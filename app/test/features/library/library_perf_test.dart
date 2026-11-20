@@ -15,12 +15,15 @@ import 'library_rig.dart';
 /// a ready list (the DB query has its own perf test in T-005/T-006) and no
 /// real image decoding (the thumb builder is a gradient).
 ///
-/// The budget is the NFR itself (1 s). On the Claude workspace the measured
-/// time is about 200 ms, so there is about 5x headroom for a slow or shared CI
-/// box. A widget test runs in the JIT, which is slower than a release build on
-/// a phone. If CI proves flaky, raise [budget] rather than skip the test. The
-/// tiles are built lazily, so the cost does not grow with the item count; the
-/// other two tests prove that.
+/// The budget is the NFR itself (1 s). This measures only the widget side:
+/// layout and build of the first screen from a ready in-memory list, in the
+/// JIT of a widget test on the Claude workspace (about 150-250 ms there). It
+/// does NOT measure the real drift `watchLibrary` query (the sort and the
+/// media join), the thumbnail decoding, or a phone CPU. T-037 measures the
+/// real path on a device. If CI proves flaky, raise [budget] rather than skip
+/// the test. The rows are one flat lazy list with known extents, so the cost
+/// does not grow with the item count or the number of days (see the QA perf
+/// test); the other two tests check that only the visible tiles are built.
 const Duration budget = Duration(milliseconds: 1000);
 
 List<ContentWithMedia> _items(int count, List<Target> targets) {

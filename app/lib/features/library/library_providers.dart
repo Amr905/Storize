@@ -65,6 +65,16 @@ class LibrarySelectionController extends Notifier<Set<int>> {
 
   /// Leaves selection mode.
   void clear() => state = const {};
+
+  /// Replaces the selection.
+  void replace(Set<int> ids) => state = Set.unmodifiable(ids);
+
+  /// Drops every selected ID that is not in [visible]. Keeps the same state
+  /// object when nothing changes.
+  void retain(Set<int> visible) {
+    if (state.isEmpty || visible.containsAll(state)) return;
+    state = Set.unmodifiable(state.intersection(visible));
+  }
 }
 
 /// Every stored item, newest first. One repo subscription feeds the grid, the
@@ -147,8 +157,12 @@ LibraryView buildLibraryView({
       lastCheck = at;
     }
   }
+  final groups = groupLibrary(shown, byId);
+  final flat = flattenGroups(groups);
   return LibraryView(
-    groups: groupLibrary(shown, byId),
+    groups: groups,
+    rows: flat.rows,
+    rowDay: flat.rowDay,
     itemCount: shown.length,
     targets: targets,
     targetsById: byId,

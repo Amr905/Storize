@@ -721,5 +721,21 @@
   "libRemoveFromLibrary": "Remove from library",
   "@libRemoveFromLibrary": {
     "description": "Dialog confirm button for a missing file."
+  },
+  "libDeletePartial": "{deleted} deleted, {failed} couldn't be deleted",
+  "@libDeletePartial": {
+    "description": "Snackbar after a delete where some items could not be deleted from the gallery.",
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "libDeleting": "Deleting…",
+  "@libDeleting": {
+    "description": "Progress label (semantics) while a delete runs."
   }
 }

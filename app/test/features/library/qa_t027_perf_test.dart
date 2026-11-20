@@ -38,7 +38,18 @@ ContentWithMedia _item(int i, int targetId, DateTime posted) =>
     );
 
 void main() {
-  for (final perDay in [1, 2, 5, 25]) {
+  // The first pump in a test process pays for JIT compilation and font and
+  // theme setup (about 1 s here). That cost is not the library's, so warm up
+  // once before the measured tests.
+  testWidgets('warm-up (not measured)', (t) async {
+    final rig = LibraryRig();
+    final target = await rig.addTarget('warm');
+    await rig.addContent(target, postedAt: DateTime(2026, 11, 20, 9));
+    await pumpLibrary(t, rig, size: const Size(400, 800));
+    expect(find.byType(StoryThumb), findsOneWidget);
+  });
+
+  for (final perDay in [25, 5, 2, 1]) {
     testWidgets('5000 items, $perDay per day, open time and built widgets', (
       t,
     ) async {
@@ -63,7 +74,7 @@ void main() {
         extra: [allContentProvider.overrideWith((ref) => Stream.value(items))],
       );
       sw.stop();
-      final headers = find.byType(SliverDateHeader).evaluate().length;
+      final headers = find.byType(DateHeader).evaluate().length;
       final tiles = find.byType(StoryThumb).evaluate().length;
       // ignore: avoid_print, evidence for the QA report.
       print(
@@ -72,13 +83,9 @@ void main() {
       );
       expect(tiles, lessThan(60));
       expect(headers, lessThan(60));
-      // FINDING F4: one SliverMainAxisGroup per day is not lazy, so the open
-      // time grows with the number of distinct days. The NFR budget holds
-      // only for a library that spans a few hundred days. Pinned as measured.
-      if (perDay >= 25) expect(sw.elapsedMilliseconds, lessThan(1000));
-      if (perDay == 1) {
-        expect(sw.elapsedMilliseconds, greaterThan(1000));
-      }
+      // F4 fixed: the rows are one flat lazy list, so the open time does
+      // not depend on how many distinct days there are.
+      expect(sw.elapsedMilliseconds, lessThan(1000));
     });
   }
 

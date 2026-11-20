@@ -552,4 +552,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libRemoveFromLibrary => 'Remove from library';
+
+  @override
+  String libDeletePartial(int deleted, int failed) {
+    return '$deleted deleted, $failed couldn\'t be deleted';
+  }
+
+  @override
+  String get libDeleting => 'Deleting…';
 }

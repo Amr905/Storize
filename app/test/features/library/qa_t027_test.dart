@@ -196,23 +196,21 @@ void main() {
         'content://fake/1/0',
         'content://fake/2/0',
       });
-      await _pumpWith(t, rig, spy);
+      final c = await _pumpWith(t, rig, spy);
       await _selectTiles(t, [0, 1, 2]);
       await t.tap(find.byTooltip(_deleteTip));
       await t.pumpAndSettle();
       await t.tap(find.widgetWithText(FilledButton, 'Delete'));
       await t.pumpAndSettle();
       // Two failed, one deleted: the failed rows stay.
-      expect(find.text("2 items couldn't be deleted"), findsOneWidget);
+      expect(find.text("1 deleted, 2 couldn't be deleted"), findsOneWidget);
       final remaining = await _remainingIds(rig);
       expect(remaining.containsAll({1, 2}), isTrue);
       expect(remaining.contains(3), isFalse);
       expect(_tiles(), findsNWidgets(8));
-      // FINDING F2: the selection is cleared even though 2 items are kept,
-      // so a retry needs reselecting, and the snackbar does not say that 1
-      // item was deleted.
-      expect(find.text('3 selected'), findsNothing);
-      expect(find.text('1 item deleted'), findsNothing);
+      // F2 fixed: the failed items stay selected, the deleted one is gone.
+      expect(find.text('2 selected'), findsOneWidget);
+      expect(c.read(librarySelectionProvider), {1, 2});
     });
 
     testWidgets('every item failing reports all of them', (t) async {
@@ -230,6 +228,7 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text("2 items couldn't be deleted"), findsOneWidget);
       expect(_tiles(), findsNWidgets(9));
+      expect(find.text('2 selected'), findsOneWidget);
     });
 
     testWidgets('slide of a carousel: all gallery files of the post go', (
@@ -277,7 +276,7 @@ void main() {
       expect(find.text('Library'), findsOneWidget);
     });
 
-    testWidgets('FINDING F1: Delete can be started again while one runs', (
+    testWidgets('F1: Delete and Share are disabled while a delete runs', (
       t,
     ) async {
       final rig = _SpyRig();
@@ -289,48 +288,41 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.widgetWithText(FilledButton, 'Delete'));
       await t.pump(const Duration(milliseconds: 400));
-      // The first delete is hanging in the gallery. The selection and the
-      // Delete button are still live and no progress is shown.
+      // The first delete hangs in the gallery: progress shows and the
+      // actions are disabled, so a second confirm is impossible.
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      IconButton action(IconData icon) =>
+          t.widget<IconButton>(find.widgetWithIcon(IconButton, icon));
+      expect(action(Icons.delete_outline_rounded).onPressed, isNull);
+      expect(action(Icons.share_outlined).onPressed, isNull);
+      await t.tap(find.byTooltip(_deleteTip), warnIfMissed: false);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.text('Delete 1 item?'), findsNothing);
+      // Tiles ignore taps too.
+      await t.tap(_tiles().at(1), warnIfMissed: false);
+      await t.pump();
       expect(find.text('1 selected'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-      await t.tap(find.byTooltip(_deleteTip));
-      await t.pump(const Duration(milliseconds: 400));
-      expect(find.text('Delete 1 item?'), findsOneWidget);
-      await t.tap(find.widgetWithText(FilledButton, 'Delete'));
-      await t.pump(const Duration(milliseconds: 400));
-      // Two DeleteContent runs hit the same gallery file.
-      expect(spy.deletes, ['content://fake/1/0', 'content://fake/1/0']);
       spy.gate!.complete();
       await t.pumpAndSettle();
+      expect(spy.deletes, ['content://fake/1/0']);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
     });
 
-    testWidgets('FINDING F3: the selection can hide behind a kind switch', (
-      t,
-    ) async {
+    testWidgets('F3: a kind switch ends selection mode', (t) async {
       final rig = _SpyRig();
       await seedStandard(rig);
       final spy = SpyGallery(rig.gallery);
       final c = await _pumpWith(t, rig, spy);
       await _selectTiles(t, [0]);
-      // The Stories/Posts switch and the account chips stay usable.
       await t.tap(find.text('Posts').first);
       await t.pumpAndSettle();
-      expect(find.byType(StoryThumb), findsNothing);
-      // Still in selection mode with a selected item that cannot be seen.
-      expect(c.read(librarySelectionProvider), {1});
-      expect(find.text('1 selected'), findsOneWidget);
-      await t.tap(find.byTooltip(_deleteTip));
-      await t.pumpAndSettle();
-      expect(find.text('Delete 1 item?'), findsOneWidget);
-      await t.tap(find.widgetWithText(FilledButton, 'Delete'));
-      await t.pumpAndSettle();
-      // A story that is no longer on screen was removed from the gallery.
-      expect(spy.deletes, ['content://fake/1/0']);
+      expect(c.read(librarySelectionProvider), isEmpty);
+      expect(find.textContaining('selected'), findsNothing);
+      expect(find.byTooltip(_deleteTip), findsNothing);
+      expect(spy.deletes, isEmpty);
     });
 
-    testWidgets('FINDING F3: an account filter hides a selected item', (
-      t,
-    ) async {
+    testWidgets('F3: an account chip ends selection mode', (t) async {
       final rig = LibraryRig();
       await seedStandard(rig);
       final c = await pumpLibrary(t, rig);
@@ -338,12 +330,53 @@ void main() {
       await t.tap(find.textContaining('@brandx').first);
       await t.pumpAndSettle();
       expect(_tiles(), findsNWidgets(3));
-      expect(c.read(librarySelectionProvider), {1, 2});
-      expect(find.text('2 selected'), findsOneWidget);
-      await t.tap(find.byTooltip(_deleteTip));
+      expect(c.read(librarySelectionProvider), isEmpty);
+      expect(find.byTooltip(_deleteTip), findsNothing);
+    });
+
+    testWidgets('F3: the filter sheet ends selection mode', (t) async {
+      final rig = LibraryRig();
+      await seedStandard(rig);
+      final c = await pumpLibrary(t, rig);
+      await _selectTiles(t, [0]);
+      // The Filters action is replaced by the selection actions, so change
+      // the filter through the provider, as the sheet's Apply does.
+      c
+          .read(libraryFiltersProvider.notifier)
+          .replace(
+            c.read(libraryFiltersProvider).copyWith(type: TypeFilter.videos),
+          );
       await t.pumpAndSettle();
-      // The dialog asks about 2 items while 3 other, unselected tiles show.
-      expect(find.text('Delete 2 items?'), findsOneWidget);
+      expect(c.read(librarySelectionProvider), isEmpty);
+    });
+
+    testWidgets('F3: an item that leaves the screen leaves the selection', (
+      t,
+    ) async {
+      final rig = LibraryRig();
+      await seedStandard(rig);
+      final c = await pumpLibrary(t, rig);
+      await _selectTiles(t, [0, 1]);
+      expect(find.text('2 selected'), findsOneWidget);
+      // Another part of the app (retention, a target removal) deletes row 1.
+      await rig.content.deleteByIds([1]);
+      await t.pumpAndSettle();
+      expect(c.read(librarySelectionProvider), {2});
+      expect(find.text('1 selected'), findsOneWidget);
+    });
+
+    testWidgets('Delete and Share act on the same visible set', (t) async {
+      final rig = _SpyRig();
+      await seedStandard(rig);
+      final spy = SpyGallery(rig.gallery);
+      await _pumpWith(t, rig, spy);
+      await _selectTiles(t, [0, 2]);
+      await t.tap(find.byTooltip('Share'));
+      await t.pumpAndSettle();
+      expect(
+        rig.share.calls.single.map((f) => f.contentUri).toSet(),
+        {'content://fake/1/0', 'content://fake/3/0'},
+      );
     });
 
     testWidgets('broken tile: cancel keeps it, confirm removes only it', (

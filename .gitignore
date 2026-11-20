@@ -46,3 +46,7 @@ key.properties
 # Symbols / obfuscation
 app.*.symbols
 app.*.map.json
+
+# Flutter golden failure output (diff images). The synthetic fixtures are real files.
+**/failures/
+!packages/storize_instagram/test/fixtures/synthetic/failures/

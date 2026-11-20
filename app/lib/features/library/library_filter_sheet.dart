@@ -69,6 +69,8 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
       context: context,
       firstDate: DateTime(today.year - 5),
       lastDate: today,
+      // The app clock, not the system one, so "today" is consistent.
+      currentDate: today,
       initialDateRange: _filters.customFrom != null && _filters.customTo != null
           ? DateTimeRange(start: _filters.customFrom!, end: _filters.customTo!)
           : null,

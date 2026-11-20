@@ -7,6 +7,15 @@ sealed class LibraryRow {
   const LibraryRow();
 }
 
+/// The sticky-style day header ("Today", "Yesterday", a date).
+final class DayHeaderRow extends LibraryRow {
+  /// Creates a header.
+  const DayHeaderRow(this.day);
+
+  /// The local date (midnight).
+  final DateTime day;
+}
+
 /// The "@account . N" sub-header of a day.
 final class AccountHeaderRow extends LibraryRow {
   /// Creates a header.
@@ -63,10 +72,19 @@ class LibraryView {
     required this.filtersActive,
     required this.now,
     required this.lastCheck,
+    required this.rows,
+    required this.rowDay,
   });
 
   /// Day groups, newest first.
   final List<DayGroup> groups;
+
+  /// The same content as one flat list: a [DayHeaderRow], then the rows of
+  /// that day, for every day. The page builds it lazily with known extents.
+  final List<LibraryRow> rows;
+
+  /// For each entry of [rows], the index of its day in [groups].
+  final List<int> rowDay;
 
   /// Items that pass the filters, for the current kind.
   final int itemCount;
@@ -103,6 +121,23 @@ class LibraryView {
       }
     }
   }
+}
+
+/// Flattens [groups] into rows and the day index of each row.
+({List<LibraryRow> rows, List<int> rowDay}) flattenGroups(
+  List<DayGroup> groups,
+) {
+  final rows = <LibraryRow>[];
+  final rowDay = <int>[];
+  for (var d = 0; d < groups.length; d++) {
+    rows.add(DayHeaderRow(groups[d].day));
+    rowDay.add(d);
+    for (final r in groups[d].rows) {
+      rows.add(r);
+      rowDay.add(d);
+    }
+  }
+  return (rows: rows, rowDay: rowDay);
 }
 
 /// Number of tiles per row.

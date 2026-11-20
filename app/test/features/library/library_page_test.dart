@@ -114,6 +114,44 @@ void main() {
     });
   });
 
+  group('sticky day header', () {
+    testWidgets('the current day stays on top while scrolling', (t) async {
+      final rig = LibraryRig();
+      await seedStandard(rig);
+      // More of yesterday, so its header can reach the top edge.
+      for (var i = 0; i < 9; i++) {
+        await rig.addContent(
+          rig.byName['client_co']!,
+          postedAt: DateTime(2026, 11, 19, 8, i),
+        );
+      }
+      await pumpLibrary(t, rig, size: const Size(400, 400));
+      double? topOf(String label) {
+        final ys = [
+          for (final e in find.text(label).evaluate())
+            t.getTopLeft(find.byWidget(e.widget)).dy,
+        ];
+        return ys.isEmpty ? null : ys.reduce((a, b) => a < b ? a : b);
+      }
+
+      final list = find.byType(CustomScrollView);
+      // At the top the inline "Today" header is the only one.
+      expect(find.text('Today'), findsOneWidget);
+      // Scroll past the start of today's group: the label is still on top.
+      await t.drag(list, const Offset(0, -300));
+      await t.pumpAndSettle();
+      expect(topOf('Today'), lessThan(80));
+      // Scroll into yesterday: the label changes.
+      await t.drag(list, const Offset(0, -700));
+      await t.pumpAndSettle();
+      expect(topOf('Yesterday'), lessThan(80));
+      // Back at the top the overlay is gone again.
+      await t.drag(list, const Offset(0, 3000));
+      await t.pumpAndSettle();
+      expect(find.text('Today'), findsOneWidget);
+    });
+  });
+
   group('navigation', () {
     testWidgets('tapping a story opens the story viewer', (t) async {
       final rig = LibraryRig();
@@ -346,9 +384,10 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.widgetWithText(FilledButton, 'Delete'));
       await t.pumpAndSettle();
-      expect(find.text("1 item couldn't be deleted"), findsOneWidget);
-      // The kept item is still in the library.
+      expect(find.text("1 deleted, 1 couldn't be deleted"), findsOneWidget);
+      // The kept item is still in the library and still selected.
       expect(_tiles(), findsNWidgets(8));
+      expect(find.text('1 selected'), findsOneWidget);
     });
 
     testWidgets('share goes through ShareService with saved files', (t) async {

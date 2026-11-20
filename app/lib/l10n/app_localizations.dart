@@ -1024,6 +1024,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove from library'**
   String get libRemoveFromLibrary;
+
+  /// Snackbar after a delete where some items could not be deleted from the gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'{deleted} deleted, {failed} couldn\'t be deleted'**
+  String libDeletePartial(int deleted, int failed);
+
+  /// Progress label (semantics) while a delete runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get libDeleting;
 }
 
 class _AppLocalizationsDelegate
