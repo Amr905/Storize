@@ -1,0 +1,8 @@
+[
+  {"src": "https://scontent.fbcdn.net/ZZFAKE/photo.jpg", "kind": "image"},
+  {"src": "https://scontent.cdninstagram.com/ZZFAKE/clip.mp4", "kind": "video"},
+  {"src": "blob:https://www.instagram.com/ZZFAKE", "kind": "video"},
+  {"src": "https://example.test/ZZFAKE.jpg", "kind": "image"},
+  {"src": "http://scontent.fbcdn.net/ZZFAKE/plain.jpg", "kind": "image"},
+  {"src": 7, "kind": "image"}
+]

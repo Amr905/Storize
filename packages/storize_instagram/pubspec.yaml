@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Same exact pin as app/pubspec.yaml (6.1.5 breaks under AGP 9).
+  flutter_inappwebview: 6.2.0-beta.3
   storize_domain: any
   storize_model: any
 
