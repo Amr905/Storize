@@ -39,6 +39,11 @@ void main() {
               ..statusCode = 429
               ..headers.set('retry-after', '99999999999')
               ..write('{}');
+          case '/retry-wrap':
+            req.response
+              ..statusCode = 429
+              ..headers.set('retry-after', '18446744073769')
+              ..write('{}');
           case '/retry-neg':
             req.response
               ..statusCode = 429
@@ -89,6 +94,17 @@ void main() {
     expect(hits, ['/to-target']);
     expect(reply.toString(), isNot(contains('ZZFAKE')));
   });
+
+  test(
+    'INFO: an absurd Retry-After (about 2^64 microseconds) wraps to a '
+    'short Duration (evidence only; the header comes from Instagram)',
+    () async {
+      final r = await DartIoHttp().send(_get('$base/retry-wrap'));
+      // ignore: avoid_print, evidence for the review
+      print('RETRY_WRAP=${r.retryAfter}');
+      expect(r.status, 429);
+    },
+  );
 
   test('Retry-After: seconds are read; negative gives null', () async {
     expect(
