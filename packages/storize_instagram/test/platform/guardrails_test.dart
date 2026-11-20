@@ -107,17 +107,19 @@ void main() {
     }
   });
 
-  test('the CDN allowlist rule matches the T-013 probe rule', () {
+  test('there is one CDN allowlist: the probe uses allowedCdnUri', () {
     final probe = File('lib/probe/ig_probe.dart').readAsStringSync();
     final policy = File('lib/media/cdn_policy.dart').readAsStringSync();
-    expect(probe, contains("['cdninstagram.com', 'fbcdn.net']"));
+    expect(probe, contains('allowedCdnUri('));
+    expect(probe, isNot(contains('cdninstagram.com')));
+    expect(probe, isNot(contains('fbcdn.net')));
     expect(policy, contains("['cdninstagram.com', 'fbcdn.net']"));
   });
 
   test('the lease and the breaker store have no Instagram or session code', () {
     for (final name in [
       'lib/platform/governor_webview_lease.dart',
-      'lib/platform/seen_breaker_store.dart',
+      'lib/page/seen_breaker_store.dart',
     ]) {
       final src = _code(name);
       expect(src.contains('SessionStore'), isFalse, reason: name);

@@ -106,14 +106,18 @@ void main() {
     },
   );
 
-  test('Retry-After: seconds are read; negative gives null', () async {
-    expect(
-      (await DartIoHttp().send(_get('$base/retry-neg'))).retryAfter,
-      isNull,
-    );
-    final huge = await DartIoHttp().send(_get('$base/retry-huge'));
-    expect(huge.retryAfter, const Duration(seconds: 99999999999));
-  });
+  test(
+    'Retry-After: seconds are read; negative gives null; huge is clamped',
+    () async {
+      expect(
+        (await DartIoHttp().send(_get('$base/retry-neg'))).retryAfter,
+        isNull,
+      );
+      final huge = await DartIoHttp().send(_get('$base/retry-huge'));
+      // T-015 N4: clamped to the 24 h maximum instead of passed on.
+      expect(huge.retryAfter, const Duration(hours: 24));
+    },
+  );
 
   test(
     'QA-F6: Retry-After as an HTTP-date should become a duration',

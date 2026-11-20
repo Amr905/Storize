@@ -1,4 +1,4 @@
-import 'package:storize_instagram/platform/seen_breaker_store.dart';
+import 'package:storize_instagram/page/seen_breaker_store.dart';
 
 /// Who may use the app's WebView (QA-F7).
 ///
@@ -54,6 +54,12 @@ final class NoopWebViewLease implements WebViewLease {
 ///   store keeps its old value, so another isolate or a restart would not see
 ///   the trip. Call [trip] again to retry the write.
 /// - Only [reset] clears the breaker, in memory and in the store.
+///
+/// **Use `InstagramPlatform`, not `PageExtractor` directly.** The extractor
+/// only checks the synchronous [tripped] flag. The platform calls [refresh]
+/// before every page-mode story load, so a trip persisted by the other isolate
+/// or by an earlier process is honoured. A caller that drives `PageExtractor`
+/// on its own never reads the store.
 final class SeenGuard {
   /// Creates a guard that has not tripped. Tests make their own.
   SeenGuard({SeenBreakerStore? store})

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:storize_instagram/direct/failure_classifier.dart';
 import 'package:storize_instagram/direct/ig_http.dart';
 
 /// An [IgHttp] on `dart:io`, with no extra dependency.
@@ -120,14 +121,16 @@ final class DartIoHttp implements IgHttp {
   }
 
   /// `Retry-After` as whole seconds or as an HTTP-date. Null when missing,
-  /// unreadable, negative or already past.
+  /// unreadable, negative or already past. Whole seconds are clamped before
+  /// the conversion (T-013 N4), so a huge value cannot wrap.
   static Duration? _parseRetryAfter(String? value) {
     if (value == null) return null;
     final seconds = int.tryParse(value.trim());
-    if (seconds != null) return seconds < 0 ? null : Duration(seconds: seconds);
+    if (seconds != null) return clampedRetryAfter(seconds);
     try {
       final wait = HttpDate.parse(value.trim()).difference(DateTime.now());
-      return wait > Duration.zero ? wait : null;
+      if (wait <= Duration.zero) return null;
+      return wait > defaultMaxRetryAfter ? defaultMaxRetryAfter : wait;
     } on Object {
       return null;
     }

@@ -7,11 +7,11 @@
 /// page-mode story loads.
 ///
 /// **Composition root (T-021 / app):** inject an implementation backed by
-/// `SharedPreferences` (one bool key, for example `seen_breaker_tripped`), so
-/// both isolates read the same value. Create one `SeenGuard` per isolate with
-/// that store and give the same instance to `PageExtractor` and
-/// `InstagramPlatform`. The in-memory default is only for tests and for a
-/// process that never restarts.
+/// the app's key-value store (shared preferences; one bool key, for example
+/// `seen_breaker_tripped`), so both isolates read the same value. Create one
+/// `SeenGuard` per isolate with that store and give the same instance to
+/// `PageExtractor` and `InstagramPlatform`. The in-memory default is only for
+/// tests and for a process that never restarts.
 ///
 /// Rules for implementations:
 /// - [isTripped] and [markTripped] may throw; `SeenGuard` fails closed.

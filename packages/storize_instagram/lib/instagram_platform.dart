@@ -1,5 +1,7 @@
 import 'dart:async';
 
+// ignore: implementation_imports, until the Lead exports it from the barrel.
+import 'package:storize_domain/src/ports/content_signals.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/governor/governor.dart';
@@ -59,7 +61,8 @@ import 'package:storize_model/storize_model.dart';
 /// resume, host allowlist, 403/410 as `ExpiredMediaUrl`, **not governed**
 /// (ADR-0009), no URLs in logs.
 ///
-/// ## Signals without a port change (T-013 N3)
+/// ## Signals (T-013 N3)
+/// The platform also implements the domain `ContentSignals` port.
 /// [takeSignals] returns what the port cannot carry: how many malformed
 /// timeline edges direct mode skipped, and how many times page mode was used,
 /// since the last call. RunCheck reads it around each post check (EC-14).
@@ -75,7 +78,7 @@ import 'package:storize_model/storize_model.dart';
 /// every page load one `RequestCost.pageLoad` (3) call inside the extractors;
 /// this class makes no governed call itself and never nests or leaves one
 /// unawaited.
-final class InstagramPlatform implements ContentPlatform {
+final class InstagramPlatform implements ContentPlatform, ContentSignals {
   /// Creates the platform from its parts. Use [InstagramPlatform.assemble] to
   /// build the parts with the right sharing.
   InstagramPlatform({
@@ -211,8 +214,8 @@ final class InstagramPlatform implements ContentPlatform {
   @override
   PlatformId get id => PlatformId.instagram;
 
-  /// Returns what the platform noticed since the last call and resets it.
-  PlatformSignalsSnapshot takeSignals() => signals.take();
+  @override
+  ContentSignalsSnapshot takeSignals() => signals.take();
 
   // ----------------------------------------------------------------- users
 
