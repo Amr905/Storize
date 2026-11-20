@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/library/library_page.dart';
 
 import '../helpers/app_harness.dart';
 
@@ -19,7 +20,7 @@ void main() {
         final h = await pumpApp(t, initialLocation: '/targets');
         await h.go(bad);
         expect(h.location, '/library');
-        expect(find.text('TODO(T-027)'), findsOneWidget);
+        expect(find.byType(LibraryPage), findsOneWidget);
         expect(t.takeException(), isNull);
       });
     }
@@ -60,7 +61,7 @@ void main() {
         await h.go(tab);
         await back(t);
         expect(h.location, '/library');
-        expect(find.text('TODO(T-027)'), findsOneWidget);
+        expect(find.byType(LibraryPage), findsOneWidget);
       });
     }
 

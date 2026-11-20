@@ -2,8 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/library/library_page.dart';
+import 'package:storize_app/features/library/library_providers.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/router/routes.dart';
+import 'package:storize_app/ui/ui.dart';
+import 'package:storize_model/storize_model.dart';
 
 import '../helpers/app_harness.dart';
 
@@ -22,7 +26,7 @@ void main() {
           findsOneWidget,
         );
       }
-      expect(find.text('TODO(T-027)'), findsOneWidget);
+      expect(find.byType(LibraryPage), findsOneWidget);
     });
 
     testWidgets('every screen resolves to its placeholder', (t) async {
@@ -30,7 +34,6 @@ void main() {
       const cases = {
         '/login': 'TODO(T-026)',
         '/setup': 'TODO(T-026)',
-        '/library': 'TODO(T-027)',
         '/story/3': 'TODO(T-028)',
         '/post/3': 'TODO(T-029)',
         '/targets': 'TODO(T-030)',
@@ -44,6 +47,8 @@ void main() {
         await h.go(e.key);
         expect(find.text(e.value), findsOneWidget, reason: e.key);
       }
+      await h.go('/library');
+      expect(find.byType(LibraryPage), findsOneWidget, reason: '/library');
       // The lock page is only reachable while locked.
       expect(Routes.lockPath, '/lock');
     });
@@ -96,7 +101,12 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://library?kind=posts&target=5');
       expect(h.location, '/library?kind=posts&target=5');
-      expect(find.text('kind=post target=5'), findsOneWidget);
+      final page = t.widget<LibraryPage>(find.byType(LibraryPage));
+      expect(page.kind, ContentKind.post);
+      expect(page.targetId, 5);
+      // The page applied the parameters to its state.
+      expect(h.container.read(libraryKindProvider), LibraryKind.posts);
+      expect(h.container.read(libraryFiltersProvider).targetIds, {5});
     });
 
     testWidgets('storize://settings/storage opens S-12 at storage', (t) async {
@@ -118,7 +128,7 @@ void main() {
         final h = await pumpApp(t, initialLocation: '/targets');
         await h.go(bad);
         expect(h.location, '/library');
-        expect(find.text('TODO(T-027)'), findsOneWidget);
+        expect(find.byType(LibraryPage), findsOneWidget);
         expect(t.takeException(), isNull);
       });
     }
@@ -148,7 +158,7 @@ void main() {
       expect(find.text('targetId=9'), findsOneWidget);
 
       await tapTab('Library');
-      expect(find.text('TODO(T-027)'), findsOneWidget);
+      expect(find.byType(LibraryPage), findsOneWidget);
       expect(find.text('targetId=9'), findsNothing);
 
       await tapTab('Targets');

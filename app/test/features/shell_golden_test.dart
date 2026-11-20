@@ -23,10 +23,18 @@ void main() {
           ..physicalSize = const Size(400, 700);
         addTearDown(t.view.reset);
         final repo = FakeAccountRepo();
+        final targets = FakeTargetRepo();
         await t.pumpWidget(
           StorizeApp(
             overrides: [
               accountRepoProvider.overrideWithValue(repo),
+              // The Library (T-027) reads these; empty fakes show its
+              // "nothing saved yet" state.
+              targetRepoProvider.overrideWithValue(targets),
+              contentRepoProvider.overrideWithValue(
+                FakeContentRepo(targets: targets),
+              ),
+              clockProvider.overrideWithValue(FakeClock(DateTime.utc(2026))),
               initialLocationProvider.overrideWithValue('/library'),
               appLockTestBypassProvider.overrideWithValue(true),
             ],

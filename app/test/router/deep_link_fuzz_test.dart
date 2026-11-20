@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 
 import '../helpers/app_harness.dart';
@@ -144,7 +145,10 @@ void main() {
         if (!isError && !_known.hasMatch(at)) {
           failures.add('$raw -> UNKNOWN $at');
         }
-        if (!isError && find.textContaining('TODO(').evaluate().length != 1) {
+        final pages =
+            find.textContaining('TODO(').evaluate().length +
+            find.byType(LibraryPage).evaluate().length;
+        if (!isError && pages != 1) {
           failures.add('$raw -> $at: no single placeholder page');
         }
         print('FUZZ $raw -> $at');
@@ -179,7 +183,8 @@ void main() {
         final ex = t.takeException();
         print(
           'PATH $raw -> ${where(h)} ex=${ex != null} '
-          'todo=${find.textContaining('TODO(').evaluate().length}',
+          'todo=${find.textContaining('TODO(').evaluate().length} '
+          'library=${find.byType(LibraryPage).evaluate().length}',
         );
       }
       expect(failures, isEmpty);
