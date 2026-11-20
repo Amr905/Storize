@@ -1,0 +1,37 @@
+{
+  "reels": {
+    "ZZFAKE_user_a": {
+      "id": "ZZFAKE_user_a",
+      "reel_type": "user_reel",
+      "latest_reel_media": 1800000100,
+      "items": [
+        {
+          "pk": "ZZFAKE_story_rest",
+          "id": "ZZFAKE_story_rest_ZZFAKE_user_a",
+          "media_type": 1,
+          "product_type": "story",
+          "taken_at": 1800000100,
+          "expiring_at": 1800086500,
+          "code": "ZZFAKE_code",
+          "user": {
+            "pk": "ZZFAKE_user_a"
+          },
+          "audience": null,
+          "story_link_stickers": null,
+          "original_width": 1080,
+          "original_height": 1920,
+          "image_versions2": {
+            "candidates": [
+              {
+                "url": "https://cdn.example.test/ZZFAKE_rs_720x1280.jpg",
+                "width": 720,
+                "height": 1280
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "status": "ok"
+}

@@ -1,0 +1,7 @@
+{
+  "message": "challenge_required",
+  "challenge": {
+    "url": "https://example.test/ZZFAKE"
+  },
+  "status": "fail"
+}

@@ -1,0 +1,15 @@
+{
+  "data": {
+    "user": {
+      "pk": "ZZFAKE_user_a",
+      "username": "zzfake_a",
+      "full_name": "ZZFAKE Name",
+      "is_private": true,
+      "followed_by_viewer": true,
+      "blocked_by_viewer": false,
+      "profile_pic_url": "https://cdn.example.test/ZZFAKE_avatar.jpg",
+      "latest_reel_media": 1800000140
+    }
+  },
+  "status": "ok"
+}

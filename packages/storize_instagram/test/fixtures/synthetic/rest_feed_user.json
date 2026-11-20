@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "pk": "ZZFAKE_post_rest",
+      "id": "ZZFAKE_post_rest_ZZFAKE_user_a",
+      "code": "ZZFAKE_c_t_rest",
+      "media_type": 1,
+      "product_type": "feed",
+      "taken_at": 1800000300,
+      "user": {
+        "pk": "ZZFAKE_user_a"
+      },
+      "owner_id": {
+        "pk": "ZZFAKE_user_a"
+      },
+      "caption": null,
+      "timeline_pinned_user_ids": [],
+      "coauthor_producers": [],
+      "image_versions2": {
+        "candidates": [
+          {
+            "url": "https://cdn.example.test/ZZFAKE_rp_1080x1080.jpg",
+            "width": 1080,
+            "height": 1080
+          }
+        ]
+      }
+    }
+  ],
+  "num_results": 1,
+  "status": "ok"
+}

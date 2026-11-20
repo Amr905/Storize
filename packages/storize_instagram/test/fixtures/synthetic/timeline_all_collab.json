@@ -1,0 +1,83 @@
+{
+  "data": {
+    "xdt_api__v1__feed__user_timeline_graphql_connection": {
+      "edges": [
+        {
+          "node": {
+            "pk": "ZZFAKE_cc_1",
+            "id": "ZZFAKE_cc_1_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_E_cc_1",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000001,
+            "user": {
+              "pk": "ZZFAKE_user_b"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_b"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [
+              {
+                "pk": "ZZFAKE_user_b"
+              },
+              {
+                "pk": "ZZFAKE_user_a"
+              }
+            ],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_x_10x10.jpg",
+                  "width": 10,
+                  "height": 10
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_cc_2",
+            "id": "ZZFAKE_cc_2_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_E_cc_2",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000002,
+            "user": {
+              "pk": "ZZFAKE_user_z"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_z"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [
+              {
+                "pk": "ZZFAKE_user_z"
+              },
+              {
+                "pk": "ZZFAKE_user_a"
+              }
+            ],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_y_10x10.jpg",
+                  "width": 10,
+                  "height": 10
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "ZZFAKE_viewer"
+      }
+    }
+  }
+}
