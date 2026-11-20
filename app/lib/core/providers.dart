@@ -13,6 +13,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_domain/storize_domain.dart';
 
 Never _unwired(String name) => throw UnimplementedError(
@@ -85,4 +86,25 @@ final storageInfoProvider = Provider<StorageInfo>(
 /// [SessionStore].
 final sessionStoreProvider = Provider<SessionStore>(
   (ref) => _unwired('sessionStoreProvider'),
+);
+
+/// [ShareService] (library, viewers). Does nothing until a share package is
+/// wired in `main`.
+final shareServiceProvider = Provider<ShareService>(
+  (ref) => const NoOpShareService(),
+);
+
+/// [CheckNowAction]: pull-to-refresh and "Check now". A stub until T-017/T-021
+/// wire `RunCheck`.
+final checkNowActionProvider = Provider<CheckNowAction>(
+  (ref) => const StubCheckNowAction(),
+);
+
+/// The [DeleteContent] use case, built from the repo and the ports.
+final deleteContentProvider = Provider<DeleteContent>(
+  (ref) => DeleteContent(
+    content: ref.watch(contentRepoProvider),
+    gallery: ref.watch(galleryStoreProvider),
+    cache: ref.watch(mediaCacheProvider),
+  ),
 );
