@@ -11,8 +11,13 @@ final class IgSession {
   IgSession(this.blob, {this.appId});
 
   /// Loads the session of [accountId] from [store], or null when there is no
-  /// usable one (missing, without the required cookies, or with a CR or LF in
-  /// a header value).
+  /// usable one (missing, without the required cookies, or with a character
+  /// in a header name or value that HTTP headers cannot carry).
+  ///
+  /// Allowed are TAB and the printable ASCII range 0x20..0x7E only. CR, LF,
+  /// NUL, other control characters and non-ASCII are refused (T-013 N1): the
+  /// platform HTTP client would refuse them inside `governor.run`, which
+  /// costs a token on every run until the user logs in again.
   static Future<IgSession?> load(
     SessionStore store,
     int accountId, {
@@ -22,21 +27,26 @@ final class IgSession {
     if (blob == null || SessionStore.missingCookies(blob).isNotEmpty) {
       return null;
     }
-    if (_hasLineBreak(blob.userAgent) ||
+    if (!_headerSafe(blob.userAgent) ||
         blob.cookies.entries.any(
-          (e) => _hasLineBreak(e.key) || _hasLineBreak(e.value),
+          (e) => !_headerSafe(e.key) || !_headerSafe(e.value),
         ) ||
-        _hasLineBreak(appId ?? '')) {
-      // A header value with CR or LF is a corrupt session (or header
-      // injection). Treated like no session: the user logs in again. The
-      // value is never echoed.
+        !_headerSafe(appId ?? '')) {
+      // A header value with CR, LF, NUL or non-ASCII is a corrupt session (or
+      // header injection). Treated like no session: the user logs in again.
+      // The value is never echoed.
       return null;
     }
     return IgSession(blob, appId: appId);
   }
 
-  static bool _hasLineBreak(String value) =>
-      value.contains('\r') || value.contains('\n');
+  /// Whether every code unit is TAB or printable ASCII (0x20..0x7E).
+  static bool _headerSafe(String value) {
+    for (final unit in value.codeUnits) {
+      if (unit != 0x09 && (unit < 0x20 || unit > 0x7E)) return false;
+    }
+    return true;
+  }
 
   /// The stored session.
   final SessionBlob blob;
