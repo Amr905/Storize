@@ -11,7 +11,8 @@ final class IgSession {
   IgSession(this.blob, {this.appId});
 
   /// Loads the session of [accountId] from [store], or null when there is no
-  /// usable one (missing, or without the required cookies).
+  /// usable one (missing, without the required cookies, or with a CR or LF in
+  /// a header value).
   static Future<IgSession?> load(
     SessionStore store,
     int accountId, {
@@ -21,8 +22,21 @@ final class IgSession {
     if (blob == null || SessionStore.missingCookies(blob).isNotEmpty) {
       return null;
     }
+    if (_hasLineBreak(blob.userAgent) ||
+        blob.cookies.entries.any(
+          (e) => _hasLineBreak(e.key) || _hasLineBreak(e.value),
+        ) ||
+        _hasLineBreak(appId ?? '')) {
+      // A header value with CR or LF is a corrupt session (or header
+      // injection). Treated like no session: the user logs in again. The
+      // value is never echoed.
+      return null;
+    }
     return IgSession(blob, appId: appId);
   }
+
+  static bool _hasLineBreak(String value) =>
+      value.contains('\r') || value.contains('\n');
 
   /// The stored session.
   final SessionBlob blob;

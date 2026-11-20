@@ -128,15 +128,21 @@ final class Node {
     throw SchemaException(path);
   }
 
-  /// Unix seconds as a UTC time (required).
-  DateTime get unixTime => _fromUnix(integer);
+  /// Unix seconds as a UTC time (required). Outside 0 to 2100 is a
+  /// [SchemaException].
+  DateTime get unixTime => _fromUnix(integer, path);
 
   /// Unix seconds as a UTC time, or null when missing or not positive.
   DateTime? get unixTimeOrNull {
     final i = intOrNull;
-    return i == null || i <= 0 ? null : _fromUnix(i);
+    return i == null || i <= 0 ? null : _fromUnix(i, path);
   }
 
-  static DateTime _fromUnix(int seconds) =>
-      DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true);
+  /// Latest accepted unix time: 2100-01-01. Anything above is a broken reply.
+  static final int _maxUnix = DateTime.utc(2100).millisecondsSinceEpoch ~/ 1000;
+
+  static DateTime _fromUnix(int seconds, String path) {
+    if (seconds < 0 || seconds > _maxUnix) throw SchemaException(path);
+    return DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true);
+  }
 }

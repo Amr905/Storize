@@ -139,6 +139,7 @@ final class Rig {
     IgTransport? transport,
     bool withSession = true,
     String sessionUserId = viewerId,
+    UsernameCache? usernames,
   }) {
     leases = FakeGovernorLeaseRepo(time.clock);
     governor = RequestGovernor(
@@ -165,6 +166,7 @@ final class Rig {
           GraphqlTransport(docIds: FakeDocIds(), tokens: FakeTokens()),
       log: log,
       appId: fakeAppId,
+      usernames: usernames,
     );
   }
 

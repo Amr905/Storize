@@ -21,8 +21,8 @@ final class ProbeEntry {
   /// A fixed description of the call (no values).
   final String label;
 
-  /// `ok`, `http_error`, `network`, `rate_limited`, `paused`, `busy`,
-  /// `no_session` or `skipped`.
+  /// `ok`, `http_error`, `network`, `rate_limited`, `session_invalid`,
+  /// `restricted`, `paused`, `busy`, `error`, `no_session` or `skipped`.
   final String outcome;
 
   /// The HTTP status, when a reply came.
@@ -77,7 +77,8 @@ final class CdnEntry {
   /// `story_image` or `story_video` (or another fixed label).
   final String label;
 
-  /// `ok`, `http_error` or `network`.
+  /// `ok`, `http_error`, `network` or `rejected` (the URL is not an https
+  /// Instagram CDN URL, so it was not requested).
   final String outcome;
 
   /// The HTTP status.
@@ -165,11 +166,25 @@ final class IgProbe {
   final IgHttp _http;
   final DiagnosticLog? _log;
 
+  static const FailureClassifier _classifier = FailureClassifier();
+
+  /// After one of these outcomes the rest of the probe is not sent: the
+  /// session or the account needs attention, or Instagram asked us to wait.
+  static const Set<String> _stopOutcomes = {
+    'rate_limited',
+    'session_invalid',
+    'restricted',
+    'paused',
+    'busy',
+    'error',
+  };
+
   static const int _maxKeys = 40;
   static final RegExp _unsafeKeyChar = RegExp('[^A-Za-z0-9_]');
 
   /// Sends IG-1 to IG-5 once each, in order. [username] and [userId] belong
-  /// to one tracked test account. After a rate limit or a pause the rest are
+  /// to one tracked test account. After a rate limit, a pause, a login,
+  /// checkpoint or challenge answer, or a restricted account, the rest are
   /// `skipped`.
   Future<ProbeReport> run({
     required String username,
@@ -193,7 +208,7 @@ final class IgProbe {
         entry = ProbeEntry(id: id, label: label, outcome: 'skipped');
       } else {
         entry = await _one(id, label, request.withHeaders(session.headers()));
-        stop = const {'rate_limited', 'paused', 'busy'}.contains(entry.outcome);
+        stop = _stopOutcomes.contains(entry.outcome);
       }
       _log?.log(
         LogLevel.info,
@@ -214,9 +229,16 @@ final class IgProbe {
   Future<List<CdnEntry>> checkCdn(Map<String, RemoteMedia> files) async {
     final out = <CdnEntry>[];
     for (final MapEntry(key: label, value: media) in files.entries) {
+      final uri = _cdnUri(media.url);
+      if (uri == null) {
+        // Never requested: only https on an Instagram CDN host is allowed.
+        out.add(CdnEntry(label: label, outcome: 'rejected'));
+        _log?.log(LogLevel.warn, 'probe', 'CDN $label outcome=rejected');
+        continue;
+      }
       final request = IgRequest(
         method: IgMethod.get,
-        uri: Uri.parse(media.url),
+        uri: uri,
         headers: const {'Range': 'bytes=0-1023'},
       );
       try {
@@ -233,6 +255,8 @@ final class IgProbe {
         );
       } on TransportException {
         out.add(CdnEntry(label: label, outcome: 'network'));
+      } on Object {
+        out.add(CdnEntry(label: label, outcome: 'network'));
       }
       _log?.log(
         LogLevel.info,
@@ -244,45 +268,64 @@ final class IgProbe {
   }
 
   Future<ProbeEntry> _one(String id, String label, IgRequest request) async {
+    IgReply? seen;
     try {
-      final result = await _governor.run<Result<IgReply>>(
+      await _governor.run<Result<IgReply>>(
         accountId: accountId,
         cost: RequestCost.api,
         call: () async {
           try {
             final reply = await _http.send(request);
-            // Feed a rate limit to the governor; record every other status.
-            final failure = reply.status == 429
-                ? RateLimited(reply.retryAfter)
-                : null;
-            return failure == null ? Ok(reply) : Err(failure);
+            seen = reply;
+            // Feed a rate limit (a 429, or a "please wait" body) to the
+            // governor; every reply is recorded either way.
+            final failure = _classifier.classify(reply);
+            return failure is RateLimited ? Err(failure) : Ok(reply);
           } on TransportException {
             return const Err(NetworkFailure());
           }
         },
       );
-      switch (result) {
-        case Ok(:final value):
-          return ProbeEntry(
-            id: id,
-            label: label,
-            outcome: value.isSuccess ? 'ok' : 'http_error',
-            status: value.status,
-            topLevelKeys: _keysOf(value.json),
-          );
-        case Err(:final failure):
-          return ProbeEntry(
-            id: id,
-            label: label,
-            outcome: failure is RateLimited ? 'rate_limited' : 'network',
-            status: failure is RateLimited ? 429 : null,
-          );
-      }
     } on GovernorPaused {
       return ProbeEntry(id: id, label: label, outcome: 'paused');
     } on GovernorBusy {
       return ProbeEntry(id: id, label: label, outcome: 'busy');
+    } on Object {
+      // Not even the type is recorded: the text may carry a request value.
+      return ProbeEntry(id: id, label: label, outcome: 'error');
     }
+    final reply = seen;
+    if (reply == null) {
+      return ProbeEntry(id: id, label: label, outcome: 'network');
+    }
+    final outcome = switch (_classifier.classify(reply)) {
+      RateLimited() => 'rate_limited',
+      SessionInvalid() => 'session_invalid',
+      AccountRestricted() => 'restricted',
+      _ => reply.isSuccess ? 'ok' : 'http_error',
+    };
+    return ProbeEntry(
+      id: id,
+      label: label,
+      outcome: outcome,
+      status: reply.status,
+      topLevelKeys: _keysOf(reply.json),
+    );
+  }
+
+  static const List<String> _cdnDomains = ['cdninstagram.com', 'fbcdn.net'];
+
+  /// The URL when it is https, has no credentials and a host under an
+  /// Instagram CDN domain; otherwise null.
+  static Uri? _cdnUri(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https' || uri.userInfo.isNotEmpty) {
+      return null;
+    }
+    if (uri.hasPort && uri.port != 443) return null;
+    final host = uri.host.toLowerCase();
+    final ok = _cdnDomains.any((d) => host == d || host.endsWith('.$d'));
+    return ok ? uri : null;
   }
 
   String _safeKey(String key) {

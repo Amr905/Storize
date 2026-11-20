@@ -13,11 +13,23 @@ import 'support.dart';
 DateTime _t(int s) =>
     DateTime.fromMillisecondsSinceEpoch(s * 1000, isUtc: true);
 
+/// The real profile body with the username replaced, so that the username
+/// check of `resolveUser` passes (the capture holds only placeholders).
+Object? _profileNamed(String username) {
+  final body = jsonDecode(
+    jsonEncode(loadReal('profile', '004_graphql.json')),
+  ) as Map<String, Object?>;
+  ((body['data']! as Map<String, Object?>)['user']!
+          as Map<String, Object?>)['username'] =
+      username;
+  return body;
+}
+
 Rig _realRig({String sessionUserId = viewerId}) => Rig(
   sessionUserId: sessionUserId,
   responder: graphqlResponder(
     stories: loadReal('story', '003_graphql.json'),
-    profile: loadReal('profile', '004_graphql.json'),
+    profile: _profileNamed('ZZFake_Name'),
     posts: loadReal('profile', '007_graphql.json'),
   ),
 );

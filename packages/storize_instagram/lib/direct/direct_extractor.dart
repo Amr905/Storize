@@ -5,6 +5,7 @@ import 'package:storize_instagram/direct/failure_classifier.dart';
 import 'package:storize_instagram/direct/ig_http.dart';
 import 'package:storize_instagram/direct/ig_session.dart';
 import 'package:storize_instagram/direct/ig_transport.dart';
+import 'package:storize_instagram/direct/username_cache.dart';
 import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/mapper/mapper.dart';
 import 'package:storize_model/storize_model.dart';
@@ -24,6 +25,13 @@ const int storyChunkSize = 20;
 /// - The log gets operation names, outcome and failure type only: no URLs,
 ///   query values, headers, cookies, tokens or content.
 ///
+/// **Call cost.** `resolveUser` over GraphQL costs 2 calls (posts, then
+/// profile). `fetchNewPosts` and `latestPostTime` cost **1** call when the
+/// username of the user is known to the [UsernameCache] and 2 when it is not
+/// (the profile is read first). The default cache is in memory, so after an
+/// isolate restart every target costs 2 once; inject a persistent cache
+/// (T-015: the target repo, which stores the username) to avoid that.
+///
 /// The method set follows `ContentPlatform` without `policy` and `openMedia`;
 /// T-015 adapts it.
 final class DirectExtractor {
@@ -37,7 +45,8 @@ final class DirectExtractor {
     this._log,
     this.appId,
     this.classifier = const FailureClassifier(),
-  });
+    UsernameCache? usernames,
+  }) : _usernames = usernames ?? InMemoryUsernameCache();
 
   /// The login account whose session and request budget are used.
   final int accountId;
@@ -57,8 +66,8 @@ final class DirectExtractor {
   final DiagnosticLog? _log;
   final MediaMapper _media = const MediaMapper();
 
-  /// Usernames seen per user id, so the GraphQL posts query needs no lookup.
-  final Map<String, String> _usernames = {};
+  /// Usernames per user id, so the GraphQL posts query needs no lookup.
+  final UsernameCache _usernames;
 
   // ----------------------------------------------------------------- users
 
@@ -70,7 +79,12 @@ final class DirectExtractor {
       final clean = username.trim().replaceFirst(RegExp('^@'), '');
       if (clean.isEmpty) return const Err(TargetNotFound());
       final r = await transport.userByUsername(clean, call);
-      return r.map(_remember);
+      if (r is Ok<UserProfile> &&
+          r.value.user.username.toLowerCase() != clean.toLowerCase()) {
+        // The profile of the id we found is not the user we asked for.
+        return const Err(UnknownFailure(null, 'username_mismatch'));
+      }
+      return _rememberResult(r);
     },
   );
 
@@ -86,15 +100,16 @@ final class DirectExtractor {
     final retry =
         (failure is TargetNotFound || failure is UnknownFailure) &&
         lastUsername.trim().isNotEmpty;
-    if (!retry) return byId.map(_remember);
+    if (!retry) return _rememberResult(byId);
     final byName = await transport.userByUsername(lastUsername.trim(), call);
-    return switch (byName) {
-      Ok(:final value) when value.user.remoteUserId == remoteUserId => Ok(
-        _remember(value),
-      ),
-      Ok() => const Err(TargetNotFound()),
-      Err(:final failure) => Err(failure),
-    };
+    switch (byName) {
+      case Ok(:final value) when value.user.remoteUserId == remoteUserId:
+        return _rememberResult(byName);
+      case Ok():
+        return const Err(TargetNotFound());
+      case Err(:final failure):
+        return Err(failure);
+    }
   });
 
   /// Checks the session and returns the logged-in user (IG-4 purpose).
@@ -115,8 +130,8 @@ final class DirectExtractor {
           return const Err(SessionInvalid(SessionReason.loginRequired));
         }
         final profile = value.profile;
-        if (profile != null) return Ok(_remember(profile));
-        return (await transport.userById(own, call)).map(_remember);
+        if (profile != null) return _rememberResult(Ok(profile));
+        return _rememberResult(await transport.userById(own, call));
     }
   });
 
@@ -156,10 +171,8 @@ final class DirectExtractor {
   Future<Result<DateTime?>> latestStoryTime(String userId) =>
       _op('latestStoryTime', (call) async {
         final r = await transport.userById(userId, call);
-        return r.map((p) {
-          _remember(p);
-          return p.latestReelMedia;
-        });
+        await _rememberResult(r);
+        return r.map((p) => p.latestReelMedia);
       });
 
   // ----------------------------------------------------------------- posts
@@ -169,8 +182,11 @@ final class DirectExtractor {
   ///
   /// Only the first page is read (12 posts, ADR-0010). Collab posts that list
   /// the user in `coauthor_producers` count. A pinned post has
-  /// `extras['pinned'] == true`. Posts that are not newer are not mapped, so
-  /// a malformed old post cannot fail the run.
+  /// `extras['pinned'] == true` (pinned by any user). Posts that are not
+  /// newer are not mapped, so a malformed old post cannot fail the run; an
+  /// edge without a usable `pk` or `taken_at` is skipped and counted in the
+  /// log, and the page fails only if every edge is malformed. Costs 1 call
+  /// when the username is cached, else 2.
   Future<Result<List<RemoteContent>>> fetchNewPosts(
     String userId,
     DateTime watermark,
@@ -178,7 +194,7 @@ final class DirectExtractor {
     final r = await transport.timeline(
       userId,
       call,
-      usernameHint: _usernames[userId],
+      usernameHint: await _usernameOf(userId),
     );
     switch (r) {
       case Err(:final failure):
@@ -192,7 +208,8 @@ final class DirectExtractor {
                 seen.add(e.pk))
               e,
         ]..sort((a, b) => b.takenAt.compareTo(a.takenAt));
-        _cacheUsername(userId, value.usernameUsed);
+        await _cacheUsername(userId, value.usernameUsed);
+        _logSkipped('fetchNewPosts', value.skippedMalformed);
         return guardMapping(
           () => [
             for (final e in fresh)
@@ -210,17 +227,21 @@ final class DirectExtractor {
   /// none. It is the largest `taken_at` of the posts that belong to the user,
   /// never the first entry, because pinned posts come first. A pinned post
   /// counts by its time like any other, so a freshly pinned new post is not
-  /// downloaded later as "new".
+  /// downloaded later as "new". Costs 1 call when the username is cached,
+  /// else 2.
   Future<Result<DateTime?>> latestPostTime(String userId) => _op(
     'latestPostTime',
     (call) async {
       final r = await transport.timeline(
         userId,
         call,
-        usernameHint: _usernames[userId],
+        usernameHint: await _usernameOf(userId),
       );
+      if (r is Ok<Timeline>) {
+        await _cacheUsername(userId, r.value.usernameUsed);
+        _logSkipped('latestPostTime', r.value.skippedMalformed);
+      }
       return r.map((t) {
-        _cacheUsername(userId, t.usernameUsed);
         DateTime? latest;
         for (final e in t.entries) {
           if (!e.belongsTo(userId)) continue;
@@ -233,13 +254,43 @@ final class DirectExtractor {
 
   // --------------------------------------------------------------- plumbing
 
-  RemoteUser _remember(UserProfile profile) {
-    _usernames[profile.user.remoteUserId] = profile.user.username;
-    return profile.user;
+  /// Remembers the username of a successful profile and returns the user.
+  Future<Result<RemoteUser>> _rememberResult(
+    Result<UserProfile> result,
+  ) async {
+    if (result is Ok<UserProfile>) {
+      final user = result.value.user;
+      await _cacheUsername(user.remoteUserId, user.username);
+    }
+    return result.map((p) => p.user);
   }
 
-  void _cacheUsername(String userId, String? username) {
-    if (username != null) _usernames[userId] = username;
+  /// A cache that fails must not fail the operation.
+  Future<String?> _usernameOf(String userId) async {
+    try {
+      return await _usernames.usernameOf(userId);
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<void> _cacheUsername(String userId, String? username) async {
+    if (username == null) return;
+    try {
+      await _usernames.remember(userId, username);
+    } on Object {
+      // Only an optimisation.
+    }
+  }
+
+  void _logSkipped(String op, int skipped) {
+    if (skipped > 0) {
+      _log?.log(
+        LogLevel.warn,
+        'direct',
+        'op=$op skipped_malformed=$skipped',
+      );
+    }
   }
 
   /// Runs one operation: checks the session, hands the transport a governed
@@ -259,6 +310,15 @@ final class DirectExtractor {
       } on SchemaException catch (e) {
         _log?.log(LogLevel.warn, 'direct', 'op=$name schema_changed');
         return Err(e.toFailure());
+      } on Object catch (error) {
+        // A resolver, a cache or a transport that throws: no Result contract
+        // breach, and only the type is logged.
+        _log?.log(
+          LogLevel.warn,
+          'direct',
+          'op=$name unexpected_error type=${error.runtimeType}',
+        );
+        return const Err(UnknownFailure(null, 'unexpected_error'));
       }
     }
     _logResult(name, result);
@@ -293,6 +353,15 @@ final class DirectExtractor {
       return Err(paused.toFailure());
     } on GovernorBusy {
       return const Err(UnknownFailure(null, 'governor_busy'));
+    } on Object catch (error) {
+      // Never rethrow: the extractor returns a Result. Only the type is
+      // logged, because the text of an exception can carry a request value.
+      _log?.log(
+        LogLevel.warn,
+        'direct',
+        'unexpected_error type=${error.runtimeType}',
+      );
+      return const Err(UnknownFailure(null, 'unexpected_error'));
     }
   }
 

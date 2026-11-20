@@ -107,13 +107,27 @@ final class GraphqlTransport implements IgTransport {
       'enable_integrity_filters': true,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    return callAndParse(call, (request as Ok<IgRequest>).value, (body) {
-      final (profile, viewerId) = mapper.graphqlProfile(body);
-      if (viewerId == null) {
-        throw SchemaException(body['data']['viewer']['user']['id'].path);
-      }
-      return Viewer(viewerId: viewerId, profile: profile);
-    });
+    final result = await callAndParse<Viewer?>(
+      call,
+      (request as Ok<IgRequest>).value,
+      (body) {
+        final (profile, viewerId) = mapper.graphqlProfile(body);
+        if (viewerId == null) {
+          // A `viewer` object without a user is what a logged-out answer
+          // looks like; no `viewer` at all means the shape changed.
+          if (body['data'].has('viewer')) return null;
+          throw SchemaException(body['data']['viewer']['user']['id'].path);
+        }
+        return Viewer(viewerId: viewerId, profile: profile);
+      },
+    );
+    return switch (result) {
+      Err<Viewer?>(:final failure) => Err(failure),
+      Ok<Viewer?>(:final value) =>
+        value == null
+            ? const Err(SessionInvalid(SessionReason.loginRequired))
+            : Ok(value),
+    };
   }
 
   Future<Result<Timeline>> _timeline(String username, IgCall call) async {
@@ -136,14 +150,24 @@ final class GraphqlTransport implements IgTransport {
   }
 
   /// The profile owner's id from a timeline. Collab posts carry another
-  /// author's id, so only posts without co-authors vote; if there are none,
-  /// the one id present in every post.
+  /// author's id, so only posts without co-authors vote, and the id with the
+  /// most votes wins (a tie is no answer). If no post can vote, it is the one
+  /// id present in every post.
   String? _ownerOf(Timeline timeline) {
-    final solo = [
-      for (final e in timeline.entries)
-        if (e.coauthorIds.isEmpty && e.authorIds.length == 1) e,
-    ];
-    if (solo.isNotEmpty) return solo.first.authorIds.first;
+    final votes = <String, int>{};
+    for (final e in timeline.entries) {
+      if (e.coauthorIds.isEmpty && e.authorIds.length == 1) {
+        votes.update(e.authorIds.first, (n) => n + 1, ifAbsent: () => 1);
+      }
+    }
+    if (votes.isNotEmpty) {
+      final best = votes.values.reduce((a, b) => a > b ? a : b);
+      final winners = [
+        for (final v in votes.entries)
+          if (v.value == best) v.key,
+      ];
+      return winners.length == 1 ? winners.first : null;
+    }
     Set<String>? common;
     for (final e in timeline.entries) {
       final ids = {...e.authorIds, ...e.coauthorIds};

@@ -239,7 +239,7 @@ void main() {
     RemoteMedia media(MediaType type) => RemoteMedia(
       index: 0,
       type: type,
-      url: 'https://cdn.example.test/ZZFAKE_file?sig=ZZFAKE_signature',
+      url: 'https://scontent.cdninstagram.com/ZZFAKE_file?sig=ZZFAKE_signature',
       width: 1,
       height: 1,
     );
@@ -275,7 +275,7 @@ void main() {
         final text =
             '${report.render()}${report.toJson()}${rig.log.entries.join()}';
         expect(text, isNot(contains('ZZFAKE_signature')));
-        expect(text, isNot(contains('cdn.example')));
+        expect(text, isNot(contains('cdninstagram')));
         expect(
           await rig.governor.remainingTokens(1),
           6,

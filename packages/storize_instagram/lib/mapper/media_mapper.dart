@@ -58,7 +58,9 @@ final class MediaMapper {
 
   /// Maps a post (a timeline node or a `media/info` item).
   ///
-  /// [pinned] and [collab] only set markers in `extras`.
+  /// [pinned] and [collab] only set markers in `extras`. `pinned` means
+  /// "pinned by any user" (a co-author counts), not necessarily the profile
+  /// owner.
   RemoteContent post(Node node, {bool pinned = false, bool collab = false}) {
     final kind = _mediaType(node, allowCarousel: true);
     final postedAt = node['taken_at'].unixTime;

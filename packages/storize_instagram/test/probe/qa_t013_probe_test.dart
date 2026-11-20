@@ -100,30 +100,46 @@ void main() {
       await rig.run(rig.probe.run(username: 'u', userId: '1'));
       expect(rig.http.requests, hasLength(1));
     },
-    skip:
-        'QA-F9 (Low-Medium): only 429/paused/busy stop the probe; 4 more '
-        'calls go out on a challenged or logged-out session',
   );
 
   test(
-    'current behaviour pinned: a 401 on IG-1 still sends IG-2..IG-5',
+    'QA-F9: a 401, a login redirect or a 200 login_required body also stops '
+    'the probe; the rest is skipped',
     () async {
-      final rig = _Rig((_) => const IgReply(status: 401));
-      await rig.run(rig.probe.run(username: 'u', userId: '1'));
-      expect(rig.http.requests, hasLength(5));
+      for (final reply in [
+        const IgReply(status: 401),
+        const IgReply(status: 302, redirectPath: '/accounts/login/'),
+        const IgReply(status: 302, redirectPath: '/challenge/'),
+        jsonReply({'message': 'login_required', 'status': 'fail'}),
+        jsonReply({
+          'message': 'feedback_required',
+          'status': 'fail',
+        }, status: 400),
+      ]) {
+        final rig = _Rig((_) => reply);
+        final report = await rig.run(rig.probe.run(username: 'u', userId: '1'));
+        expect(rig.http.requests, hasLength(1), reason: '$reply');
+        expect(
+          report.entries.skip(1).map((e) => e.outcome),
+          everyElement('skipped'),
+        );
+        expect(report.entries.first.status, reply.status);
+        expect(report.entries.first.proven, isFalse);
+      }
     },
   );
 
   test(
-    'a 200 "please wait" body (not 429) is not fed to the governor',
+    'a 200 "please wait" body (not 429) is fed to the governor and stops '
+    'the probe',
     () async {
       final rig = _Rig(
         (_) =>
             jsonReply({'status': 'fail', 'message': 'Please wait a few min'}),
       );
       await rig.run(rig.probe.run(username: 'u', userId: '1'));
-      expect(rig.http.requests, hasLength(5));
-      expect(await rig.governor.isPaused(1), isFalse);
+      expect(rig.http.requests, hasLength(1));
+      expect(await rig.governor.isPaused(1), isTrue);
     },
   );
 
@@ -136,7 +152,7 @@ void main() {
         );
         final out = await rig.probe.checkCdn({
           'story_image': _media(
-            'https://cdn.example.test/a.jpg?sig=ZZURLSECRET&oh=ZZ2',
+            'https://scontent.cdninstagram.com/a.jpg?sig=ZZURLSECRET&oh=ZZ2',
           ),
         });
         expect(out.single.outcome, 'ok');
@@ -151,19 +167,6 @@ void main() {
       },
     );
 
-    test('NOTE (QA-F10): any host is requested, including the Instagram API '
-        'host, without cookies and without the governor', () async {
-      final rig = _Rig((_) => const IgReply(status: 200));
-      await rig.probe.checkCdn({
-        'a': _media('https://www.instagram.com/api/v1/feed/reels_media/?x=1'),
-        'b': _media('http://insecure.example.test/a.jpg'),
-      });
-      expect(rig.http.requests.map((r) => r.uri.host), [
-        'www.instagram.com',
-        'insecure.example.test',
-      ]);
-    });
-
     test(
       'QA-F10: only https CDN hosts may be requested by the ungoverned check',
       () async {
@@ -174,18 +177,13 @@ void main() {
         });
         expect(rig.http.requests, isEmpty);
       },
-      skip:
-          'QA-F10 (Low-Medium): no host/scheme allow-list; the media URL '
-          'comes from Instagram JSON',
     );
 
-    test('a malformed URL string: current behaviour is a thrown '
-        'FormatException (not a CdnEntry)', () async {
+    test('a malformed URL string is a rejected entry, not a throw', () async {
       final rig = _Rig((_) => const IgReply(status: 200));
-      await expectLater(
-        rig.probe.checkCdn({'a': _media('http://[::1')}),
-        throwsA(isA<FormatException>()),
-      );
+      final out = await rig.probe.checkCdn({'a': _media('http://[::1')});
+      expect(out.single.outcome, 'rejected');
+      expect(rig.http.requests, isEmpty);
     });
 
     test('403 and a socket error are recorded, the loop goes on', () async {
@@ -196,8 +194,8 @@ void main() {
         return const IgReply(status: 403);
       });
       final out = await rig.probe.checkCdn({
-        'a': _media('https://cdn.example.test/1'),
-        'b': _media('https://cdn.example.test/2'),
+        'a': _media('https://scontent.cdninstagram.com/1'),
+        'b': _media('https://scontent.cdninstagram.com/2'),
       });
       expect(out.map((e) => e.outcome), ['network', 'http_error']);
     });

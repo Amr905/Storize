@@ -9,8 +9,9 @@ enum IgMethod {
 
 /// One HTTP request, before the session headers are added.
 ///
-/// `toString` shows only the method, host and path: query values and form
-/// fields can hold tokens and signed URLs, so they never reach a log.
+/// `toString` shows only the method, the host and the path with ids replaced
+/// by `<id>`: ids, query values and form fields can hold tokens and signed
+/// URLs, so they never reach a log.
 final class IgRequest {
   /// Creates a request.
   const IgRequest({
@@ -69,8 +70,31 @@ final class IgRequest {
     form: form,
   );
 
+  /// Path segments that are fixed words of the API. Every other segment can
+  /// be an id and is printed as `<id>`.
+  static const Set<String> _knownSegments = {
+    'api',
+    'v1',
+    'users',
+    'user',
+    'info',
+    'feed',
+    'reels_media',
+    'accounts',
+    'current_user',
+    'web_profile_info',
+    'graphql',
+    'media',
+  };
+
   @override
-  String toString() => 'IgRequest(${method.name} ${uri.host}${uri.path})';
+  String toString() {
+    final path = [
+      for (final s in uri.pathSegments)
+        if (s.isEmpty || _knownSegments.contains(s)) s else '<id>',
+    ].join('/');
+    return 'IgRequest(${method.name} ${uri.host}/$path)';
+  }
 }
 
 /// One HTTP response. The body is already decoded when it was JSON.

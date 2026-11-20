@@ -5,12 +5,13 @@ import 'package:storize_model/storize_model.dart';
 /// when the reply is a usable JSON object.
 ///
 /// Rules, in this order (the first that matches wins):
-/// 1. `checkpoint_required`, `challenge_required` or a `challenge` object:
-///    `SessionInvalid(challenge)`.
+/// 1. `checkpoint_required`, `challenge_required`, a `challenge` object or a
+///    redirect to `/challenge/...`: `SessionInvalid(challenge)`.
 /// 2. 401, a redirect to the login page, `login_required`,
 ///    `user_has_logged_out` or `require_login`:
 ///    `SessionInvalid(loginRequired)`.
-/// 3. `feedback_required` or a disabled account: `AccountRestricted`.
+/// 3. `feedback_required`, a disabled account or a redirect to
+///    `/accounts/suspended` or `/accounts/disabled`: `AccountRestricted`.
 /// 4. 429 or "please wait" or "too many requests": `RateLimited`.
 /// 5. 403 "not authorized to view": `TargetNotVisible`.
 /// 6. 404: `TargetNotFound`.
@@ -35,15 +36,15 @@ final class FailureClassifier {
       if (body == null) return const SchemaChanged('response');
       if (!_isFailBody(body)) return null;
     }
+    final redirect = reply.redirectPath ?? '';
     final text = _markers(body, includeErrors: body?['data'] == null);
     if (text.contains('checkpoint_required') ||
         text.contains('challenge_required') ||
+        redirect.startsWith('/challenge') ||
         body?['challenge'] is Map<String, Object?>) {
       return const SessionInvalid(SessionReason.challenge);
     }
-    final redirectToLogin = (reply.redirectPath ?? '').contains(
-      '/accounts/login',
-    );
+    final redirectToLogin = redirect.contains('/accounts/login');
     if (reply.status == 401 ||
         redirectToLogin ||
         text.contains('login_required') ||
@@ -51,7 +52,9 @@ final class FailureClassifier {
         body?['require_login'] == true) {
       return const SessionInvalid(SessionReason.loginRequired);
     }
-    if (text.contains('feedback_required') ||
+    if (redirect.startsWith('/accounts/suspended') ||
+        redirect.startsWith('/accounts/disabled') ||
+        text.contains('feedback_required') ||
         text.contains('account_disabled') ||
         text.contains('account has been disabled') ||
         text.contains('disabled your account')) {

@@ -178,7 +178,7 @@ void main() {
     );
 
     test('an unexpected exception from IgHttp: token spent, lease released, '
-        'error surfaces (documented: not mapped to a Failure)', () async {
+        'mapped to Err(unexpected_error) without its text', () async {
       var boom = true;
       final rig = Rig(
         responder: (r) {
@@ -189,10 +189,12 @@ void main() {
           return jsonReply(loadReal('profile', '004_graphql.json'));
         },
       );
-      await expectLater(
-        rig.run(rig.extractor.verifySession()),
-        throwsA(isA<StateError>()),
+      final failed = await rig.run(rig.extractor.verifySession());
+      expect(
+        failed.failureOrNull,
+        const UnknownFailure(null, 'unexpected_error'),
       );
+      expect(rig.allLogs, isNot(contains('ZZFAKE_unexpected')));
       final ok = await rig.run(rig.extractor.verifySession());
       expect(ok.isOk, isTrue, reason: 'governor is not stuck');
     });
@@ -205,7 +207,6 @@ void main() {
         final r = await rig.run(rig.extractor.verifySession());
         expect(r.isErr, isTrue);
       },
-      skip: 'QA-F1: _governed catches only TransportException',
     );
   });
 
@@ -496,9 +497,6 @@ void main() {
         );
         expect(r.valueOrNull!.map((p) => p.remoteId), ['new']);
       },
-      skip:
-          'QA-F3: EnvelopeMapper.entry() requires pk/taken_at/pinned/ '
-          'coauthors of every edge, so one malformed old post fails the page',
     );
 
     test(
@@ -513,7 +511,6 @@ void main() {
         );
         expect(r.isOk, isTrue);
       },
-      skip: 'QA-F3: same cause',
     );
 
     test('current behaviour pinned: the failure of QA-F3 is a clean '
@@ -536,7 +533,6 @@ void main() {
         );
         expect(r.failureOrNull, isA<SchemaChanged>());
       },
-      skip: 'QA-F8: Node._fromUnix throws ArgumentError (out of range)',
     );
   });
 
@@ -576,7 +572,6 @@ void main() {
         await rig.run(rig.extractor.resolveUser('ZZ_name'));
         expect(profileIdRequested(rig), 'ZZ_owner');
       },
-      skip: 'QA-F2: _ownerOf takes solo.first, no majority vote',
     );
 
     test(
@@ -588,9 +583,6 @@ void main() {
         final r = await rig.run(rig.extractor.resolveUser('ZZ_not_that_name'));
         expect(r.isOk, isFalse);
       },
-      skip:
-          'QA-F2: userByUsername returns the profile without comparing '
-          'its username with the requested one',
     );
   });
 
@@ -611,22 +603,7 @@ void main() {
           const SessionInvalid(SessionReason.loginRequired),
         );
       },
-      skip:
-          'QA-F5: a logged-out viewer is SchemaChanged (page mode), not '
-          'SessionInvalid; low risk, page mode will then find the login page',
     );
-
-    test('current behaviour pinned: viewer null gives SchemaChanged', () async {
-      final body = jsonDecode(
-        jsonEncode(loadReal('profile', '004_graphql.json')),
-      ) as Map<String, Object?>;
-      ((body['data']! as Map<String, Object?>)['viewer']!
-              as Map<String, Object?>)['user'] =
-          null;
-      final rig = Rig(responder: (_) => jsonReply(body));
-      final r = await rig.run(rig.extractor.verifySession());
-      expect(r.failureOrNull, isA<SchemaChanged>());
-    });
 
     test(
       'viewer id differs from ds_user_id: SessionInvalid, no profile leak',
@@ -754,7 +731,6 @@ void main() {
           const SessionInvalid(SessionReason.challenge),
         );
       },
-      skip: 'QA-F4: only /accounts/login is recognised as a redirect',
     );
 
     test('Retry-After and the hint: 429 passes the duration through', () {

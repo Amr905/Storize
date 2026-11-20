@@ -9,15 +9,18 @@ import 'package:storize_instagram/direct/ig_http.dart';
 ///
 /// It never follows redirects, never stores cookies of its own, and throws
 /// [TransportException] on a socket error or a timeout. Bodies are read up to
-/// [maxBodyBytes]; a body that starts with `{` or `[` is decoded as JSON,
-/// anything else leaves `json` null.
+/// [maxBodyBytes] (past it the connection is aborted and `json` is null); a
+/// body that starts with `{` or `[` is decoded as JSON, anything else leaves
+/// `json` null. A timeout aborts the request. Any other error becomes a
+/// [TransportException] **without** the original text, which can contain a
+/// header value such as a cookie.
 final class DartIoHttp implements IgHttp {
   /// Creates the client.
   DartIoHttp({
     this.timeout = const Duration(seconds: 30),
     this.maxBodyBytes = 8 * 1024 * 1024,
     HttpClient? client,
-  }) : _client = client ?? HttpClient();
+  }) : _client = client ?? (HttpClient()..connectionTimeout = timeout);
 
   /// Per-request timeout.
   final Duration timeout;
@@ -29,23 +32,25 @@ final class DartIoHttp implements IgHttp {
 
   @override
   Future<IgReply> send(IgRequest request) async {
+    final pending = _Pending();
     try {
-      return await _send(request).timeout(timeout);
+      return await _send(request, pending).timeout(timeout);
     } on TimeoutException {
+      pending.abort();
       throw const TransportException('timeout');
-    } on SocketException {
-      throw const TransportException('socket');
-    } on HttpException {
-      throw const TransportException('socket');
-    } on HandshakeException {
+    } on Object {
+      // Whatever it was (socket, TLS, a header the platform refuses), its
+      // text may carry a request value such as a cookie: never pass it on.
+      pending.abort();
       throw const TransportException('socket');
     }
   }
 
-  Future<IgReply> _send(IgRequest request) async {
+  Future<IgReply> _send(IgRequest request, _Pending pending) async {
     final call = request.method == IgMethod.get
         ? await _client.getUrl(request.uri)
         : await _client.postUrl(request.uri);
+    pending.call = call;
     final headers = call.headers;
     request.headers.forEach(headers.set);
     call.followRedirects = false;
@@ -68,12 +73,31 @@ final class DartIoHttp implements IgHttp {
     }
     final response = await call.close();
     final bytes = BytesBuilder(copy: false);
-    await for (final chunk in response) {
-      if (bytes.length < maxBodyBytes) bytes.add(chunk);
-    }
+    var tooLarge = false;
+    final done = Completer<void>();
+    // Cancelling the subscription closes the connection, so a timeout or the
+    // size cap stops the transfer instead of draining it.
+    pending.sub = response.listen(
+      (chunk) {
+        bytes.add(chunk);
+        if (bytes.length > maxBodyBytes && !done.isCompleted) {
+          tooLarge = true;
+          pending.abort();
+          done.complete();
+        }
+      },
+      onDone: () {
+        if (!done.isCompleted) done.complete();
+      },
+      onError: (Object e, StackTrace s) {
+        if (!done.isCompleted) done.completeError(e, s);
+      },
+      cancelOnError: true,
+    );
+    await done.future;
     final contentType = response.headers.contentType?.mimeType;
     Object? json;
-    final body = bytes.takeBytes();
+    final body = tooLarge ? Uint8List(0) : bytes.takeBytes();
     final first = body.isEmpty ? 0 : body.first;
     // `{` or `[`: JSON whatever the content type says (GraphQL answers can
     // come as text/javascript).
@@ -84,14 +108,39 @@ final class DartIoHttp implements IgHttp {
         json = null;
       }
     }
-    final retry = int.tryParse(response.headers.value('retry-after') ?? '');
+    final retryAfter = _parseRetryAfter(response.headers.value('retry-after'));
     final location = response.headers.value('location');
     return IgReply(
       status: response.statusCode,
       json: json,
-      retryAfter: retry == null || retry < 0 ? null : Duration(seconds: retry),
+      retryAfter: retryAfter,
       redirectPath: location == null ? null : Uri.tryParse(location)?.path,
       contentType: contentType,
     );
+  }
+
+  /// `Retry-After` as whole seconds or as an HTTP-date. Null when missing,
+  /// unreadable, negative or already past.
+  static Duration? _parseRetryAfter(String? value) {
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    if (seconds != null) return seconds < 0 ? null : Duration(seconds: seconds);
+    try {
+      final wait = HttpDate.parse(value.trim()).difference(DateTime.now());
+      return wait > Duration.zero ? wait : null;
+    } on Object {
+      return null;
+    }
+  }
+}
+
+/// What a running request holds, so a timeout or the size cap can close it.
+final class _Pending {
+  HttpClientRequest? call;
+  StreamSubscription<List<int>>? sub;
+
+  void abort() {
+    call?.abort();
+    unawaited(sub?.cancel());
   }
 }

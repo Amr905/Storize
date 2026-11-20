@@ -44,7 +44,10 @@ final class TimelineEntry {
   /// When the post was published.
   final DateTime takenAt;
 
-  /// Whether the profile owner pinned it (`timeline_pinned_user_ids`).
+  /// Whether the post is pinned (`timeline_pinned_user_ids` is not empty).
+  /// It means "pinned by any user", for example a co-author of a collab
+  /// post, not only by the profile owner. It never affects which posts are
+  /// returned; it is only a marker.
   final bool pinned;
 
   /// `user.pk` and `owner_id.pk`. On a collab post this is the other author.
@@ -66,7 +69,16 @@ final class TimelineEntry {
 /// A timeline page.
 final class Timeline {
   /// Creates a timeline.
-  const Timeline({required this.entries, this.viewerId, this.usernameUsed});
+  const Timeline({
+    required this.entries,
+    this.viewerId,
+    this.usernameUsed,
+    this.skippedMalformed = 0,
+  });
+
+  /// How many edges were left out because their `pk` or `taken_at` was
+  /// missing or broken. The page fails only when every edge is malformed.
+  final int skippedMalformed;
 
   /// The posts, in the order Instagram lists them (pinned first; not date
   /// order).
@@ -137,8 +149,8 @@ final class EnvelopeMapper {
     final edges =
         data['xdt_api__v1__feed__user_timeline_graphql_connection']['edges']
             .list;
-    return Timeline(
-      entries: [for (final e in edges) entry(e['node'])],
+    return _timeline(
+      [for (final e in edges) e['node']],
       viewerId: data['xdt_viewer']['user']['id'].stringOrNull,
       usernameUsed: usernameUsed,
     );
@@ -178,29 +190,62 @@ final class EnvelopeMapper {
   }
 
   /// IG-5 `feed/user/{id}`: `items[]`.
-  Timeline restFeed(Node body) => Timeline(
-    entries: [for (final n in body['items'].list) entry(n)],
-  );
+  Timeline restFeed(Node body) => _timeline(body['items'].list);
 
   // -------------------------------------------------------------- shared
 
-  /// Reads the fields change detection needs from a media object.
+  /// Reads the fields change detection needs from a media object. `pk` and
+  /// `taken_at` are required; the pinned and co-author lists are read
+  /// tolerantly (a wrong type counts as empty).
   TimelineEntry entry(Node node) {
-    final authors = <String>{
-      ?node['user']['pk'].stringOrNull,
-      ?node['owner_id']['pk'].stringOrNull,
-    };
-    final coauthors = <String>{
-      for (final c in node['coauthor_producers'].listOrEmpty)
-        ?c['pk'].stringOrNull,
-    };
+    final raw = node.value;
+    final map = raw is Map<String, Object?> ? raw : const <String, Object?>{};
+    final pinned = map['timeline_pinned_user_ids'];
+    final coauthors = map['coauthor_producers'];
     return TimelineEntry(
       node: node,
       pk: node['pk'].string,
       takenAt: node['taken_at'].unixTime,
-      pinned: node['timeline_pinned_user_ids'].listOrEmpty.isNotEmpty,
-      authorIds: authors,
-      coauthorIds: coauthors,
+      pinned: pinned is List<Object?> && pinned.isNotEmpty,
+      authorIds: {?_pkOf(map['user']), ?_pkOf(map['owner_id'])},
+      coauthorIds: {
+        if (coauthors is List<Object?>)
+          for (final c in coauthors) ?_pkOf(c),
+      },
+    );
+  }
+
+  static String? _pkOf(Object? user) {
+    if (user is! Map<String, Object?>) return null;
+    final pk = user['pk'];
+    final text = pk is String ? pk : (pk is int ? pk.toString() : null);
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  /// Maps edges to entries. A malformed edge is skipped and counted; the
+  /// page fails (with the first problem) only when every edge is malformed.
+  Timeline _timeline(
+    List<Node> nodes, {
+    String? viewerId,
+    String? usernameUsed,
+  }) {
+    final entries = <TimelineEntry>[];
+    SchemaException? first;
+    var skipped = 0;
+    for (final node in nodes) {
+      try {
+        entries.add(entry(node));
+      } on SchemaException catch (e) {
+        skipped++;
+        first ??= e;
+      }
+    }
+    if (entries.isEmpty && first != null) throw first;
+    return Timeline(
+      entries: entries,
+      viewerId: viewerId,
+      usernameUsed: usernameUsed,
+      skippedMalformed: skipped,
     );
   }
 

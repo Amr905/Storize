@@ -99,20 +99,12 @@ void main() {
     expect(huge.retryAfter, const Duration(seconds: 99999999999));
   });
 
-  test('Retry-After as an HTTP-date is not understood: null (the governor '
-      'then uses its 15 min default; fail-safe)', () async {
-    final reply = await DartIoHttp().send(_get('$base/retry-date'));
-    expect(reply.status, 429);
-    expect(reply.retryAfter, isNull);
-  });
-
   test(
     'QA-F6: Retry-After as an HTTP-date should become a duration',
     () async {
       final reply = await DartIoHttp().send(_get('$base/retry-date'));
       expect(reply.retryAfter, isNotNull);
     },
-    skip: 'QA-F6 (Low): only integer seconds are parsed',
   );
 
   test('a body over the cap: status kept, json null, memory bounded', () async {
@@ -160,23 +152,45 @@ void main() {
   );
 
   test(
-    'QA-F7: after a timeout the connection is closed (no socket leak)',
+    'QA-F7: after a timeout or the body cap the connection is closed (no '
+    'socket leak)',
     () async {
+      // A raw socket server sees the client leave (an HttpServer does not
+      // notice a half-read response until it writes much more).
+      final gone = <String>[];
+      final raw = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      raw.listen((s) {
+        s.listen((_) {}, onDone: () => gone.add('closed'), onError: (_) {});
+        // ignore: cascade_invocations, listen returns a subscription.
+        s.add(
+          utf8.encode(
+            'HTTP/1.1 200 OK\r\ncontent-type: application/json\r\n'
+            'transfer-encoding: chunked\r\n\r\n',
+          ),
+        );
+        final timer = Timer.periodic(const Duration(milliseconds: 50), (t) {
+          try {
+            s.add(utf8.encode('64\r\n${'z' * 100}\r\n'));
+          } on Object {
+            t.cancel();
+          }
+        });
+        unawaited(s.done.whenComplete(timer.cancel).catchError((_) {}));
+      });
+      final url = 'http://127.0.0.1:${raw.port}/drip';
       await expectLater(
-        DartIoHttp(timeout: const Duration(milliseconds: 300))
-            .send(_get('$base/drip')),
+        DartIoHttp(timeout: const Duration(milliseconds: 300)).send(_get(url)),
         throwsA(isA<TransportException>()),
       );
-      await Future<void>.delayed(const Duration(seconds: 1));
-      expect(
-        hits,
-        contains('drip-client-gone'),
-        reason: 'the server should see the client disconnect',
-      );
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(gone, ['closed'], reason: 'closed after the timeout');
+      final reply = await DartIoHttp(maxBodyBytes: 500).send(_get(url));
+      expect(reply.status, 200);
+      expect(reply.json, isNull);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(gone, ['closed', 'closed'], reason: 'closed at the cap');
+      await raw.close();
     },
-    skip:
-        'QA-F7 (Low): Future.timeout does not cancel the request; the '
-        'socket stays open until the server finishes',
   );
 
   test('a closed port and a non-TLS server over https are TransportException '
@@ -238,9 +252,6 @@ void main() {
       expect(error, isA<TransportException>());
       expect(error.toString(), isNot(contains('ZZFAKE')));
     },
-    skip:
-        'QA-F1: only Timeout/Socket/Http/Handshake errors are mapped; a '
-        'FormatException or ArgumentError from the header API escapes',
   );
 
   test(
