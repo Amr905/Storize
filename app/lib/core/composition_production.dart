@@ -68,6 +68,7 @@ Future<AppComposition> composeProduction({
     log: diagnostics.log,
   );
   final accounts = DriftAccountRepo(db);
+  final gallery = PluginGalleryStore(plugin);
   final parts = CompositionParts(
     db: db,
     settings: SharedPrefsSettingsRepo(),
@@ -75,7 +76,8 @@ Future<AppComposition> composeProduction({
       SecureStorageSessionStore.defaultStorage(),
       onUnreadable: markLoggedOutOnUnreadable(accounts),
     ),
-    gallery: PluginGalleryStore(plugin),
+    gallery: gallery,
+    findExisting: gallery.findExisting,
     cache: FileMediaCache.pathProvider(),
     storage: PluginStorageInfo(plugin),
     igHttp: DartIoHttp(),

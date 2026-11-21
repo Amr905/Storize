@@ -43,6 +43,7 @@ final class CompositionParts {
     required this.pins,
     required this.biometric,
     this.crashMarker,
+    this.findExisting,
     this.clock = const SystemClock(),
     this.governorConfig = const GovernorConfig(),
     this.closers = const [],
@@ -102,6 +103,9 @@ final class CompositionParts {
 
   /// Biometric authentication.
   final BiometricAuth biometric;
+
+  /// Adopts a gallery file saved just before a kill (null in tests).
+  final GalleryFileFinder? findExisting;
 
   /// The crash marker, to report a pending crash after the database opens.
   final CrashMarker? crashMarker;
@@ -278,8 +282,7 @@ final class AppComposition {
         holder: '$holderId-dl',
         displayName: displayNameFor,
         relativeDir: relativeDirFor,
-        // findExisting: not wired. It needs a native "find by name" in the
-        // plugin, which has no such method yet (see the T-021 report).
+        findExisting: parts.findExisting,
       ),
       applyRetention: ApplyRetention(
         settings: parts.settings,
