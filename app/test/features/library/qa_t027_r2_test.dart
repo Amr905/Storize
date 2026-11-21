@@ -1,6 +1,7 @@
+// QA evidence file: long diagnostic strings and step-by-step router calls.
+// ignore_for_file: cascade_invocations, lines_longer_than_80_chars
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
