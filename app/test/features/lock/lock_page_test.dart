@@ -5,6 +5,7 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
+import 'package:storize_app/features/targets/target_detail_page.dart';
 import 'package:storize_app/features/viewer/post_viewer_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/app_router.dart';
@@ -254,7 +255,7 @@ void main() {
         ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await t.pumpAndSettle();
       expect(find.byType(LockPage), findsOneWidget);
-      expect(find.text('targetId=3'), findsNothing);
+      expect(_target(3), findsNothing);
       await enter(t, '1234');
       await t.pumpAndSettle();
       expect(h.location, '/targets/3');
@@ -373,4 +374,9 @@ Finder _story(int id) => find.byWidgetPredicate(
 Finder _post(int id) => find.byWidgetPredicate(
   (w) => w is PostViewerPage && w.contentId == id,
   description: 'PostViewerPage(contentId: $id)',
+);
+
+Finder _target(int id) => find.byWidgetPredicate(
+  (w) => w is TargetDetailPage && w.targetId == id,
+  description: 'TargetDetailPage(targetId: $id)',
 );
