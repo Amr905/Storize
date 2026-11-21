@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 25 / 43 tasks done (58%)** — original plan 20 / 37 (54%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 26 / 43 tasks done (60%)** — original plan 21 / 37 (57%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,7 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-027 | frontend-developer (sonnet) | `app/lib/features/library/**`, `app/test/features/library/**` (incl. goldens), `app/lib/l10n/app_en.arb` (+ generated), `app/lib/core/providers.dart` (new library providers only) | 11:55 |
 | T-015a | backend-developer (sonnet) | `packages/storize_instagram/lib/{instagram_platform.dart,platform/**,media/**}`, `lib/page/webview_lease.dart` (SeenGuard refresh timeout only), `test/platform/**`, `test/media/**` | 02:15 |
 | T-016 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/add_target.dart`, new `test/usecases/add_target*` | 02:15 |
 | T-018 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/download_pending.dart`, new `test/usecases/download_pending*` | 02:15 |
@@ -69,7 +68,7 @@
 | T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | **done** | 1 | QA PASS + CI [44584045847](https://github.com/Amr905/Storize/actions/runs/44584045847) · `05-reviews/T-024b.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
 | T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
-| T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | in_progress | 1 | — |
+| T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | **done** | 2 | QA PASS r1 + Lead-verified r2 + CI [44844665040](https://github.com/Amr905/Storize/actions/runs/44844665040) · `05-reviews/T-027.md` |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | todo | — | — |
@@ -169,3 +168,4 @@
 - 2026-11-20 13:40 — **T-015 done** (QA PASS, 128 adversarial tests; CI green), merged; Lead exported platform/media/instagram_platform and the `ContentSignals` port, removed the temporary `src` imports; main green (domain 216, instagram 1225). QA findings F1–F7 → new follow-up **T-015a** (T-017 now depends on it).
 - 2026-11-21 02:10 — Resumed after the **weekly** usage limit (hit ~13:40 on 11-20, reset 20:00). T-027 QA round 2 resumed.
 - 2026-11-21 02:30 — **User adopted cost-efficiency rules 1–7** (CLAUDE.md, Phase 5 orchestration): risk-based QA, one QA round max, ~15 targeted QA tests, package-only test runs during dev, ≤150-word reports, compact briefs, Haiku for Medium UI/plumbing. Applies from the next delegation; in-flight agents (T-015a, T-016, T-018, T-027 QA r2) finish under the old brief.
+- 2026-11-21 02:45 — A server restart stopped all 4 agents (T-015a, T-016, T-018, T-027 QA r2). **T-027 done**: per the new cost rules the Lead verified round 2 (library +124 stable under TZ=America/New_York ×3; only the 10 synthetic fixtures tracked under `failures/`), CI green, merged; main green (app 605). **Checkpoint 5** (26 done) run by the Lead: full melos suite green on main. T-015a/T-016/T-018 relaunched on their partial work with lean briefs.
