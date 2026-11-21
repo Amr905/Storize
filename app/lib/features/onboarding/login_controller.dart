@@ -123,7 +123,6 @@ class LoginController extends Notifier<LoginState>
   late SessionStore _sessions;
   late ContentPlatform _platform;
   late AccountRepo _accounts;
-  late SettingsRepo _settings;
   late Clock _clock;
 
   @override
@@ -139,7 +138,6 @@ class LoginController extends Notifier<LoginState>
     _lease = ref.read(loginLeaseProvider);
     _sessions = ref.read(sessionStoreProvider);
     _platform = ref.read(loginPlatformProvider);
-    _settings = ref.read(settingsRepoProvider);
     _accounts = ref.read(accountRepoProvider);
     _clock = ref.read(clockProvider);
     ref.onDispose(() {
@@ -379,10 +377,20 @@ class LoginController extends Notifier<LoginState>
     );
     await sessions.save(stored.id, blob);
     await _wipeStaging();
+    // `onboardingDone` is written when the user leaves S-03 (QA T-026 #1), so
+    // killing the app at S-03 shows setup again at the next start.
+    // Log out cancels every schedule (T-033); put them back for this run.
     try {
-      await _settings.update((s) => s.copyWith(onboardingDone: true));
+      final st = await ref.read(settingsRepoProvider).get();
+      await ref
+          .read(schedulerProvider)
+          .apply(
+            storyMin: st.storyIntervalMin,
+            postMin: st.postIntervalMin,
+            wifiOnly: st.wifiOnly,
+          );
     } on Object {
-      // The account is connected; the flag is retried at the next login.
+      // The next foreground start re-applies the schedule.
     }
     // The session now lives only in the vault.
     await _safeClear();

@@ -43,3 +43,19 @@ final onboardingDoneProvider = StreamProvider<bool>(
       .map((s) => s.onboardingDone)
       .distinct(),
 );
+
+/// Set when the user leaves S-03 with Done or Skip in this run. The gate
+/// opens on it at once, before the stored `onboardingDone` stream catches up
+/// (QA T-026 finding 1: the flag is written at S-03, not at login).
+final setupFinishedProvider = NotifierProvider<SetupFinished, bool>(
+  SetupFinished.new,
+);
+
+/// Holds [setupFinishedProvider].
+class SetupFinished extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  /// Marks onboarding finished for this run.
+  void mark() => state = true;
+}

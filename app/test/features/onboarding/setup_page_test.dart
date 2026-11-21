@@ -88,4 +88,16 @@ void main() {
     await t.pumpAndSettle();
     expect(rig.router.state.uri.path, '/library');
   });
+
+  for (final key in ['onb-done', 'onb-skip']) {
+    testWidgets('$key stores onboardingDone (QA T-026 #1)', (t) async {
+      final rig = OnbRig();
+      await rig.pump(t, initial: Routes.setupPath);
+      expect((await rig.settings.get()).onboardingDone, isFalse);
+      await t.ensureVisible(find.byKey(ValueKey(key)));
+      await t.tap(find.byKey(ValueKey(key)));
+      await t.pumpAndSettle();
+      expect((await rig.settings.get()).onboardingDone, isTrue);
+    });
+  }
 }

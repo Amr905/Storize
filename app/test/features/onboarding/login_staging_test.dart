@@ -105,7 +105,7 @@ void main() {
     final active = (await rig.accounts.getActive())!;
     expect(active.id, isNot(staging));
     expect(rig.sessions.accountIds, {active.id});
-    expect((await rig.settings.get()).onboardingDone, isTrue);
+    expect((await rig.settings.get()).onboardingDone, isFalse);
     await t.pump(const Duration(seconds: 1));
     await t.pumpAndSettle();
   });

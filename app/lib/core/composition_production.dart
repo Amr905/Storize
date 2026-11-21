@@ -175,6 +175,8 @@ List<Override> appOverrides(AppComposition c) => [
   // Until the setting is read the gate stays open: a returning user never
   // sees S-01, and a first-run user is redirected as soon as it loads.
   onboardingCompleteProvider.overrideWith(
-    (ref) => ref.watch(onboardingDoneProvider).value ?? true,
+    (ref) =>
+        ref.watch(setupFinishedProvider) ||
+        (ref.watch(onboardingDoneProvider).value ?? true),
   ),
 ];

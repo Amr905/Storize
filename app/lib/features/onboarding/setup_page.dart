@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_controller.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -43,7 +45,16 @@ class _SetupPageState extends ConsumerState<SetupPage>
     }
   }
 
-  void _finish() {
+  Future<void> _finish() async {
+    ref.read(setupFinishedProvider.notifier).mark();
+    try {
+      await ref
+          .read(settingsRepoProvider)
+          .update((s) => s.copyWith(onboardingDone: true));
+    } on Object {
+      // The gate is already open for this run; S-03 shows again next start.
+    }
+    if (!mounted) return;
     if (context.canPop()) {
       context.pop();
     } else {
@@ -215,12 +226,12 @@ class _SetupPageState extends ConsumerState<SetupPage>
                     key: const ValueKey('onb-done'),
                     label: l10n.onbDone,
                     expand: true,
-                    onPressed: _finish,
+                    onPressed: () => unawaited(_finish()),
                   ),
                   StorizeTextButton(
                     key: const ValueKey('onb-skip'),
                     label: l10n.onbSkip,
-                    onPressed: _finish,
+                    onPressed: () => unawaited(_finish()),
                   ),
                 ],
               ),
