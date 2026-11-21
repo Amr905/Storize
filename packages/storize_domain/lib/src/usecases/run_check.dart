@@ -271,6 +271,9 @@ final class RunCheck {
           return;
         }
         await _onFailure(run, failure, targetLevel ? chunk.single : null);
+        if (failure is SchemaChanged && chunk.length == 1) {
+          await _rotateToBack(chunk.single, CheckScope.stories);
+        }
     }
   }
 
@@ -353,8 +356,33 @@ final class RunCheck {
           final targetLevel =
               failure is TargetNotVisible || failure is TargetNotFound;
           await _onFailure(run, failure, targetLevel ? target : null);
+          if (failure is SchemaChanged) {
+            await _rotateToBack(target, CheckScope.posts);
+          }
       }
       if (run.result != null) return;
+    }
+  }
+
+  /// Moves a target that hit `SchemaChanged` to the back of the round-robin.
+  ///
+  /// Only the check time is stamped, so `TargetRepo.listActive` puts the target
+  /// last. The watermark is untouched, so nothing is skipped: the target is
+  /// tried again once the others had their turn. Without this, targets whose
+  /// responses keep changing shape sit at the front, use up the "3 schema
+  /// failures in a row" budget every run and starve the healthy targets.
+  Future<void> _rotateToBack(Target target, CheckScope scope) async {
+    try {
+      final t = await _targets.getById(target.id);
+      if (t == null) return;
+      final now = _clock.now();
+      await _targets.update(
+        scope == CheckScope.stories
+            ? t.copyWith(lastStoriesCheckAt: now)
+            : t.copyWith(lastPostsCheckAt: now),
+      );
+    } on Object catch (_) {
+      // Rotation is best effort; it must never break a check.
     }
   }
 

@@ -7,6 +7,7 @@ export 'db/db.dart';
 export 'files/files.dart';
 export 'log/log.dart';
 export 'repo/repo.dart';
+export 'scheduler/scheduler.dart';
 export 'security/security.dart';
 export 'settings/settings.dart';
 export 'update/update.dart';

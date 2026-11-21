@@ -67,6 +67,27 @@ class MediaStoreOpsInstrumentedTest {
     }
 
     @Test
+    fun findByNameFindsOnlyAFinishedFileOfThisAppInThatFolder() {
+        val name = "find_me_${System.nanoTime()}.jpg"
+        val result = insertImage(name)
+
+        val found = ops.findByName("storize_test", name)
+        assertNotNull(found)
+        assertEquals(result["uri"], found!!["uri"])
+        assertEquals(name, found["displayName"])
+
+        assertNull(ops.findByName("storize_test", "nope_$name"))
+        assertNull(ops.findByName("storize_other", name))
+    }
+
+    @Test
+    fun findByNameRejectsUnsafeArguments() {
+        assertThrows(PluginException::class.java) { ops.findByName("../x", "a.jpg") }
+        assertThrows(PluginException::class.java) { ops.findByName("storize_test", "a/b.jpg") }
+        assertThrows(PluginException::class.java) { ops.findByName(null, "a.jpg") }
+    }
+
+    @Test
     fun insertExistsSizeDelete() {
         val source = imageFile("src_a.jpg")
         val result = insertImage("a_${System.nanoTime()}.jpg")

@@ -777,4 +777,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onbChecking => 'Checking';
+
+  @override
+  String get actFilterAll => 'All';
+
+  @override
+  String get actFilterDownloads => 'Downloads';
+
+  @override
+  String get actFilterErrors => 'Errors';
+
+  @override
+  String get actFilterGaps => 'Gaps';
+
+  @override
+  String get actSubtitle => 'Last 7 days';
+
+  @override
+  String get actToday => 'Today';
+
+  @override
+  String get actYesterday => 'Yesterday';
+
+  @override
+  String get actEmptyTitle => 'No activity yet.';
+
+  @override
+  String actCheckDoneOk(int count) {
+    return 'Checked $count accounts · No errors';
+  }
+
+  @override
+  String actCheckDoneFailed(int count, int failed) {
+    return 'Checked $count accounts · $failed failed';
+  }
+
+  @override
+  String actDownloadedStories(int count, String account) {
+    return '$count stories downloaded · $account';
+  }
+
+  @override
+  String actDownloadedPosts(int count, String account) {
+    return '$count posts downloaded · $account';
+  }
+
+  @override
+  String actRemovedBeforeDownload(String account) {
+    return 'Removed before download · $account · not an error';
+  }
+
+  @override
+  String actGap(String from, String to) {
+    return 'Gap: no checks from $from to $to';
+  }
+
+  @override
+  String get actFixBattery => 'Fix battery settings';
+
+  @override
+  String get actFix => 'Fix';
+
+  @override
+  String get actRateLimited => 'Instagram slowed us down · checks slowed';
+
+  @override
+  String get actSessionProblem => 'Instagram login needs attention';
+
+  @override
+  String get actPlatformChanged => 'Instagram changed — update Storize';
+
+  @override
+  String get actPageModeUsed => 'Page mode used for a check';
+
+  @override
+  String get actStorageLow => 'Storage is low';
+
+  @override
+  String get actStoragePaused => 'Downloads paused · storage full';
+
+  @override
+  String actTargetStatus(String account) {
+    return 'Account status changed · $account';
+  }
+
+  @override
+  String actFileMissing(String account) {
+    return 'File missing from gallery · $account';
+  }
+
+  @override
+  String get actAppCrash => 'Storize closed unexpectedly';
+
+  @override
+  String actAccountHandle(String username) {
+    return '@$username';
+  }
+
+  @override
+  String get actAccountRemoved => 'Removed account';
 }

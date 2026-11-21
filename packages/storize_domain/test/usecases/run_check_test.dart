@@ -604,4 +604,53 @@ void main() {
       expect(h.checkRuns.runs.single.isFinished, isTrue);
     });
   });
+
+  group('rotation after SchemaChanged', () {
+    test(
+      'posts: failing targets go to the back, the rest get a turn',
+      () async {
+        final old = s.t0.add(const Duration(hours: 1));
+        for (final id in ['1', '2', '3', '4']) {
+          await h.add(id, lastPosts: old);
+        }
+        h.platform.fetchNewPostsResults.fallback = const Err(
+          SchemaChanged('timeline'),
+        );
+        final r = await h.go(CheckScope.posts);
+        expect(r.run.errorCode, 'schema_changed');
+
+        final order = await h.targets.listActive(CheckScope.posts);
+        expect(order.first.remoteUserId, '4');
+        // The watermark did not move: nothing is skipped.
+        for (final t in order) {
+          expect(t.postsWatermarkAt, isNot(h.clock.now()));
+        }
+      },
+    );
+
+    test('stories: a single failing target is rotated', () async {
+      final old = s.t0.add(const Duration(hours: 1));
+      final a = await h.add('1', lastStories: old);
+      h.platform.fetchStoriesResults.fallback = const Err(
+        SchemaChanged('stories'),
+      );
+      await h.go(CheckScope.stories);
+      final t = await h.targets.getById(a.id);
+      expect(t!.lastStoriesCheckAt, h.clock.now());
+    });
+
+    test(
+      'stories: a batch cannot say whose fault it is, none rotated',
+      () async {
+        final old = s.t0.add(const Duration(hours: 1));
+        final a = await h.add('1', lastStories: old);
+        await h.add('2', lastStories: old);
+        h.platform.fetchStoriesResults.fallback = const Err(
+          SchemaChanged('stories'),
+        );
+        await h.go(CheckScope.stories);
+        expect((await h.targets.getById(a.id))!.lastStoriesCheckAt, old);
+      },
+    );
+  });
 }
