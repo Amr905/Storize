@@ -560,4 +560,166 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libDeleting => 'Deleting…';
+
+  @override
+  String storyPostedLine(String time, String ago) {
+    return 'Posted $time · $ago';
+  }
+
+  @override
+  String get storyAgoJustNow => 'just now';
+
+  @override
+  String storyAgoMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min ago',
+      one: '1 min ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String storyAgoHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count h ago',
+      one: '1 h ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String storyAgoDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String storyAccount(String username) {
+    return '@$username';
+  }
+
+  @override
+  String get storyClose => 'Close';
+
+  @override
+  String get storyMute => 'Mute';
+
+  @override
+  String get storyUnmute => 'Unmute';
+
+  @override
+  String get storyPlay => 'Play';
+
+  @override
+  String get storyPause => 'Pause';
+
+  @override
+  String get storyScrubber => 'Video position';
+
+  @override
+  String get storyLoading => 'Loading…';
+
+  @override
+  String storyLinkSticker(String url) {
+    return 'Link sticker: $url';
+  }
+
+  @override
+  String get storyShare => 'Share';
+
+  @override
+  String get storyInfo => 'Info';
+
+  @override
+  String get storyDelete => 'Delete';
+
+  @override
+  String get storyDeleteTooltip => 'Delete (deletes from your gallery too)';
+
+  @override
+  String get storyDeleteTitle => 'Delete 1 item?';
+
+  @override
+  String get storyDeleteBody =>
+      'They\'ll also be removed from your gallery. This can\'t be undone.';
+
+  @override
+  String get storyCancel => 'Cancel';
+
+  @override
+  String get storyDeleted => '1 item deleted';
+
+  @override
+  String get storyDeleteFailed => 'This item couldn\'t be deleted.';
+
+  @override
+  String get storyShareNothing =>
+      'Nothing to share yet. The file is still downloading.';
+
+  @override
+  String get storyShareFailed => 'Couldn\'t share this item.';
+
+  @override
+  String get storyMissingTitle => 'This file is missing';
+
+  @override
+  String get storyMissingBody => 'Remove it from your library?';
+
+  @override
+  String get storyRemoveFromLibrary => 'Remove from library';
+
+  @override
+  String get storyCantPlay => 'This file can\'t be played.';
+
+  @override
+  String get storyPhotoUnavailable => 'Photo unavailable';
+
+  @override
+  String get storyInfoTitle => 'Details';
+
+  @override
+  String get storyInfoPosted => 'Posted';
+
+  @override
+  String get storyInfoDownloaded => 'Downloaded';
+
+  @override
+  String get storyInfoType => 'Type';
+
+  @override
+  String get storyTypePhoto => 'Photo';
+
+  @override
+  String get storyTypeVideo => 'Video';
+
+  @override
+  String get storyInfoDuration => 'Duration';
+
+  @override
+  String get storyInfoSize => 'Size';
+
+  @override
+  String storySizeKb(String kilobytes) {
+    return '$kilobytes KB';
+  }
+
+  @override
+  String storySizeMb(String megabytes) {
+    return '$megabytes MB';
+  }
+
+  @override
+  String get storyInfoItemId => 'Item ID';
+
+  @override
+  String get storyInfoFolder => 'Gallery folder';
 }
