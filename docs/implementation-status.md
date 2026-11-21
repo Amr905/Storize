@@ -29,6 +29,7 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-022 | backend-developer (haiku) | `app/lib/notifications/**`, `app/lib/background/**` (notify hook only), `app/lib/core/composition*.dart`, `app/lib/main.dart`, `app/pubspec.yaml` (+flutter_local_notifications), AndroidManifest (notification entries), `app/test/notifications/**`, background tests, `app_en.arb` (`ntf*` keys only) | 01:30 |
+| T-031 | frontend-developer (haiku) | `app/lib/features/targets/target_detail*`, `app/lib/features/targets/remove_target*`, `app/test/features/targets/target_detail*`, `app/test/features/targets/remove_target*`, `app_en.arb` (`tdt*` keys only) | 02:00 |
 | T-029 | frontend-developer (haiku) | `app/lib/features/viewer/post_*`, `app/test/features/viewer/post_*`, `app_en.arb` (`post*` keys only) | 23:40 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
