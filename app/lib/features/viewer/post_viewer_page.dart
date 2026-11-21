@@ -274,6 +274,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
             // Page dots.
             if (total > 1)
               ExcludeSemantics(
+                key: const ValueKey('post-dots'),
                 child: Padding(
                   padding: const EdgeInsetsDirectional.only(
                     top: StorizeSpacing.s8,
