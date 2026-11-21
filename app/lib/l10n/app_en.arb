@@ -929,5 +929,81 @@
     "placeholders": {"username": {"type": "String"}}
   },
   "actAccountRemoved": "Removed account",
-  "@actAccountRemoved": {"description": "S-11 account label when the target was removed."}
+  "@actAccountRemoved": {"description": "S-11 account label when the target was removed."},
+  "postTypePhoto": "Photo",
+  "@postTypePhoto": {"description": "S-15 type label: single photo post."},
+  "postTypeVideo": "Video",
+  "@postTypeVideo": {"description": "S-15 type label: single video post."},
+  "postTypeCarousel": "Carousel",
+  "@postTypeCarousel": {"description": "S-15 type label: carousel post."},
+  "postTypeReel": "Reel",
+  "@postTypeReel": {"description": "S-15 type label: reel."},
+  "postCounter": "{current} / {total}",
+  "@postCounter": {
+    "description": "S-15 top bar: slide counter.",
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "postSlideSemantics": "Slide {current} of {total}",
+  "@postSlideSemantics": {
+    "description": "S-15 semantics label for the media pager.",
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "postMoreTooltip": "More",
+  "@postMoreTooltip": {"description": "S-15 overflow menu tooltip."},
+  "postShareAll": "Share all slides",
+  "@postShareAll": {"description": "S-15 overflow menu: share every slide of the post."},
+  "postPostedOn": "Posted {when} · {type}",
+  "@postPostedOn": {
+    "description": "S-15 meta line: posted date and time, then the type label.",
+    "placeholders": {
+      "when": {"type": "String"},
+      "type": {"type": "String"}
+    }
+  },
+  "postCaptionMore": "More",
+  "@postCaptionMore": {"description": "S-15 caption toggle: expand the caption."},
+  "postCaptionLess": "Less",
+  "@postCaptionLess": {"description": "S-15 caption toggle: collapse the caption."},
+  "postLinkTitle": "Post link",
+  "@postLinkTitle": {"description": "S-15 Info sheet: label for the post link."},
+  "postCopyLink": "Copy link",
+  "@postCopyLink": {"description": "S-15 Info sheet: copy the post link."},
+  "postLinkCopied": "Link copied",
+  "@postLinkCopied": {"description": "S-15 snackbar after the post link is copied."},
+  "postInfoSlides": "Slides",
+  "@postInfoSlides": {"description": "S-15 Info sheet row: slide count."},
+  "postInfoSlideCount": "{count, plural, =1{1 slide} other{{count} slides}}",
+  "@postInfoSlideCount": {
+    "description": "S-15 Info sheet: number of slides.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "postDeleteTitle": "{count, plural, =1{Delete this post (1 file)?} other{Delete this post ({count} files)?}}",
+  "@postDeleteTitle": {
+    "description": "S-15 delete confirmation title; the count is the number of gallery files.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "postDeleteBody": "Also removes them from your gallery. This can't be undone.",
+  "@postDeleteBody": {"description": "S-15 delete confirmation body (gallery wording)."},
+  "postDeleted": "Post deleted",
+  "@postDeleted": {"description": "S-15 snackbar after the post is deleted."},
+  "postDeleteFailed": "This post couldn't be deleted.",
+  "@postDeleteFailed": {"description": "S-15 snackbar when the delete fails."},
+  "postSlideMissingTitle": "This slide's file is missing",
+  "@postSlideMissingTitle": {"description": "S-15 per-slide state: the gallery file is gone (EC-20)."},
+  "postSlideMissingBody": "It was moved or deleted outside Storize.",
+  "@postSlideMissingBody": {"description": "S-15 per-slide missing state: explanation."},
+  "postRemoveSlide": "Remove slide",
+  "@postRemoveSlide": {"description": "S-15 per-slide missing state: remove this slide from the library."},
+  "postSlideRemoveFailed": "This slide couldn't be removed.",
+  "@postSlideRemoveFailed": {"description": "S-15 snackbar when removing one slide fails."},
+  "postSlideNotDownloaded": "Not downloaded",
+  "@postSlideNotDownloaded": {"description": "S-15 per-slide state: the slide never finished downloading (EC-21)."},
+  "postSlideNotDownloadedBody": "This slide didn't finish downloading.",
+  "@postSlideNotDownloadedBody": {"description": "S-15 per-slide not-downloaded state: explanation."}
 }

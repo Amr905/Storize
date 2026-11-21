@@ -1450,6 +1450,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed account'**
   String get actAccountRemoved;
+
+  /// S-15 type label: single photo post.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get postTypePhoto;
+
+  /// S-15 type label: single video post.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get postTypeVideo;
+
+  /// S-15 type label: carousel post.
+  ///
+  /// In en, this message translates to:
+  /// **'Carousel'**
+  String get postTypeCarousel;
+
+  /// S-15 type label: reel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reel'**
+  String get postTypeReel;
+
+  /// S-15 top bar: slide counter.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {total}'**
+  String postCounter(int current, int total);
+
+  /// S-15 semantics label for the media pager.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide {current} of {total}'**
+  String postSlideSemantics(int current, int total);
+
+  /// S-15 overflow menu tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get postMoreTooltip;
+
+  /// S-15 overflow menu: share every slide of the post.
+  ///
+  /// In en, this message translates to:
+  /// **'Share all slides'**
+  String get postShareAll;
+
+  /// S-15 meta line: posted date and time, then the type label.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted {when} · {type}'**
+  String postPostedOn(String when, String type);
+
+  /// S-15 caption toggle: expand the caption.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get postCaptionMore;
+
+  /// S-15 caption toggle: collapse the caption.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get postCaptionLess;
+
+  /// S-15 Info sheet: label for the post link.
+  ///
+  /// In en, this message translates to:
+  /// **'Post link'**
+  String get postLinkTitle;
+
+  /// S-15 Info sheet: copy the post link.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get postCopyLink;
+
+  /// S-15 snackbar after the post link is copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get postLinkCopied;
+
+  /// S-15 Info sheet row: slide count.
+  ///
+  /// In en, this message translates to:
+  /// **'Slides'**
+  String get postInfoSlides;
+
+  /// S-15 Info sheet: number of slides.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 slide} other{{count} slides}}'**
+  String postInfoSlideCount(int count);
+
+  /// S-15 delete confirmation title; the count is the number of gallery files.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete this post (1 file)?} other{Delete this post ({count} files)?}}'**
+  String postDeleteTitle(int count);
+
+  /// S-15 delete confirmation body (gallery wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Also removes them from your gallery. This can\'t be undone.'**
+  String get postDeleteBody;
+
+  /// S-15 snackbar after the post is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Post deleted'**
+  String get postDeleted;
+
+  /// S-15 snackbar when the delete fails.
+  ///
+  /// In en, this message translates to:
+  /// **'This post couldn\'t be deleted.'**
+  String get postDeleteFailed;
+
+  /// S-15 per-slide state: the gallery file is gone (EC-20).
+  ///
+  /// In en, this message translates to:
+  /// **'This slide\'s file is missing'**
+  String get postSlideMissingTitle;
+
+  /// S-15 per-slide missing state: explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'It was moved or deleted outside Storize.'**
+  String get postSlideMissingBody;
+
+  /// S-15 per-slide missing state: remove this slide from the library.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove slide'**
+  String get postRemoveSlide;
+
+  /// S-15 snackbar when removing one slide fails.
+  ///
+  /// In en, this message translates to:
+  /// **'This slide couldn\'t be removed.'**
+  String get postSlideRemoveFailed;
+
+  /// S-15 per-slide state: the slide never finished downloading (EC-21).
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded'**
+  String get postSlideNotDownloaded;
+
+  /// S-15 per-slide not-downloaded state: explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This slide didn\'t finish downloading.'**
+  String get postSlideNotDownloadedBody;
 }
 
 class _AppLocalizationsDelegate
