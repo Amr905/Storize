@@ -17,7 +17,7 @@ class PostSlideView extends ConsumerWidget {
   const PostSlideView({
     required this.contentId,
     required this.media,
-    required this.onRemove,
+    this.onRemove,
     super.key,
   });
 
@@ -28,7 +28,8 @@ class PostSlideView extends ConsumerWidget {
   final MediaFile media;
 
   /// The user chose "Remove slide" in the missing state.
-  final VoidCallback onRemove;
+  /// Null hides the "Remove slide" action.
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

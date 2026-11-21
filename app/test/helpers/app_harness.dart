@@ -7,6 +7,10 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
+import 'package:storize_app/features/onboarding/login_lease.dart';
+import 'package:storize_app/features/onboarding/login_web_view.dart';
+import 'package:storize_app/features/onboarding/onboarding_providers.dart';
+import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
@@ -89,6 +93,9 @@ Future<AppHarness> pumpApp(
         // tests pass bypassLock: false.
         if (bypassLock) appLockTestBypassProvider.overrideWithValue(true),
         ...overrides,
+        // The onboarding pages (S-01 to S-03) are the real widgets, so their
+        // providers are faked, unless the test overrides one itself.
+        ..._onboardingFakes(except: overrides),
       ],
     ),
   );
@@ -98,6 +105,70 @@ Future<AppHarness> pumpApp(
   );
   return AppHarness(tester, container, repo);
 }
+
+/// A login WebView stand-in: no platform view.
+Widget _stubLoginWebView(BuildContext context, LoginWebViewEvents events) =>
+    const SizedBox.expand(key: ValueKey('stub-login-web'));
+
+class _StubLease implements LoginLease {
+  @override
+  Future<bool> tryAcquire(String owner) async => true;
+
+  @override
+  Future<void> release(String owner) async {}
+
+  @override
+  Stream<void> get onLost => const Stream<void>.empty();
+}
+
+class _StubSetupOps implements SetupOps {
+  @override
+  Future<bool> notificationsAllowed() async => true;
+
+  @override
+  Future<PermissionOutcome> requestNotifications() async =>
+      PermissionOutcome.granted;
+
+  @override
+  Future<bool> batteryUnrestricted() async => true;
+
+  @override
+  Future<void> openBatterySettings() async {}
+
+  @override
+  Future<String> manufacturer() async => 'other';
+
+  @override
+  Future<int> sdkInt() async => 34;
+
+  @override
+  Future<bool> storageGranted() async => true;
+
+  @override
+  Future<PermissionOutcome> requestStorage() async => PermissionOutcome.granted;
+
+  @override
+  Future<void> openAppSettings() async {}
+}
+
+List<Override> _onboardingFakes({required List<Override> except}) {
+  // A provider cannot be overridden twice in one scope.
+  final taken = {for (final o in except) o.origin};
+  return [
+    for (final o in _allOnboardingFakes())
+      if (!taken.contains(o.origin)) o,
+  ];
+}
+
+List<Override> _allOnboardingFakes() => [
+  loginLeaseProvider.overrideWithValue(_StubLease()),
+  loginWebViewBuilderProvider.overrideWithValue(_stubLoginWebView),
+  setupOpsProvider.overrideWithValue(_StubSetupOps()),
+  loginPlatformProvider.overrideWithValue(FakeContentPlatform()),
+  sessionStoreProvider.overrideWithValue(FakeSessionStore()),
+  settingsRepoProvider.overrideWithValue(FakeSettingsRepo()),
+  clockProvider.overrideWithValue(FakeClock(DateTime.utc(2026, 11, 21))),
+];
 
 /// Overrides a gate provider with a flag that [GateFlag.set] can flip.
 ({List<Override> overrides, NotifierProvider<GateFlag, bool> flag}) gate(

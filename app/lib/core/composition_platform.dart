@@ -23,16 +23,30 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
   ActiveAccountPlatform({
     required this._accounts,
     required this._factory,
+    this._fixedAccountId,
   });
 
+  /// The adapter of one fixed account id, whatever the active account is.
+  /// The login flow uses it for the staging id `0` (S-02 verifies a session
+  /// before it belongs to any account).
+  ActiveAccountPlatform.fixed({
+    required AccountRepo accounts,
+    required PlatformFactory factory,
+    required int accountId,
+  }) : this(
+         accounts: accounts,
+         factory: factory,
+         fixedAccountId: accountId,
+       );
+
   final AccountRepo _accounts;
+  final int? _fixedAccountId;
   final PlatformFactory _factory;
   final Map<int, Future<InstagramPlatform>> _cache = {};
   InstagramPlatform? _last;
 
   Future<InstagramPlatform> _current() async {
-    final account = await _accounts.getActive();
-    final id = account?.id ?? 0;
+    final id = _fixedAccountId ?? (await _accounts.getActive())?.id ?? 0;
     final platform = await _cache.putIfAbsent(id, () => _factory(id));
     return _last = platform;
   }

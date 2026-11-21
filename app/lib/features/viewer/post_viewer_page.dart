@@ -133,10 +133,9 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
 
   Future<void> _removeSlide(int slideIndex) async {
     final l10n = AppLocalizations.of(context);
-    final removed = await ref.read(postSlideRemoverProvider)(
-      widget.contentId,
-      slideIndex,
-    );
+    final remover = ref.read(postSlideRemoverProvider);
+    if (remover == null) return;
+    final removed = await remover(widget.contentId, slideIndex);
     if (!mounted) return;
     if (removed) {
       ref.invalidate(postViewerProvider(widget.contentId));
@@ -266,7 +265,9 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                     key: ValueKey('slide-${media[i].id}'),
                     contentId: item.content.id,
                     media: media[i],
-                    onRemove: () => unawaited(_removeSlide(i)),
+                    onRemove: ref.watch(postSlideRemoverProvider) == null
+                        ? null
+                        : () => unawaited(_removeSlide(i)),
                   ),
                 ),
               ),

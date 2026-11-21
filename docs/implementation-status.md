@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 34 / 43 tasks done (79%)** — original plan 28 / 37 (76%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 36 / 43 tasks done (84%)** — original plan 30 / 37 (81%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,9 +29,8 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-030 | frontend-developer (haiku) | `app/lib/features/targets/**` except `target_detail_page.dart`, `app/test/features/targets/**`, `app_en.arb` (`tgt*` keys only) | 21:20 |
-| T-033 | frontend-developer (haiku) | `app/lib/features/settings/**`, `app/lib/features/account/**`, their tests, `app_en.arb` (`set*`/`acc*` keys only) | 21:20 |
+| T-022 | backend-developer (haiku) | `app/lib/notifications/**`, `app/lib/background/**` (notify hook only), `app/lib/core/composition*.dart`, `app/lib/main.dart`, `app/pubspec.yaml` (+flutter_local_notifications), AndroidManifest (notification entries), `app/test/notifications/**`, background tests, `app_en.arb` (`ntf*` keys only) | 01:30 |
 | T-029 | frontend-developer (haiku) | `app/lib/features/viewer/post_*`, `app/test/features/viewer/post_*`, `app_en.arb` (`post*` keys only) | 23:40 |
-| T-026 | frontend-developer (sonnet) | `app/lib/features/onboarding/**`, `app/test/features/onboarding/**`, `app_en.arb` (append `onb*` keys only) | 04:00 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -68,14 +67,14 @@
 | T-024a | Primary colour #D9481F → #C93F17 (WCAG AA, UD-1) | Low | haiku | Frontend Developer | T-024 | **done** | 1 | QA PASS + CI [44608881787](https://github.com/Amr905/Storize/actions/runs/44608881787) · `05-reviews/T-024a.md` |
 | T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | **done** | 1 | QA PASS + CI [44584045847](https://github.com/Amr905/Storize/actions/runs/44584045847) · `05-reviews/T-024b.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
-| T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | in_progress | 1 | — |
+| T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | done | 1 | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | **done** | 2 | QA PASS r1 + Lead-verified r2 + CI [44844665040](https://github.com/Amr905/Storize/actions/runs/44844665040) · `05-reviews/T-027.md` |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | done | 1 | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | todo | — | — |
 | T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | todo | — | — |
 | T-032 | Activity S-11 | Medium | haiku | Frontend Developer | T-025, T-020 | done | 1 | Lead review |
-| T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | todo | — | — |
+| T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | done | — | — |
 | T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | **done** | 2 | QA PASS r2 (3 majors fixed) + CI [44523291566](https://github.com/Amr905/Storize/actions/runs/44523291566) · `05-reviews/T-034.md` |
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
 | T-036 | Release pipeline (`release.yml`) + README install guide | Medium | sonnet | Backend Developer | T-001, P-5 | todo | — | — |
@@ -176,3 +175,5 @@
 - 2026-11-21 05:45 — **T-021 done** (33/43, 77%): QA PASS (15 tests, `05-reviews/T-021.md`), F1 fixed by Lead, CI 44858825809 green, merged 22c57ba; storize_data now exports `scheduler/`. Full suite green. AC5 (reboot/force-stop) carried to T-037. Lock released.
 - 2026-11-21 23:20 — Resumed after usage limit. T-026 wiring/permissions restarted (sonnet; lock extended to composition, gates, router/fuzz tests, platform plugin new methods). T-028 CI fix (format). Started T-030 and T-033 (haiku).
 - 2026-11-21 23:40 — **T-028 done** (34/43, 79%): Lead review + CI 44950793739 green; merged 1457b31; app 711 tests. Follow-up (after T-026 merges, plugin lock): full-size photo read path (`content://`) for S-06/S-15, both show thumbnails until then. Started T-029 (haiku).
+- 2026-11-22 00:30 — **T-026 done** (35/43, 81%): QA PASS (44 tests, `05-reviews/T-026.md`); Lead fixed #1 (onboardingDone at S-03 exit) and re-applies the scheduler after login; CI 44953990959 green (first Kotlin compile of PermissionOps); merged. App 798 tests. **Checkpoint 7 GREEN** (Lead): format, analyze clean; data 1452 ~4, domain 464, instagram 1244 ~3, model 73, platform 98, app 798 ~1; gitleaks no leaks.
+- 2026-11-22 01:10 — **T-033 done** (36/43, 84%): QA FAIL (Medium, log-out order) fixed by the Lead; router tests use real pages; `appVersionProvider` wired; S-13 goldens regenerated under **TZ=UTC** (CI zone; local is Cairo, so always run golden updates with `TZ=UTC`). CI 44956752614 green; merged. Not built: S-13 "Follows X of Y" line (no data source), carried to T-038.

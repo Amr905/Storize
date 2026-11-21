@@ -849,6 +849,282 @@
   "@storyInfoItemId": {"description": "Info sheet row: Instagram item ID."},
   "storyInfoFolder": "Gallery folder",
   "@storyInfoFolder": {"description": "Info sheet row: gallery folder of the saved file."},
+  "onbWelcomeTagline": "Save stories automatically, before they disappear.",
+  "@onbWelcomeTagline": {
+    "description": "S-01 headline."
+  },
+  "onbRiskTitle": "Before you continue",
+  "@onbRiskTitle": {
+    "description": "S-01 risk card title."
+  },
+  "onbRisk1": "Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.",
+  "@onbRisk1": {
+    "description": "S-01 risk bullet."
+  },
+  "onbRisk2": "People you track will see that account in their story viewers.",
+  "@onbRisk2": {
+    "description": "S-01 risk bullet."
+  },
+  "onbRisk3": "Use a dedicated account, not your personal one.",
+  "@onbRisk3": {
+    "description": "S-01 risk bullet."
+  },
+  "onbRisk4": "Only track your own/client accounts, people who agreed, or public creators.",
+  "@onbRisk4": {
+    "description": "S-01 risk bullet."
+  },
+  "onbRiskCheckbox": "I understand these risks",
+  "@onbRiskCheckbox": {
+    "description": "S-01 checkbox."
+  },
+  "onbContinue": "Continue",
+  "@onbContinue": {
+    "description": "S-01 primary button."
+  },
+  "onbLoginInfo": "Only the login session is saved, never your password.",
+  "@onbLoginInfo": {
+    "description": "S-02 info strip."
+  },
+  "onbLoginHelp": "Why use a dedicated account?",
+  "@onbLoginHelp": {
+    "description": "S-02 help link."
+  },
+  "onbLoginHelpBody": "Storize views stories as this account, and Instagram may challenge or ban it. A dedicated account keeps your personal one safe.",
+  "@onbLoginHelpBody": {
+    "description": "S-02 help dialog body."
+  },
+  "onbLoginClose": "Close",
+  "@onbLoginClose": {
+    "description": "Dialog close button."
+  },
+  "onbLoginCancel": "Cancel login",
+  "@onbLoginCancel": {
+    "description": "S-02 back button semantics label."
+  },
+  "onbLoginConnecting": "Connecting…",
+  "@onbLoginConnecting": {
+    "description": "S-02 while the session is verified."
+  },
+  "onbLoginConnected": "Connected as @{username}",
+  "@onbLoginConnected": {
+    "description": "S-02 success.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "onbLoginPageLoading": "Loading the login page",
+  "@onbLoginPageLoading": {
+    "description": "S-02 progress bar semantics label."
+  },
+  "onbTryAgain": "Try again",
+  "@onbTryAgain": {
+    "description": "S-02 error button."
+  },
+  "onbErrNetworkTitle": "No internet",
+  "@onbErrNetworkTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrNetworkBody": "Check your connection and try again.",
+  "@onbErrNetworkBody": {
+    "description": "S-02 error body."
+  },
+  "onbErrPageTitle": "The page didn't load",
+  "@onbErrPageTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrPageBody": "Instagram's login page could not be loaded.",
+  "@onbErrPageBody": {
+    "description": "S-02 error body."
+  },
+  "onbErrCheckpointTitle": "Instagram needs to verify this account",
+  "@onbErrCheckpointTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrCheckpointBody": "Open Instagram on another device, confirm it's you, then try again. Or use another account.",
+  "@onbErrCheckpointBody": {
+    "description": "S-02 error body."
+  },
+  "onbErrUnusableTitle": "Couldn't connect this account",
+  "@onbErrUnusableTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrUnusableBody": "Try again or use another account.",
+  "@onbErrUnusableBody": {
+    "description": "S-02 error body."
+  },
+  "onbErrWrongAccountTitle": "Account not switched",
+  "@onbErrWrongAccountTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrWrongAccountBody": "Checks keep using @{username}.",
+  "@onbErrWrongAccountBody": {
+    "description": "S-02 error body.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "onbErrBusyTitle": "Login isn't available right now",
+  "@onbErrBusyTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrBusyBody": "Storize is using the web engine for a check. Try again in a moment.",
+  "@onbErrBusyBody": {
+    "description": "S-02 error body."
+  },
+  "onbErrCancelledTitle": "Login cancelled",
+  "@onbErrCancelledTitle": {
+    "description": "S-02 error title."
+  },
+  "onbErrCancelledBody": "No account was connected.",
+  "@onbErrCancelledBody": {
+    "description": "S-02 error body."
+  },
+  "onbSwitchTitle": "Switch to @{username}?",
+  "@onbSwitchTitle": {
+    "description": "S-02 switch dialog title.",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "onbSwitchBody": "Checks will use this account from now on.",
+  "@onbSwitchBody": {
+    "description": "S-02 switch dialog body."
+  },
+  "onbSwitchConfirm": "Switch",
+  "@onbSwitchConfirm": {
+    "description": "S-02 switch dialog confirm."
+  },
+  "onbSwitchKeep": "Keep current",
+  "@onbSwitchKeep": {
+    "description": "S-02 switch dialog cancel."
+  },
+  "onbSetupEyebrow": "STEP 3 OF 3 · SETUP",
+  "@onbSetupEyebrow": {
+    "description": "S-03 eyebrow."
+  },
+  "onbSetupIntro": "Android may stop background checks to save battery. These steps keep your archive complete.",
+  "@onbSetupIntro": {
+    "description": "S-03 intro."
+  },
+  "onbNotifTitle": "Notifications",
+  "@onbNotifTitle": {
+    "description": "S-03 step title."
+  },
+  "onbNotifBody": "Get told about new stories and login problems.",
+  "@onbNotifBody": {
+    "description": "S-03 step body."
+  },
+  "onbAllow": "Allow",
+  "@onbAllow": {
+    "description": "S-03 permission button."
+  },
+  "onbOpenAppSettings": "Open app settings",
+  "@onbOpenAppSettings": {
+    "description": "S-03 link after a permission was denied twice."
+  },
+  "onbBatteryTitle": "Battery optimization",
+  "@onbBatteryTitle": {
+    "description": "S-03 step title."
+  },
+  "onbBatteryBody": "Set Storize to Unrestricted in battery settings.",
+  "@onbBatteryBody": {
+    "description": "S-03 step body."
+  },
+  "onbBatteryOpen": "Open battery settings",
+  "@onbBatteryOpen": {
+    "description": "S-03 button."
+  },
+  "onbOemTitle": "Extra step for {oem}",
+  "@onbOemTitle": {
+    "description": "S-03 step title.",
+    "placeholders": {
+      "oem": {
+        "type": "String"
+      }
+    }
+  },
+  "onbOemDetected": "Detected on this phone.",
+  "@onbOemDetected": {
+    "description": "S-03 step subtitle."
+  },
+  "onbOemSamsung": "1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize",
+  "@onbOemSamsung": {
+    "description": "Samsung steps."
+  },
+  "onbOemXiaomi": "1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions",
+  "@onbOemXiaomi": {
+    "description": "Xiaomi steps."
+  },
+  "onbOemOppo": "1. Settings > Battery > Storize\n2. Allow background activity and auto-launch",
+  "@onbOemOppo": {
+    "description": "Oppo/Realme steps."
+  },
+  "onbOemVivo": "1. Settings > Battery > Background power consumption\n2. Storize > Allow",
+  "@onbOemVivo": {
+    "description": "Vivo steps."
+  },
+  "onbOemHuawei": "1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background",
+  "@onbOemHuawei": {
+    "description": "Huawei steps."
+  },
+  "onbOemOther": "Open your phone's battery settings and allow Storize to run in the background and start automatically.",
+  "@onbOemOther": {
+    "description": "Other phones steps."
+  },
+  "onbOemSamsungName": "Samsung",
+  "@onbOemSamsungName": {
+    "description": "Manufacturer name."
+  },
+  "onbOemXiaomiName": "Xiaomi",
+  "@onbOemXiaomiName": {
+    "description": "Manufacturer name."
+  },
+  "onbOemOppoName": "Oppo or Realme",
+  "@onbOemOppoName": {
+    "description": "Manufacturer name."
+  },
+  "onbOemVivoName": "Vivo",
+  "@onbOemVivoName": {
+    "description": "Manufacturer name."
+  },
+  "onbOemHuaweiName": "Huawei",
+  "@onbOemHuaweiName": {
+    "description": "Manufacturer name."
+  },
+  "onbOemOtherName": "your phone",
+  "@onbOemOtherName": {
+    "description": "Manufacturer name (generic)."
+  },
+  "onbStorageTitle": "Storage",
+  "@onbStorageTitle": {
+    "description": "S-03 step title (Android 8-9)."
+  },
+  "onbStorageBody": "Needed to save into your gallery.",
+  "@onbStorageBody": {
+    "description": "S-03 step body (Android 8-9)."
+  },
+  "onbBatteryWarning": "Without the battery step, checks may be delayed or missed.",
+  "@onbBatteryWarning": {
+    "description": "S-03 inline warning."
+  },
+  "onbDone": "Done",
+  "@onbDone": {
+    "description": "S-03 primary button."
+  },
+  "onbSkip": "Skip for now",
+  "@onbSkip": {
+    "description": "S-03 secondary button."
+  },
+  "onbChecking": "Checking",
+  "@onbChecking": {
+    "description": "S-03 step spinner semantics label."
+  },
   "actFilterAll": "All",
   "@actFilterAll": {"description": "S-11 filter chip: every entry."},
   "actFilterDownloads": "Downloads",
@@ -1005,5 +1281,121 @@
   "postSlideNotDownloaded": "Not downloaded",
   "@postSlideNotDownloaded": {"description": "S-15 per-slide state: the slide never finished downloading (EC-21)."},
   "postSlideNotDownloadedBody": "This slide didn't finish downloading.",
-  "@postSlideNotDownloadedBody": {"description": "S-15 per-slide not-downloaded state: explanation."}
+  "@postSlideNotDownloadedBody": {"description": "S-15 per-slide not-downloaded state: explanation."},
+  "setSectionInstagram": "Instagram",
+  "@setSectionInstagram": {"description": "S-12 section header."},
+  "setSectionChecking": "Checking",
+  "@setSectionChecking": {"description": "S-12 section header."},
+  "setSectionNotifications": "Notifications",
+  "@setSectionNotifications": {"description": "S-12 section header."},
+  "setSectionStorage": "Storage",
+  "@setSectionStorage": {"description": "S-12 section header."},
+  "setSectionSecurity": "Security",
+  "@setSectionSecurity": {"description": "S-12 section header."},
+  "setSectionAbout": "About",
+  "@setSectionAbout": {"description": "S-12 section header."},
+  "setStoryInterval": "Check stories every",
+  "@setStoryInterval": {"description": "S-12 row title and sheet title for the story interval."},
+  "setPostInterval": "Check posts every",
+  "@setPostInterval": {"description": "S-12 row title and sheet title for the post interval."},
+  "setIntervalMinutes": "{minutes} min",
+  "@setIntervalMinutes": {"description": "Interval value shorter than an hour.", "placeholders": {"minutes": {"type": "int"}}},
+  "setIntervalHours": "{hours} h",
+  "@setIntervalHours": {"description": "Interval value of whole hours.", "placeholders": {"hours": {"type": "int"}}},
+  "setPostOneHourWarning": "More requests increase the ban risk.",
+  "@setPostOneHourWarning": {"description": "Hint under the post interval when it is 1 h."},
+  "setWifiOnly": "Wi-Fi only",
+  "@setWifiOnly": {"description": "S-12 switch: download only on an unmetered network."},
+  "setKeepRunning": "Keep Storize running",
+  "@setKeepRunning": {"description": "S-12 row that opens S-03 (background permissions)."},
+  "setNotifyStories": "New stories",
+  "@setNotifyStories": {"description": "S-12 notification switch."},
+  "setNotifyPosts": "New posts",
+  "@setNotifyPosts": {"description": "S-12 notification switch."},
+  "setNotifyLogin": "Login problems",
+  "@setNotifyLogin": {"description": "S-12 notification switch."},
+  "setNotifyLoginOffWarning": "You may not notice when checks stop.",
+  "@setNotifyLoginOffWarning": {"description": "Warning shown while the login-problems notification is off."},
+  "setStorageLocation": "Saved to Pictures/Storize",
+  "@setStorageLocation": {"description": "S-12 info row: the fixed gallery location."},
+  "setStorageCalculating": "Calculating…",
+  "@setStorageCalculating": {"description": "S-12 storage row while figures load."},
+  "setStorageUnknown": "Storage unknown",
+  "@setStorageUnknown": {"description": "S-12 storage row when the figures cannot be read."},
+  "setStorageUsedFree": "Used {used} · free {free}",
+  "@setStorageUsedFree": {"description": "S-12 storage row.", "placeholders": {"used": {"type": "String"}, "free": {"type": "String"}}},
+  "setStorageUsedOnly": "Used {used}",
+  "@setStorageUsedOnly": {"description": "S-12 storage row when free space is unknown.", "placeholders": {"used": {"type": "String"}}},
+  "setStorageByAccount": "Storage by account",
+  "@setStorageByAccount": {"description": "Sheet title of the per-account storage list."},
+  "setStorageNone": "No downloads stored yet.",
+  "@setStorageNone": {"description": "Per-account storage sheet when nothing is stored."},
+  "setSizeGb": "{value} GB",
+  "@setSizeGb": {"description": "Byte size in gigabytes.", "placeholders": {"value": {"type": "String"}}},
+  "setSizeMb": "{value} MB",
+  "@setSizeMb": {"description": "Byte size in megabytes.", "placeholders": {"value": {"type": "String"}}},
+  "setSizeKb": "{value} KB",
+  "@setSizeKb": {"description": "Byte size in kilobytes.", "placeholders": {"value": {"type": "String"}}},
+  "setSizeBytes": "{value} B",
+  "@setSizeBytes": {"description": "Byte size under one kilobyte.", "placeholders": {"value": {"type": "String"}}},
+  "setKeepDownloads": "Keep downloads",
+  "@setKeepDownloads": {"description": "S-12 row title and sheet title for retention."},
+  "setKeepForever": "Forever",
+  "@setKeepForever": {"description": "Retention choice: keep everything."},
+  "setKeepAfterDays": "{days, plural, =1{After 1 day} other{After {days} days}}",
+  "@setKeepAfterDays": {"description": "S-12 retention value when retention is on.", "placeholders": {"days": {"type": "int"}}},
+  "setRetentionAfter": "After",
+  "@setRetentionAfter": {"description": "Retention sheet radio label for the N-days option."},
+  "setRetentionDaysLabel": "Days",
+  "@setRetentionDaysLabel": {"description": "Retention sheet text field label (integer 1 to 3650)."},
+  "setRetentionDaysError": "Enter a whole number from 1 to 3650.",
+  "@setRetentionDaysError": {"description": "Validation message for the retention days field."},
+  "setRetentionConfirmTitle": "Delete older downloads now?",
+  "@setRetentionConfirmTitle": {"description": "Retention confirmation dialog title."},
+  "setRetentionConfirmBody": "Items older than {days} days ({count, plural, =1{1 item} other{{count} items}}, {size}) will be deleted now.",
+  "@setRetentionConfirmBody": {"description": "Retention confirmation body (FR-54).", "placeholders": {"days": {"type": "int"}, "count": {"type": "int"}, "size": {"type": "String"}}},
+  "setRetentionConfirm": "Delete now",
+  "@setRetentionConfirm": {"description": "Retention confirmation button."},
+  "setCancel": "Cancel",
+  "@setCancel": {"description": "Cancel button in S-12 sheets and dialogs."},
+  "setSave": "Save",
+  "@setSave": {"description": "Save button in the retention sheet."},
+  "setVersion": "Version {version}",
+  "@setVersion": {"description": "S-12 about row.", "placeholders": {"version": {"type": "String"}}},
+  "setUpdateAvailable": "Update available",
+  "@setUpdateAvailable": {"description": "S-12 row when a newer release exists."},
+  "setUpdateRequired": "Update required",
+  "@setUpdateRequired": {"description": "S-12 row when the installed version is below min-supported."},
+  "setUpdateVersion": "v{version}",
+  "@setUpdateVersion": {"description": "Version value of the update row.", "placeholders": {"version": {"type": "String"}}},
+  "accConnected": "Connected {date}",
+  "@accConnected": {"description": "S-13 connection date.", "placeholders": {"date": {"type": "String"}}},
+  "accNotConnected": "Not connected",
+  "@accNotConnected": {"description": "S-13 and S-12 gray status for no usable login."},
+  "accHealthTitle": "Health",
+  "@accHealthTitle": {"description": "S-13 health card title."},
+  "accLastCheck": "Last successful check {time}",
+  "@accLastCheck": {"description": "S-13 health line.", "placeholders": {"time": {"type": "String"}}},
+  "accLastCheckNever": "No successful check yet",
+  "@accLastCheckNever": {"description": "S-13 health line when no check has succeeded."},
+  "accRateLimitEvents": "Rate-limit events (7 days): {count}",
+  "@accRateLimitEvents": {"description": "S-13 health line.", "placeholders": {"count": {"type": "int"}}},
+  "accNeedsReloginBody": "Instagram ended the session or asked for verification. Checks are paused.",
+  "@accNeedsReloginBody": {"description": "S-13 amber state message."},
+  "accRestrictedBody": "Instagram may have restricted this account. Checks are stopped. Consider logging in with a different dedicated account.",
+  "@accRestrictedBody": {"description": "S-13 red state message."},
+  "accLogIn": "Log in",
+  "@accLogIn": {"description": "S-13 button when not connected."},
+  "accLogInAgain": "Log in again",
+  "@accLogInAgain": {"description": "S-13 primary button in the needs re-login state."},
+  "accLogInAnother": "Log in with another account",
+  "@accLogInAnother": {"description": "S-13 primary button in the restricted state."},
+  "accLogOut": "Log out",
+  "@accLogOut": {"description": "S-13 button that clears the saved session."},
+  "accLogOutTitle": "Log out of Instagram?",
+  "@accLogOutTitle": {"description": "S-13 log-out confirmation title."},
+  "accLogOutBody": "Stop all checks and remove the saved session? Your downloads and targets are kept.",
+  "@accLogOutBody": {"description": "S-13 log-out confirmation body (from UX.md S-13)."},
+  "accLogOutConfirm": "Log out",
+  "@accLogOutConfirm": {"description": "S-13 log-out confirmation button."}
 }

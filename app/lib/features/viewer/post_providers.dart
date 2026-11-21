@@ -36,12 +36,10 @@ final FutureProviderFamily<PostViewerData?, int> postViewerProvider =
     });
 
 /// Removes one slide from the library (EC-20 "Remove slide"). Returns true
-/// when the slide is gone. The default is not wired: no port removes a single
-/// media file yet, so it returns false and the page shows a failure message.
+/// when the slide is gone.
 typedef PostSlideRemover = Future<bool> Function(int contentId, int slideIndex);
 
-/// The per-slide remover. Replace it when the port exists.
-final postSlideRemoverProvider = Provider<PostSlideRemover>(
-  (ref) =>
-      (contentId, slideIndex) async => false,
-);
+/// The per-slide remover. Null until a port removes a single media file
+/// (follow-up T-029a); while null the "Remove slide" action is hidden and the
+/// whole post can still be deleted.
+final postSlideRemoverProvider = Provider<PostSlideRemover?>((ref) => null);

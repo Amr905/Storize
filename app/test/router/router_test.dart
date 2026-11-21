@@ -2,11 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/account/account_page.dart';
 import 'package:storize_app/features/activity/activity_page.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/library/library_providers.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
+import 'package:storize_app/features/onboarding/login_page.dart';
+import 'package:storize_app/features/onboarding/setup_page.dart';
+import 'package:storize_app/features/onboarding/welcome_page.dart';
+import 'package:storize_app/features/settings/settings_page.dart';
+import 'package:storize_app/features/viewer/post_viewer_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
+import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_model/storize_model.dart';
@@ -34,14 +41,9 @@ void main() {
     testWidgets('every screen resolves to its placeholder', (t) async {
       final h = await pumpApp(t);
       const cases = {
-        '/login': 'TODO(T-026)',
-        '/setup': 'TODO(T-026)',
-        '/post/3': 'TODO(T-029)',
         '/targets': 'TODO(T-030)',
         '/targets/add': 'TODO(T-030)',
         '/targets/9': 'TODO(T-031)',
-        '/settings': 'TODO(T-033)',
-        '/account': 'TODO(T-033)',
       };
       for (final e in cases.entries) {
         await h.go(e.key);
@@ -49,6 +51,16 @@ void main() {
       }
       await h.go('/story/3');
       expect(_story(3), findsOneWidget, reason: '/story/3');
+      // Onboarding pages are real. S-01 redirects to the Library once
+      // onboarding is complete, so it is covered by the gates group.
+      await h.go('/settings');
+      expect(find.byType(SettingsPage), findsOneWidget, reason: '/settings');
+      await h.go('/account');
+      expect(find.byType(AccountPage), findsOneWidget, reason: '/account');
+      await h.go('/login');
+      expect(find.byType(LoginPage), findsOneWidget, reason: '/login');
+      await h.go('/setup');
+      expect(find.byType(SetupPage), findsOneWidget, reason: '/setup');
       await h.go('/library');
       expect(find.byType(LibraryPage), findsOneWidget, reason: '/library');
       await h.go('/activity');
@@ -90,14 +102,14 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://post/13');
       expect(h.location, '/post/13');
-      expect(find.text('contentId=13'), findsOneWidget);
+      expect(_post(13), findsOneWidget);
     });
 
     testWidgets('storize://account opens S-13', (t) async {
       final h = await pumpApp(t);
       await h.go('storize://account');
       expect(h.location, '/account');
-      expect(find.text('TODO(T-033)'), findsOneWidget);
+      expect(find.byType(AccountPage), findsOneWidget);
     });
 
     testWidgets('storize://library keeps its filters', (t) async {
@@ -116,7 +128,12 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://settings/storage');
       expect(h.location, '/settings?section=storage');
-      expect(find.text('section=storage'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is SettingsPage && w.section == SettingsSection.storage,
+        ),
+        findsOneWidget,
+      );
     });
 
     for (final bad in [
@@ -176,6 +193,8 @@ void main() {
 
     testWidgets('back from a tab detail returns to the tab root', (t) async {
       final h = await pumpApp(t);
+      await h.go('/post/3');
+      expect(_post(3), findsOneWidget, reason: '/post/3');
       await h.go('/targets');
       await h.push('/targets/4');
       h.router.pop();
@@ -211,7 +230,7 @@ void main() {
         overrides: [onboardingCompleteProvider.overrideWithValue(false)],
       );
       expect(h.location.startsWith('/welcome'), isTrue);
-      expect(find.text('TODO(T-026)'), findsOneWidget);
+      expect(find.byType(WelcomePage), findsOneWidget);
       // The onboarding pages stay reachable.
       await h.go('/login');
       expect(h.location, '/login');
@@ -297,7 +316,7 @@ void main() {
       h.container.read(g.flag.notifier).set(value: true);
       await t.pumpAndSettle();
       expect(h.location, '/post/8');
-      expect(find.text('contentId=8'), findsOneWidget);
+      expect(_post(8), findsOneWidget);
     });
 
     testWidgets('an unsafe from= is ignored', (t) async {
@@ -331,4 +350,9 @@ void main() {
 Finder _story(int id) => find.byWidgetPredicate(
   (w) => w is StoryViewerPage && w.contentId == id,
   description: 'StoryViewerPage(contentId: $id)',
+);
+
+Finder _post(int id) => find.byWidgetPredicate(
+  (w) => w is PostViewerPage && w.contentId == id,
+  description: 'PostViewerPage(contentId: $id)',
 );

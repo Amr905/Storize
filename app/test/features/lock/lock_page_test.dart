@@ -5,6 +5,7 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
+import 'package:storize_app/features/viewer/post_viewer_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_app/router/app_shell.dart';
@@ -229,10 +230,11 @@ void main() {
       final h = await pumpApp(t, bypassLock: false, overrides: f.overrides);
       await h.go('storize://post/5');
       expect(h.location.startsWith('/lock'), isTrue);
-      expect(find.text('contentId=5'), findsNothing);
+      expect(_post(5), findsNothing);
       await enter(t, '1234');
       await t.pumpAndSettle();
       expect(h.location, '/post/5');
+      expect(_post(5), findsOneWidget);
     });
 
     testWidgets('re-lock after 60 s returns to the same page', (t) async {
@@ -366,4 +368,9 @@ void main() {
 Finder _story(int id) => find.byWidgetPredicate(
   (w) => w is StoryViewerPage && w.contentId == id,
   description: 'StoryViewerPage(contentId: $id)',
+);
+
+Finder _post(int id) => find.byWidgetPredicate(
+  (w) => w is PostViewerPage && w.contentId == id,
+  description: 'PostViewerPage(contentId: $id)',
 );
