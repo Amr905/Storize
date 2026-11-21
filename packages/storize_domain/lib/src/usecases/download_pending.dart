@@ -6,6 +6,7 @@ import 'package:storize_domain/src/entities/activity_event.dart';
 import 'package:storize_domain/src/entities/content.dart';
 import 'package:storize_domain/src/entities/content_filter.dart';
 import 'package:storize_domain/src/entities/content_with_media.dart';
+import 'package:storize_domain/src/entities/governor_lease.dart';
 import 'package:storize_domain/src/entities/media_file.dart';
 import 'package:storize_domain/src/entities/target.dart';
 import 'package:storize_domain/src/exceptions.dart';
@@ -16,6 +17,7 @@ import 'package:storize_domain/src/ports/media_cache.dart';
 import 'package:storize_domain/src/ports/storage_info.dart';
 import 'package:storize_domain/src/repos/activity_repo.dart';
 import 'package:storize_domain/src/repos/content_repo.dart';
+import 'package:storize_domain/src/repos/governor_lease_repo.dart';
 import 'package:storize_domain/src/repos/target_repo.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -74,6 +76,10 @@ enum DownloadStopReason {
 
   /// Another run is active in this object; nothing was done.
   alreadyRunning,
+
+  /// Another instance or isolate holds the downloads lease (or it was lost
+  /// mid-run). Nothing was done, or the run stopped before the next item.
+  busy,
 }
 
 /// New files of one target and kind in one run, for notifications (EC-8).
@@ -212,6 +218,7 @@ class _RunState {
   final List<DownloadFailure> failures = [];
   DownloadStopReason? stop;
   bool lowWritten = false;
+  bool cut = false;
 
   _Tally tally(int targetId, ContentKind kind) =>
       tallies.putIfAbsent((targetId, kind), _Tally.new);
@@ -283,9 +290,11 @@ final class DownloadPending {
     required GalleryStore gallery,
     required StorageInfo storage,
     required Clock clock,
+    required GovernorLeaseRepo leases,
     required DisplayNameBuilder displayName,
     required RelativeDirBuilder relativeDir,
     GalleryFileFinder? findExisting,
+    String? holder,
     this.budget = const Duration(minutes: 8),
   }) : _content = content,
        _targets = targets,
@@ -295,6 +304,8 @@ final class DownloadPending {
        _gallery = gallery,
        _storage = storage,
        _clock = clock,
+       _leases = leases,
+       _holder = holder ?? _uniqueHolder(clock),
        _displayName = displayName,
        _relativeDir = relativeDir,
        _find = findExisting;
@@ -317,6 +328,21 @@ final class DownloadPending {
   final DisplayNameBuilder _displayName;
   final RelativeDirBuilder _relativeDir;
   final GalleryFileFinder? _find;
+  final GovernorLeaseRepo _leases;
+  final String _holder;
+
+  /// The reserved lease key of the whole downloads run (`-1` is another
+  /// reserved key; real login accounts are positive).
+  static const int leaseKey = -2;
+
+  /// How long the downloads lease lasts; renewed before every item.
+  static const Duration leaseTtl = Duration(minutes: 10);
+
+  static int _seq = 0;
+
+  static String _uniqueHolder(Clock clock) =>
+      'downloads-${clock.now().microsecondsSinceEpoch}-${_seq++}-'
+      '${Object().hashCode}';
 
   bool _running = false;
 
@@ -337,9 +363,30 @@ final class DownloadPending {
     }
     _running = true;
     try {
-      return await _run(
-        _RunState(deadline ?? _clock.now().add(budget), policy),
+      final lease = await _leases.acquire(
+        accountId: leaseKey,
+        holder: _holder,
+        ttl: leaseTtl,
+        initialBucket: GovernorBucket(
+          tokens: 0,
+          lastRefillAt: _clock.now().toUtc(),
+        ),
       );
+      if (lease == null) {
+        return DownloadPendingResult(
+          stopReason: DownloadStopReason.busy,
+          remaining: (await _content.pendingMedia()).length,
+          counts: const [],
+          failures: const [],
+        );
+      }
+      try {
+        return await _run(
+          _RunState(deadline ?? _clock.now().add(budget), policy),
+        );
+      } finally {
+        await _leases.release(accountId: leaseKey, holder: _holder);
+      }
     } finally {
       _running = false;
     }
@@ -358,6 +405,14 @@ final class DownloadPending {
       }
       final next = await _nextPending(s);
       if (next == null) break;
+      if (!await _leases.renew(
+        accountId: leaseKey,
+        holder: _holder,
+        ttl: leaseTtl,
+      )) {
+        s.stop = DownloadStopReason.busy; // Lost the lease: stop at once.
+        break;
+      }
       if (await _storageStops(s)) break;
       s.touched.add(next.file.id);
       await _process(next, s);
@@ -558,7 +613,11 @@ final class DownloadPending {
     while (true) {
       final from = await _cache.partialLength(file.id);
       try {
-        await _cache.append(file.id, _platform.openMedia(url, fromByte: from));
+        s.cut = false;
+        await _cache.append(
+          file.id,
+          _untilDeadline(_platform.openMedia(url, fromByte: from), s),
+        );
         break;
       } on ExpiredMediaUrl {
         if (refreshed) return const _Fail('url_expired');
@@ -576,6 +635,8 @@ final class DownloadPending {
       }
     }
 
+    // Cut at the deadline: keep the `.part`, charge no attempt (resumes next).
+    if (s.cut) return const _Stop(DownloadStopReason.deadline);
     if (await _cache.partialLength(file.id) == 0) {
       await _discardQuietly(file.id);
       return const _Fail('empty_file');
@@ -589,6 +650,17 @@ final class DownloadPending {
     );
     await _markDone(file, saved, content, s, track);
     return const _Ok();
+  }
+
+  /// Ends [src] cleanly once the deadline has passed (checked per chunk).
+  Stream<List<int>> _untilDeadline(Stream<List<int>> src, _RunState s) async* {
+    await for (final chunk in src) {
+      yield chunk;
+      if (!_clock.now().isBefore(s.deadline)) {
+        s.cut = true;
+        return; // Cancels the source.
+      }
+    }
   }
 
   Future<GalleryFile?> _adopt(
@@ -612,7 +684,16 @@ final class DownloadPending {
     // A `.part` means an earlier run reached this file; only then can a
     // gallery copy exist without a DONE row.
     if (find != null && await _cache.partialLength(file.id) > 0) {
-      return find(relativeDir: relativeDir, displayName: name);
+      final found = await find(relativeDir: relativeDir, displayName: name);
+      if (found == null || found.displayName != name) return null;
+      // Never take a file another row already owns (BR-9).
+      final all = await _content.watchLibrary(ContentFilter()).first;
+      for (final c in all) {
+        for (final m in c.media) {
+          if (m.id != file.id && m.contentUri == found.uri) return null;
+        }
+      }
+      return found;
     }
     return null;
   }

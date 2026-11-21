@@ -90,6 +90,7 @@ final class Throwing implements StorageInfo {
 
 void main() {
   late FakeClock clock;
+  late FakeGovernorLeaseRepo leases;
   late FakeTargetRepo targets;
   late FakeContentRepo content;
   late FakeActivityRepo activity;
@@ -114,6 +115,7 @@ void main() {
     gallery: gal,
     storage: st ?? storage,
     clock: clock,
+    leases: leases,
     displayName: name ?? dn,
     relativeDir: relDir,
     findExisting: finder
@@ -131,6 +133,7 @@ void main() {
 
   setUp(() async {
     clock = FakeClock(s.t0);
+    leases = FakeGovernorLeaseRepo(clock);
     targets = FakeTargetRepo();
     content = FakeContentRepo(targets: targets);
     activity = FakeActivityRepo(clock);
@@ -273,7 +276,7 @@ void main() {
       isNot(aUri),
       reason: 'B adopted the file that belongs to A (shared URI)',
     );
-  }, skip: 'QA-T018-F1: shared gallery URI, run with --run-skipped');
+  });
 
   test('adoption is skipped without a .part (fresh item, same name)', () async {
     await fgal.save(
@@ -480,5 +483,5 @@ void main() {
       reason: 'second instance re-downloaded the same media id',
     );
     expect(fgal.saved, hasLength(1), reason: 'duplicate gallery entry');
-  }, skip: 'QA-T018-F2: no cross-instance lock, run with --run-skipped');
+  });
 }

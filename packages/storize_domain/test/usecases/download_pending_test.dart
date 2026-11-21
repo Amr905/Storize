@@ -63,6 +63,7 @@ final class HookCache implements MediaCache {
 
   final FakeMediaCache inner;
   bool crashOnDiscard = false;
+  void Function()? onChunk;
 
   @override
   Future<void> discard(int mediaFileId) async {
@@ -71,8 +72,13 @@ final class HookCache implements MediaCache {
   }
 
   @override
-  Future<void> append(int mediaFileId, Stream<List<int>> bytes) =>
-      inner.append(mediaFileId, bytes);
+  Future<void> append(int mediaFileId, Stream<List<int>> bytes) => inner.append(
+    mediaFileId,
+    bytes.map((c) {
+      onChunk?.call();
+      return c;
+    }),
+  );
 
   @override
   Future<int> cleanupOrphans(Set<int> pendingIds) =>
@@ -109,6 +115,7 @@ final class ThrowingStorage implements StorageInfo {
 
 void main() {
   late FakeClock clock;
+  late FakeGovernorLeaseRepo leases;
   late FakeTargetRepo targets;
   late FakeContentRepo content;
   late FakeActivityRepo activity;
@@ -133,6 +140,7 @@ void main() {
     gallery: gallery,
     storage: storageInfo ?? storage,
     clock: clock,
+    leases: leases,
     displayName: dn,
     relativeDir: relDir,
     budget: budget,
@@ -151,6 +159,7 @@ void main() {
 
   setUp(() async {
     clock = FakeClock(s.t0);
+    leases = FakeGovernorLeaseRepo(clock);
     targets = FakeTargetRepo();
     content = FakeContentRepo(targets: targets);
     activity = FakeActivityRepo(clock);
@@ -1012,6 +1021,87 @@ void main() {
       final r = await build().run();
       expect(r.stopReason, DownloadStopReason.permissionDenied);
       expect((await filesOf(id)).single.status, MediaFileStatus.pending);
+    });
+  });
+
+  group('lease, deadline and adoption guards', () {
+    test('a busy lease returns busy and does nothing', () async {
+      await seed(alice);
+      await leases.acquire(
+        accountId: DownloadPending.leaseKey,
+        holder: 'other',
+        ttl: DownloadPending.leaseTtl,
+        initialBucket: GovernorBucket(tokens: 0, lastRefillAt: s.t0),
+      );
+      final r = await build().run();
+      expect(r.stopReason, DownloadStopReason.busy);
+      expect(r.remaining, 1);
+      expect(platform.callsTo('openMedia'), isEmpty);
+    });
+
+    test('the lease is released after a run, even when it throws', () async {
+      await seed(alice);
+      platform.queueMedia(bytes(5));
+      gallery.beforeSave = () async => throw Crash();
+      await expectLater(build().run(), throwsA(isA<Crash>()));
+      gallery.beforeSave = null;
+      platform.queueMedia(bytes(5));
+      final r = await build().run();
+      expect(r.stopReason, DownloadStopReason.completed);
+      expect(r.totalFiles, 1);
+    });
+
+    test('the deadline cuts a stream; .part kept, no attempt', () async {
+      final id = await seed(alice);
+      platform.queueMedia(bytes(40), chunkSize: 10);
+      var chunks = 0;
+      hookCache.onChunk = () {
+        if (++chunks == 2) clock.advance(const Duration(minutes: 9));
+      };
+      final r = await build().run();
+      expect(r.stopReason, DownloadStopReason.deadline);
+      expect(r.remaining, 1);
+      final f = (await filesOf(id)).single;
+      expect(f.status, MediaFileStatus.pending);
+      expect(f.attempts, 0);
+      expect(cache.partialLength(id), completion(20));
+      expect(r.failures, isEmpty);
+      // The next run resumes from the kept bytes.
+      hookCache.onChunk = null;
+      platform.queueMedia(bytes(40), chunkSize: 10);
+      await build().run();
+      expect((await filesOf(id)).single.status, MediaFileStatus.done);
+      expect(platform.callsTo('openMedia').last.args, contains(20));
+    });
+
+    test('a finder hit with another display name is not adopted', () async {
+      final id = await seed(alice);
+      await cache.append(id, Stream.value(bytes(5)));
+      final uc = DownloadPending(
+        content: content,
+        targets: targets,
+        activity: activity,
+        platform: platform,
+        cache: hookCache,
+        gallery: gallery,
+        storage: storage,
+        clock: clock,
+        leases: leases,
+        displayName: dn,
+        relativeDir: relDir,
+        findExisting: ({required relativeDir, required displayName}) async =>
+            GalleryFile(
+              uri: 'content://other/1',
+              sizeBytes: 5,
+              relativePath: relativeDir,
+              displayName: 'someone_else.jpg',
+            ),
+      );
+      platform.queueMedia(bytes(5), chunkSize: 5);
+      await uc.run();
+      final f = (await filesOf(id)).single;
+      expect(f.contentUri, isNot('content://other/1'));
+      expect(f.status, MediaFileStatus.done);
     });
   });
 
