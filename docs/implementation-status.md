@@ -29,6 +29,9 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-027 | frontend-developer (sonnet) | `app/lib/features/library/**`, `app/test/features/library/**` (incl. goldens), `app/lib/l10n/app_en.arb` (+ generated), `app/lib/core/providers.dart` (new library providers only) | 11:55 |
+| T-015a | backend-developer (sonnet) | `packages/storize_instagram/lib/{instagram_platform.dart,platform/**,media/**}`, `lib/page/webview_lease.dart` (SeenGuard refresh timeout only), `test/platform/**`, `test/media/**` | 02:15 |
+| T-016 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/add_target.dart`, new `test/usecases/add_target*` | 02:15 |
+| T-018 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/download_pending.dart`, new `test/usecases/download_pending*` | 02:15 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -51,10 +54,10 @@
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | **done** | 2 | QA PASS r2 + CI [44643606619](https://github.com/Amr905/Storize/actions/runs/44643606619) · `05-reviews/T-013.md` |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | **done** | 2 | QA PASS r2 + CI [44718122191](https://github.com/Amr905/Storize/actions/runs/44718122191) · `05-reviews/T-014.md` |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | **done** | 1 (+follow-ups) | QA PASS + CI [44728720352](https://github.com/Amr905/Storize/actions/runs/44728720352) · `05-reviews/T-015.md` |
-| T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | todo | — | — |
-| T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
+| T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | in_progress | 1 | — |
+| T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | in_progress | 1 | — |
 | T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | todo | — | — |
-| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | todo | — | — |
+| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | in_progress | 1 | — |
 | T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
