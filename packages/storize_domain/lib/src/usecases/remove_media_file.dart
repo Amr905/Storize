@@ -39,12 +39,10 @@ final class RemoveMediaFileResult {
 final class RemoveMediaFile {
   /// Creates the use case.
   RemoveMediaFile({
-    required ContentRepo content,
-    required GalleryStore gallery,
-    required MediaCache cache,
-  }) : _content = content,
-       _gallery = gallery,
-       _cache = cache;
+    required this._content,
+    required this._gallery,
+    required this._cache,
+  });
 
   final ContentRepo _content;
   final GalleryStore _gallery;

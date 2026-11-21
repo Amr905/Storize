@@ -347,9 +347,75 @@ void main() {
       ]);
     });
 
+    test('Check now for one target passes its id to the scheduler', () async {
+      final container = ProviderContainer(overrides: appOverrides(c()));
+      addTearDown(container.dispose);
+
+      await container.read(checkNowActionProvider).call(targetId: 7);
+
+      expect(rig.scheduler.checkNowCalls, [
+        (scope: CheckScope.all, targetId: 7),
+      ]);
+    });
+
     test('Check now reports failure when enqueueing fails', () async {
       final action = SchedulerCheckNowAction(_ThrowingScheduler());
       expect((await action.call()).failed, isTrue);
+    });
+  });
+
+  group('clearStagingSession', () {
+    SessionBlob blob() => SessionBlob(
+      cookies: const {'sessionid': 'S', 'ds_user_id': '1'},
+      userAgent: 'UA',
+      capturedAt: DateTime.utc(2026),
+    );
+
+    test('removes a leftover staging session, keeps real accounts', () async {
+      await rig.sessions.save(LoginAccount.unsavedId, blob());
+      await rig.sessions.save(5, blob());
+
+      await c().clearStagingSession();
+
+      expect(rig.sessions.accountIds, {5});
+    });
+
+    test('a failing store is ignored and logged without values', () async {
+      final failing = CompositionRig();
+      addTearDown(failing.composition.dispose);
+      final composition = AppComposition.assemble(
+        CompositionParts(
+          db: failing.db,
+          settings: failing.settings,
+          sessions: _ThrowingSessions(),
+          gallery: failing.parts.gallery,
+          cache: failing.cache,
+          storage: failing.parts.storage,
+          igHttp: failing.network,
+          cdnHttp: failing.network,
+          pageDriver: NoPages(),
+          hookSource: () async => '',
+          seenStore: failing.parts.seenStore,
+          log: failing.log,
+          scheduler: failing.scheduler,
+          enqueuer: failing.enqueuer,
+          updateChecker: failing.parts.updateChecker,
+          currentVersion: '0.1.0',
+          pins: failing.parts.pins,
+          biometric: failing.parts.biometric,
+          clock: failing.clock,
+        ),
+        background: false,
+      );
+
+      await composition.clearStagingSession();
+
+      final warns = failing.log.entries.where((e) => e.level == LogLevel.warn);
+      expect(warns.any((e) => e.message.contains('StateError')), isTrue);
+      expect(
+        failing.log.entries.any((e) => e.message.contains('secret-value')),
+        isFalse,
+      );
     });
   });
 
@@ -371,6 +437,25 @@ void main() {
         expect(rig.scheduler.applyCalls, hasLength(1));
       },
     );
+
+    test('foreground start clears a leftover staging session', () async {
+      await rig.sessions.save(
+        LoginAccount.unsavedId,
+        SessionBlob(
+          cookies: const {'sessionid': 'S', 'ds_user_id': '1'},
+          userAgent: 'UA',
+          capturedAt: DateTime.utc(2026),
+        ),
+      );
+      await buildApp(
+        diagnostics: rig.diagnostics,
+        compose: (_) async => c(),
+        initializeWorkmanager: () async {},
+      );
+      await pumpEventQueue();
+
+      expect(rig.sessions.accountIds, isEmpty);
+    });
 
     test(
       'a failing composition starts the app unwired instead of blank',
@@ -404,4 +489,15 @@ final class _ThrowingScheduler implements Scheduler {
 
   @override
   Future<void> cancelAll() async {}
+}
+
+final class _ThrowingSessions implements SessionStore {
+  @override
+  Future<void> save(int accountId, SessionBlob session) async {}
+
+  @override
+  Future<SessionBlob?> load(int accountId) async => null;
+
+  @override
+  Future<void> clear(int accountId) async => throw StateError('secret-value');
 }

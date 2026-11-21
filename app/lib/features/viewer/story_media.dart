@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/viewer/full_photo.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
 import 'package:storize_app/features/viewer/story_video_player.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -176,16 +177,7 @@ class _StoryPhoto extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    if (media.thumbPath == null) {
-      return Center(
-        child: Text(
-          l10n.storyPhotoUnavailable,
-          style: TextStyle(color: StorizeColors.of(context).onMediaScrim),
-        ),
-      );
-    }
-    return Center(child: ref.watch(storyPhotoBuilderProvider)(context, media));
+    return Center(child: FullPhoto(media: media));
   }
 }
 

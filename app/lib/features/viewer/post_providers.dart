@@ -39,7 +39,29 @@ final FutureProviderFamily<PostViewerData?, int> postViewerProvider =
 /// when the slide is gone.
 typedef PostSlideRemover = Future<bool> Function(int contentId, int slideIndex);
 
-/// The per-slide remover. Null until a port removes a single media file
-/// (follow-up T-029a); while null the "Remove slide" action is hidden and the
-/// whole post can still be deleted.
-final postSlideRemoverProvider = Provider<PostSlideRemover?>((ref) => null);
+/// The use case behind "Remove slide" (EC-20).
+final removeMediaFileProvider = Provider<RemoveMediaFile>(
+  (ref) => RemoveMediaFile(
+    content: ref.watch(contentRepoProvider),
+    gallery: ref.watch(galleryStoreProvider),
+    cache: ref.watch(mediaCacheProvider),
+  ),
+);
+
+/// The per-slide remover: deletes the slide's gallery file, thumbnail and row
+/// (the whole post when it was the last slide). Returns false when the slide
+/// is unknown or its gallery file could not be deleted (the row is kept).
+///
+/// Override with null to hide the "Remove slide" action.
+final postSlideRemoverProvider = Provider<PostSlideRemover?>((ref) {
+  final remove = ref.watch(removeMediaFileProvider);
+  final content = ref.watch(contentRepoProvider);
+  return (contentId, slideIndex) async {
+    final item = await content.getById(contentId);
+    final file = item?.media
+        .where((m) => m.slideIndex == slideIndex)
+        .firstOrNull;
+    if (file == null) return false;
+    return (await remove(contentId, file.id)).removed;
+  };
+});

@@ -364,25 +364,27 @@ void runContentRepoContract(RepoHarness Function() create) {
       },
     );
 
-    test('deleteMediaFile removes one slide; the last one removes the item',
-        () async {
-      final id = await add(aContent(t1, remoteId: 'a'), [
-        aMedia(),
-        aMedia(slideIndex: 1),
-      ]);
-      final other = await add(aContent(t1, remoteId: 'b'));
-      final slides = (await repo.getById(id))!.media;
+    test(
+      'deleteMediaFile removes one slide; the last one removes the item',
+      () async {
+        final id = await add(aContent(t1, remoteId: 'a'), [
+          aMedia(),
+          aMedia(slideIndex: 1),
+        ]);
+        final other = await add(aContent(t1, remoteId: 'b'));
+        final slides = (await repo.getById(id))!.media;
 
-      await repo.deleteMediaFile(slides.first.id);
-      await repo.deleteMediaFile(999);
-      expect((await repo.getById(id))!.media.map((m) => m.id), [
-        slides.last.id,
-      ]);
+        await repo.deleteMediaFile(slides.first.id);
+        await repo.deleteMediaFile(999);
+        expect((await repo.getById(id))!.media.map((m) => m.id), [
+          slides.last.id,
+        ]);
 
-      await repo.deleteMediaFile(slides.last.id);
-      expect(await repo.getById(id), isNull);
-      expect(await repo.getById(other), isNotNull);
-    });
+        await repo.deleteMediaFile(slides.last.id);
+        expect(await repo.getById(id), isNull);
+        expect(await repo.getById(other), isNotNull);
+      },
+    );
 
     test('deleting a target cascades to its content and media only', () async {
       await add(aContent(t1, remoteId: 'a'), [

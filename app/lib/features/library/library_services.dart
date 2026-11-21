@@ -59,7 +59,10 @@ class CheckNowResult {
 abstract interface class CheckNowAction {
   /// Runs the check and completes with its outcome. Never throws for expected
   /// failures; report them with [CheckNowResult.failed].
-  Future<CheckNowResult> call();
+  ///
+  /// With [targetId], only that target is checked (S-09); otherwise all active
+  /// targets.
+  Future<CheckNowResult> call({int? targetId});
 }
 
 /// The default [CheckNowAction]: completes at once with nothing new.
@@ -68,5 +71,5 @@ final class StubCheckNowAction implements CheckNowAction {
   const StubCheckNowAction();
 
   @override
-  Future<CheckNowResult> call() async => const CheckNowResult();
+  Future<CheckNowResult> call({int? targetId}) async => const CheckNowResult();
 }

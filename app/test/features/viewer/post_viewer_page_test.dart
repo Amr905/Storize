@@ -240,8 +240,8 @@ void main() {
       await t.drag(find.byType(PageView), const Offset(-500, 0));
       await t.pumpAndSettle();
       expect(find.text("This slide's file is missing"), findsOneWidget);
-      // No per-slide remover yet (T-029a): the action is hidden.
-      expect(find.text('Remove slide'), findsNothing);
+      // The real remover is wired (T-029a): the action is visible.
+      expect(find.text('Remove slide'), findsOneWidget);
     });
 
     testWidgets('a slide that never downloaded shows Not downloaded', (

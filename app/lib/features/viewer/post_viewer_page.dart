@@ -267,7 +267,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                     media: media[i],
                     onRemove: ref.watch(postSlideRemoverProvider) == null
                         ? null
-                        : () => unawaited(_removeSlide(i)),
+                        : () => unawaited(_removeSlide(media[i].slideIndex)),
                   ),
                 ),
               ),

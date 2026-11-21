@@ -156,7 +156,7 @@ class CountingCheckNow implements CheckNowAction {
   Future<CheckNowResult> Function()? gate;
 
   @override
-  Future<CheckNowResult> call() async {
+  Future<CheckNowResult> call({int? targetId}) async {
     calls++;
     return gate != null ? gate!() : result;
   }

@@ -63,12 +63,13 @@ class TargetCheckController extends Notifier<bool> {
   @override
   bool build() => false;
 
-  /// Checks all active targets. Returns null when a run is already going.
-  Future<CheckNowResult?> checkAll() async {
+  /// Checks all active targets, or only [targetId] when given (S-09).
+  /// Returns null when a run is already going.
+  Future<CheckNowResult?> checkAll({int? targetId}) async {
     if (state) return null;
     state = true;
     try {
-      return await ref.read(checkNowActionProvider).call();
+      return await ref.read(checkNowActionProvider).call(targetId: targetId);
     } finally {
       if (ref.mounted) state = false;
     }

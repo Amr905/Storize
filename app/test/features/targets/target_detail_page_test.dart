@@ -185,6 +185,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(rig.checkNow.calls, 1);
+      expect(rig.checkNow.targetIds, [target.id]);
       expect(find.text(l10n.tgtCheckDone(2)), findsOneWidget);
     });
 

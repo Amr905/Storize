@@ -82,6 +82,8 @@ Future<void> _startUp(AppComposition composition) async {
   // Subscribe first: the first emission registers the tasks even if the
   // start-up work below is slow.
   composition.keepScheduleApplied();
+  // Foreground only: a background task must not wipe a running login.
+  await composition.clearStagingSession();
   await composition.start();
 }
 

@@ -31,9 +31,13 @@ class FakeCheckNow implements CheckNowAction {
   /// Number of runs started.
   int calls = 0;
 
+  /// The `targetId` of each run (null = all).
+  final List<int?> targetIds = [];
+
   @override
-  Future<CheckNowResult> call() async {
+  Future<CheckNowResult> call({int? targetId}) async {
     calls++;
+    targetIds.add(targetId);
     final g = gate;
     if (g != null) await g.future;
     return result;

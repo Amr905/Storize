@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,9 +95,8 @@ class StoryViewerActions {
 
 /// Builds the photo of a slide. Replace it in tests.
 ///
-/// The default shows the cached preview. The full-size photo would need a
-/// read path for `content://` URIs, which the ports do not have yet (see the
-/// T-028 report).
+/// The default shows the cached preview; `FullPhoto` shows the full-size
+/// photo over it once it is read.
 typedef StoryPhotoBuilder = Widget Function(
   BuildContext context,
   MediaFile media,
@@ -115,6 +115,32 @@ final storyPhotoBuilderProvider = Provider<StoryPhotoBuilder>(
     );
   },
 );
+
+/// Reads the bytes of a gallery photo for the full-size view (null when it
+/// cannot be read or is too big). Never throws for expected failures.
+typedef FullPhotoReader = Future<Uint8List?> Function(String contentUri);
+
+/// The full-size photo reader. The default reads nothing, so the viewers keep
+/// showing the thumbnail; production wires `StorizePlatformAndroid.readBytes`.
+final fullPhotoReaderProvider = Provider<FullPhotoReader>(
+  (ref) =>
+      (contentUri) async => null,
+);
+
+/// The bytes of the full-size photo at a `contentUri`, or null. A read error
+/// is treated as null (the thumbnail stays on screen). Freed when the slide
+/// leaves the screen.
+final FutureProviderFamily<Uint8List?, String> fullPhotoBytesProvider =
+    FutureProvider.autoDispose.family<Uint8List?, String>((
+      ref,
+      contentUri,
+    ) async {
+      try {
+        return await ref.watch(fullPhotoReaderProvider)(contentUri);
+      } on Object {
+        return null;
+      }
+    });
 
 /// Makes the video player for a gallery URI. Replace it in tests.
 final storyVideoPlayerFactoryProvider = Provider<StoryVideoPlayerFactory>(
