@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 39 / 43 tasks done (91%)** — original plan 33 / 37 (89%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 40 / 43 tasks done (93%)** — original plan 34 / 37 (92%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,7 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-022 | backend-developer (haiku) | `app/lib/notifications/**`, `app/lib/background/**` (notify hook only), `app/lib/core/composition*.dart`, `app/lib/main.dart`, `app/pubspec.yaml` (+flutter_local_notifications), AndroidManifest (notification entries), `app/test/notifications/**`, background tests, `app_en.arb` (`ntf*` keys only) | 01:30 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -59,7 +58,7 @@
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | haiku | Backend Developer | T-006, T-015 | **done** | 1 | Lead review + CI [44851976869](https://github.com/Amr905/Storize/actions/runs/44851976869) · `05-reviews/T-020.md` |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | done | 1 | — |
-| T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
+| T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | done | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
 | T-024a | Primary colour #D9481F → #C93F17 (WCAG AA, UD-1) | Low | haiku | Frontend Developer | T-024 | **done** | 1 | QA PASS + CI [44608881787](https://github.com/Amr905/Storize/actions/runs/44608881787) · `05-reviews/T-024a.md` |
@@ -178,3 +177,4 @@
 - 2026-11-22 01:45 — **T-030 done** (37/43, 84%→86%): Lead review; Lead fixed session-usable (needs an `active` account) via one shared `activeAccountProvider` (keeps the single watchActive subscription); router tests use real pages. CI 44957929275 green; merged. T-031 now ready. T-022 started (haiku).
 - 2026-11-22 02:10 — **T-029 done** (38/43, 88%): Lead review; post-route tests use the real page; "Remove slide" hidden until a per-media port exists. CI 44959246953 green; merged. **Follow-up T-029a** (Lead-approved port change): `ContentRepo` per-media delete + use case, and full-size photo read path for S-06/S-15. T-022 dev done (wiring by Lead next); T-031 started.
 - 2026-11-22 02:45 — **T-031 done** (39/43, 91%): Lead review; no route placeholders remain; CI 44961143437 green; merged. Gap: S-09 Check now checks all targets (carried to T-038). Note: f4be7e3 on main had committed merge markers (Lead error: commit chained after a conflicted merge); fixed in f875463, CI green. Rule: never chain a commit after `git merge` without checking for unmerged paths.
+- 2026-11-22 03:00 — **T-022 done** (40/43, 93%): Lead review; Lead added warm-tap routing, core library desugaring and **compileSdk 37** (flutter_local_notifications 23 needs it; targetSdk stays 36); CI 44961986939 green; merged. melos `test`/`golden:update` now run with `TZ=UTC`. **Checkpoint 8 GREEN** (Lead): melos run test SUCCESS (app 962 ~1, domain 464, instagram 1244 ~3, model 73, platform 98, data), analyze clean, gitleaks no leaks. Remaining: T-036 (needs P-5 keystore), T-037 (needs P-4 phones), T-038 (a11y + carry-forwards); follow-up T-029a; Could T-035.
