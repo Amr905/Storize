@@ -178,9 +178,6 @@ void main() {
             isNull,
           );
         },
-        skip:
-            'QA T-021 finding F1: findExisting catches only '
-            'StorizePlatformException and TypeError',
       );
     }
   });

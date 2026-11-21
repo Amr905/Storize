@@ -72,9 +72,9 @@ final class PluginGalleryStore implements GalleryStore {
         relativePath: found.relativePath ?? 'Pictures/Storize/$relativeDir/',
         displayName: found.displayName,
       );
-    } on StorizePlatformException {
-      return null;
-    } on TypeError {
+      // A lookup is only an optimisation: any failure means "not found".
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
       return null;
     }
   }
