@@ -942,23 +942,23 @@
   "@onbOemDetected": {
     "description": "S-03 step subtitle."
   },
-  "onbOemSamsung": "1. Settings → Battery → Background usage limits\n2. Never sleeping apps → + Storize",
+  "onbOemSamsung": "1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize",
   "@onbOemSamsung": {
     "description": "Samsung steps."
   },
-  "onbOemXiaomi": "1. Settings → Apps → Manage apps → Storize\n2. Autostart on, Battery saver → No restrictions",
+  "onbOemXiaomi": "1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions",
   "@onbOemXiaomi": {
     "description": "Xiaomi steps."
   },
-  "onbOemOppo": "1. Settings → Battery → Storize\n2. Allow background activity and auto-launch",
+  "onbOemOppo": "1. Settings > Battery > Storize\n2. Allow background activity and auto-launch",
   "@onbOemOppo": {
     "description": "Oppo/Realme steps."
   },
-  "onbOemVivo": "1. Settings → Battery → Background power consumption\n2. Storize → Allow",
+  "onbOemVivo": "1. Settings > Battery > Background power consumption\n2. Storize > Allow",
   "@onbOemVivo": {
     "description": "Vivo steps."
   },
-  "onbOemHuawei": "1. Settings → Battery → App launch → Storize\n2. Manage manually: auto-launch, secondary launch, run in background",
+  "onbOemHuawei": "1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background",
   "@onbOemHuawei": {
     "description": "Huawei steps."
   },

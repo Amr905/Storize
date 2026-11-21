@@ -48,20 +48,14 @@ abstract interface class SetupOps {
 final class PlatformSetupOps implements SetupOps {
   /// Creates the adapter.
   PlatformSetupOps({
-    required StorizePlatformAndroid platform,
-    required Future<bool> Function() notificationsAllowed,
-    required Future<PermissionOutcome> Function() requestNotifications,
-    required Future<int> Function() sdkInt,
-    required Future<bool> Function() storageGranted,
-    required Future<PermissionOutcome> Function() requestStorage,
-    required Future<void> Function() openAppSettings,
-  }) : _platform = platform,
-       _notificationsAllowed = notificationsAllowed,
-       _requestNotifications = requestNotifications,
-       _sdkInt = sdkInt,
-       _storageGranted = storageGranted,
-       _requestStorage = requestStorage,
-       _openAppSettings = openAppSettings;
+    required this._platform,
+    required this._notificationsAllowed,
+    required this._requestNotifications,
+    required this._sdkInt,
+    required this._storageGranted,
+    required this._requestStorage,
+    required this._openAppSettings,
+  });
 
   final StorizePlatformAndroid _platform;
   final Future<bool> Function() _notificationsAllowed;

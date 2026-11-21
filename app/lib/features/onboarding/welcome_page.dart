@@ -150,19 +150,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: StorizeSpacing.s12),
-                    CheckboxListTile(
-                      key: const ValueKey('onb-risk-checkbox'),
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: _understood,
-                      title: Text(
-                        l10n.onbRiskCheckbox,
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                      onChanged: (v) =>
-                          setState(() => _understood = v ?? false),
-                    ),
                   ],
                 ),
               ),
@@ -174,12 +161,28 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                 StorizeSpacing.screenMargin,
                 StorizeSpacing.s16,
               ),
-              child: PrimaryButton(
-                key: const ValueKey('onb-continue'),
-                label: l10n.onbContinue,
-                expand: true,
-                loading: _saving,
-                onPressed: _understood ? _continue : null,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CheckboxListTile(
+                    key: const ValueKey('onb-risk-checkbox'),
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: _understood,
+                    title: Text(
+                      l10n.onbRiskCheckbox,
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                    onChanged: (v) => setState(() => _understood = v ?? false),
+                  ),
+                  PrimaryButton(
+                    key: const ValueKey('onb-continue'),
+                    label: l10n.onbContinue,
+                    expand: true,
+                    loading: _saving,
+                    onPressed: _understood ? _continue : null,
+                  ),
+                ],
               ),
             ),
           ],

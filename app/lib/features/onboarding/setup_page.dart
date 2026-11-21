@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -21,9 +23,11 @@ class _SetupPageState extends ConsumerState<SetupPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    Future.microtask(() {
-      if (mounted) ref.read(setupControllerProvider.notifier).refresh();
-    });
+    unawaited(
+      Future.microtask(() async {
+        if (mounted) await ref.read(setupControllerProvider.notifier).refresh();
+      }),
+    );
   }
 
   @override
@@ -35,7 +39,7 @@ class _SetupPageState extends ConsumerState<SetupPage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref.read(setupControllerProvider.notifier).refresh();
+      unawaited(ref.read(setupControllerProvider.notifier).refresh());
     }
   }
 
@@ -140,59 +144,62 @@ class _SetupPageState extends ConsumerState<SetupPage>
         child: Column(
           children: [
             Expanded(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsetsDirectional.all(
                   StorizeSpacing.screenMargin,
                 ),
-                children: [
-                  Text(
-                    l10n.onbSetupEyebrow,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: scheme.primary,
-                      letterSpacing: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.onbSetupEyebrow,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.primary,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: StorizeSpacing.s4),
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      l10n.screenSetup,
-                      style: theme.textTheme.headlineMedium,
+                    const SizedBox(height: StorizeSpacing.s4),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        l10n.screenSetup,
+                        style: theme.textTheme.headlineMedium,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: StorizeSpacing.s8),
-                  Text(
-                    l10n.onbSetupIntro,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                    const SizedBox(height: StorizeSpacing.s8),
+                    Text(
+                      l10n.onbSetupIntro,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: StorizeSpacing.s16),
-                  for (var i = 0; i < cards.length; i++) ...[
-                    cards[i](i + 1),
-                    const SizedBox(height: StorizeSpacing.s12),
-                  ],
-                  if (s.showBatteryWarning)
-                    Row(
-                      key: const ValueKey('onb-battery-warning'),
-                      children: [
-                        Icon(
-                          Icons.warning_amber_rounded,
-                          size: 20,
-                          color: warning.color,
-                        ),
-                        const SizedBox(width: StorizeSpacing.s8),
-                        Expanded(
-                          child: Text(
-                            l10n.onbBatteryWarning,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: warning.color,
+                    const SizedBox(height: StorizeSpacing.s16),
+                    for (var i = 0; i < cards.length; i++) ...[
+                      cards[i](i + 1),
+                      const SizedBox(height: StorizeSpacing.s12),
+                    ],
+                    if (s.showBatteryWarning)
+                      Row(
+                        key: const ValueKey('onb-battery-warning'),
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 20,
+                            color: warning.color,
+                          ),
+                          const SizedBox(width: StorizeSpacing.s8),
+                          Expanded(
+                            child: Text(
+                              l10n.onbBatteryWarning,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: warning.color,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                ],
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
             Padding(

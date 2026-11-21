@@ -20,7 +20,7 @@ abstract interface class LoginLease {
 
 /// [LoginLease] over the shared [GovernorWebViewLease] (key -1).
 final class GovernorLoginLease implements LoginLease {
-  /// Wraps [lease].
+  /// Wraps the shared lease.
   GovernorLoginLease(this._lease);
 
   final GovernorWebViewLease _lease;

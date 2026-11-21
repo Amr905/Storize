@@ -112,7 +112,7 @@ class SetupController extends Notifier<SetupState> {
     final oem = await _guard(_ops.manufacturer, 'other');
     final notif = await _guard(_ops.notificationsAllowed, false);
     final battery = await _guard(_ops.batteryUnrestricted, false);
-    final storage = sdk <= 28 ? await _guard(_ops.storageGranted, false) : true;
+    final storage = !(sdk <= 28) || await _guard(_ops.storageGranted, false);
     state = state.copyWith(
       sdkInt: sdk,
       manufacturer: oem,

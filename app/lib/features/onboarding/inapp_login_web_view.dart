@@ -13,11 +13,8 @@ Widget buildInAppLoginWebView(
 ) => InAppWebView(
   initialUrlRequest: URLRequest(url: WebUri.uri(LoginHostPolicy.loginUrl)),
   initialSettings: InAppWebViewSettings(
-    javaScriptCanOpenWindowsAutomatically: false,
-    supportMultipleWindows: false,
     allowFileAccess: false,
     allowContentAccess: false,
-    incognito: false,
   ),
   onWebViewCreated: (c) => events.onReady(_InAppController(c)),
   shouldOverrideUrlLoading: (_, action) async {

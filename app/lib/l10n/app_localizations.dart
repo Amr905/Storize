@@ -1316,31 +1316,31 @@ abstract class AppLocalizations {
   /// Samsung steps.
   ///
   /// In en, this message translates to:
-  /// **'1. Settings → Battery → Background usage limits\n2. Never sleeping apps → + Storize'**
+  /// **'1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize'**
   String get onbOemSamsung;
 
   /// Xiaomi steps.
   ///
   /// In en, this message translates to:
-  /// **'1. Settings → Apps → Manage apps → Storize\n2. Autostart on, Battery saver → No restrictions'**
+  /// **'1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions'**
   String get onbOemXiaomi;
 
   /// Oppo/Realme steps.
   ///
   /// In en, this message translates to:
-  /// **'1. Settings → Battery → Storize\n2. Allow background activity and auto-launch'**
+  /// **'1. Settings > Battery > Storize\n2. Allow background activity and auto-launch'**
   String get onbOemOppo;
 
   /// Vivo steps.
   ///
   /// In en, this message translates to:
-  /// **'1. Settings → Battery → Background power consumption\n2. Storize → Allow'**
+  /// **'1. Settings > Battery > Background power consumption\n2. Storize > Allow'**
   String get onbOemVivo;
 
   /// Huawei steps.
   ///
   /// In en, this message translates to:
-  /// **'1. Settings → Battery → App launch → Storize\n2. Manage manually: auto-launch, secondary launch, run in background'**
+  /// **'1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background'**
   String get onbOemHuawei;
 
   /// Other phones steps.

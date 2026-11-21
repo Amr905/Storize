@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -21,13 +23,25 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _navigated = false;
+  Timer? _doneTimer;
+  late final LoginController _controller;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (mounted) ref.read(loginControllerProvider.notifier).start();
-    });
+    _controller = ref.read(loginControllerProvider.notifier);
+    unawaited(
+      Future.microtask(() async {
+        if (mounted) await ref.read(loginControllerProvider.notifier).start();
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _doneTimer?.cancel();
+    _controller.close();
+    super.dispose();
   }
 
   Future<void> _leave() async {
@@ -87,9 +101,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     ref.listen(loginControllerProvider, (prev, next) {
       if (prev?.phase == next.phase) return;
-      if (next.phase == LoginPhase.confirmSwitch) _askSwitch(next);
+      if (next.phase == LoginPhase.confirmSwitch) unawaited(_askSwitch(next));
       if (next.phase == LoginPhase.connected) {
-        Future<void>.delayed(const Duration(milliseconds: 900), _done);
+        _doneTimer ??= Timer(const Duration(milliseconds: 900), _done);
       }
     });
     final s = ref.watch(loginControllerProvider);
@@ -103,7 +117,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _leave();
+        if (!didPop) unawaited(_leave());
       },
       child: Scaffold(
         appBar: AppBar(

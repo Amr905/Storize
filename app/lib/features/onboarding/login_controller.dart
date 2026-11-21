@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/onboarding/login_host_policy.dart';
 import 'package:storize_app/features/onboarding/login_lease.dart';
@@ -48,7 +48,7 @@ enum LoginError {
   /// The user declined to switch to a different account.
   wrongAccount,
 
-  /// Another part of the app uses the WebView (page mode, or the lease was lost).
+  /// Another part of the app uses the WebView, or the lease was lost.
   busy,
 
   /// The user cancelled.
@@ -118,20 +118,46 @@ class LoginController extends Notifier<LoginState>
   /// IG-4. It is cleared as soon as the flow ends.
   static const int stagingAccountId = LoginAccount.unsavedId;
 
-  LoginLease get _lease => ref.read(loginLeaseProvider);
+  // Captured in build(): `ref` must not be used once the provider is disposed.
+  late LoginLease _lease;
+  late SessionStore _sessions;
+  late ContentPlatform _platform;
+  late AccountRepo _accounts;
+  late Clock _clock;
+
+  @override
+  LoginState get state => super.state;
+
+  @override
+  set state(LoginState value) {
+    if (!_disposed) super.state = value;
+  }
 
   @override
   LoginState build() {
+    _lease = ref.read(loginLeaseProvider);
+    _sessions = ref.read(sessionStoreProvider);
+    _platform = ref.read(contentPlatformProvider);
+    _accounts = ref.read(accountRepoProvider);
+    _clock = ref.read(clockProvider);
     ref.onDispose(() {
       _disposed = true;
-      unawaited(_lostSub?.cancel());
-      _answerSwitch(false);
-      if (_leaseHeld) {
-        _leaseHeld = false;
-        unawaited(_lease.release(LoginLease.owner));
-      }
+      close();
     });
     return const LoginState();
+  }
+
+  /// Ends the flow: stops listening and gives the lease back. The page calls
+  /// this when it closes; it is idempotent and also runs on dispose.
+  void close() {
+    _generation++;
+    unawaited(_lostSub?.cancel());
+    _lostSub = null;
+    _answerSwitch(false);
+    if (_leaseHeld) {
+      _leaseHeld = false;
+      unawaited(_lease.release(LoginLease.owner));
+    }
   }
 
   /// Takes the lease. Call once when S-02 opens.
@@ -251,7 +277,7 @@ class LoginController extends Notifier<LoginState>
       final blob = SessionBlob(
         cookies: cookies,
         userAgent: ua ?? '',
-        capturedAt: ref.read(clockProvider).now().toUtc(),
+        capturedAt: _clock.now().toUtc(),
       );
       if (SessionStore.missingCookies(blob).isNotEmpty) return;
       if (gen != _generation) return;
@@ -266,11 +292,11 @@ class LoginController extends Notifier<LoginState>
   }
 
   Future<void> _finish(SessionBlob blob, int gen) async {
-    final sessions = ref.read(sessionStoreProvider);
+    final sessions = _sessions;
     await sessions.save(stagingAccountId, blob);
     final Result<RemoteUser> verified;
     try {
-      verified = await ref.read(contentPlatformProvider).verifySession();
+      verified = await _platform.verifySession();
     } on Object {
       await _wipeStaging();
       if (gen == _generation) _fail(LoginError.unusable);
@@ -289,12 +315,15 @@ class LoginController extends Notifier<LoginState>
       final failure = verified.failureOrNull;
       _fail(switch (failure) {
         NetworkFailure() => LoginError.network,
-        AccountRestricted() => LoginError.checkpoint,
+        AccountRestricted() ||
+        SessionInvalid(
+          reason: SessionReason.challenge,
+        ) => LoginError.checkpoint,
         _ => LoginError.unusable,
       });
       return;
     }
-    final accounts = ref.read(accountRepoProvider);
+    final accounts = _accounts;
     final active = await accounts.getActive();
     if (active != null && active.remoteUserId != user.remoteUserId) {
       state = LoginState(
@@ -321,7 +350,7 @@ class LoginController extends Notifier<LoginState>
         return;
       }
     }
-    final now = ref.read(clockProvider).now().toUtc();
+    final now = _clock.now().toUtc();
     final stored = await accounts.upsert(
       LoginAccount(
         id: active?.remoteUserId == user.remoteUserId
@@ -350,7 +379,7 @@ class LoginController extends Notifier<LoginState>
 
   Future<void> _wipeStaging() async {
     try {
-      await ref.read(sessionStoreProvider).clear(stagingAccountId);
+      await _sessions.clear(stagingAccountId);
     } on Object {
       // Best effort.
     }
@@ -366,7 +395,7 @@ class LoginController extends Notifier<LoginState>
 }
 
 /// The S-02 controller. Auto-disposed with the page, which releases the lease.
-final loginControllerProvider =
+final NotifierProvider<LoginController, LoginState> loginControllerProvider =
     NotifierProvider.autoDispose<LoginController, LoginState>(
       LoginController.new,
     );

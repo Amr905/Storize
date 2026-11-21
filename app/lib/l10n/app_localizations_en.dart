@@ -719,23 +719,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onbOemSamsung =>
-      '1. Settings → Battery → Background usage limits\n2. Never sleeping apps → + Storize';
+      '1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize';
 
   @override
   String get onbOemXiaomi =>
-      '1. Settings → Apps → Manage apps → Storize\n2. Autostart on, Battery saver → No restrictions';
+      '1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions';
 
   @override
   String get onbOemOppo =>
-      '1. Settings → Battery → Storize\n2. Allow background activity and auto-launch';
+      '1. Settings > Battery > Storize\n2. Allow background activity and auto-launch';
 
   @override
   String get onbOemVivo =>
-      '1. Settings → Battery → Background power consumption\n2. Storize → Allow';
+      '1. Settings > Battery > Background power consumption\n2. Storize > Allow';
 
   @override
   String get onbOemHuawei =>
-      '1. Settings → Battery → App launch → Storize\n2. Manage manually: auto-launch, secondary launch, run in background';
+      '1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background';
 
   @override
   String get onbOemOther =>
