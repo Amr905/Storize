@@ -27,6 +27,8 @@ dependencies:
   storize_instagram: any
   storize_model: any
   storize_platform_android: any
+  video_player: ^2.14.1
+  workmanager: ^0.10.10
 
 dev_dependencies:
   flutter_test:

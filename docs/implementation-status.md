@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 28 / 43 tasks done (65%)** — original plan 22 / 37 (59%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 31 / 43 tasks done (72%)** — original plan 25 / 37 (68%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,9 +28,10 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-018 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/download_pending.dart`, new `test/usecases/download_pending*` | 02:15 |
-| T-017 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/run_check.dart`, new `test/usecases/run_check*` | 03:40 |
-| T-020 | backend-developer (haiku) | new `packages/storize_domain/lib/src/usecases/{detect_gaps,compute_storage,verify_session}.dart`, new `test/usecases/{detect_gaps,compute_storage,verify_session}*` | 03:40 |
+| T-021 | backend-developer (sonnet) | `app/lib/background/**` (new), `packages/storize_data/lib/scheduler/**` (new), `app/lib/main.dart` + new `app/lib/core/composition*.dart` (composition root), `app/android/app/src/main/AndroidManifest.xml` (workmanager/boot only), tests | 04:00 |
+| T-026 | frontend-developer (sonnet) | `app/lib/features/onboarding/**`, `app/test/features/onboarding/**`, `app_en.arb` (append `onb*` keys only) | 04:00 |
+| T-028 | frontend-developer (haiku) | `app/lib/features/viewer/story_*`, `app/test/features/viewer/story_*`, `app_en.arb` (append `story*` keys only) | 04:00 |
+| T-032 | frontend-developer (haiku) | `app/lib/features/activity/**`, `app/test/features/activity/**`, `app_en.arb` (append `act*` keys only) | 04:00 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -55,25 +56,25 @@
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | **done** | 1 (+follow-ups) | QA PASS + CI [44728720352](https://github.com/Amr905/Storize/actions/runs/44728720352) · `05-reviews/T-015.md` |
 | T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | **done** | 1 | Lead review + CI [44848081880](https://github.com/Amr905/Storize/actions/runs/44848081880) · `05-reviews/T-015a.md` |
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | haiku | Backend Developer | T-006, T-015 | **done** | 1 | Lead review + CI [44846723906](https://github.com/Amr905/Storize/actions/runs/44846723906) · `05-reviews/T-016.md` |
-| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | in_progress | 1 | — |
-| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | in_review | 1 | — |
+| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | **done** | 1 | QA PASS + CI [44852865606](https://github.com/Amr905/Storize/actions/runs/44852865606) · `05-reviews/T-017.md` |
+| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | **done** | 2 | QA FAIL→fixed (Lead-verified) + CI [44850968810](https://github.com/Amr905/Storize/actions/runs/44850968810) · `05-reviews/T-018.md` |
 | T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
-| T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | in_progress | 1 | — |
-| T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
+| T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | haiku | Backend Developer | T-006, T-015 | **done** | 1 | Lead review + CI [44851976869](https://github.com/Amr905/Storize/actions/runs/44851976869) · `05-reviews/T-020.md` |
+| T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | in_progress | 1 | — |
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
 | T-024 | Design system: theme tokens + shared components + goldens | Medium | sonnet | Frontend Developer | T-001 | **done** | 2 | QA PASS + CI [44457715432](https://github.com/Amr905/Storize/actions/runs/44457715432) · `05-reviews/T-024.md` |
 | T-024a | Primary colour #D9481F → #C93F17 (WCAG AA, UD-1) | Low | haiku | Frontend Developer | T-024 | **done** | 1 | QA PASS + CI [44608881787](https://github.com/Amr905/Storize/actions/runs/44608881787) · `05-reviews/T-024a.md` |
 | T-024b | Move StorizeStrings into ARB/AppLocalizations | Low | haiku | Frontend Developer | T-025 | **done** | 1 | QA PASS + CI [44584045847](https://github.com/Amr905/Storize/actions/runs/44584045847) · `05-reviews/T-024b.md` |
 | T-025 | App shell: router, bottom nav, deep links, UiState pattern, l10n | Medium | sonnet | Frontend Developer | T-024, T-004 | **done** | 2 | QA PASS + CI [44464531584](https://github.com/Amr905/Storize/actions/runs/44464531584) · `05-reviews/T-025.md` |
-| T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | todo | — | — |
+| T-026 | Onboarding: S-01 risk, S-02 login + SessionCapture, S-03 setup | High | sonnet | Frontend Developer | T-025, T-008, T-009, T-020 | in_progress | 1 | — |
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | **done** | 2 | QA PASS r1 + Lead-verified r2 + CI [44844665040](https://github.com/Amr905/Storize/actions/runs/44844665040) · `05-reviews/T-027.md` |
-| T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
+| T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | in_progress | 1 | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | todo | — | — |
 | T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | todo | — | — |
-| T-032 | Activity S-11 | Medium | sonnet | Frontend Developer | T-025, T-020 | todo | — | — |
+| T-032 | Activity S-11 | Medium | sonnet | Frontend Developer | T-025, T-020 | in_progress | 1 | — |
 | T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | todo | — | — |
 | T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | **done** | 2 | QA PASS r2 (3 majors fixed) + CI [44523291566](https://github.com/Amr905/Storize/actions/runs/44523291566) · `05-reviews/T-034.md` |
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
@@ -170,3 +171,4 @@
 - 2026-11-21 02:30 — **User adopted cost-efficiency rules 1–7** (CLAUDE.md, Phase 5 orchestration): risk-based QA, one QA round max, ~15 targeted QA tests, package-only test runs during dev, ≤150-word reports, compact briefs, Haiku for Medium UI/plumbing. Applies from the next delegation; in-flight agents (T-015a, T-016, T-018, T-027 QA r2) finish under the old brief.
 - 2026-11-21 02:45 — A server restart stopped all 4 agents (T-015a, T-016, T-018, T-027 QA r2). **T-027 done**: per the new cost rules the Lead verified round 2 (library +124 stable under TZ=America/New_York ×3; only the 10 synthetic fixtures tracked under `failures/`), CI green, merged; main green (app 605). **Checkpoint 5** (26 done) run by the Lead: full melos suite green on main. T-015a/T-016/T-018 relaunched on their partial work with lean briefs.
 - 2026-11-21 03:35 — **T-016 done** (Lead review + CI; haiku) and **T-015a done** (Lead review + CI; one transient APK-build CI failure, re-run green), merged; Lead exported `add_target`; main green (domain 298, instagram 1244). Another server restart stopped T-018; relaunched and delivered (a8ab91f) → QA (High). Next: T-017, T-020.
+- 2026-11-21 04:00 — **T-018, T-020, T-017 done** (31/43, 72%), merged; Lead exported all domain use cases; main green (domain 461). **Checkpoint 6** (Lead): full suite green. Lead added deps `video_player`, `workmanager` (app) and `workmanager` (data). Started T-021 (sonnet), T-026 (sonnet, security), T-028 (haiku), T-032 (haiku).

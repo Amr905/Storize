@@ -1,5 +1,4 @@
 // QA tests for T-018 (independent of the developer's suite).
-import 'package:storize_domain/src/usecases/download_pending.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_model/storize_model.dart';
