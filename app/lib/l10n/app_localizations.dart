@@ -1198,6 +1198,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed account'**
   String get actAccountRemoved;
+
+  /// Targets title with the tracked count and the recommended limit (S-07).
+  ///
+  /// In en, this message translates to:
+  /// **'Targets ({count}/{limit})'**
+  String tgtCountLimit(int count, int limit);
+
+  /// S-07 action: check all active targets now (FR-21).
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get tgtCheckNow;
+
+  /// Tooltip on the disabled Check now action (BR-7).
+  ///
+  /// In en, this message translates to:
+  /// **'Log in again to check now.'**
+  String get tgtCheckNowDisabled;
+
+  /// Snackbar after Check now.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing new} =1{1 new item} other{{count} new items}}'**
+  String tgtCheckDone(int count);
+
+  /// Snackbar when Check now fails.
+  ///
+  /// In en, this message translates to:
+  /// **'The check could not run.'**
+  String get tgtCheckFailed;
+
+  /// Warning bar on S-07 while checks are slowed (EC-15).
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram is limiting requests. Storize has slowed checks down.'**
+  String get tgtRateLimitBar;
+
+  /// S-07 row meta line: last check time.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {time}'**
+  String tgtMetaChecked(String time);
+
+  /// S-07 row meta line when a target was never checked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet'**
+  String get tgtMetaNever;
+
+  /// S-07 row meta line: last new story time.
+  ///
+  /// In en, this message translates to:
+  /// **'Last new {time}'**
+  String tgtMetaLastNew(String time);
+
+  /// Joins two meta parts on S-07.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} · {second}'**
+  String tgtMetaLine(String first, String second);
+
+  /// Swipe action on a target row.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get tgtActionPause;
+
+  /// Swipe action on a paused target row.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get tgtActionResume;
+
+  /// Snackbar when pausing or resuming fails.
+  ///
+  /// In en, this message translates to:
+  /// **'The change could not be saved.'**
+  String get tgtUpdateFailed;
+
+  /// S-07 empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your first account'**
+  String get tgtEmptyTitle;
+
+  /// S-07 empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an Instagram account to start saving its stories and posts.'**
+  String get tgtEmptyBody;
+
+  /// S-07 add button (FAB) label and empty-state action.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get tgtAddAccount;
+
+  /// S-08 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get tgtFormTitle;
+
+  /// S-08 close icon semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get tgtClose;
+
+  /// S-08 username field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Username or profile link'**
+  String get tgtUsernameLabel;
+
+  /// S-08 username field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'@username or instagram.com/name'**
+  String get tgtUsernameHint;
+
+  /// S-08 inline username error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid Instagram username or profile link.'**
+  String get tgtUsernameInvalid;
+
+  /// S-08 category group label; * marks it required.
+  ///
+  /// In en, this message translates to:
+  /// **'Category *'**
+  String get tgtCategoryLabel;
+
+  /// S-08 category error on submit (BR-1).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category.'**
+  String get tgtCategoryRequired;
+
+  /// S-08 track chips group label.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get tgtTrackLabel;
+
+  /// S-08 track chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get tgtTrackStories;
+
+  /// S-08 track chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get tgtTrackPosts;
+
+  /// S-08 track chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reels'**
+  String get tgtTrackReels;
+
+  /// S-08 error when every track chip is off (FR-65, FR-67).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one.'**
+  String get tgtTrackRequired;
+
+  /// S-08 hint under the track chips (FR-63, A-18).
+  ///
+  /// In en, this message translates to:
+  /// **'New posts are saved from now on — older posts aren\'t downloaded.'**
+  String get tgtTrackHint;
+
+  /// S-08 note field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get tgtNoteLabel;
+
+  /// S-08 note field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. consent by email 3/11'**
+  String get tgtNoteHint;
+
+  /// S-08 error when the note is too long (FR-16).
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the note to 200 characters or fewer.'**
+  String get tgtNoteTooLong;
+
+  /// S-08 inline error: account does not exist.
+  ///
+  /// In en, this message translates to:
+  /// **'No Instagram account named {username}.'**
+  String tgtNotFound(String username);
+
+  /// S-08 inline error: private and not followed (BR-2).
+  ///
+  /// In en, this message translates to:
+  /// **'{username} is private and {login} doesn\'t follow it. Follow it first from Instagram.'**
+  String tgtNotVisiblePrivate(String username, String login);
+
+  /// S-08 inline error: the account blocked the login.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} can\'t be seen from the logged-in account.'**
+  String tgtNotVisibleBlocked(String username);
+
+  /// S-08 inline error: duplicate by user ID (EC-16, EC-5).
+  ///
+  /// In en, this message translates to:
+  /// **'Already tracked as {username}.'**
+  String tgtDuplicate(String username);
+
+  /// S-08 action on the duplicate error: opens S-09.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get tgtOpen;
+
+  /// S-08 session warning; the Add button is disabled (BR-7).
+  ///
+  /// In en, this message translates to:
+  /// **'Log in again to add accounts.'**
+  String get tgtSessionInactive;
+
+  /// S-08 snackbar when the login account is restricted (EC-6).
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram restricted the login account. Checks are paused.'**
+  String get tgtRestricted;
+
+  /// S-08 non-blocking warning at the recommended limit (A-12, NFR-4).
+  ///
+  /// In en, this message translates to:
+  /// **'More than {limit} accounts increases the risk of a ban.'**
+  String tgtOverLimit(int limit);
+
+  /// S-08 submit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add & verify'**
+  String get tgtAddAndVerify;
+
+  /// S-08 button label while verifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying…'**
+  String get tgtVerifying;
+
+  /// S-08 snackbar after a successful add.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking {username}. First check running…'**
+  String tgtAdded(String username);
 }
 
 class _AppLocalizationsDelegate
