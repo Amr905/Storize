@@ -123,7 +123,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             onEdit: () => unawaited(_editCategory(target)),
           ),
           _EditRow(
-            label: l10n.tgtNoteLabel,
+            label: l10n.tdtNoteLabel,
             value: Text(
               target.note ?? l10n.tdtNoteNone,
               maxLines: 2,
