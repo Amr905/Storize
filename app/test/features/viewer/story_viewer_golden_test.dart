@@ -8,8 +8,6 @@ import '../../ui/golden_helpers.dart';
 import '../library/library_rig.dart' show testNow;
 import 'story_rig.dart';
 
-const _phone = Size(400, 800);
-
 Future<void> _golden(WidgetTester t, String name, Brightness b, {Finder? of}) =>
     expectLater(
       of ?? find.byType(StoryViewerPage),
@@ -52,7 +50,6 @@ void main() {
       rig,
       contentId: older,
       brightness: b,
-      size: _phone,
     );
   });
 
@@ -63,7 +60,7 @@ void main() {
       type: MediaType.video,
       durationMs: 12000,
     );
-    await pumpStoryViewer(t, rig, contentId: id, brightness: b, size: _phone);
+    await pumpStoryViewer(t, rig, contentId: id, brightness: b);
   });
 
   _both('missing', (t, rig, b) async {
@@ -72,7 +69,7 @@ void main() {
       postedAt: testNow.subtract(const Duration(hours: 2)),
       inGallery: false,
     );
-    await pumpStoryViewer(t, rig, contentId: id, brightness: b, size: _phone);
+    await pumpStoryViewer(t, rig, contentId: id, brightness: b);
   });
 
   for (final b in Brightness.values) {
@@ -82,7 +79,7 @@ void main() {
         await rig.addTarget('nour_k'),
         postedAt: testNow.subtract(const Duration(hours: 2)),
       );
-      await pumpStoryViewer(t, rig, contentId: id, brightness: b, size: _phone);
+      await pumpStoryViewer(t, rig, contentId: id, brightness: b);
       await t.tap(find.text('Info'));
       await t.pumpAndSettle();
       await _golden(t, 'info', b, of: find.byType(StoryInfoSheet));

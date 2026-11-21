@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/features/viewer/story_media.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
@@ -84,7 +84,7 @@ void main() {
   group('AC2 video', () {
     testWidgets('plays when shown, pauses, mutes and seeks', (t) async {
       final id = await rig.addStory(
-        (await rig.addTarget('clip')),
+        await rig.addTarget('clip'),
         postedAt: testNow.subtract(const Duration(minutes: 20)),
         type: MediaType.video,
         durationMs: 12000,
