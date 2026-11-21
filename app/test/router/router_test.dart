@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/activity/activity_page.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/library/library_providers.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
@@ -39,7 +40,6 @@ void main() {
         '/targets': 'TODO(T-030)',
         '/targets/add': 'TODO(T-030)',
         '/targets/9': 'TODO(T-031)',
-        '/activity': 'TODO(T-032)',
         '/settings': 'TODO(T-033)',
         '/account': 'TODO(T-033)',
       };
@@ -49,6 +49,8 @@ void main() {
       }
       await h.go('/library');
       expect(find.byType(LibraryPage), findsOneWidget, reason: '/library');
+      await h.go('/activity');
+      expect(find.byType(ActivityPage), findsOneWidget, reason: '/activity');
       // The lock page is only reachable while locked.
       expect(Routes.lockPath, '/lock');
     });
