@@ -29,6 +29,8 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-018 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/download_pending.dart`, new `test/usecases/download_pending*` | 02:15 |
+| T-017 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/run_check.dart`, new `test/usecases/run_check*` | 03:40 |
+| T-020 | backend-developer (haiku) | new `packages/storize_domain/lib/src/usecases/{detect_gaps,compute_storage,verify_session}.dart`, new `test/usecases/{detect_gaps,compute_storage,verify_session}*` | 03:40 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -53,11 +55,11 @@
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | **done** | 1 (+follow-ups) | QA PASS + CI [44728720352](https://github.com/Amr905/Storize/actions/runs/44728720352) · `05-reviews/T-015.md` |
 | T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | **done** | 1 | Lead review + CI [44848081880](https://github.com/Amr905/Storize/actions/runs/44848081880) · `05-reviews/T-015a.md` |
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | haiku | Backend Developer | T-006, T-015 | **done** | 1 | Lead review + CI [44846723906](https://github.com/Amr905/Storize/actions/runs/44846723906) · `05-reviews/T-016.md` |
-| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | todo | — | — |
+| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | in_progress | 1 | — |
 | T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | in_review | 1 | — |
 | T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
-| T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
+| T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | in_progress | 1 | — |
 | T-021 | Scheduler + background dispatcher | High | sonnet | Backend Developer | T-017, T-018, T-019, T-020, T-007 | todo | — | — |
 | T-022 | NotificationService (channels, grouping, deep links) | Medium | sonnet | Backend Developer | T-021, T-025 | todo | — | — |
 | T-023 | UpdateChecker (GitHub Releases API) | Low | haiku | Backend Developer | T-006 | **done** | 2 | QA PASS + r2 (URL host pinning) + CI [44521600894](https://github.com/Amr905/Storize/actions/runs/44521600894) · `05-reviews/T-023.md` |
