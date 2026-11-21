@@ -1040,7 +1040,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actAccountRemoved => 'Removed account';
 
   @override
-<<<<<<< HEAD
   String tgtCountLimit(int count, int limit) {
     return 'Targets ($count/$limit)';
   }
@@ -1059,71 +1058,11 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count new items',
       one: '1 new item',
       zero: 'Nothing new',
-=======
-  String get postTypePhoto => 'Photo';
-
-  @override
-  String get postTypeVideo => 'Video';
-
-  @override
-  String get postTypeCarousel => 'Carousel';
-
-  @override
-  String get postTypeReel => 'Reel';
-
-  @override
-  String postCounter(int current, int total) {
-    return '$current / $total';
-  }
-
-  @override
-  String postSlideSemantics(int current, int total) {
-    return 'Slide $current of $total';
-  }
-
-  @override
-  String get postMoreTooltip => 'More';
-
-  @override
-  String get postShareAll => 'Share all slides';
-
-  @override
-  String postPostedOn(String when, String type) {
-    return 'Posted $when · $type';
-  }
-
-  @override
-  String get postCaptionMore => 'More';
-
-  @override
-  String get postCaptionLess => 'Less';
-
-  @override
-  String get postLinkTitle => 'Post link';
-
-  @override
-  String get postCopyLink => 'Copy link';
-
-  @override
-  String get postLinkCopied => 'Link copied';
-
-  @override
-  String get postInfoSlides => 'Slides';
-
-  @override
-  String postInfoSlideCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count slides',
-      one: '1 slide',
->>>>>>> t-029-post-viewer
     );
     return '$_temp0';
   }
 
   @override
-<<<<<<< HEAD
   String get tgtCheckFailed => 'The check could not run.';
 
   @override
@@ -1262,7 +1201,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String tgtAdded(String username) {
     return 'Tracking $username. First check running…';
   }
-=======
+
+  @override
+  String get postTypePhoto => 'Photo';
+
+  @override
+  String get postTypeVideo => 'Video';
+
+  @override
+  String get postTypeCarousel => 'Carousel';
+
+  @override
+  String get postTypeReel => 'Reel';
+
+  @override
+  String postCounter(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String postSlideSemantics(int current, int total) {
+    return 'Slide $current of $total';
+  }
+
+  @override
+  String get postMoreTooltip => 'More';
+
+  @override
+  String get postShareAll => 'Share all slides';
+
+  @override
+  String postPostedOn(String when, String type) {
+    return 'Posted $when · $type';
+  }
+
+  @override
+  String get postCaptionMore => 'More';
+
+  @override
+  String get postCaptionLess => 'Less';
+
+  @override
+  String get postLinkTitle => 'Post link';
+
+  @override
+  String get postCopyLink => 'Copy link';
+
+  @override
+  String get postLinkCopied => 'Link copied';
+
+  @override
+  String get postInfoSlides => 'Slides';
+
+  @override
+  String postInfoSlideCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count slides',
+      one: '1 slide',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String postDeleteTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1301,7 +1303,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get postSlideNotDownloadedBody =>
       'This slide didn\'t finish downloading.';
->>>>>>> t-029-post-viewer
 
   @override
   String get setSectionInstagram => 'Instagram';

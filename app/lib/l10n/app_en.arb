@@ -1206,7 +1206,6 @@
   },
   "actAccountRemoved": "Removed account",
   "@actAccountRemoved": {"description": "S-11 account label when the target was removed."},
-<<<<<<< HEAD
   "tgtCountLimit": "Targets ({count}/{limit})",
   "@tgtCountLimit": {"description": "Targets title with the tracked count and the recommended limit (S-07).", "placeholders": {"count": {"type": "int"}, "limit": {"type": "int"}}},
   "tgtCheckNow": "Check now",
@@ -1293,7 +1292,6 @@
   "@tgtVerifying": {"description": "S-08 button label while verifying."},
   "tgtAdded": "Tracking {username}. First check running…",
   "@tgtAdded": {"description": "S-08 snackbar after a successful add.", "placeholders": {"username": {"type": "String"}}},
-=======
   "postTypePhoto": "Photo",
   "@postTypePhoto": {"description": "S-15 type label: single photo post."},
   "postTypeVideo": "Video",
@@ -1370,7 +1368,6 @@
   "@postSlideNotDownloaded": {"description": "S-15 per-slide state: the slide never finished downloading (EC-21)."},
   "postSlideNotDownloadedBody": "This slide didn't finish downloading.",
   "@postSlideNotDownloadedBody": {"description": "S-15 per-slide not-downloaded state: explanation."},
->>>>>>> t-029-post-viewer
   "setSectionInstagram": "Instagram",
   "@setSectionInstagram": {"description": "S-12 section header."},
   "setSectionChecking": "Checking",

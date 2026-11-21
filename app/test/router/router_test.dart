@@ -11,12 +11,9 @@ import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
-<<<<<<< HEAD
 import 'package:storize_app/features/targets/add_target_page.dart';
 import 'package:storize_app/features/targets/targets_page.dart';
-=======
 import 'package:storize_app/features/viewer/post_viewer_page.dart';
->>>>>>> t-029-post-viewer
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/router/routes.dart';
@@ -46,12 +43,6 @@ void main() {
     testWidgets('every screen resolves to its placeholder', (t) async {
       final h = await pumpApp(t);
       const cases = {
-<<<<<<< HEAD
-        '/post/3': 'TODO(T-029)',
-=======
-        '/targets': 'TODO(T-030)',
-        '/targets/add': 'TODO(T-030)',
->>>>>>> t-029-post-viewer
         '/targets/9': 'TODO(T-031)',
       };
       for (final e in cases.entries) {
@@ -60,6 +51,8 @@ void main() {
       }
       await h.go('/story/3');
       expect(_story(3), findsOneWidget, reason: '/story/3');
+      await h.go('/post/3');
+      expect(_post(3), findsOneWidget, reason: '/post/3');
       // Onboarding pages are real. S-01 redirects to the Library once
       // onboarding is complete, so it is covered by the gates group.
       await h.go('/targets');
@@ -210,8 +203,6 @@ void main() {
 
     testWidgets('back from a tab detail returns to the tab root', (t) async {
       final h = await pumpApp(t);
-      await h.go('/post/3');
-      expect(_post(3), findsOneWidget, reason: '/post/3');
       await h.go('/targets');
       await h.push('/targets/4');
       h.router.pop();

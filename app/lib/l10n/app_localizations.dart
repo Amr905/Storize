@@ -1835,7 +1835,6 @@ abstract class AppLocalizations {
   /// **'Removed account'**
   String get actAccountRemoved;
 
-<<<<<<< HEAD
   /// Targets title with the tracked count and the recommended limit (S-07).
   ///
   /// In en, this message translates to:
@@ -2093,7 +2092,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tracking {username}. First check running…'**
   String tgtAdded(String username);
-=======
+
   /// S-15 type label: single photo post.
   ///
   /// In en, this message translates to:
@@ -2249,7 +2248,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This slide didn\'t finish downloading.'**
   String get postSlideNotDownloadedBody;
->>>>>>> t-029-post-viewer
 
   /// S-12 section header.
   ///
