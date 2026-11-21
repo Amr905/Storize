@@ -184,8 +184,8 @@ class StorizePlatformAndroid {
 
   /// The Android API level of this device (26 = Android 8).
   Future<int> sdkInt() async {
-    final value = await _call<int>(_system, 'sdkInt');
-    if (value == null || value <= 0) throw _bad('sdkInt', value);
+    final value = await _call<Object?>(_system, 'sdkInt');
+    if (value is! int || value <= 0) throw _bad('sdkInt', value);
     return value;
   }
 
@@ -195,14 +195,14 @@ class StorizePlatformAndroid {
   /// granted.
   Future<bool> checkPermission(String name) async => _requireBool(
     'checkPermission',
-    await _call<bool>(_system, 'checkPermission', {'name': name}),
+    await _call<Object?>(_system, 'checkPermission', {'name': name}),
   );
 
   /// Shows the system prompt for [name] (`POST_NOTIFICATIONS` on Android 13+,
   /// `WRITE_EXTERNAL_STORAGE` on Android 8-9; granted at once elsewhere). With
   /// no activity on screen the answer is [PermissionStatus.denied].
   Future<PermissionStatus> requestPermission(String name) async {
-    final raw = await _call<String>(_system, 'requestPermission', {
+    final raw = await _call<Object?>(_system, 'requestPermission', {
       'name': name,
     });
     return switch (raw) {
@@ -217,7 +217,7 @@ class StorizePlatformAndroid {
   /// opened.
   Future<bool> openAppSettings() async => _requireBool(
     'openAppSettings',
-    await _call<bool>(_system, 'openAppSettings'),
+    await _call<Object?>(_system, 'openAppSettings'),
   );
 
   Future<T?> _call<T>(

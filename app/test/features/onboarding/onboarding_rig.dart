@@ -15,6 +15,7 @@ import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -140,6 +141,9 @@ class OnbRig {
     Brightness brightness = Brightness.light,
     Size size = const Size(400, 800),
     bool pushLogin = false,
+    ContentPlatform? platformOverride,
+    AccountRepo? accountsOverride,
+    SessionStore? sessionsOverride,
   }) async {
     t.view
       ..devicePixelRatio = 1
@@ -166,9 +170,9 @@ class OnbRig {
         loginLeaseProvider.overrideWithValue(lease),
         loginWebViewBuilderProvider.overrideWithValue(fakeWebView),
         setupOpsProvider.overrideWithValue(ops),
-        sessionStoreProvider.overrideWithValue(sessions),
-        contentPlatformProvider.overrideWithValue(platform),
-        accountRepoProvider.overrideWithValue(accounts),
+        sessionStoreProvider.overrideWithValue(sessionsOverride ?? sessions),
+        loginPlatformProvider.overrideWithValue(platformOverride ?? platform),
+        accountRepoProvider.overrideWithValue(accountsOverride ?? accounts),
         settingsRepoProvider.overrideWithValue(settings),
         clockProvider.overrideWithValue(clock),
       ],

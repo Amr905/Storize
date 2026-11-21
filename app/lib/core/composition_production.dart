@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/misc.dart';
 import 'package:storize_app/core/composition.dart';
+import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
+import 'package:storize_app/features/onboarding/onboarding_providers.dart';
+import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/files/files.dart';
 import 'package:storize_data/log/log.dart';
@@ -87,6 +90,7 @@ Future<AppComposition> composeProduction({
     seenStore: SharedPrefsSeenBreakerStore(),
     log: diagnostics.log,
     crashMarker: diagnostics.marker,
+    setupOps: productionSetupOps(plugin),
     scheduler: scheduler,
     enqueuer: scheduler,
     updateChecker: updateChecker,
@@ -97,6 +101,29 @@ Future<AppComposition> composeProduction({
   );
   return AppComposition.assemble(parts, background: background);
 }
+
+/// Maps the plugin's answer to the onboarding outcome.
+PermissionOutcome _outcome(PermissionStatus status) => switch (status) {
+  PermissionStatus.granted => PermissionOutcome.granted,
+  PermissionStatus.denied => PermissionOutcome.denied,
+  PermissionStatus.permanentlyDenied => PermissionOutcome.permanentlyDenied,
+};
+
+/// The onboarding device operations over [plugin]. Only the two permissions
+/// the plugin allowlists are ever asked about.
+SetupOps productionSetupOps(StorizePlatformAndroid plugin) => PlatformSetupOps(
+  platform: plugin,
+  notificationsAllowed: () => plugin.checkPermission('POST_NOTIFICATIONS'),
+  requestNotifications: () async =>
+      _outcome(await plugin.requestPermission('POST_NOTIFICATIONS')),
+  sdkInt: plugin.sdkInt,
+  storageGranted: () => plugin.checkPermission('WRITE_EXTERNAL_STORAGE'),
+  requestStorage: () async =>
+      _outcome(await plugin.requestPermission('WRITE_EXTERNAL_STORAGE')),
+  openAppSettings: () async {
+    await plugin.openAppSettings();
+  },
+);
 
 /// "Check now" over the real scheduler: enqueues an expedited one-off task
 /// for every scope (FR-21). The result only says whether it was enqueued;
@@ -141,5 +168,13 @@ List<Override> appOverrides(AppComposition c) => [
   biometricAuthProvider.overrideWithValue(c.parts.biometric),
   checkNowActionProvider.overrideWithValue(
     SchedulerCheckNowAction(c.scheduler),
+  ),
+  loginLeaseProvider.overrideWithValue(c.loginLease),
+  loginPlatformProvider.overrideWithValue(c.loginPlatform),
+  if (c.parts.setupOps case final ops?) setupOpsProvider.overrideWithValue(ops),
+  // Until the setting is read the gate stays open: a returning user never
+  // sees S-01, and a first-run user is redirected as soon as it loads.
+  onboardingCompleteProvider.overrideWith(
+    (ref) => ref.watch(onboardingDoneProvider).value ?? true,
   ),
 ];

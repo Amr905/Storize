@@ -123,6 +123,7 @@ class LoginController extends Notifier<LoginState>
   late SessionStore _sessions;
   late ContentPlatform _platform;
   late AccountRepo _accounts;
+  late SettingsRepo _settings;
   late Clock _clock;
 
   @override
@@ -137,7 +138,8 @@ class LoginController extends Notifier<LoginState>
   LoginState build() {
     _lease = ref.read(loginLeaseProvider);
     _sessions = ref.read(sessionStoreProvider);
-    _platform = ref.read(contentPlatformProvider);
+    _platform = ref.read(loginPlatformProvider);
+    _settings = ref.read(settingsRepoProvider);
     _accounts = ref.read(accountRepoProvider);
     _clock = ref.read(clockProvider);
     ref.onDispose(() {
@@ -291,7 +293,17 @@ class LoginController extends Notifier<LoginState>
     }
   }
 
+  /// Verifies and stores [blob]. The staging session (id 0) is cleared on
+  /// every way out: success, failure, cancel and exceptions.
   Future<void> _finish(SessionBlob blob, int gen) async {
+    try {
+      await _finishStaged(blob, gen);
+    } finally {
+      await _wipeStaging();
+    }
+  }
+
+  Future<void> _finishStaged(SessionBlob blob, int gen) async {
     final sessions = _sessions;
     await sessions.save(stagingAccountId, blob);
     final Result<RemoteUser> verified;
@@ -367,6 +379,11 @@ class LoginController extends Notifier<LoginState>
     );
     await sessions.save(stored.id, blob);
     await _wipeStaging();
+    try {
+      await _settings.update((s) => s.copyWith(onboardingDone: true));
+    } on Object {
+      // The account is connected; the flag is retried at the next login.
+    }
     // The session now lives only in the vault.
     await _safeClear();
     state = LoginState(phase: LoginPhase.connected, username: user.username);
