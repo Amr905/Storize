@@ -122,6 +122,10 @@ final class DriftContentRepo implements ContentRepo {
   }
 
   @override
+  Future<void> deleteMediaFile(int mediaFileId) =>
+      _dao.deleteMediaFile(mediaFileId);
+
+  @override
   Future<List<ContentWithMedia>> olderThan(DateTime cutoff) async =>
       (await _dao.olderThan(cutoff)).map(_toContentWithMedia).toList();
 

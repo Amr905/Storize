@@ -37,6 +37,7 @@ export 'src/usecases/compute_storage.dart';
 export 'src/usecases/delete_content.dart';
 export 'src/usecases/detect_gaps.dart';
 export 'src/usecases/download_pending.dart';
+export 'src/usecases/remove_media_file.dart';
 export 'src/usecases/remove_target.dart';
 export 'src/usecases/run_check.dart';
 export 'src/usecases/verify_session.dart';

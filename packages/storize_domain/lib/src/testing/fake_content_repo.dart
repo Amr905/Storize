@@ -215,6 +215,14 @@ final class FakeContentRepo implements ContentRepo {
   }
 
   @override
+  Future<void> deleteMediaFile(int mediaFileId) async {
+    final file = _media.remove(mediaFileId);
+    if (file == null) return;
+    if (_slides(file.contentId).isEmpty) _contents.remove(file.contentId);
+    _feed.notify();
+  }
+
+  @override
   Future<List<ContentWithMedia>> olderThan(DateTime cutoff) async =>
       (_contents.values.where((c) => c.postedAt.isBefore(cutoff)).toList()
             ..sort((a, b) => a.postedAt.compareTo(b.postedAt)))

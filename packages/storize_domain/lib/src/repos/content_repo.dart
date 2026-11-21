@@ -97,6 +97,11 @@ abstract interface class ContentRepo {
   /// gallery files first (BR-9). Unknown IDs are ignored.
   Future<void> deleteByIds(Iterable<int> ids);
 
+  /// Deletes one media row. When it was the last media row of its item, the
+  /// content row is deleted too. Callers delete the gallery file first (BR-9).
+  /// An unknown ID is ignored.
+  Future<void> deleteMediaFile(int mediaFileId);
+
   /// Content with `postedAt` before [cutoff], with slides, for retention
   /// (FR-54).
   Future<List<ContentWithMedia>> olderThan(DateTime cutoff);

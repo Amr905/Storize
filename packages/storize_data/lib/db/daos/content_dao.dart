@@ -314,6 +314,23 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
         .write(const ContentsCompanion(viewed: Value(true)));
   }
 
+  /// Deletes one media row, and its content row when it was the last one.
+  Future<void> deleteMediaFile(int mediaFileId) => transaction(() async {
+    final row = await (select(
+      mediaFiles,
+    )..where((m) => m.id.equals(mediaFileId))).getSingleOrNull();
+    if (row == null) return;
+    await (delete(mediaFiles)..where((m) => m.id.equals(mediaFileId))).go();
+    final left =
+        await (select(mediaFiles)
+              ..where((m) => m.contentId.equals(row.contentId))
+              ..limit(1))
+            .get();
+    if (left.isEmpty) {
+      await (delete(contents)..where((c) => c.id.equals(row.contentId))).go();
+    }
+  });
+
   /// Deletes content rows; their media rows cascade. Returns rows deleted.
   Future<int> deleteByIds(Iterable<int> ids) async {
     final wanted = ids.toList();
