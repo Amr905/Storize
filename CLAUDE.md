@@ -26,7 +26,16 @@ Each phase produces an artifact in `docs/`. The Lead reviews it, then the
 **Rule:** All planning and design work (phases 1–4, plus code review) runs on **Opus**.
 
 ## Phase 5 orchestration (user rules, 2026-11-19)
-**Complexity → model:** Low (Tier S) → **Haiku** · Medium (Tier M) and High (Tier L) → **Sonnet**. Planning and review → Opus (the Lead).
+**Complexity → model:** Low (Tier S) and Medium UI/plumbing tasks → **Haiku** · High (Tier L) and Medium tasks touching Instagram, secrets, deletion or concurrency → **Sonnet**. Planning and review → Opus (the Lead).
+
+**Cost-efficiency rules (user, 2026-11-21):**
+1. **Risk-based QA.** Independent QA agent only for High tasks or tasks touching secrets, deletion, Instagram traffic or concurrency. Other tasks: the Lead reviews the diff + CI.
+2. **One QA round max.** After fixes, the developer proves each finding fixed with tests; the Lead checks the diff; CI confirms. A second QA round only if the first was a FAIL on a safety issue.
+3. **Capped QA scope:** about 15 targeted tests on the ACs and top risks, not exhaustive adversarial suites.
+4. **Targeted test runs:** during development run only the changed package's tests; the full `melos run test` once before reporting, and at checkpoints.
+5. **Short reports:** agents return ≤ 150 words + commit hash + blocking questions; details go in the review/commit, read by the Lead only when needed.
+6. **Compact briefs:** the Lead passes the exact spec excerpts/paths needed, not "read these documents".
+7. **Cheaper models:** see Complexity → model above.
 
 **Specialists** (`.claude/agents/`): `backend-developer` (all non-UI tasks), `frontend-developer` (UI tasks T-024…T-035, T-038),
 `qa-engineer` (independent verification of each task, 5-task checkpoints, T-037). The Lead passes the model per task.
@@ -36,7 +45,7 @@ Each phase produces an artifact in `docs/`. The Lead reviews it, then the
 1. Pick a task whose dependencies are all `done` in `docs/implementation-status.md`.
 2. Read its spec, classify the complexity, choose the model and specialist, and **register its file lock** in the status file. Never overlap an active lock.
 3. Delegate with: task ID, requirements, spec sections, acceptance criteria, files in scope. Implementation **and automated tests** are required.
-4. QA Engineer verifies independently (`docs/05-reviews/<task>.md`). Then the Lead reviews the diff and the evidence.
+4. QA Engineer verifies independently (`docs/05-reviews/<task>.md`) when the cost rules require it; otherwise the Lead reviews the diff, tests and CI.
 5. FAIL → feedback to the same developer → fixes → re-run tests → re-verify. After 2 failed rounds on a High task, ask the user whether to use Opus.
 6. Only after a verified PASS: mark it `done`, release the lock, and log it in the status file.
 7. **After every 5 tasks marked done:** QA runs the full suite (checkpoint report). Regressions block new tasks until fixed.
