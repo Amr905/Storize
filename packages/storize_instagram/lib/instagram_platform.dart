@@ -39,6 +39,14 @@ import 'package:storize_model/storize_model.dart';
 ///   WebView holds the lease; `governor_busy`): `NetworkFailure`, the
 ///   "retry next period, no state change" row of §7.
 ///
+/// "Did not run" means **no WebView page was opened** (T-015a): `assemble`
+/// counts the page driver's `open` calls, so a `RateLimited` from a paused
+/// governor or a `SessionInvalid` from a missing session is returned as is and
+/// is not a `PAGE_MODE_USED`. Once a stories loop has loaded a user the use is
+/// counted, and a later gate stop (guard, username) returns the direct
+/// `SchemaChanged`; any other failure is returned as is. What a failed
+/// multi-user stories call had loaded is in [takePartialStories].
+///
 /// The background gate (`pageModeInBackground`) and the WebView lease are
 /// enforced by `PageExtractor` (give it `runsInBackground` and the lease).
 ///
@@ -90,6 +98,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     this._clock = const SystemClock(),
     this.lookupPolicy = ExtractionPolicy.directThenPage,
     PlatformSignals? signals,
+    this._usernames,
   }) : _seenGuard = seenGuard ?? SeenGuard.shared,
        signals = signals ?? PlatformSignals();
 
@@ -162,9 +171,13 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       classifier: classifier,
       usernames: sharedNames,
     );
-    final driver = webViewLease is GovernorWebViewLease
-        ? LeaseHoldingPageDriver(pageDriver, webViewLease)
-        : pageDriver;
+    final opens = PageOpenCounter();
+    final driver = CountingPageDriver(
+      webViewLease is GovernorWebViewLease
+          ? LeaseHoldingPageDriver(pageDriver, webViewLease)
+          : pageDriver,
+      opens,
+    );
     final page = PageExtractor(
       accountId: accountId,
       governor: governor,
@@ -185,7 +198,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     );
     return InstagramPlatform(
       direct: DirectExtractorOps(direct),
-      page: PageExtractorOps(page),
+      page: PageExtractorOps(page, counter: opens),
       media: CdnMediaOpener(http: cdnHttp, log: log),
       seenGuard: guard,
       log: log,
@@ -193,6 +206,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       clock: clock,
       lookupPolicy: lookupPolicy,
       signals: sharedSignals,
+      usernames: sharedNames,
     );
   }
 
@@ -209,12 +223,18 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   final DiagnosticLog? _log;
   final ActivityRepo? _activity;
   final Clock _clock;
+  final UsernameCache? _usernames;
 
   @override
   PlatformId get id => PlatformId.instagram;
 
   @override
   ContentSignalsSnapshot takeSignals() => signals.take();
+
+  /// What the last multi-user page-mode stories call had loaded when it
+  /// failed, read-and-reset; null if there is none (T-015a F1). The call
+  /// itself returns the failure.
+  PartialStories? takePartialStories() => signals.takePartialStories();
 
   // ----------------------------------------------------------------- users
 
@@ -248,12 +268,16 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   Future<Result<Map<String, List<RemoteContent>>>> fetchStories(
     List<String> userIds, {
     required ExtractionPolicy policy,
-  }) => _run(
-    'fetchStories',
-    policy,
-    () => _direct.fetchStories(userIds),
-    () => _pageStories(userIds),
-  );
+  }) {
+    final progress = _StoriesProgress();
+    return _run(
+      'fetchStories',
+      policy,
+      () => _direct.fetchStories(userIds),
+      () => _pageStories(userIds, progress),
+      pageLoadedData: () => progress.loadedUsers > 0,
+    );
+  }
 
   @override
   Future<Result<List<RemoteContent>>> fetchNewPosts(
@@ -283,24 +307,69 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
 
   /// Page-mode stories, one user per page load, so the persisted seen breaker
   /// is read before **each** story page load (R2-F5) and a trip stops the
-  /// loop at once. The result equals `PageExtractor.fetchStories` (first
-  /// failure fails the call).
+  /// loop at once.
+  ///
+  /// - **Pre-check (F1).** Every username is checked before the first load
+  ///   (like `PageExtractor.fetchStories`), so a `username_unknown` aborts
+  ///   before any WebView page is loaded. Only when a [UsernameCache] was
+  ///   given.
+  /// - **First failure fails the call**, and is returned as is. The port's
+  ///   `Result` cannot say "some users", and an `Ok` with fewer users would
+  ///   hide a `SessionInvalid` or `RateLimited` that RunCheck must see, and
+  ///   make a user whose load was skipped look like "no stories". So a
+  ///   failure after at least one loaded user is a failure, and what was
+  ///   loaded is kept in
+  ///   the platform signals ([takePartialStories]) with the number of users
+  ///   skipped.
   Future<Result<Map<String, List<RemoteContent>>>> _pageStories(
     List<String> userIds,
+    _StoriesProgress progress,
   ) async {
     final ids = {
       for (final id in userIds)
         if (id.trim().isNotEmpty) id.trim(),
-    };
+    }.toList();
+    final names = _usernames;
+    if (names != null) {
+      for (final id in ids) {
+        String? name;
+        try {
+          name = await names.usernameOf(id);
+        } on Object {
+          name = null;
+        }
+        if (name == null || !pageUsernameShape.hasMatch(name)) {
+          return const Err(UnknownFailure(null, 'username_unknown'));
+        }
+      }
+    }
     final out = <String, List<RemoteContent>>{};
+    Result<Map<String, List<RemoteContent>>> fail(Failure failure) {
+      if (progress.loadedUsers > 0) {
+        signals.partialStories = PartialStories(
+          loaded: Map.of(out),
+          skipped: ids.length - progress.loadedUsers,
+        );
+        _log?.log(
+          LogLevel.warn,
+          'platform',
+          'op=fetchStories page_stories_partial '
+              'loaded=${progress.loadedUsers} '
+              'skipped=${ids.length - progress.loadedUsers}',
+        );
+      }
+      return Err(failure);
+    }
+
     try {
       for (final id in ids) {
         await _seenGuard.refresh();
         final r = await _page.fetchStories([id]);
         switch (r) {
           case Err(:final failure):
-            return Err(failure);
+            return fail(failure);
           case Ok(:final value):
+            progress.loadedUsers++;
             out.addAll(value);
         }
       }
@@ -314,25 +383,46 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     String op,
     ExtractionPolicy policy,
     Future<Result<T>> Function() direct,
-    Future<Result<T>> Function() page,
-  ) async {
+    Future<Result<T>> Function() page, {
+    bool Function()? pageLoadedData,
+  }) async {
     final first = await _guarded(direct);
     if (first.failureOrNull is! SchemaChanged ||
         policy == ExtractionPolicy.directOnly) {
       return _normalize(first);
     }
+    final openedBefore = _page.pagesOpened;
     final second = await _guarded(page);
     final failure = second.failureOrNull;
-    if (failure != null && _pageDidNotRun(failure)) {
-      // Page mode was not allowed, not possible or busy: nothing was loaded.
+    final openedAfter = _page.pagesOpened;
+    final sessions = openedBefore == null || openedAfter == null
+        ? null
+        : openedAfter - openedBefore;
+    final skippedReason = failure != null && _pageDidNotRun(failure);
+    // Did page mode load at least one page? The session counter is exact; if
+    // there is none, a loaded user (stories) or a result that is not a
+    // "refused before loading" reason says so.
+    final used =
+        (pageLoadedData?.call() ?? false) ||
+        (sessions != null ? sessions > 0 : !skippedReason);
+    if (!used) {
+      // Nothing was loaded: not allowed, not possible, busy, a paused
+      // governor or no stored session. Not a PAGE_MODE_USED (F1, I2).
+      if (failure == null) return _normalize(second);
       _log?.log(
         LogLevel.info,
         'platform',
-        'op=$op page_mode_skipped reason=${_reasonOf(failure)}',
+        'op=$op page_mode_skipped reason=${_reasonOf(failure) ?? 'refused'}',
       );
-      return _isBusy(failure) ? _normalize(second) : first;
+      if (_isBusy(failure)) return _normalize(second);
+      return skippedReason ? first : _normalize(second);
     }
     await _notePageModeUsed(op);
+    if (failure != null && skippedReason && !_isBusy(failure)) {
+      // Stopped by a gate after loading (a multi-user stories loop): the
+      // original "Instagram changed" answer (EC-14), the use is counted.
+      return first;
+    }
     return _normalize(second);
   }
 
@@ -404,4 +494,9 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     }
     return result;
   }
+}
+
+/// How many users the page-mode stories loop loaded in one call.
+final class _StoriesProgress {
+  int loadedUsers = 0;
 }

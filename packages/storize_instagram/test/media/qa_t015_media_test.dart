@@ -174,8 +174,8 @@ void main() {
       expect(cancelled, isTrue);
     });
 
-    test('PIN (QA-T015-F3): a 206 for a request WITHOUT Range (fromByte 0) '
-        'is accepted whatever its Content-Range start is', () async {
+    test('FIXED (QA-T015-F3): a 206 for a request WITHOUT Range (fromByte 0) '
+        'must start at 0', () async {
       final http = FakeCdnHttp(
         (_, _) => _resp(
           [List<int>.filled(10, 9)],
@@ -186,14 +186,13 @@ void main() {
       );
       final (got, err) = await _collect(opener(http).open(_url));
       expect(http.headers.single, isEmpty, reason: 'no Range was sent');
-      // WANTED: a failure (range_mismatch). Current: wrong bytes accepted.
-      expect(err, isNull);
-      expect(got, hasLength(10));
+      expect((err! as MediaStreamFailure).message, 'range_mismatch');
+      expect(got, isEmpty);
     });
 
     test(
-      'PIN (QA-T015-F4): a 206 without Content-Length that ends early is '
-      'a success (silent short file); Content-Range total is unused',
+      'FIXED (QA-T015-F4): a 206 without Content-Length that ends early is '
+      '`truncated` (the Content-Range total is used)',
       () async {
         final http = FakeCdnHttp(
           (_, _) => _resp(
@@ -205,9 +204,8 @@ void main() {
         final (got, err) = await _collect(
           opener(http).open(_url, fromByte: 50),
         );
-        // WANTED: 'truncated' (100 bytes announced by Content-Range).
-        expect(err, isNull);
-        expect(got, hasLength(10));
+        expect((err! as MediaStreamFailure).message, 'truncated');
+        expect(got, hasLength(10), reason: 'bytes before the end are valid');
       },
     );
 

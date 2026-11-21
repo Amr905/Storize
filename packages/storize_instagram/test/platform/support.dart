@@ -32,6 +32,10 @@ final class FakeMode implements DirectOps, PageOps {
   Result<DateTime?> Function() latest = () => const Ok(null);
   Exception? throwWith;
 
+  /// Sessions this fake page mode "opened"; null = unknown (reason-based).
+  @override
+  int? pagesOpened;
+
   Future<T> _answer<T>(String method, T Function() make) async {
     calls.add('$label.$method');
     if (throwWith case final Exception error) throw error;
