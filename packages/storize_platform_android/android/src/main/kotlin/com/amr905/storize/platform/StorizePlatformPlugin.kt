@@ -58,6 +58,13 @@ class StorizePlatformPlugin :
                                     call.argument<String>("displayName"),
                                 )
                             }
+                        "readBytes" ->
+                            background(result) {
+                                media.readBytes(
+                                    call.argument<String>("uri"),
+                                    intArg(call, "maxBytes"),
+                                )
+                            }
                         "size" -> background(result) { media.size(call.argument<String>("uri")) }
                         "storageStats" -> background(result) { storage.storageStats() }
                         "videoThumbnail" ->
