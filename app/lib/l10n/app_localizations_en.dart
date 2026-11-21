@@ -1038,4 +1038,223 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actAccountRemoved => 'Removed account';
+
+  @override
+  String get setSectionInstagram => 'Instagram';
+
+  @override
+  String get setSectionChecking => 'Checking';
+
+  @override
+  String get setSectionNotifications => 'Notifications';
+
+  @override
+  String get setSectionStorage => 'Storage';
+
+  @override
+  String get setSectionSecurity => 'Security';
+
+  @override
+  String get setSectionAbout => 'About';
+
+  @override
+  String get setStoryInterval => 'Check stories every';
+
+  @override
+  String get setPostInterval => 'Check posts every';
+
+  @override
+  String setIntervalMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String setIntervalHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get setPostOneHourWarning => 'More requests increase the ban risk.';
+
+  @override
+  String get setWifiOnly => 'Wi-Fi only';
+
+  @override
+  String get setKeepRunning => 'Keep Storize running';
+
+  @override
+  String get setNotifyStories => 'New stories';
+
+  @override
+  String get setNotifyPosts => 'New posts';
+
+  @override
+  String get setNotifyLogin => 'Login problems';
+
+  @override
+  String get setNotifyLoginOffWarning => 'You may not notice when checks stop.';
+
+  @override
+  String get setStorageLocation => 'Saved to Pictures/Storize';
+
+  @override
+  String get setStorageCalculating => 'Calculating…';
+
+  @override
+  String get setStorageUnknown => 'Storage unknown';
+
+  @override
+  String setStorageUsedFree(String used, String free) {
+    return 'Used $used · free $free';
+  }
+
+  @override
+  String setStorageUsedOnly(String used) {
+    return 'Used $used';
+  }
+
+  @override
+  String get setStorageByAccount => 'Storage by account';
+
+  @override
+  String get setStorageNone => 'No downloads stored yet.';
+
+  @override
+  String setSizeGb(String value) {
+    return '$value GB';
+  }
+
+  @override
+  String setSizeMb(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String setSizeKb(String value) {
+    return '$value KB';
+  }
+
+  @override
+  String setSizeBytes(String value) {
+    return '$value B';
+  }
+
+  @override
+  String get setKeepDownloads => 'Keep downloads';
+
+  @override
+  String get setKeepForever => 'Forever';
+
+  @override
+  String setKeepAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'After $days days',
+      one: 'After 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get setRetentionAfter => 'After';
+
+  @override
+  String get setRetentionDaysLabel => 'Days';
+
+  @override
+  String get setRetentionDaysError => 'Enter a whole number from 1 to 3650.';
+
+  @override
+  String get setRetentionConfirmTitle => 'Delete older downloads now?';
+
+  @override
+  String setRetentionConfirmBody(int days, int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return 'Items older than $days days ($_temp0, $size) will be deleted now.';
+  }
+
+  @override
+  String get setRetentionConfirm => 'Delete now';
+
+  @override
+  String get setCancel => 'Cancel';
+
+  @override
+  String get setSave => 'Save';
+
+  @override
+  String setVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get setUpdateAvailable => 'Update available';
+
+  @override
+  String get setUpdateRequired => 'Update required';
+
+  @override
+  String setUpdateVersion(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String accConnected(String date) {
+    return 'Connected $date';
+  }
+
+  @override
+  String get accNotConnected => 'Not connected';
+
+  @override
+  String get accHealthTitle => 'Health';
+
+  @override
+  String accLastCheck(String time) {
+    return 'Last successful check $time';
+  }
+
+  @override
+  String get accLastCheckNever => 'No successful check yet';
+
+  @override
+  String accRateLimitEvents(int count) {
+    return 'Rate-limit events (7 days): $count';
+  }
+
+  @override
+  String get accNeedsReloginBody =>
+      'Instagram ended the session or asked for verification. Checks are paused.';
+
+  @override
+  String get accRestrictedBody =>
+      'Instagram may have restricted this account. Checks are stopped. Consider logging in with a different dedicated account.';
+
+  @override
+  String get accLogIn => 'Log in';
+
+  @override
+  String get accLogInAgain => 'Log in again';
+
+  @override
+  String get accLogInAnother => 'Log in with another account';
+
+  @override
+  String get accLogOut => 'Log out';
+
+  @override
+  String get accLogOutTitle => 'Log out of Instagram?';
+
+  @override
+  String get accLogOutBody =>
+      'Stop all checks and remove the saved session? Your downloads and targets are kept.';
+
+  @override
+  String get accLogOutConfirm => 'Log out';
 }

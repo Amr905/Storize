@@ -9,6 +9,7 @@ import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
+import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/files/files.dart';
 import 'package:storize_data/log/log.dart';
@@ -169,6 +170,7 @@ List<Override> appOverrides(AppComposition c) => [
   checkNowActionProvider.overrideWithValue(
     SchedulerCheckNowAction(c.scheduler),
   ),
+  appVersionProvider.overrideWithValue(c.parts.currentVersion),
   loginLeaseProvider.overrideWithValue(c.loginLease),
   loginPlatformProvider.overrideWithValue(c.loginPlatform),
   if (c.parts.setupOps case final ops?) setupOpsProvider.overrideWithValue(ops),

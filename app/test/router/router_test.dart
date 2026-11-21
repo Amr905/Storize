@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
+import 'package:storize_app/features/account/account_page.dart';
 import 'package:storize_app/features/activity/activity_page.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/library/library_providers.dart';
@@ -9,7 +10,9 @@ import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
+import 'package:storize_app/features/settings/settings_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
+import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_model/storize_model.dart';
@@ -41,8 +44,6 @@ void main() {
         '/targets': 'TODO(T-030)',
         '/targets/add': 'TODO(T-030)',
         '/targets/9': 'TODO(T-031)',
-        '/settings': 'TODO(T-033)',
-        '/account': 'TODO(T-033)',
       };
       for (final e in cases.entries) {
         await h.go(e.key);
@@ -52,6 +53,10 @@ void main() {
       expect(_story(3), findsOneWidget, reason: '/story/3');
       // Onboarding pages are real. S-01 redirects to the Library once
       // onboarding is complete, so it is covered by the gates group.
+      await h.go('/settings');
+      expect(find.byType(SettingsPage), findsOneWidget, reason: '/settings');
+      await h.go('/account');
+      expect(find.byType(AccountPage), findsOneWidget, reason: '/account');
       await h.go('/login');
       expect(find.byType(LoginPage), findsOneWidget, reason: '/login');
       await h.go('/setup');
@@ -104,7 +109,7 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://account');
       expect(h.location, '/account');
-      expect(find.text('TODO(T-033)'), findsOneWidget);
+      expect(find.byType(AccountPage), findsOneWidget);
     });
 
     testWidgets('storize://library keeps its filters', (t) async {
@@ -123,7 +128,12 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://settings/storage');
       expect(h.location, '/settings?section=storage');
-      expect(find.text('section=storage'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is SettingsPage && w.section == SettingsSection.storage,
+        ),
+        findsOneWidget,
+      );
     });
 
     for (final bad in [
