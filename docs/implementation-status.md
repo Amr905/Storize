@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 24 / 42 tasks done (57%)** — original plan 19 / 37 (51%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 25 / 43 tasks done (58%)** — original plan 20 / 37 (54%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-027 | frontend-developer (sonnet) | `app/lib/features/library/**`, `app/test/features/library/**` (incl. goldens), `app/lib/l10n/app_en.arb` (+ generated), `app/lib/core/providers.dart` (new library providers only) | 11:55 |
-| T-015 | backend-developer (sonnet) | new `packages/storize_instagram/lib/instagram_platform.dart`, `lib/media/**`, `lib/platform/**`; `lib/direct/ig_session.dart`, `lib/direct/failure_classifier.dart` (T-013 N1/N4 only); `assets/hook.js` (R2-F1 only); new `test/platform/**`, `test/media/**` | 12:40 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -51,9 +50,10 @@
 | T-012a | Lease clock-skew in repos + limit-record retry | Medium | sonnet | Backend Developer | T-012, T-006 | **done** | 1 | QA PASS + CI [44517651587](https://github.com/Amr905/Storize/actions/runs/44517651587) · `05-reviews/T-012a.md` |
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | **done** | 2 | QA PASS r2 + CI [44643606619](https://github.com/Amr905/Storize/actions/runs/44643606619) · `05-reviews/T-013.md` |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | **done** | 2 | QA PASS r2 + CI [44718122191](https://github.com/Amr905/Storize/actions/runs/44718122191) · `05-reviews/T-014.md` |
-| T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | in_progress | 1 | — |
+| T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | **done** | 1 (+follow-ups) | QA PASS + CI [44728720352](https://github.com/Amr905/Storize/actions/runs/44728720352) · `05-reviews/T-015.md` |
+| T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | todo | — | — |
 | T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
-| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-012 | todo | — | — |
+| T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | todo | — | — |
 | T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | todo | — | — |
 | T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
@@ -163,3 +163,5 @@
 - 2026-11-20 02:15 — **T-013 done** (23/42, 55%): QA R1 found 13 issues (2 Medium) → R2 fixed all → QA PASS, CI green, merged; Lead exported direct/mapper/probe from the instagram barrel; main green (instagram 680). T-014 started; UD-3 still unanswered → default applied: **block the seen mutation** in page mode (Lead recommendation, reversible).
 - 2026-11-20 11:55 — Resumed after the usage-limit pause (limit hit ~03:00, reset 04:50; user resumed 11:50). T-014 round 2 restarted with a new developer (previous session lost) on its partial work. T-027 (Library) started in parallel — its deps T-025 and T-019 are done.
 - 2026-11-20 12:40 — **T-014 done** (24/42, 57%): R2 QA PASS (~110 hook scenarios), CI green, merged; Lead exported `page/page.dart`; main green (instagram 896). T-015 started (re-tiered High: carries T-013/T-014 follow-ups). T-027 round 2 (24 router/shell tests that asserted the placeholder, lock widened).
+- 2026-11-20 13:40 — **T-015 done** (QA PASS, 128 adversarial tests; CI green), merged; Lead exported platform/media/instagram_platform and the `ContentSignals` port, removed the temporary `src` imports; main green (domain 216, instagram 1225). QA findings F1–F7 → new follow-up **T-015a** (T-017 now depends on it).
+- 2026-11-21 02:10 — Resumed after the **weekly** usage limit (hit ~13:40 on 11-20, reset 20:00). T-027 QA round 2 resumed.

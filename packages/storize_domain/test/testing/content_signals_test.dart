@@ -1,7 +1,7 @@
 // The barrels are not edited by this task, so the new files are imported
 // directly until the Lead exports them.
-import 'package:storize_domain/src/ports/content_signals.dart';
-import 'package:storize_domain/src/testing/fake_content_signals.dart';
+import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_domain/testing.dart';
 import 'package:test/test.dart';
 
 void main() {

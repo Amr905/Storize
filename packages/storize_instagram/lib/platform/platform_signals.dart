@@ -1,5 +1,5 @@
-// ignore: implementation_imports, until the Lead exports it from the barrel.
-import 'package:storize_domain/src/ports/content_signals.dart';
+// ignore: until the Lead exports it from the barrel.
+import 'package:storize_domain/storize_domain.dart';
 
 /// Counters that `InstagramPlatform` fills while it works. Values only: no ids,
 /// names or URLs.

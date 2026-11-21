@@ -17,6 +17,7 @@ export 'src/entities/target_limits.dart';
 export 'src/exceptions.dart';
 export 'src/ports/clock.dart';
 export 'src/ports/content_platform.dart';
+export 'src/ports/content_signals.dart';
 export 'src/ports/diagnostic_log.dart';
 export 'src/ports/gallery_store.dart';
 export 'src/ports/media_cache.dart';

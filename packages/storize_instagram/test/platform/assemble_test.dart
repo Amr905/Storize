@@ -7,7 +7,6 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 // Direct import until the Lead exports the port from the barrel.
-import 'package:storize_domain/src/ports/content_signals.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_instagram/direct/direct.dart';

@@ -2,8 +2,8 @@
 // ignore_for_file: unnecessary_raw_strings
 import 'dart:io';
 
-import 'package:storize_domain/src/ports/content_signals.dart';
-import 'package:storize_domain/src/testing/fake_content_signals.dart';
+import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_domain/testing.dart';
 import 'package:test/test.dart';
 
 void main() {

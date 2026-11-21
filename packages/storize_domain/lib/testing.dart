@@ -10,6 +10,7 @@ export 'src/testing/fake_check_run_repo.dart';
 export 'src/testing/fake_clock.dart';
 export 'src/testing/fake_content_platform.dart';
 export 'src/testing/fake_content_repo.dart';
+export 'src/testing/fake_content_signals.dart';
 export 'src/testing/fake_diagnostic_log.dart';
 export 'src/testing/fake_gallery_store.dart';
 export 'src/testing/fake_governor_lease_repo.dart';
