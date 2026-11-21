@@ -5,6 +5,7 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
+import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_app/router/app_shell.dart';
 import 'package:storize_domain/testing.dart';
@@ -216,11 +217,11 @@ void main() {
         initialLocation: 'storize://story/77',
       );
       expect(h.location.startsWith('/lock'), isTrue);
-      expect(find.text('contentId=77'), findsNothing);
+      expect(_story(77), findsNothing);
       await enter(t, '1234');
       await t.pumpAndSettle();
       expect(h.location, '/story/77');
-      expect(find.text('contentId=77'), findsOneWidget);
+      expect(_story(77), findsOneWidget);
     });
 
     testWidgets('a link that arrives while locked is kept', (t) async {
@@ -361,3 +362,8 @@ void main() {
     });
   });
 }
+
+Finder _story(int id) => find.byWidgetPredicate(
+  (w) => w is StoryViewerPage && w.contentId == id,
+  description: 'StoryViewerPage(contentId: $id)',
+);

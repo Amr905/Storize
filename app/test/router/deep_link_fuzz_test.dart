@@ -5,6 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/features/library/library_page.dart';
+import 'package:storize_app/features/onboarding/login_page.dart';
+import 'package:storize_app/features/onboarding/setup_page.dart';
+import 'package:storize_app/features/onboarding/welcome_page.dart';
+import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 
 import '../helpers/app_harness.dart';
@@ -147,7 +151,11 @@ void main() {
         }
         final pages =
             find.textContaining('TODO(').evaluate().length +
-            find.byType(LibraryPage).evaluate().length;
+            find.byType(LibraryPage).evaluate().length +
+            find.byType(StoryViewerPage).evaluate().length +
+            find.byType(LoginPage).evaluate().length +
+            find.byType(SetupPage).evaluate().length +
+            find.byType(WelcomePage).evaluate().length;
         if (!isError && pages != 1) {
           failures.add('$raw -> $at: no single placeholder page');
         }

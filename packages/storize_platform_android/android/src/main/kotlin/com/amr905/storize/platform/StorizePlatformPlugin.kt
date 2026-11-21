@@ -3,6 +3,8 @@ package com.amr905.storize.platform
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.ExecutorService
@@ -14,10 +16,13 @@ import java.util.concurrent.RejectedExecutionException
  * `storize/media` (gallery) and `storize/system` (battery, OEM, stop reasons).
  * MethodChannels are in-process, and the plugin manifest exports no components.
  */
-class StorizePlatformPlugin : FlutterPlugin {
+class StorizePlatformPlugin :
+    FlutterPlugin,
+    ActivityAware {
     private var mediaChannel: MethodChannel? = null
     private var systemChannel: MethodChannel? = null
     private var executor: ExecutorService? = null
+    private var permissions: PermissionOps? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -29,6 +34,7 @@ class StorizePlatformPlugin : FlutterPlugin {
         val storage = StorageStatsOps()
         val battery = BatteryOps(context)
         val exits = ExitReasonOps(context)
+        val perms = PermissionOps(context).also { permissions = it }
 
         mediaChannel =
             MethodChannel(binding.binaryMessenger, MEDIA_CHANNEL).also { channel ->
@@ -74,6 +80,16 @@ class StorizePlatformPlugin : FlutterPlugin {
                         "isIgnoringBatteryOptimizations" -> mainThread(result) { battery.isIgnoringBatteryOptimizations() }
                         "openBatterySettings" -> mainThread(result) { battery.openBatterySettings(call.argument<String>("oem")) }
                         "manufacturer" -> mainThread(result) { battery.manufacturer() }
+                        "sdkInt" -> mainThread(result) { perms.sdkInt() }
+                        "checkPermission" -> mainThread(result) { perms.check(call.argument<String>("name")) }
+                        "requestPermission" ->
+                            try {
+                                perms.request(call.argument<String>("name"), result)
+                            } catch (e: Throwable) {
+                                val (code, message) = mapThrowable(e)
+                                result.error(code, message, null)
+                            }
+                        "openAppSettings" -> mainThread(result) { perms.openAppSettings() }
                         "lastStopReasons" -> background(result) { exits.lastStopReasons(intArg(call, "limit")) }
                         else -> result.notImplemented()
                     }
@@ -88,6 +104,23 @@ class StorizePlatformPlugin : FlutterPlugin {
         systemChannel = null
         executor?.shutdown()
         executor = null
+        permissions = null
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        permissions?.attach(binding)
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        permissions?.detach()
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        permissions?.attach(binding)
+    }
+
+    override fun onDetachedFromActivity() {
+        permissions?.detach()
     }
 
     private fun intArg(
