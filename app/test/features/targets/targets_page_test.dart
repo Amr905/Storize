@@ -67,6 +67,22 @@ void main() {
     expect(rig.checkNow.calls, 0);
   });
 
+  for (final status in [null, AccountStatus.loggedOut]) {
+    testWidgets('Check now is disabled with account status $status (Lead)', (
+      t,
+    ) async {
+      final rig = TargetsRig();
+      if (status != null) await rig.addAccount(status: status);
+      await rig.addTarget('nour_k');
+      await pumpTargets(t, rig: rig);
+      l10n = await loc(t);
+      final button = t.widget<TextButton>(
+        find.widgetWithText(TextButton, l10n.tgtCheckNow),
+      );
+      expect(button.onPressed, isNull);
+    });
+  }
+
   testWidgets('AC1: Check now with an active session marks rows Checking', (
     t,
   ) async {

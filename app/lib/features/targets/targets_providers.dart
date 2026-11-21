@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storize_app/core/providers.dart';
-import 'package:storize_app/core/session_banner_provider.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
@@ -22,16 +21,17 @@ final FutureProvider<String?> targetsLoginNameProvider =
           (await ref.watch(accountRepoProvider).getActive())?.username,
     );
 
-/// True when the login session is usable (BR-7): the session banner shows no
-/// problem. Check now and Add are disabled otherwise.
-///
-/// Derived from [sessionBannerProvider], so there is still one `watchActive`
-/// subscription. It cannot tell "no account" from "healthy", so no account
-/// counts as usable until the banner provider exposes the status.
-final targetsSessionActiveProvider = Provider<bool>((ref) {
-  final banner = ref.watch(sessionBannerProvider);
-  return banner.hasValue && banner.value == null;
-});
+final _activeAccountProvider = StreamProvider<LoginAccount?>(
+  (ref) => ref.watch(accountRepoProvider).watchActive(),
+);
+
+/// True when the login session is usable (BR-7): there is an account and its
+/// status is `active`. Check now and Add are disabled otherwise, including
+/// when logged out or while the account is still loading.
+final targetsSessionActiveProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(_activeAccountProvider).value?.status == AccountStatus.active,
+);
 
 final _rateLimitEventsProvider = StreamProvider<List<ActivityEvent>>(
   (ref) => ref
