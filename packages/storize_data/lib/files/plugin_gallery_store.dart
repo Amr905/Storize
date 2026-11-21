@@ -52,6 +52,33 @@ final class PluginGalleryStore implements GalleryStore {
     );
   }
 
+  /// Finds a file this app saved under `relativeDir` with exactly
+  /// `displayName`, or null (the `GalleryFileFinder` that `DownloadPending`
+  /// takes as `findExisting`). Owner-scoped natively. Any failure is "not
+  /// found": adoption is best effort and the download then saves normally.
+  Future<GalleryFile?> findExisting({
+    required String relativeDir,
+    required String displayName,
+  }) async {
+    try {
+      final found = await _plugin.findByName(
+        relativeDir: relativeDir,
+        displayName: displayName,
+      );
+      if (found == null) return null;
+      return GalleryFile(
+        uri: found.uri,
+        sizeBytes: found.size,
+        relativePath: found.relativePath ?? 'Pictures/Storize/$relativeDir/',
+        displayName: found.displayName,
+      );
+      // A lookup is only an optimisation: any failure means "not found".
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Future<bool> delete(String contentUri) async {
     try {

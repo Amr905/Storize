@@ -45,6 +45,13 @@ class StorizePlatformPlugin : FlutterPlugin {
                             }
                         "delete" -> background(result) { media.delete(call.argument<String>("uri")) }
                         "exists" -> background(result) { media.exists(call.argument<String>("uri")) }
+                        "findByName" ->
+                            background(result) {
+                                media.findByName(
+                                    call.argument<String>("relativeDir"),
+                                    call.argument<String>("displayName"),
+                                )
+                            }
                         "size" -> background(result) { media.size(call.argument<String>("uri")) }
                         "storageStats" -> background(result) { storage.storageStats() }
                         "videoThumbnail" ->
