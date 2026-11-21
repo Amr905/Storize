@@ -19,7 +19,6 @@ import 'package:storize_data/security/pin_vault.dart';
 import '../../helpers/app_harness.dart';
 import 'lock_fakes.dart';
 
-
 // QA tests for T-034 (independent of the developer's tests).
 
 Future<void> _enter(WidgetTester t, String digits) async {

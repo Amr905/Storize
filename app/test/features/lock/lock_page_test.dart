@@ -13,7 +13,6 @@ import 'package:storize_domain/testing.dart';
 import '../../helpers/app_harness.dart';
 import 'lock_fakes.dart';
 
-
 /// A phone-sized view tall enough for the PIN setup screen.
 void tall(WidgetTester t) {
   t.view

@@ -10,7 +10,6 @@ import 'package:storize_app/router/deep_link.dart';
 
 import '../helpers/app_harness.dart';
 
-
 String where(AppHarness h) {
   final c = h.router.routerDelegate.currentConfiguration;
   return c.isEmpty ? 'ERROR_PAGE(${c.error != null})' : h.location;
