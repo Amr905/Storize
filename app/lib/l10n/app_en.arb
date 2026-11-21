@@ -376,5 +376,366 @@
   "lockBiometricUnavailable": "Fingerprint is not available right now. Try again.",
   "@lockBiometricUnavailable": {
     "description": "S-14 message for a fingerprint-only lock whose sensor is unavailable."
+  },
+  "libFilterTooltip": "Filters",
+  "@libFilterTooltip": {
+    "description": "Library app bar: tooltip of the filter button (S-04)."
+  },
+  "libStoriesTab": "Stories",
+  "@libStoriesTab": {
+    "description": "Library kind switch: stories segment."
+  },
+  "libPostsTab": "Posts",
+  "@libPostsTab": {
+    "description": "Library kind switch: posts segment."
+  },
+  "libSelectedCount": "{count} selected",
+  "@libSelectedCount": {
+    "description": "Library selection mode app bar title.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libCancelSelection": "Cancel selection",
+  "@libCancelSelection": {
+    "description": "Tooltip of the button that leaves selection mode."
+  },
+  "libDelete": "Delete",
+  "@libDelete": {
+    "description": "Library selection mode: delete action label and confirm button."
+  },
+  "libDeleteTooltip": "Delete (deletes from your gallery too)",
+  "@libDeleteTooltip": {
+    "description": "Tooltip of the delete action in selection mode (BR-9)."
+  },
+  "libShare": "Share",
+  "@libShare": {
+    "description": "Library selection mode: share action label."
+  },
+  "libCancel": "Cancel",
+  "@libCancel": {
+    "description": "Cancel button of the library dialogs."
+  },
+  "libDeleteTitle": "Delete {count, plural, =1{1 item} other{{count} items}}?",
+  "@libDeleteTitle": {
+    "description": "Delete confirmation title (S-04).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libDeleteBody": "They'll also be removed from your gallery. This can't be undone.",
+  "@libDeleteBody": {
+    "description": "Delete confirmation body (BR-9)."
+  },
+  "libDeleted": "{count, plural, =1{1 item deleted} other{{count} items deleted}}",
+  "@libDeleted": {
+    "description": "Snackbar after a successful delete.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libDeleteFailed": "{count, plural, =1{1 item couldn't be deleted} other{{count} items couldn't be deleted}}",
+  "@libDeleteFailed": {
+    "description": "Snackbar when some items could not be deleted from the gallery.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libShareNothing": "Nothing to share yet. Files are still downloading.",
+  "@libShareNothing": {
+    "description": "Snackbar when the selection has no saved files."
+  },
+  "libShareFailed": "Couldn't share these items.",
+  "@libShareFailed": {
+    "description": "Snackbar when sharing failed."
+  },
+  "libCheckRunning": "Checking for new items…",
+  "@libCheckRunning": {
+    "description": "Snackbar/label while a check runs after pull-to-refresh."
+  },
+  "libCheckDone": "{count, plural, =0{Check finished. Nothing new.} =1{Check finished. 1 new item.} other{Check finished. {count} new items.}}",
+  "@libCheckDone": {
+    "description": "Snackbar with the check result.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libCheckFailed": "Couldn't check right now. Try again later.",
+  "@libCheckFailed": {
+    "description": "Snackbar when the check failed."
+  },
+  "libCheckNow": "Check now",
+  "@libCheckNow": {
+    "description": "Button in the \"waiting for new items\" empty state."
+  },
+  "libEmptyNoTargetsTitle": "Nothing saved yet",
+  "@libEmptyNoTargetsTitle": {
+    "description": "S-04 empty state (a) title."
+  },
+  "libEmptyNoTargetsBody": "Add an account to start archiving.",
+  "@libEmptyNoTargetsBody": {
+    "description": "S-04 empty state (a) body."
+  },
+  "libAddAccount": "Add account",
+  "@libAddAccount": {
+    "description": "S-04 empty state (a) button."
+  },
+  "libEmptyStoriesTitle": "No stories yet",
+  "@libEmptyStoriesTitle": {
+    "description": "S-04 empty state (b) title for stories."
+  },
+  "libEmptyPostsTitle": "No posts yet",
+  "@libEmptyPostsTitle": {
+    "description": "S-04 empty state (b) title for posts."
+  },
+  "libWaitingStories": "Waiting for new stories.",
+  "@libWaitingStories": {
+    "description": "S-04 empty state (b) body for stories without a last check time."
+  },
+  "libWaitingPosts": "Waiting for new posts.",
+  "@libWaitingPosts": {
+    "description": "S-04 empty state (b) body for posts without a last check time."
+  },
+  "libWaitingStoriesAt": "Waiting for new stories. Last check {time}.",
+  "@libWaitingStoriesAt": {
+    "description": "S-04 empty state (b) body for stories.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "libWaitingPostsAt": "Waiting for new posts. Last check {time}.",
+  "@libWaitingPostsAt": {
+    "description": "S-04 empty state (b) body for posts.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "libFilteredStories": "No stories match these filters.",
+  "@libFilteredStories": {
+    "description": "S-04 empty state (c) for stories."
+  },
+  "libFilteredPosts": "No posts match these filters.",
+  "@libFilteredPosts": {
+    "description": "S-04 empty state (c) for posts."
+  },
+  "libClearFilters": "Clear filters",
+  "@libClearFilters": {
+    "description": "S-04 empty state (c) button."
+  },
+  "libFiltersTitle": "Filters",
+  "@libFiltersTitle": {
+    "description": "S-05 sheet title."
+  },
+  "libFilterAccounts": "Accounts",
+  "@libFilterAccounts": {
+    "description": "S-05 section label."
+  },
+  "libFilterKind": "Kind",
+  "@libFilterKind": {
+    "description": "S-05 section label."
+  },
+  "libFilterDate": "Date",
+  "@libFilterDate": {
+    "description": "S-05 section label."
+  },
+  "libFilterType": "Type",
+  "@libFilterType": {
+    "description": "S-05 section label."
+  },
+  "libDateToday": "Today",
+  "@libDateToday": {
+    "description": "Date filter option and date header."
+  },
+  "libDateYesterday": "Yesterday",
+  "@libDateYesterday": {
+    "description": "Date header."
+  },
+  "libDate7": "Last 7 days",
+  "@libDate7": {
+    "description": "Date filter option."
+  },
+  "libDate30": "Last 30 days",
+  "@libDate30": {
+    "description": "Date filter option."
+  },
+  "libDateCustom": "Custom…",
+  "@libDateCustom": {
+    "description": "Date filter option that opens the range picker."
+  },
+  "libDateRange": "{from} – {to}",
+  "@libDateRange": {
+    "description": "Label of a custom date range.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "libTypeAll": "All",
+  "@libTypeAll": {
+    "description": "Type filter option."
+  },
+  "libTypePhotos": "Photos",
+  "@libTypePhotos": {
+    "description": "Type filter option."
+  },
+  "libTypeVideos": "Videos",
+  "@libTypeVideos": {
+    "description": "Type filter option."
+  },
+  "libTypeCarousels": "Carousels",
+  "@libTypeCarousels": {
+    "description": "Type filter option (posts only)."
+  },
+  "libTypeReels": "Reels",
+  "@libTypeReels": {
+    "description": "Type filter option (posts only)."
+  },
+  "libApply": "Apply",
+  "@libApply": {
+    "description": "S-05 apply button."
+  },
+  "libClear": "Clear",
+  "@libClear": {
+    "description": "S-05 clear button."
+  },
+  "libRemoveFilter": "Remove filter",
+  "@libRemoveFilter": {
+    "description": "Tooltip of the delete icon on an active filter chip."
+  },
+  "libAccountNew": "{count} new",
+  "@libAccountNew": {
+    "description": "Account sub-header badge: unviewed items.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libAccountCount": "{count}",
+  "@libAccountCount": {
+    "description": "Account sub-header item count.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libTileStory": "Story by {account}, {type}, {when}",
+  "@libTileStory": {
+    "description": "Semantics label of a story tile.",
+    "placeholders": {
+      "account": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "libTilePost": "Post by {account}, {type}, {when}",
+  "@libTilePost": {
+    "description": "Semantics label of a post tile.",
+    "placeholders": {
+      "account": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "libTilePhoto": "photo",
+  "@libTilePhoto": {
+    "description": "Tile semantics: photo."
+  },
+  "libTileVideo": "video",
+  "@libTileVideo": {
+    "description": "Tile semantics: video without a known duration."
+  },
+  "libTileVideoDuration": "video, {duration}",
+  "@libTileVideoDuration": {
+    "description": "Tile semantics: video with a duration.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "libTileCarousel": "carousel, {count} items",
+  "@libTileCarousel": {
+    "description": "Tile semantics: carousel.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libTileReel": "reel",
+  "@libTileReel": {
+    "description": "Tile semantics: reel."
+  },
+  "libWhen": "{day} {time}",
+  "@libWhen": {
+    "description": "Tile semantics: day and time.",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "libMissingTitle": "This file is missing",
+  "@libMissingTitle": {
+    "description": "Dialog title when a broken tile is tapped."
+  },
+  "libMissingBody": "Remove it from your library?",
+  "@libMissingBody": {
+    "description": "Dialog body when a broken tile is tapped."
+  },
+  "libRemoveFromLibrary": "Remove from library",
+  "@libRemoveFromLibrary": {
+    "description": "Dialog confirm button for a missing file."
+  },
+  "libDeletePartial": "{deleted} deleted, {failed} couldn't be deleted",
+  "@libDeletePartial": {
+    "description": "Snackbar after a delete where some items could not be deleted from the gallery.",
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "libDeleting": "Deleting…",
+  "@libDeleting": {
+    "description": "Progress label (semantics) while a delete runs."
   }
 }

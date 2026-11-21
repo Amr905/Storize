@@ -646,6 +646,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fingerprint is not available right now. Try again.'**
   String get lockBiometricUnavailable;
+
+  /// Library app bar: tooltip of the filter button (S-04).
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get libFilterTooltip;
+
+  /// Library kind switch: stories segment.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get libStoriesTab;
+
+  /// Library kind switch: posts segment.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get libPostsTab;
+
+  /// Library selection mode app bar title.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String libSelectedCount(int count);
+
+  /// Tooltip of the button that leaves selection mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel selection'**
+  String get libCancelSelection;
+
+  /// Library selection mode: delete action label and confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get libDelete;
+
+  /// Tooltip of the delete action in selection mode (BR-9).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete (deletes from your gallery too)'**
+  String get libDeleteTooltip;
+
+  /// Library selection mode: share action label.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get libShare;
+
+  /// Cancel button of the library dialogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get libCancel;
+
+  /// Delete confirmation title (S-04).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count, plural, =1{1 item} other{{count} items}}?'**
+  String libDeleteTitle(int count);
+
+  /// Delete confirmation body (BR-9).
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll also be removed from your gallery. This can\'t be undone.'**
+  String get libDeleteBody;
+
+  /// Snackbar after a successful delete.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item deleted} other{{count} items deleted}}'**
+  String libDeleted(int count);
+
+  /// Snackbar when some items could not be deleted from the gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item couldn\'t be deleted} other{{count} items couldn\'t be deleted}}'**
+  String libDeleteFailed(int count);
+
+  /// Snackbar when the selection has no saved files.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to share yet. Files are still downloading.'**
+  String get libShareNothing;
+
+  /// Snackbar when sharing failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share these items.'**
+  String get libShareFailed;
+
+  /// Snackbar/label while a check runs after pull-to-refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for new items…'**
+  String get libCheckRunning;
+
+  /// Snackbar with the check result.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Check finished. Nothing new.} =1{Check finished. 1 new item.} other{Check finished. {count} new items.}}'**
+  String libCheckDone(int count);
+
+  /// Snackbar when the check failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check right now. Try again later.'**
+  String get libCheckFailed;
+
+  /// Button in the "waiting for new items" empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get libCheckNow;
+
+  /// S-04 empty state (a) title.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet'**
+  String get libEmptyNoTargetsTitle;
+
+  /// S-04 empty state (a) body.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an account to start archiving.'**
+  String get libEmptyNoTargetsBody;
+
+  /// S-04 empty state (a) button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get libAddAccount;
+
+  /// S-04 empty state (b) title for stories.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories yet'**
+  String get libEmptyStoriesTitle;
+
+  /// S-04 empty state (b) title for posts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get libEmptyPostsTitle;
+
+  /// S-04 empty state (b) body for stories without a last check time.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for new stories.'**
+  String get libWaitingStories;
+
+  /// S-04 empty state (b) body for posts without a last check time.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for new posts.'**
+  String get libWaitingPosts;
+
+  /// S-04 empty state (b) body for stories.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for new stories. Last check {time}.'**
+  String libWaitingStoriesAt(String time);
+
+  /// S-04 empty state (b) body for posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for new posts. Last check {time}.'**
+  String libWaitingPostsAt(String time);
+
+  /// S-04 empty state (c) for stories.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories match these filters.'**
+  String get libFilteredStories;
+
+  /// S-04 empty state (c) for posts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts match these filters.'**
+  String get libFilteredPosts;
+
+  /// S-04 empty state (c) button.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get libClearFilters;
+
+  /// S-05 sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get libFiltersTitle;
+
+  /// S-05 section label.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get libFilterAccounts;
+
+  /// S-05 section label.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get libFilterKind;
+
+  /// S-05 section label.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get libFilterDate;
+
+  /// S-05 section label.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get libFilterType;
+
+  /// Date filter option and date header.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get libDateToday;
+
+  /// Date header.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get libDateYesterday;
+
+  /// Date filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get libDate7;
+
+  /// Date filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get libDate30;
+
+  /// Date filter option that opens the range picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get libDateCustom;
+
+  /// Label of a custom date range.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String libDateRange(String from, String to);
+
+  /// Type filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libTypeAll;
+
+  /// Type filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get libTypePhotos;
+
+  /// Type filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get libTypeVideos;
+
+  /// Type filter option (posts only).
+  ///
+  /// In en, this message translates to:
+  /// **'Carousels'**
+  String get libTypeCarousels;
+
+  /// Type filter option (posts only).
+  ///
+  /// In en, this message translates to:
+  /// **'Reels'**
+  String get libTypeReels;
+
+  /// S-05 apply button.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get libApply;
+
+  /// S-05 clear button.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get libClear;
+
+  /// Tooltip of the delete icon on an active filter chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove filter'**
+  String get libRemoveFilter;
+
+  /// Account sub-header badge: unviewed items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new'**
+  String libAccountNew(int count);
+
+  /// Account sub-header item count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String libAccountCount(int count);
+
+  /// Semantics label of a story tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Story by {account}, {type}, {when}'**
+  String libTileStory(String account, String type, String when);
+
+  /// Semantics label of a post tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Post by {account}, {type}, {when}'**
+  String libTilePost(String account, String type, String when);
+
+  /// Tile semantics: photo.
+  ///
+  /// In en, this message translates to:
+  /// **'photo'**
+  String get libTilePhoto;
+
+  /// Tile semantics: video without a known duration.
+  ///
+  /// In en, this message translates to:
+  /// **'video'**
+  String get libTileVideo;
+
+  /// Tile semantics: video with a duration.
+  ///
+  /// In en, this message translates to:
+  /// **'video, {duration}'**
+  String libTileVideoDuration(String duration);
+
+  /// Tile semantics: carousel.
+  ///
+  /// In en, this message translates to:
+  /// **'carousel, {count} items'**
+  String libTileCarousel(int count);
+
+  /// Tile semantics: reel.
+  ///
+  /// In en, this message translates to:
+  /// **'reel'**
+  String get libTileReel;
+
+  /// Tile semantics: day and time.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {time}'**
+  String libWhen(String day, String time);
+
+  /// Dialog title when a broken tile is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is missing'**
+  String get libMissingTitle;
+
+  /// Dialog body when a broken tile is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove it from your library?'**
+  String get libMissingBody;
+
+  /// Dialog confirm button for a missing file.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from library'**
+  String get libRemoveFromLibrary;
+
+  /// Snackbar after a delete where some items could not be deleted from the gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'{deleted} deleted, {failed} couldn\'t be deleted'**
+  String libDeletePartial(int deleted, int failed);
+
+  /// Progress label (semantics) while a delete runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get libDeleting;
 }
 
 class _AppLocalizationsDelegate

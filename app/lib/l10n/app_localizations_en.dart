@@ -306,4 +306,258 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lockBiometricUnavailable =>
       'Fingerprint is not available right now. Try again.';
+
+  @override
+  String get libFilterTooltip => 'Filters';
+
+  @override
+  String get libStoriesTab => 'Stories';
+
+  @override
+  String get libPostsTab => 'Posts';
+
+  @override
+  String libSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get libCancelSelection => 'Cancel selection';
+
+  @override
+  String get libDelete => 'Delete';
+
+  @override
+  String get libDeleteTooltip => 'Delete (deletes from your gallery too)';
+
+  @override
+  String get libShare => 'Share';
+
+  @override
+  String get libCancel => 'Cancel';
+
+  @override
+  String libDeleteTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return 'Delete $_temp0?';
+  }
+
+  @override
+  String get libDeleteBody =>
+      'They\'ll also be removed from your gallery. This can\'t be undone.';
+
+  @override
+  String libDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items deleted',
+      one: '1 item deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libDeleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items couldn\'t be deleted',
+      one: '1 item couldn\'t be deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libShareNothing =>
+      'Nothing to share yet. Files are still downloading.';
+
+  @override
+  String get libShareFailed => 'Couldn\'t share these items.';
+
+  @override
+  String get libCheckRunning => 'Checking for new items…';
+
+  @override
+  String libCheckDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Check finished. $count new items.',
+      one: 'Check finished. 1 new item.',
+      zero: 'Check finished. Nothing new.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libCheckFailed => 'Couldn\'t check right now. Try again later.';
+
+  @override
+  String get libCheckNow => 'Check now';
+
+  @override
+  String get libEmptyNoTargetsTitle => 'Nothing saved yet';
+
+  @override
+  String get libEmptyNoTargetsBody => 'Add an account to start archiving.';
+
+  @override
+  String get libAddAccount => 'Add account';
+
+  @override
+  String get libEmptyStoriesTitle => 'No stories yet';
+
+  @override
+  String get libEmptyPostsTitle => 'No posts yet';
+
+  @override
+  String get libWaitingStories => 'Waiting for new stories.';
+
+  @override
+  String get libWaitingPosts => 'Waiting for new posts.';
+
+  @override
+  String libWaitingStoriesAt(String time) {
+    return 'Waiting for new stories. Last check $time.';
+  }
+
+  @override
+  String libWaitingPostsAt(String time) {
+    return 'Waiting for new posts. Last check $time.';
+  }
+
+  @override
+  String get libFilteredStories => 'No stories match these filters.';
+
+  @override
+  String get libFilteredPosts => 'No posts match these filters.';
+
+  @override
+  String get libClearFilters => 'Clear filters';
+
+  @override
+  String get libFiltersTitle => 'Filters';
+
+  @override
+  String get libFilterAccounts => 'Accounts';
+
+  @override
+  String get libFilterKind => 'Kind';
+
+  @override
+  String get libFilterDate => 'Date';
+
+  @override
+  String get libFilterType => 'Type';
+
+  @override
+  String get libDateToday => 'Today';
+
+  @override
+  String get libDateYesterday => 'Yesterday';
+
+  @override
+  String get libDate7 => 'Last 7 days';
+
+  @override
+  String get libDate30 => 'Last 30 days';
+
+  @override
+  String get libDateCustom => 'Custom…';
+
+  @override
+  String libDateRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get libTypeAll => 'All';
+
+  @override
+  String get libTypePhotos => 'Photos';
+
+  @override
+  String get libTypeVideos => 'Videos';
+
+  @override
+  String get libTypeCarousels => 'Carousels';
+
+  @override
+  String get libTypeReels => 'Reels';
+
+  @override
+  String get libApply => 'Apply';
+
+  @override
+  String get libClear => 'Clear';
+
+  @override
+  String get libRemoveFilter => 'Remove filter';
+
+  @override
+  String libAccountNew(int count) {
+    return '$count new';
+  }
+
+  @override
+  String libAccountCount(int count) {
+    return '$count';
+  }
+
+  @override
+  String libTileStory(String account, String type, String when) {
+    return 'Story by $account, $type, $when';
+  }
+
+  @override
+  String libTilePost(String account, String type, String when) {
+    return 'Post by $account, $type, $when';
+  }
+
+  @override
+  String get libTilePhoto => 'photo';
+
+  @override
+  String get libTileVideo => 'video';
+
+  @override
+  String libTileVideoDuration(String duration) {
+    return 'video, $duration';
+  }
+
+  @override
+  String libTileCarousel(int count) {
+    return 'carousel, $count items';
+  }
+
+  @override
+  String get libTileReel => 'reel';
+
+  @override
+  String libWhen(String day, String time) {
+    return '$day $time';
+  }
+
+  @override
+  String get libMissingTitle => 'This file is missing';
+
+  @override
+  String get libMissingBody => 'Remove it from your library?';
+
+  @override
+  String get libRemoveFromLibrary => 'Remove from library';
+
+  @override
+  String libDeletePartial(int deleted, int failed) {
+    return '$deleted deleted, $failed couldn\'t be deleted';
+  }
+
+  @override
+  String get libDeleting => 'Deleting…';
 }
