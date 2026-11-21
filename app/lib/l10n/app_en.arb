@@ -737,5 +737,86 @@
   "libDeleting": "Deleting…",
   "@libDeleting": {
     "description": "Progress label (semantics) while a delete runs."
-  }
+  },
+  "actFilterAll": "All",
+  "@actFilterAll": {"description": "S-11 filter chip: every entry."},
+  "actFilterDownloads": "Downloads",
+  "@actFilterDownloads": {"description": "S-11 filter chip: download entries."},
+  "actFilterErrors": "Errors",
+  "@actFilterErrors": {"description": "S-11 filter chip: problem entries."},
+  "actFilterGaps": "Gaps",
+  "@actFilterGaps": {"description": "S-11 filter chip: gap entries."},
+  "actSubtitle": "Last 7 days",
+  "@actSubtitle": {"description": "S-11 subtitle under the title."},
+  "actToday": "Today",
+  "@actToday": {"description": "S-11 day header for today."},
+  "actYesterday": "Yesterday",
+  "@actYesterday": {"description": "S-11 day header for yesterday."},
+  "actEmptyTitle": "No activity yet.",
+  "@actEmptyTitle": {"description": "S-11 empty state title."},
+  "actCheckDoneOk": "Checked {count} accounts · No errors",
+  "@actCheckDoneOk": {
+    "description": "S-11 entry: a check finished without failures.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "actCheckDoneFailed": "Checked {count} accounts · {failed} failed",
+  "@actCheckDoneFailed": {
+    "description": "S-11 entry: a check finished with failed accounts.",
+    "placeholders": {"count": {"type": "int"}, "failed": {"type": "int"}}
+  },
+  "actDownloadedStories": "{count} stories downloaded · {account}",
+  "@actDownloadedStories": {
+    "description": "S-11 entry: stories were downloaded for an account.",
+    "placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}
+  },
+  "actDownloadedPosts": "{count} posts downloaded · {account}",
+  "@actDownloadedPosts": {
+    "description": "S-11 entry: posts were downloaded for an account.",
+    "placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}
+  },
+  "actRemovedBeforeDownload": "Removed before download · {account} · not an error",
+  "@actRemovedBeforeDownload": {
+    "description": "S-11 info entry (EC-7): content vanished before it was downloaded.",
+    "placeholders": {"account": {"type": "String"}}
+  },
+  "actGap": "Gap: no checks from {from} to {to}",
+  "@actGap": {
+    "description": "S-11 warning entry: no checks ran in this time range.",
+    "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
+  },
+  "actFixBattery": "Fix battery settings",
+  "@actFixBattery": {"description": "S-11 gap entry action; opens S-03."},
+  "actFix": "Fix",
+  "@actFix": {"description": "S-11 session entry action; opens S-13."},
+  "actRateLimited": "Instagram slowed us down · checks slowed",
+  "@actRateLimited": {"description": "S-11 warning entry (EC-15)."},
+  "actSessionProblem": "Instagram login needs attention",
+  "@actSessionProblem": {"description": "S-11 error entry (EC-1/2); opens S-13."},
+  "actPlatformChanged": "Instagram changed — update Storize",
+  "@actPlatformChanged": {"description": "S-11 error entry (EC-14)."},
+  "actPageModeUsed": "Page mode used for a check",
+  "@actPageModeUsed": {"description": "S-11 info entry: the headless page fallback ran."},
+  "actStorageLow": "Storage is low",
+  "@actStorageLow": {"description": "S-11 warning entry (NFR-13)."},
+  "actStoragePaused": "Downloads paused · storage full",
+  "@actStoragePaused": {"description": "S-11 error entry (NFR-13)."},
+  "actTargetStatus": "Account status changed · {account}",
+  "@actTargetStatus": {
+    "description": "S-11 info entry: a tracked account changed status.",
+    "placeholders": {"account": {"type": "String"}}
+  },
+  "actFileMissing": "File missing from gallery · {account}",
+  "@actFileMissing": {
+    "description": "S-11 warning entry: a saved file is gone from the gallery.",
+    "placeholders": {"account": {"type": "String"}}
+  },
+  "actAppCrash": "Storize closed unexpectedly",
+  "@actAppCrash": {"description": "S-11 error entry: crash marker from the previous run."},
+  "actAccountHandle": "@{username}",
+  "@actAccountHandle": {
+    "description": "Account label in S-11 entries.",
+    "placeholders": {"username": {"type": "String"}}
+  },
+  "actAccountRemoved": "Removed account",
+  "@actAccountRemoved": {"description": "S-11 account label when the target was removed."}
 }
