@@ -12,6 +12,7 @@ import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
 import 'package:storize_app/features/targets/add_target_page.dart';
 import 'package:storize_app/features/targets/targets_page.dart';
+import 'package:storize_app/features/viewer/post_viewer_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 
@@ -157,6 +158,7 @@ void main() {
             find.textContaining('TODO(').evaluate().length +
             find.byType(LibraryPage).evaluate().length +
             find.byType(StoryViewerPage).evaluate().length +
+            find.byType(PostViewerPage).evaluate().length +
             find.byType(SettingsPage).evaluate().length +
             find.byType(TargetsPage).evaluate().length +
             find.byType(AddTargetPage).evaluate().length +
