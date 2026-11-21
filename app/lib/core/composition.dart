@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:storize_app/core/composition_platform.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
+import 'package:storize_app/features/onboarding/login_lease.dart';
+import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/files/display_names.dart';
 import 'package:storize_data/log/crash_marker.dart';
@@ -43,6 +45,7 @@ final class CompositionParts {
     required this.pins,
     required this.biometric,
     this.crashMarker,
+    this.setupOps,
     this.findExisting,
     this.clock = const SystemClock(),
     this.governorConfig = const GovernorConfig(),
@@ -104,6 +107,10 @@ final class CompositionParts {
   /// Biometric authentication.
   final BiometricAuth biometric;
 
+  /// Device operations of onboarding S-03 (null in tests, which override
+  /// `setupOpsProvider` themselves).
+  final SetupOps? setupOps;
+
   /// Adopts a gallery file saved just before a kill (null in tests).
   final GalleryFileFinder? findExisting;
 
@@ -160,6 +167,8 @@ final class AppComposition {
     required this.parts,
     required this.governor,
     required this.platform,
+    required this.loginPlatform,
+    required this.loginLease,
     required this.runCheck,
     required this.downloadPending,
     required this.applyRetention,
@@ -215,30 +224,37 @@ final class AppComposition {
     final seenGuard = SeenGuard(store: parts.seenStore, log: log);
 
     Future<String>? hook;
-    final platform = ActiveAccountPlatform(
+    Future<InstagramPlatform> build(int accountId) async {
+      final source = await (hook ??= parts.hookSource());
+      return InstagramPlatform.assemble(
+        accountId: accountId,
+        governor: governor,
+        sessions: parts.sessions,
+        http: parts.igHttp,
+        cdnHttp: parts.cdnHttp,
+        pageDriver: parts.pageDriver,
+        hookSource: source,
+        targets: targets,
+        log: log,
+        // No `activity`: RunCheck writes PAGE_MODE_USED from the signals.
+        clock: clock,
+        seenGuard: seenGuard,
+        webViewLease: webViewLease,
+        runsInBackground: background,
+        pageModeInBackground: () async =>
+            (await parts.settings.get()).pageModeInBackground,
+      );
+    }
+
+    final platform = ActiveAccountPlatform(accounts: accounts, factory: build);
+    // S-02 verifies a new session under the staging id before it belongs to
+    // any account (never the active account's session).
+    final loginPlatform = ActiveAccountPlatform.fixed(
       accounts: accounts,
-      factory: (accountId) async {
-        final source = await (hook ??= parts.hookSource());
-        return InstagramPlatform.assemble(
-          accountId: accountId,
-          governor: governor,
-          sessions: parts.sessions,
-          http: parts.igHttp,
-          cdnHttp: parts.cdnHttp,
-          pageDriver: parts.pageDriver,
-          hookSource: source,
-          targets: targets,
-          log: log,
-          // No `activity`: RunCheck writes PAGE_MODE_USED from the signals.
-          clock: clock,
-          seenGuard: seenGuard,
-          webViewLease: webViewLease,
-          runsInBackground: background,
-          pageModeInBackground: () async =>
-              (await parts.settings.get()).pageModeInBackground,
-        );
-      },
+      factory: build,
+      accountId: LoginAccount.unsavedId,
     );
+    final loginLease = GovernorLoginLease(webViewLease);
 
     final deleteContent = DeleteContent(
       content: content,
@@ -251,6 +267,8 @@ final class AppComposition {
       parts: parts,
       governor: governor,
       platform: platform,
+      loginPlatform: loginPlatform,
+      loginLease: loginLease,
       targets: targets,
       content: content,
       accounts: accounts,
@@ -315,6 +333,13 @@ final class AppComposition {
 
   /// The platform of the active account (also the `ContentSignals`).
   final ActiveAccountPlatform platform;
+
+  /// The platform the login flow verifies a new session with: always the
+  /// staging account id (`LoginAccount.unsavedId`), never the active account.
+  final ContentPlatform loginPlatform;
+
+  /// The WebView lease S-02 holds (key -1), shared with page mode.
+  final LoginLease loginLease;
 
   /// Checks stories or posts.
   final RunCheck runCheck;

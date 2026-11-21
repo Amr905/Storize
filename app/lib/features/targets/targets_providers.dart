@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/core/session_banner_provider.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
@@ -21,16 +22,12 @@ final FutureProvider<String?> targetsLoginNameProvider =
           (await ref.watch(accountRepoProvider).getActive())?.username,
     );
 
-final _activeAccountProvider = StreamProvider<LoginAccount?>(
-  (ref) => ref.watch(accountRepoProvider).watchActive(),
-);
-
 /// True when the login session is usable (BR-7): there is an account and its
 /// status is `active`. Check now and Add are disabled otherwise, including
 /// when logged out or while the account is still loading.
 final targetsSessionActiveProvider = Provider<bool>(
   (ref) =>
-      ref.watch(_activeAccountProvider).value?.status == AccountStatus.active,
+      ref.watch(activeAccountProvider).value?.status == AccountStatus.active,
 );
 
 final _rateLimitEventsProvider = StreamProvider<List<ActivityEvent>>(

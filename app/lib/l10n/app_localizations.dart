@@ -1037,6 +1037,642 @@ abstract class AppLocalizations {
   /// **'Deleting…'**
   String get libDeleting;
 
+  /// S-06 header: posted time and relative age.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted {time} · {ago}'**
+  String storyPostedLine(String time, String ago);
+
+  /// Relative age under one minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get storyAgoJustNow;
+
+  /// Relative age in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min ago} other{{count} min ago}}'**
+  String storyAgoMinutes(int count);
+
+  /// Relative age in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 h ago} other{{count} h ago}}'**
+  String storyAgoHours(int count);
+
+  /// Relative age in days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
+  String storyAgoDays(int count);
+
+  /// S-06 header: account handle.
+  ///
+  /// In en, this message translates to:
+  /// **'@{username}'**
+  String storyAccount(String username);
+
+  /// S-06 close button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get storyClose;
+
+  /// S-06 mute button tooltip (sound on).
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get storyMute;
+
+  /// S-06 mute button tooltip (sound off).
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get storyUnmute;
+
+  /// S-06 video play button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get storyPlay;
+
+  /// S-06 video pause button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get storyPause;
+
+  /// S-06 video scrubber semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Video position'**
+  String get storyScrubber;
+
+  /// S-06 spinner semantics label while a file or video prepares.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get storyLoading;
+
+  /// S-06 link-sticker strip entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Link sticker: {url}'**
+  String storyLinkSticker(String url);
+
+  /// S-06 action bar: share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get storyShare;
+
+  /// S-06 action bar: info sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get storyInfo;
+
+  /// S-06 action bar: delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get storyDelete;
+
+  /// S-06 delete button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete (deletes from your gallery too)'**
+  String get storyDeleteTooltip;
+
+  /// S-06 delete confirmation title; same wording as the Library.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete 1 item?'**
+  String get storyDeleteTitle;
+
+  /// S-06 delete confirmation body; same wording as the Library.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll also be removed from your gallery. This can\'t be undone.'**
+  String get storyDeleteBody;
+
+  /// Cancel button on the S-06 confirm dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get storyCancel;
+
+  /// Snackbar after a successful delete from S-06.
+  ///
+  /// In en, this message translates to:
+  /// **'1 item deleted'**
+  String get storyDeleted;
+
+  /// Snackbar when a delete from S-06 fails.
+  ///
+  /// In en, this message translates to:
+  /// **'This item couldn\'t be deleted.'**
+  String get storyDeleteFailed;
+
+  /// Snackbar when the item has no saved file to share.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to share yet. The file is still downloading.'**
+  String get storyShareNothing;
+
+  /// Snackbar when sharing fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share this item.'**
+  String get storyShareFailed;
+
+  /// S-06 missing-file state title (EC-20).
+  ///
+  /// In en, this message translates to:
+  /// **'This file is missing'**
+  String get storyMissingTitle;
+
+  /// S-06 missing-file state confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove it from your library?'**
+  String get storyMissingBody;
+
+  /// S-06 missing-file state: remove action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from library'**
+  String get storyRemoveFromLibrary;
+
+  /// S-06 error state when the video cannot be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'This file can\'t be played.'**
+  String get storyCantPlay;
+
+  /// S-06 photo with no preview file.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo unavailable'**
+  String get storyPhotoUnavailable;
+
+  /// Title of the S-06 Info sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get storyInfoTitle;
+
+  /// Info sheet row: posted time.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get storyInfoPosted;
+
+  /// Info sheet row: downloaded time.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get storyInfoDownloaded;
+
+  /// Info sheet row: media type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get storyInfoType;
+
+  /// Media type label: photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get storyTypePhoto;
+
+  /// Media type label: video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get storyTypeVideo;
+
+  /// Info sheet row: video length.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get storyInfoDuration;
+
+  /// Info sheet row: file size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get storyInfoSize;
+
+  /// File size under one megabyte.
+  ///
+  /// In en, this message translates to:
+  /// **'{kilobytes} KB'**
+  String storySizeKb(String kilobytes);
+
+  /// File size of one megabyte or more.
+  ///
+  /// In en, this message translates to:
+  /// **'{megabytes} MB'**
+  String storySizeMb(String megabytes);
+
+  /// Info sheet row: Instagram item ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Item ID'**
+  String get storyInfoItemId;
+
+  /// Info sheet row: gallery folder of the saved file.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery folder'**
+  String get storyInfoFolder;
+
+  /// S-01 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Save stories automatically, before they disappear.'**
+  String get onbWelcomeTagline;
+
+  /// S-01 risk card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you continue'**
+  String get onbRiskTitle;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.'**
+  String get onbRisk1;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'People you track will see that account in their story viewers.'**
+  String get onbRisk2;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a dedicated account, not your personal one.'**
+  String get onbRisk3;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Only track your own/client accounts, people who agreed, or public creators.'**
+  String get onbRisk4;
+
+  /// S-01 checkbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand these risks'**
+  String get onbRiskCheckbox;
+
+  /// S-01 primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get onbContinue;
+
+  /// S-02 info strip.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the login session is saved, never your password.'**
+  String get onbLoginInfo;
+
+  /// S-02 help link.
+  ///
+  /// In en, this message translates to:
+  /// **'Why use a dedicated account?'**
+  String get onbLoginHelp;
+
+  /// S-02 help dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize views stories as this account, and Instagram may challenge or ban it. A dedicated account keeps your personal one safe.'**
+  String get onbLoginHelpBody;
+
+  /// Dialog close button.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get onbLoginClose;
+
+  /// S-02 back button semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel login'**
+  String get onbLoginCancel;
+
+  /// S-02 while the session is verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get onbLoginConnecting;
+
+  /// S-02 success.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as @{username}'**
+  String onbLoginConnected(String username);
+
+  /// S-02 progress bar semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the login page'**
+  String get onbLoginPageLoading;
+
+  /// S-02 error button.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get onbTryAgain;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet'**
+  String get onbErrNetworkTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get onbErrNetworkBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'The page didn\'t load'**
+  String get onbErrPageTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram\'s login page could not be loaded.'**
+  String get onbErrPageBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram needs to verify this account'**
+  String get onbErrCheckpointTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Instagram on another device, confirm it\'s you, then try again. Or use another account.'**
+  String get onbErrCheckpointBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect this account'**
+  String get onbErrUnusableTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again or use another account.'**
+  String get onbErrUnusableBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not switched'**
+  String get onbErrWrongAccountTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks keep using @{username}.'**
+  String onbErrWrongAccountBody(String username);
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Login isn\'t available right now'**
+  String get onbErrBusyTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize is using the web engine for a check. Try again in a moment.'**
+  String get onbErrBusyBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Login cancelled'**
+  String get onbErrCancelledTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'No account was connected.'**
+  String get onbErrCancelledBody;
+
+  /// S-02 switch dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to @{username}?'**
+  String onbSwitchTitle(String username);
+
+  /// S-02 switch dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks will use this account from now on.'**
+  String get onbSwitchBody;
+
+  /// S-02 switch dialog confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get onbSwitchConfirm;
+
+  /// S-02 switch dialog cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current'**
+  String get onbSwitchKeep;
+
+  /// S-03 eyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 3 OF 3 · SETUP'**
+  String get onbSetupEyebrow;
+
+  /// S-03 intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Android may stop background checks to save battery. These steps keep your archive complete.'**
+  String get onbSetupIntro;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get onbNotifTitle;
+
+  /// S-03 step body.
+  ///
+  /// In en, this message translates to:
+  /// **'Get told about new stories and login problems.'**
+  String get onbNotifBody;
+
+  /// S-03 permission button.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get onbAllow;
+
+  /// S-03 link after a permission was denied twice.
+  ///
+  /// In en, this message translates to:
+  /// **'Open app settings'**
+  String get onbOpenAppSettings;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization'**
+  String get onbBatteryTitle;
+
+  /// S-03 step body.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Storize to Unrestricted in battery settings.'**
+  String get onbBatteryBody;
+
+  /// S-03 button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open battery settings'**
+  String get onbBatteryOpen;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra step for {oem}'**
+  String onbOemTitle(String oem);
+
+  /// S-03 step subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected on this phone.'**
+  String get onbOemDetected;
+
+  /// Samsung steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize'**
+  String get onbOemSamsung;
+
+  /// Xiaomi steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions'**
+  String get onbOemXiaomi;
+
+  /// Oppo/Realme steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Storize\n2. Allow background activity and auto-launch'**
+  String get onbOemOppo;
+
+  /// Vivo steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Background power consumption\n2. Storize > Allow'**
+  String get onbOemVivo;
+
+  /// Huawei steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background'**
+  String get onbOemHuawei;
+
+  /// Other phones steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your phone\'s battery settings and allow Storize to run in the background and start automatically.'**
+  String get onbOemOther;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung'**
+  String get onbOemSamsungName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi'**
+  String get onbOemXiaomiName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Oppo or Realme'**
+  String get onbOemOppoName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Vivo'**
+  String get onbOemVivoName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei'**
+  String get onbOemHuaweiName;
+
+  /// Manufacturer name (generic).
+  ///
+  /// In en, this message translates to:
+  /// **'your phone'**
+  String get onbOemOtherName;
+
+  /// S-03 step title (Android 8-9).
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get onbStorageTitle;
+
+  /// S-03 step body (Android 8-9).
+  ///
+  /// In en, this message translates to:
+  /// **'Needed to save into your gallery.'**
+  String get onbStorageBody;
+
+  /// S-03 inline warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without the battery step, checks may be delayed or missed.'**
+  String get onbBatteryWarning;
+
+  /// S-03 primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get onbDone;
+
+  /// S-03 secondary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get onbSkip;
+
+  /// S-03 step spinner semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get onbChecking;
+
   /// S-11 filter chip: every entry.
   ///
   /// In en, this message translates to:
@@ -1456,6 +2092,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tracking {username}. First check running…'**
   String tgtAdded(String username);
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get setSectionInstagram;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get setSectionChecking;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get setSectionNotifications;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get setSectionStorage;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get setSectionSecurity;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get setSectionAbout;
+
+  /// S-12 row title and sheet title for the story interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Check stories every'**
+  String get setStoryInterval;
+
+  /// S-12 row title and sheet title for the post interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Check posts every'**
+  String get setPostInterval;
+
+  /// Interval value shorter than an hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String setIntervalMinutes(int minutes);
+
+  /// Interval value of whole hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String setIntervalHours(int hours);
+
+  /// Hint under the post interval when it is 1 h.
+  ///
+  /// In en, this message translates to:
+  /// **'More requests increase the ban risk.'**
+  String get setPostOneHourWarning;
+
+  /// S-12 switch: download only on an unmetered network.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi only'**
+  String get setWifiOnly;
+
+  /// S-12 row that opens S-03 (background permissions).
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Storize running'**
+  String get setKeepRunning;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'New stories'**
+  String get setNotifyStories;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'New posts'**
+  String get setNotifyPosts;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Login problems'**
+  String get setNotifyLogin;
+
+  /// Warning shown while the login-problems notification is off.
+  ///
+  /// In en, this message translates to:
+  /// **'You may not notice when checks stop.'**
+  String get setNotifyLoginOffWarning;
+
+  /// S-12 info row: the fixed gallery location.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Pictures/Storize'**
+  String get setStorageLocation;
+
+  /// S-12 storage row while figures load.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating…'**
+  String get setStorageCalculating;
+
+  /// S-12 storage row when the figures cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage unknown'**
+  String get setStorageUnknown;
+
+  /// S-12 storage row.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used} · free {free}'**
+  String setStorageUsedFree(String used, String free);
+
+  /// S-12 storage row when free space is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used}'**
+  String setStorageUsedOnly(String used);
+
+  /// Sheet title of the per-account storage list.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage by account'**
+  String get setStorageByAccount;
+
+  /// Per-account storage sheet when nothing is stored.
+  ///
+  /// In en, this message translates to:
+  /// **'No downloads stored yet.'**
+  String get setStorageNone;
+
+  /// Byte size in gigabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} GB'**
+  String setSizeGb(String value);
+
+  /// Byte size in megabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String setSizeMb(String value);
+
+  /// Byte size in kilobytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} KB'**
+  String setSizeKb(String value);
+
+  /// Byte size under one kilobyte.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} B'**
+  String setSizeBytes(String value);
+
+  /// S-12 row title and sheet title for retention.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep downloads'**
+  String get setKeepDownloads;
+
+  /// Retention choice: keep everything.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get setKeepForever;
+
+  /// S-12 retention value when retention is on.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{After 1 day} other{After {days} days}}'**
+  String setKeepAfterDays(int days);
+
+  /// Retention sheet radio label for the N-days option.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get setRetentionAfter;
+
+  /// Retention sheet text field label (integer 1 to 3650).
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get setRetentionDaysLabel;
+
+  /// Validation message for the retention days field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number from 1 to 3650.'**
+  String get setRetentionDaysError;
+
+  /// Retention confirmation dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete older downloads now?'**
+  String get setRetentionConfirmTitle;
+
+  /// Retention confirmation body (FR-54).
+  ///
+  /// In en, this message translates to:
+  /// **'Items older than {days} days ({count, plural, =1{1 item} other{{count} items}}, {size}) will be deleted now.'**
+  String setRetentionConfirmBody(int days, int count, String size);
+
+  /// Retention confirmation button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete now'**
+  String get setRetentionConfirm;
+
+  /// Cancel button in S-12 sheets and dialogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get setCancel;
+
+  /// Save button in the retention sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get setSave;
+
+  /// S-12 about row.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String setVersion(String version);
+
+  /// S-12 row when a newer release exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get setUpdateAvailable;
+
+  /// S-12 row when the installed version is below min-supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get setUpdateRequired;
+
+  /// Version value of the update row.
+  ///
+  /// In en, this message translates to:
+  /// **'v{version}'**
+  String setUpdateVersion(String version);
+
+  /// S-13 connection date.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {date}'**
+  String accConnected(String date);
+
+  /// S-13 and S-12 gray status for no usable login.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get accNotConnected;
+
+  /// S-13 health card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get accHealthTitle;
+
+  /// S-13 health line.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful check {time}'**
+  String accLastCheck(String time);
+
+  /// S-13 health line when no check has succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'No successful check yet'**
+  String get accLastCheckNever;
+
+  /// S-13 health line.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate-limit events (7 days): {count}'**
+  String accRateLimitEvents(int count);
+
+  /// S-13 amber state message.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram ended the session or asked for verification. Checks are paused.'**
+  String get accNeedsReloginBody;
+
+  /// S-13 red state message.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram may have restricted this account. Checks are stopped. Consider logging in with a different dedicated account.'**
+  String get accRestrictedBody;
+
+  /// S-13 button when not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get accLogIn;
+
+  /// S-13 primary button in the needs re-login state.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in again'**
+  String get accLogInAgain;
+
+  /// S-13 primary button in the restricted state.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with another account'**
+  String get accLogInAnother;
+
+  /// S-13 button that clears the saved session.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get accLogOut;
+
+  /// S-13 log-out confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of Instagram?'**
+  String get accLogOutTitle;
+
+  /// S-13 log-out confirmation body (from UX.md S-13).
+  ///
+  /// In en, this message translates to:
+  /// **'Stop all checks and remove the saved session? Your downloads and targets are kept.'**
+  String get accLogOutBody;
+
+  /// S-13 log-out confirmation button.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get accLogOutConfirm;
 }
 
 class _AppLocalizationsDelegate
