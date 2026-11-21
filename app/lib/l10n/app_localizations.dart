@@ -1037,6 +1037,258 @@ abstract class AppLocalizations {
   /// **'Deleting…'**
   String get libDeleting;
 
+  /// S-06 header: posted time and relative age.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted {time} · {ago}'**
+  String storyPostedLine(String time, String ago);
+
+  /// Relative age under one minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get storyAgoJustNow;
+
+  /// Relative age in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min ago} other{{count} min ago}}'**
+  String storyAgoMinutes(int count);
+
+  /// Relative age in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 h ago} other{{count} h ago}}'**
+  String storyAgoHours(int count);
+
+  /// Relative age in days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
+  String storyAgoDays(int count);
+
+  /// S-06 header: account handle.
+  ///
+  /// In en, this message translates to:
+  /// **'@{username}'**
+  String storyAccount(String username);
+
+  /// S-06 close button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get storyClose;
+
+  /// S-06 mute button tooltip (sound on).
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get storyMute;
+
+  /// S-06 mute button tooltip (sound off).
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get storyUnmute;
+
+  /// S-06 video play button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get storyPlay;
+
+  /// S-06 video pause button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get storyPause;
+
+  /// S-06 video scrubber semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Video position'**
+  String get storyScrubber;
+
+  /// S-06 spinner semantics label while a file or video prepares.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get storyLoading;
+
+  /// S-06 link-sticker strip entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Link sticker: {url}'**
+  String storyLinkSticker(String url);
+
+  /// S-06 action bar: share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get storyShare;
+
+  /// S-06 action bar: info sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get storyInfo;
+
+  /// S-06 action bar: delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get storyDelete;
+
+  /// S-06 delete button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete (deletes from your gallery too)'**
+  String get storyDeleteTooltip;
+
+  /// S-06 delete confirmation title; same wording as the Library.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete 1 item?'**
+  String get storyDeleteTitle;
+
+  /// S-06 delete confirmation body; same wording as the Library.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll also be removed from your gallery. This can\'t be undone.'**
+  String get storyDeleteBody;
+
+  /// Cancel button on the S-06 confirm dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get storyCancel;
+
+  /// Snackbar after a successful delete from S-06.
+  ///
+  /// In en, this message translates to:
+  /// **'1 item deleted'**
+  String get storyDeleted;
+
+  /// Snackbar when a delete from S-06 fails.
+  ///
+  /// In en, this message translates to:
+  /// **'This item couldn\'t be deleted.'**
+  String get storyDeleteFailed;
+
+  /// Snackbar when the item has no saved file to share.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to share yet. The file is still downloading.'**
+  String get storyShareNothing;
+
+  /// Snackbar when sharing fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share this item.'**
+  String get storyShareFailed;
+
+  /// S-06 missing-file state title (EC-20).
+  ///
+  /// In en, this message translates to:
+  /// **'This file is missing'**
+  String get storyMissingTitle;
+
+  /// S-06 missing-file state confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove it from your library?'**
+  String get storyMissingBody;
+
+  /// S-06 missing-file state: remove action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from library'**
+  String get storyRemoveFromLibrary;
+
+  /// S-06 error state when the video cannot be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'This file can\'t be played.'**
+  String get storyCantPlay;
+
+  /// S-06 photo with no preview file.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo unavailable'**
+  String get storyPhotoUnavailable;
+
+  /// Title of the S-06 Info sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get storyInfoTitle;
+
+  /// Info sheet row: posted time.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get storyInfoPosted;
+
+  /// Info sheet row: downloaded time.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get storyInfoDownloaded;
+
+  /// Info sheet row: media type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get storyInfoType;
+
+  /// Media type label: photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get storyTypePhoto;
+
+  /// Media type label: video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get storyTypeVideo;
+
+  /// Info sheet row: video length.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get storyInfoDuration;
+
+  /// Info sheet row: file size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get storyInfoSize;
+
+  /// File size under one megabyte.
+  ///
+  /// In en, this message translates to:
+  /// **'{kilobytes} KB'**
+  String storySizeKb(String kilobytes);
+
+  /// File size of one megabyte or more.
+  ///
+  /// In en, this message translates to:
+  /// **'{megabytes} MB'**
+  String storySizeMb(String megabytes);
+
+  /// Info sheet row: Instagram item ID.
+  ///
+  /// In en, this message translates to:
+  /// **'Item ID'**
+  String get storyInfoItemId;
+
+  /// Info sheet row: gallery folder of the saved file.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery folder'**
+  String get storyInfoFolder;
+
   /// S-11 filter chip: every entry.
   ///
   /// In en, this message translates to:
