@@ -4,6 +4,7 @@ import 'package:storize_app/core/composition_platform.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/onboarding/login_lease.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
+import 'package:storize_app/notifications/notification_service.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/files/display_names.dart';
 import 'package:storize_data/log/crash_marker.dart';
@@ -45,6 +46,7 @@ final class CompositionParts {
     required this.pins,
     required this.biometric,
     this.crashMarker,
+    this.notifications,
     this.setupOps,
     this.findExisting,
     this.clock = const SystemClock(),
@@ -116,6 +118,9 @@ final class CompositionParts {
 
   /// The crash marker, to report a pending crash after the database opens.
   final CrashMarker? crashMarker;
+
+  /// The notification service (null in tests that do not check it).
+  final NotificationService? notifications;
 
   /// The clock.
   final Clock clock;

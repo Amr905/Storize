@@ -30,14 +30,14 @@ melos:
     test:
       description: Run unit and widget tests in every member that has tests.
       exec:
-        command: flutter test
+        command: env TZ=UTC flutter test
         failFast: false
       packageFilters:
         dirExists: test
     golden:update:
       description: Regenerate golden files in the app.
       exec:
-        command: flutter test --update-goldens
+        command: env TZ=UTC flutter test --update-goldens
         failFast: true
       packageFilters:
         scope: storize_app

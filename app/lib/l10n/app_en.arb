@@ -1559,5 +1559,60 @@
   "tdtRemovePartial": "Some downloads could not be deleted. Try again.",
   "@tdtRemovePartial": {"description": "S-10 error when some files could not be deleted."},
   "tdtRemoveFailed": "The account could not be removed.",
-  "@tdtRemoveFailed": {"description": "S-10 error when removal failed."}
+  "@tdtRemoveFailed": {"description": "S-10 error when removal failed."},
+  "ntfChannelNewStories": "New stories",
+  "@ntfChannelNewStories": {"description": "Notification channel name for new stories (T-022)."},
+  "ntfChannelNewPosts": "New posts",
+  "@ntfChannelNewPosts": {"description": "Notification channel name for new posts (T-022)."},
+  "ntfChannelLoginProblems": "Login problems",
+  "@ntfChannelLoginProblems": {"description": "Notification channel name for login alerts (T-022)."},
+  "ntfChannelStorage": "Storage",
+  "@ntfChannelStorage": {"description": "Notification channel name for storage alerts (T-022)."},
+  "ntfChannelBackground": "Background checks",
+  "@ntfChannelBackground": {"description": "Silent notification channel name for check progress (T-022)."},
+  "ntfChannelExport": "Export",
+  "@ntfChannelExport": {"description": "Notification channel name for exports (T-022)."},
+  "ntfStoriesFromAccount": "{count, plural, one{1 new story from @{username}} other{{count} new stories from @{username}}}",
+  "@ntfStoriesFromAccount": {
+    "description": "Grouped notification text for one target's new stories (UX system notifications).",
+    "placeholders": {
+      "count": {"type": "int"},
+      "username": {"type": "String"}
+    }
+  },
+  "ntfPostsFromAccount": "{count, plural, one{1 new post from @{username}} other{{count} new posts from @{username}}}",
+  "@ntfPostsFromAccount": {
+    "description": "Grouped notification text for one target's new posts (UX system notifications).",
+    "placeholders": {
+      "count": {"type": "int"},
+      "username": {"type": "String"}
+    }
+  },
+  "ntfStoriesSummary": "{count, plural, one{1 new story} other{{count} new stories}} from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfStoriesSummary": {
+    "description": "Group summary for new stories over several targets (EC-8).",
+    "placeholders": {
+      "count": {"type": "int"},
+      "accounts": {"type": "int"}
+    }
+  },
+  "ntfPostsSummary": "{count, plural, one{1 new post} other{{count} new posts}} from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfPostsSummary": {
+    "description": "Group summary for new posts over several targets (EC-8).",
+    "placeholders": {
+      "count": {"type": "int"},
+      "accounts": {"type": "int"}
+    }
+  },
+  "ntfLoginNeeded": "Instagram login needs attention — checks are paused",
+  "@ntfLoginNeeded": {"description": "High-priority login alert (UX system notifications)."},
+  "ntfStorageFull": "Storage almost full — downloads paused",
+  "@ntfStorageFull": {"description": "High-priority storage alert (UX system notifications)."},
+  "ntfChecking": "Checking {accounts, plural, one{1 account} other{{accounts} accounts}}…",
+  "@ntfChecking": {
+    "description": "Silent background notification while checks run (UX system notifications).",
+    "placeholders": {
+      "accounts": {"type": "int"}
+    }
+  }
 }
