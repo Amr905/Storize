@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 38 / 43 tasks done (88%)** — original plan 32 / 37 (86%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 39 / 43 tasks done (91%)** — original plan 33 / 37 (89%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -29,7 +29,6 @@
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
 | T-022 | backend-developer (haiku) | `app/lib/notifications/**`, `app/lib/background/**` (notify hook only), `app/lib/core/composition*.dart`, `app/lib/main.dart`, `app/pubspec.yaml` (+flutter_local_notifications), AndroidManifest (notification entries), `app/test/notifications/**`, background tests, `app_en.arb` (`ntf*` keys only) | 01:30 |
-| T-031 | frontend-developer (haiku) | `app/lib/features/targets/target_detail*`, `app/lib/features/targets/remove_target*`, `app/test/features/targets/target_detail*`, `app/test/features/targets/remove_target*`, `app_en.arb` (`tdt*` keys only) | 02:00 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -71,7 +70,7 @@
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | done | 1 | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | done | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | done | — | — |
-| T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | todo | — | — |
+| T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | done | — | — |
 | T-032 | Activity S-11 | Medium | haiku | Frontend Developer | T-025, T-020 | done | 1 | Lead review |
 | T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | done | — | — |
 | T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | **done** | 2 | QA PASS r2 (3 majors fixed) + CI [44523291566](https://github.com/Amr905/Storize/actions/runs/44523291566) · `05-reviews/T-034.md` |
@@ -178,3 +177,4 @@
 - 2026-11-22 01:10 — **T-033 done** (36/43, 84%): QA FAIL (Medium, log-out order) fixed by the Lead; router tests use real pages; `appVersionProvider` wired; S-13 goldens regenerated under **TZ=UTC** (CI zone; local is Cairo, so always run golden updates with `TZ=UTC`). CI 44956752614 green; merged. Not built: S-13 "Follows X of Y" line (no data source), carried to T-038.
 - 2026-11-22 01:45 — **T-030 done** (37/43, 84%→86%): Lead review; Lead fixed session-usable (needs an `active` account) via one shared `activeAccountProvider` (keeps the single watchActive subscription); router tests use real pages. CI 44957929275 green; merged. T-031 now ready. T-022 started (haiku).
 - 2026-11-22 02:10 — **T-029 done** (38/43, 88%): Lead review; post-route tests use the real page; "Remove slide" hidden until a per-media port exists. CI 44959246953 green; merged. **Follow-up T-029a** (Lead-approved port change): `ContentRepo` per-media delete + use case, and full-size photo read path for S-06/S-15. T-022 dev done (wiring by Lead next); T-031 started.
+- 2026-11-22 02:45 — **T-031 done** (39/43, 91%): Lead review; no route placeholders remain; CI 44961143437 green; merged. Gap: S-09 Check now checks all targets (carried to T-038). Note: f4be7e3 on main had committed merge markers (Lead error: commit chained after a conflicted merge); fixed in f875463, CI green. Rule: never chain a commit after `git merge` without checking for unmerged paths.
