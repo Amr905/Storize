@@ -56,20 +56,30 @@ class TargetsPage extends ConsumerWidget {
           const SessionBannerSlot(),
           if (rateLimited) const _RateLimitBar(),
           Expanded(
-            child: UiStateView<List<Target>>(
-              state: ui,
-              emptyBuilder: (context, reason) => EmptyState(
-                icon: Icons.person_add_alt_1_rounded,
-                title: l10n.tgtEmptyTitle,
-                body: l10n.tgtEmptyBody,
-                actionLabel: l10n.tgtAddAccount,
-                onAction: () => unawaited(context.push(Routes.addTargetPath)),
-              ),
-              builder: (context, targets) => _TargetList(
-                targets: targets,
-                checking: checking,
-              ),
-            ),
+            child: ui is UiContent<List<Target>>
+                ? _TargetList(targets: ui.value, checking: checking)
+                : LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: UiStateView<List<Target>>(
+                          state: ui,
+                          emptyBuilder: (context, reason) => EmptyState(
+                            icon: Icons.person_add_alt_1_rounded,
+                            title: l10n.tgtEmptyTitle,
+                            body: l10n.tgtEmptyBody,
+                            actionLabel: l10n.tgtAddAccount,
+                            onAction: () =>
+                                unawaited(context.push(Routes.addTargetPath)),
+                          ),
+                          builder: (context, targets) =>
+                              const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),

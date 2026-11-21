@@ -96,7 +96,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     final failure = form.failure;
     final normalized = form.normalized;
     if (failure is AddTargetNotFound && normalized != null) {
-      return l10n.tgtNotFound(normalized);
+      return l10n.tgtNotFound('@$normalized');
     }
     if (failure is AddTargetNotVisible) {
       return failure.reason == NotVisibleReason.privateNotFollowed
@@ -124,7 +124,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     final sessionActive = ref.watch(targetsSessionActiveProvider);
     final count = ref.watch(targetsProvider).value?.length ?? 0;
     final verifying = form.verifying;
-    final login = ref.watch(targetsAccountProvider).value?.username ?? '';
+    final login = ref.watch(targetsLoginNameProvider).value ?? '';
     final usernameError = _usernameError(l10n, form, login);
     final failure = form.failure;
     final categoryError = form.submitted && form.category == null

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/core/session_banner_provider.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
@@ -13,17 +14,24 @@ final targetsProvider = StreamProvider<List<Target>>(
   (ref) => ref.watch(targetRepoProvider).watchAll(),
 );
 
-/// The logged-in account, or null. One repo subscription.
-final targetsAccountProvider = StreamProvider<LoginAccount?>(
-  (ref) => ref.watch(accountRepoProvider).watchActive(),
-);
+/// The logged-in account's username, read once (for the S-08 messages). It
+/// does not subscribe to `watchActive`, which the session banner already does.
+final FutureProvider<String?> targetsLoginNameProvider =
+    FutureProvider.autoDispose<String?>(
+      (ref) async =>
+          (await ref.watch(accountRepoProvider).getActive())?.username,
+    );
 
-/// True when the login session is usable (BR-7). Check now and Add are
-/// disabled otherwise.
-final targetsSessionActiveProvider = Provider<bool>(
-  (ref) =>
-      ref.watch(targetsAccountProvider).value?.status == AccountStatus.active,
-);
+/// True when the login session is usable (BR-7): the session banner shows no
+/// problem. Check now and Add are disabled otherwise.
+///
+/// Derived from [sessionBannerProvider], so there is still one `watchActive`
+/// subscription. It cannot tell "no account" from "healthy", so no account
+/// counts as usable until the banner provider exposes the status.
+final targetsSessionActiveProvider = Provider<bool>((ref) {
+  final banner = ref.watch(sessionBannerProvider);
+  return banner.hasValue && banner.value == null;
+});
 
 final _rateLimitEventsProvider = StreamProvider<List<ActivityEvent>>(
   (ref) => ref
