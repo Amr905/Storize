@@ -12,6 +12,7 @@ import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
 import 'package:storize_app/features/targets/add_target_page.dart';
+import 'package:storize_app/features/targets/target_detail_page.dart';
 import 'package:storize_app/features/targets/targets_page.dart';
 import 'package:storize_app/features/viewer/post_viewer_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
@@ -40,17 +41,12 @@ void main() {
       expect(find.byType(LibraryPage), findsOneWidget);
     });
 
-    testWidgets('every screen resolves to its placeholder', (t) async {
+    testWidgets('every screen resolves to its real page', (t) async {
       final h = await pumpApp(t);
-      const cases = {
-        '/targets/9': 'TODO(T-031)',
-      };
-      for (final e in cases.entries) {
-        await h.go(e.key);
-        expect(find.text(e.value), findsOneWidget, reason: e.key);
-      }
       await h.go('/story/3');
       expect(_story(3), findsOneWidget, reason: '/story/3');
+      await h.go('/targets/9');
+      expect(_target(9), findsOneWidget, reason: '/targets/9');
       await h.go('/post/3');
       expect(_post(3), findsOneWidget, reason: '/post/3');
       // Onboarding pages are real. S-01 redirects to the Library once
@@ -94,7 +90,7 @@ void main() {
       await h.go(Routes.storyLocation(5));
       expect(_story(5), findsOneWidget);
       await h.go(Routes.targetDetailLocation(8));
-      expect(find.text('targetId=8'), findsOneWidget);
+      expect(_target(8), findsOneWidget);
       await h.go(Routes.settingsLocation());
       expect(h.location, '/settings');
     });
@@ -185,20 +181,20 @@ void main() {
 
       await tapTab('Targets');
       await h.push('/targets/9');
-      expect(find.text('targetId=9'), findsOneWidget);
+      expect(_target(9), findsOneWidget);
 
       await tapTab('Library');
       expect(find.byType(LibraryPage), findsOneWidget);
-      expect(find.text('targetId=9'), findsNothing);
+      expect(_target(9), findsNothing);
 
       await tapTab('Targets');
-      expect(find.text('targetId=9'), findsOneWidget);
+      expect(_target(9), findsOneWidget);
       expect(h.location, '/targets/9');
 
       // Tapping the active tab pops back to its root.
       await tapTab('Targets');
       expect(find.byType(TargetsPage), findsOneWidget);
-      expect(find.text('targetId=9'), findsNothing);
+      expect(_target(9), findsNothing);
     });
 
     testWidgets('back from a tab detail returns to the tab root', (t) async {
@@ -282,7 +278,7 @@ void main() {
       h.container.read(g.flag.notifier).set(value: false);
       await t.pumpAndSettle();
       expect(h.location, '/targets/3');
-      expect(find.text('targetId=3'), findsOneWidget);
+      expect(_target(3), findsOneWidget);
     });
 
     testWidgets('a deep link survives the lock gate', (t) async {
@@ -363,4 +359,9 @@ Finder _story(int id) => find.byWidgetPredicate(
 Finder _post(int id) => find.byWidgetPredicate(
   (w) => w is PostViewerPage && w.contentId == id,
   description: 'PostViewerPage(contentId: $id)',
+);
+
+Finder _target(int id) => find.byWidgetPredicate(
+  (w) => w is TargetDetailPage && w.targetId == id,
+  description: 'TargetDetailPage(targetId: $id)',
 );

@@ -11,6 +11,7 @@ import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/lock/lock_flows.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
+import 'package:storize_app/features/targets/target_detail_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
@@ -273,7 +274,7 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byType(LockPage), findsOneWidget);
       expect(_story(9), findsNothing);
-      expect(find.text('targetId=3'), findsNothing);
+      expect(_target(3), findsNothing);
       expect(find.byType(LibraryPage), findsNothing);
     });
 
@@ -639,4 +640,9 @@ void tall(WidgetTester t) {
 Finder _story(int id) => find.byWidgetPredicate(
   (w) => w is StoryViewerPage && w.contentId == id,
   description: 'StoryViewerPage(contentId: $id)',
+);
+
+Finder _target(int id) => find.byWidgetPredicate(
+  (w) => w is TargetDetailPage && w.targetId == id,
+  description: 'TargetDetailPage(targetId: $id)',
 );

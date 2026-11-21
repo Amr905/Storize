@@ -1483,5 +1483,81 @@
   "accLogOutBody": "Stop all checks and remove the saved session? Your downloads and targets are kept.",
   "@accLogOutBody": {"description": "S-13 log-out confirmation body (from UX.md S-13)."},
   "accLogOutConfirm": "Log out",
-  "@accLogOutConfirm": {"description": "S-13 log-out confirmation button."}
+  "@accLogOutConfirm": {"description": "S-13 log-out confirmation button."},
+  "tdtMenuTooltip": "More actions",
+  "@tdtMenuTooltip": {"description": "S-09 overflow menu button tooltip."},
+  "tdtRemove": "Remove",
+  "@tdtRemove": {"description": "S-09 overflow menu item that opens S-10."},
+  "tdtNotFound": "This account is no longer tracked.",
+  "@tdtNotFound": {"description": "S-09 shown when the target ID does not exist."},
+  "tdtCategoryLabel": "Category",
+  "@tdtCategoryLabel": {"description": "S-09 category row label and sheet title."},
+  "tdtNoteLabel": "Note",
+  "@tdtNoteLabel": {"description": "S-09 note row label and sheet title."},
+  "tdtNoteNone": "No note yet.",
+  "@tdtNoteNone": {"description": "S-09 note row when the note is empty."},
+  "tdtEditCategory": "Edit category",
+  "@tdtEditCategory": {"description": "S-09 icon button tooltip for the category row."},
+  "tdtEditNote": "Edit note",
+  "@tdtEditNote": {"description": "S-09 icon button tooltip for the note row."},
+  "tdtStatStories": "Stories",
+  "@tdtStatStories": {"description": "S-09 stats tile label: saved stories."},
+  "tdtStatPosts": "Posts",
+  "@tdtStatPosts": {"description": "S-09 stats tile label: saved posts."},
+  "tdtStatSpace": "Space",
+  "@tdtStatSpace": {"description": "S-09 stats tile label: stored bytes."},
+  "tdtStatusNotVisible": "This account is private and {login} doesn't follow it (or blocked it). Past downloads are kept.",
+  "@tdtStatusNotVisible": {
+    "description": "S-09 status card for a not-visible target.",
+    "placeholders": {"login": {"type": "String"}}
+  },
+  "tdtStatusUnavailable": "This account no longer exists.",
+  "@tdtStatusUnavailable": {"description": "S-09 status card for an unavailable target."},
+  "tdtStatusErrorBody": "{error} ({time})",
+  "@tdtStatusErrorBody": {
+    "description": "S-09 status card for an error: the last error text and its time.",
+    "placeholders": {"error": {"type": "String"}, "time": {"type": "String"}}
+  },
+  "tdtStatusErrorNone": "The last check failed.",
+  "@tdtStatusErrorNone": {"description": "S-09 status card for an error without a reason."},
+  "tdtLoginFallback": "your account",
+  "@tdtLoginFallback": {"description": "Replaces @login in the not-visible text when the login account is unknown."},
+  "tdtMetaNewPost": "Last new post {date}",
+  "@tdtMetaNewPost": {
+    "description": "S-09 meta line: date of the newest post.",
+    "placeholders": {"date": {"type": "String"}}
+  },
+  "tdtRecentLabel": "Recent",
+  "@tdtRecentLabel": {"description": "S-09 recent section title."},
+  "tdtSeeAll": "See all",
+  "@tdtSeeAll": {"description": "S-09 link to S-04 filtered to this account."},
+  "tdtEmptyStories": "No stories saved yet.",
+  "@tdtEmptyStories": {"description": "S-09 recent empty state, stories."},
+  "tdtEmptyPosts": "No posts saved yet.",
+  "@tdtEmptyPosts": {"description": "S-09 recent empty state, posts."},
+  "tdtRemoveTitle": "Stop tracking {username}?",
+  "@tdtRemoveTitle": {
+    "description": "S-10 dialog title.",
+    "placeholders": {"username": {"type": "String"}}
+  },
+  "tdtRemoveCounts": "{stories} stories, {posts} posts saved.",
+  "@tdtRemoveCounts": {
+    "description": "S-10 dialog counts line.",
+    "placeholders": {"stories": {"type": "int"}, "posts": {"type": "int"}}
+  },
+  "tdtRemoveKeep": "Keep downloads (in gallery)",
+  "@tdtRemoveKeep": {"description": "S-10 option, default and safe choice."},
+  "tdtRemoveDelete": "Delete downloads too (removes them from gallery)",
+  "@tdtRemoveDelete": {"description": "S-10 option that deletes the saved files."},
+  "tdtRemoveConfirmDelete": "Remove & delete",
+  "@tdtRemoveConfirmDelete": {"description": "S-10 confirm button when delete is selected."},
+  "tdtRemoved": "Stopped tracking {username}.",
+  "@tdtRemoved": {
+    "description": "S-07 snackbar after removal.",
+    "placeholders": {"username": {"type": "String"}}
+  },
+  "tdtRemovePartial": "Some downloads could not be deleted. Try again.",
+  "@tdtRemovePartial": {"description": "S-10 error when some files could not be deleted."},
+  "tdtRemoveFailed": "The account could not be removed.",
+  "@tdtRemoveFailed": {"description": "S-10 error when removal failed."}
 }

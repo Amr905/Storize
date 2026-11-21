@@ -1522,4 +1522,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accLogOutConfirm => 'Log out';
+
+  @override
+  String get tdtMenuTooltip => 'More actions';
+
+  @override
+  String get tdtRemove => 'Remove';
+
+  @override
+  String get tdtNotFound => 'This account is no longer tracked.';
+
+  @override
+  String get tdtCategoryLabel => 'Category';
+
+  @override
+  String get tdtNoteLabel => 'Note';
+
+  @override
+  String get tdtNoteNone => 'No note yet.';
+
+  @override
+  String get tdtEditCategory => 'Edit category';
+
+  @override
+  String get tdtEditNote => 'Edit note';
+
+  @override
+  String get tdtStatStories => 'Stories';
+
+  @override
+  String get tdtStatPosts => 'Posts';
+
+  @override
+  String get tdtStatSpace => 'Space';
+
+  @override
+  String tdtStatusNotVisible(String login) {
+    return 'This account is private and $login doesn\'t follow it (or blocked it). Past downloads are kept.';
+  }
+
+  @override
+  String get tdtStatusUnavailable => 'This account no longer exists.';
+
+  @override
+  String tdtStatusErrorBody(String error, String time) {
+    return '$error ($time)';
+  }
+
+  @override
+  String get tdtStatusErrorNone => 'The last check failed.';
+
+  @override
+  String get tdtLoginFallback => 'your account';
+
+  @override
+  String tdtMetaNewPost(String date) {
+    return 'Last new post $date';
+  }
+
+  @override
+  String get tdtRecentLabel => 'Recent';
+
+  @override
+  String get tdtSeeAll => 'See all';
+
+  @override
+  String get tdtEmptyStories => 'No stories saved yet.';
+
+  @override
+  String get tdtEmptyPosts => 'No posts saved yet.';
+
+  @override
+  String tdtRemoveTitle(String username) {
+    return 'Stop tracking $username?';
+  }
+
+  @override
+  String tdtRemoveCounts(int stories, int posts) {
+    return '$stories stories, $posts posts saved.';
+  }
+
+  @override
+  String get tdtRemoveKeep => 'Keep downloads (in gallery)';
+
+  @override
+  String get tdtRemoveDelete =>
+      'Delete downloads too (removes them from gallery)';
+
+  @override
+  String get tdtRemoveConfirmDelete => 'Remove & delete';
+
+  @override
+  String tdtRemoved(String username) {
+    return 'Stopped tracking $username.';
+  }
+
+  @override
+  String get tdtRemovePartial =>
+      'Some downloads could not be deleted. Try again.';
+
+  @override
+  String get tdtRemoveFailed => 'The account could not be removed.';
 }
