@@ -31,6 +31,7 @@ export 'src/repos/content_repo.dart';
 export 'src/repos/governor_lease_repo.dart';
 export 'src/repos/settings_repo.dart';
 export 'src/repos/target_repo.dart';
+export 'src/usecases/add_target.dart';
 export 'src/usecases/apply_retention.dart';
 export 'src/usecases/delete_content.dart';
 export 'src/usecases/remove_target.dart';

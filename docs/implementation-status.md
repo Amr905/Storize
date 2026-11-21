@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 26 / 43 tasks done (60%)** — original plan 21 / 37 (57%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 28 / 43 tasks done (65%)** — original plan 22 / 37 (59%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,8 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-015a | backend-developer (sonnet) | `packages/storize_instagram/lib/{instagram_platform.dart,platform/**,media/**}`, `lib/page/webview_lease.dart` (SeenGuard refresh timeout only), `test/platform/**`, `test/media/**` | 02:15 |
-| T-016 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/add_target.dart`, new `test/usecases/add_target*` | 02:15 |
 | T-018 | backend-developer (sonnet) | new `packages/storize_domain/lib/src/usecases/download_pending.dart`, new `test/usecases/download_pending*` | 02:15 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
@@ -53,10 +51,10 @@
 | T-013 | DirectExtractor + mappers (user, stories, posts, session) | High | sonnet | Backend Developer | T-002, T-012 | **done** | 2 | QA PASS r2 + CI [44643606619](https://github.com/Amr905/Storize/actions/runs/44643606619) · `05-reviews/T-013.md` |
 | T-014 | PageExtractor (headless WebView fallback) | High | sonnet | Backend Developer | T-013 | **done** | 2 | QA PASS r2 + CI [44718122191](https://github.com/Amr905/Storize/actions/runs/44718122191) · `05-reviews/T-014.md` |
 | T-015 | InstagramPlatform: mode selection, failure map, openMedia | High | sonnet | Backend Developer | T-013, T-014 | **done** | 1 (+follow-ups) | QA PASS + CI [44728720352](https://github.com/Amr905/Storize/actions/runs/44728720352) · `05-reviews/T-015.md` |
-| T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | in_progress | 1 | — |
-| T-016 | Use case: AddTarget (validation, watermark) | Medium | sonnet | Backend Developer | T-006, T-015 | in_progress | 1 | — |
+| T-015a | InstagramPlatform hardening (T-015 QA F1–F7) | Medium | sonnet | Backend Developer | T-015 | **done** | 1 | Lead review + CI [44848081880](https://github.com/Amr905/Storize/actions/runs/44848081880) · `05-reviews/T-015a.md` |
+| T-016 | Use case: AddTarget (validation, watermark) | Medium | haiku | Backend Developer | T-006, T-015 | **done** | 1 | Lead review + CI [44846723906](https://github.com/Amr905/Storize/actions/runs/44846723906) · `05-reviews/T-016.md` |
 | T-017 | Use case: RunCheck (stories & posts) | High | sonnet | Backend Developer | T-006, T-015, T-015a, T-012 | todo | — | — |
-| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | in_progress | 1 | — |
+| T-018 | Use case: DownloadPending | High | sonnet | Backend Developer | T-010, T-006, T-015 | in_review | 1 | — |
 | T-019a | MediaCache.deleteThumbnail + orphan thumbs | Low | haiku | Backend Developer | T-019 | **done** | 2 | QA PASS r2 + CI [44586390191](https://github.com/Amr905/Storize/actions/runs/44586390191) · `05-reviews/T-019a.md` |
 | T-019 | Use cases: DeleteContent, RemoveTarget, ApplyRetention | Medium | sonnet | Backend Developer | T-010, T-006 | **done** | 2 | QA PASS r2 + CI [44575761650](https://github.com/Amr905/Storize/actions/runs/44575761650) · `05-reviews/T-019.md` |
 | T-020 | Use cases: DetectGaps, ComputeStorage, VerifySession | Medium | sonnet | Backend Developer | T-006, T-015 | todo | — | — |
@@ -169,3 +167,4 @@
 - 2026-11-21 02:10 — Resumed after the **weekly** usage limit (hit ~13:40 on 11-20, reset 20:00). T-027 QA round 2 resumed.
 - 2026-11-21 02:30 — **User adopted cost-efficiency rules 1–7** (CLAUDE.md, Phase 5 orchestration): risk-based QA, one QA round max, ~15 targeted QA tests, package-only test runs during dev, ≤150-word reports, compact briefs, Haiku for Medium UI/plumbing. Applies from the next delegation; in-flight agents (T-015a, T-016, T-018, T-027 QA r2) finish under the old brief.
 - 2026-11-21 02:45 — A server restart stopped all 4 agents (T-015a, T-016, T-018, T-027 QA r2). **T-027 done**: per the new cost rules the Lead verified round 2 (library +124 stable under TZ=America/New_York ×3; only the 10 synthetic fixtures tracked under `failures/`), CI green, merged; main green (app 605). **Checkpoint 5** (26 done) run by the Lead: full melos suite green on main. T-015a/T-016/T-018 relaunched on their partial work with lean briefs.
+- 2026-11-21 03:35 — **T-016 done** (Lead review + CI; haiku) and **T-015a done** (Lead review + CI; one transient APK-build CI failure, re-run green), merged; Lead exported `add_target`; main green (domain 298, instagram 1244). Another server restart stopped T-018; relaunched and delivered (a8ab91f) → QA (High). Next: T-017, T-020.
