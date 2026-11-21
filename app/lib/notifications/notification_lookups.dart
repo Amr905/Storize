@@ -34,10 +34,9 @@ abstract interface class NotificationLookups {
 final class RepoNotificationLookups implements NotificationLookups {
   /// Creates the lookups.
   const RepoNotificationLookups({
-    required TargetRepo targets,
-    required ContentRepo content,
-  }) : _targets = targets,
-       _content = content;
+    required this._targets,
+    required this._content,
+  });
 
   final TargetRepo _targets;
   final ContentRepo _content;

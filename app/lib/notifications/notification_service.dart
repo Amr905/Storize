@@ -4,7 +4,6 @@ import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/notifications/notification_lookups.dart';
 import 'package:storize_app/notifications/notification_port.dart';
 import 'package:storize_app/router/deep_link.dart';
-import 'package:storize_data/log/log.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -52,7 +51,9 @@ abstract final class NotificationIds {
   /// The id of the notification of [targetId] and [kind] (one per target and
   /// kind, so a newer run replaces the older one).
   static int forTarget(int targetId, ContentKind kind) =>
-      targetBase + (targetId & 0x3fffffff) * 2 + (kind == ContentKind.post ? 1 : 0);
+      targetBase +
+      (targetId & 0x3fffffff) * 2 +
+      (kind == ContentKind.post ? 1 : 0);
 }
 
 /// The location a notification payload opens (for the router).
@@ -72,14 +73,11 @@ String? locationForPayload(String payload) {
 final class NotificationService implements TaskNotifier {
   /// Creates the service.
   NotificationService({
-    required NotificationPort port,
-    required SettingsRepo settings,
-    required NotificationLookups lookups,
-    DiagnosticLog? log,
-  }) : _port = port,
-       _settings = settings,
-       _lookups = lookups,
-       _log = log;
+    required this._port,
+    required this._settings,
+    required this._lookups,
+    this._log,
+  });
 
   final NotificationPort _port;
   final SettingsRepo _settings;
@@ -179,7 +177,10 @@ final class NotificationService implements TaskNotifier {
         check?.newContentIds ?? const [],
       );
       for (final kind in ContentKind.values) {
-        final group = [for (final c in wanted) if (c.kind == kind) c];
+        final group = [
+          for (final c in wanted)
+            if (c.kind == kind) c,
+        ];
         if (group.isEmpty) continue;
         final isStory = kind == ContentKind.story;
         final channel = isStory
@@ -281,7 +282,6 @@ final class NotificationService implements TaskNotifier {
           id: NotificationIds.checking,
           channelId: NotificationChannels.background,
           title: _strings.ntfChecking(accounts),
-          groupKey: null,
           silent: true,
         ),
       );

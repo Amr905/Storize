@@ -1,4 +1,4 @@
-/// The thin seam between [NotificationService] and the notification plugin.
+/// The thin seam between the notification service and the plugin.
 ///
 /// Nothing above this file imports `flutter_local_notifications`, so the
 /// service and the background code are tested with a fake port.

@@ -84,7 +84,6 @@ final class FlutterLocalNotificationsPort implements NotificationPort {
             groupKey: request.groupKey,
             setAsGroupSummary: request.isGroupSummary,
             silent: request.silent,
-            autoCancel: true,
           ),
         ),
       );
