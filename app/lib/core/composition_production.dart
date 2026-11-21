@@ -118,8 +118,8 @@ final class SchedulerCheckNowAction implements CheckNowAction {
 
 /// The provider overrides that connect the app to [c].
 ///
-/// `appLockTestBypassProvider` is deliberately not overridden: it stays at
-/// its default (`false`), so the lock gate always applies.
+/// The app-lock test bypass is deliberately not overridden: it stays at its
+/// default (`false`), so the lock gate always applies.
 List<Override> appOverrides(AppComposition c) => [
   targetRepoProvider.overrideWithValue(c.targets),
   contentRepoProvider.overrideWithValue(c.content),
