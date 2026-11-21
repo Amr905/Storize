@@ -75,7 +75,7 @@ class _FailingSessions implements SessionStore {
   Future<void> clear(int accountId) => inner.clear(accountId);
 }
 
-final _ig = Uri.parse('https://www.instagram.com/');
+final Uri _ig = Uri.parse('https://www.instagram.com/');
 
 Future<void> _loggedIn(WidgetTester t, OnbRig rig) async {
   rig.web.cookies = Map.of(OnbRig.goodCookies);
