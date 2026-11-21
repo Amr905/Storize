@@ -1040,6 +1040,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actAccountRemoved => 'Removed account';
 
   @override
+<<<<<<< HEAD
   String tgtCountLimit(int count, int limit) {
     return 'Targets ($count/$limit)';
   }
@@ -1058,11 +1059,71 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count new items',
       one: '1 new item',
       zero: 'Nothing new',
+=======
+  String get postTypePhoto => 'Photo';
+
+  @override
+  String get postTypeVideo => 'Video';
+
+  @override
+  String get postTypeCarousel => 'Carousel';
+
+  @override
+  String get postTypeReel => 'Reel';
+
+  @override
+  String postCounter(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String postSlideSemantics(int current, int total) {
+    return 'Slide $current of $total';
+  }
+
+  @override
+  String get postMoreTooltip => 'More';
+
+  @override
+  String get postShareAll => 'Share all slides';
+
+  @override
+  String postPostedOn(String when, String type) {
+    return 'Posted $when · $type';
+  }
+
+  @override
+  String get postCaptionMore => 'More';
+
+  @override
+  String get postCaptionLess => 'Less';
+
+  @override
+  String get postLinkTitle => 'Post link';
+
+  @override
+  String get postCopyLink => 'Copy link';
+
+  @override
+  String get postLinkCopied => 'Link copied';
+
+  @override
+  String get postInfoSlides => 'Slides';
+
+  @override
+  String postInfoSlideCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count slides',
+      one: '1 slide',
+>>>>>>> t-029-post-viewer
     );
     return '$_temp0';
   }
 
   @override
+<<<<<<< HEAD
   String get tgtCheckFailed => 'The check could not run.';
 
   @override
@@ -1201,6 +1262,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String tgtAdded(String username) {
     return 'Tracking $username. First check running…';
   }
+=======
+  String postDeleteTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete this post ($count files)?',
+      one: 'Delete this post (1 file)?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get postDeleteBody =>
+      'Also removes them from your gallery. This can\'t be undone.';
+
+  @override
+  String get postDeleted => 'Post deleted';
+
+  @override
+  String get postDeleteFailed => 'This post couldn\'t be deleted.';
+
+  @override
+  String get postSlideMissingTitle => 'This slide\'s file is missing';
+
+  @override
+  String get postSlideMissingBody => 'It was moved or deleted outside Storize.';
+
+  @override
+  String get postRemoveSlide => 'Remove slide';
+
+  @override
+  String get postSlideRemoveFailed => 'This slide couldn\'t be removed.';
+
+  @override
+  String get postSlideNotDownloaded => 'Not downloaded';
+
+  @override
+  String get postSlideNotDownloadedBody =>
+      'This slide didn\'t finish downloading.';
+>>>>>>> t-029-post-viewer
 
   @override
   String get setSectionInstagram => 'Instagram';

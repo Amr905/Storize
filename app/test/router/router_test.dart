@@ -11,8 +11,12 @@ import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
+<<<<<<< HEAD
 import 'package:storize_app/features/targets/add_target_page.dart';
 import 'package:storize_app/features/targets/targets_page.dart';
+=======
+import 'package:storize_app/features/viewer/post_viewer_page.dart';
+>>>>>>> t-029-post-viewer
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/router/routes.dart';
@@ -42,7 +46,12 @@ void main() {
     testWidgets('every screen resolves to its placeholder', (t) async {
       final h = await pumpApp(t);
       const cases = {
+<<<<<<< HEAD
         '/post/3': 'TODO(T-029)',
+=======
+        '/targets': 'TODO(T-030)',
+        '/targets/add': 'TODO(T-030)',
+>>>>>>> t-029-post-viewer
         '/targets/9': 'TODO(T-031)',
       };
       for (final e in cases.entries) {
@@ -110,7 +119,7 @@ void main() {
       final h = await pumpApp(t);
       await h.go('storize://post/13');
       expect(h.location, '/post/13');
-      expect(find.text('contentId=13'), findsOneWidget);
+      expect(_post(13), findsOneWidget);
     });
 
     testWidgets('storize://account opens S-13', (t) async {
@@ -201,6 +210,8 @@ void main() {
 
     testWidgets('back from a tab detail returns to the tab root', (t) async {
       final h = await pumpApp(t);
+      await h.go('/post/3');
+      expect(_post(3), findsOneWidget, reason: '/post/3');
       await h.go('/targets');
       await h.push('/targets/4');
       h.router.pop();
@@ -322,7 +333,7 @@ void main() {
       h.container.read(g.flag.notifier).set(value: true);
       await t.pumpAndSettle();
       expect(h.location, '/post/8');
-      expect(find.text('contentId=8'), findsOneWidget);
+      expect(_post(8), findsOneWidget);
     });
 
     testWidgets('an unsafe from= is ignored', (t) async {
@@ -356,4 +367,9 @@ void main() {
 Finder _story(int id) => find.byWidgetPredicate(
   (w) => w is StoryViewerPage && w.contentId == id,
   description: 'StoryViewerPage(contentId: $id)',
+);
+
+Finder _post(int id) => find.byWidgetPredicate(
+  (w) => w is PostViewerPage && w.contentId == id,
+  description: 'PostViewerPage(contentId: $id)',
 );
