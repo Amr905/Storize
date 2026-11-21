@@ -6,6 +6,7 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/background/background_dispatcher.dart';
 import 'package:storize_app/core/composition.dart';
 import 'package:storize_app/core/composition_production.dart';
+import 'package:storize_app/router/app_router.dart';
 import 'package:storize_data/log/log.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:workmanager/workmanager.dart';
@@ -55,7 +56,14 @@ Future<Widget> buildApp({
     await (initializeWorkmanager ??
         () => Workmanager().initialize(callbackDispatcher))();
     unawaited(_startUp(composition));
-    return StorizeApp(overrides: appOverrides(composition));
+    // A notification that launched the app opens its screen at start-up.
+    final launch = await composition.parts.notifications?.launchLocation();
+    return StorizeApp(
+      overrides: [
+        ...appOverrides(composition),
+        if (launch != null) initialLocationProvider.overrideWithValue(launch),
+      ],
+    );
   } on Object catch (error, stack) {
     d.log.log(
       LogLevel.error,

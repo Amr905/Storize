@@ -10,6 +10,9 @@ import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
+import 'package:storize_app/notifications/flutter_local_notifications_port.dart';
+import 'package:storize_app/notifications/notification_lookups.dart';
+import 'package:storize_app/notifications/notification_service.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/files/files.dart';
 import 'package:storize_data/log/log.dart';
@@ -73,9 +76,21 @@ Future<AppComposition> composeProduction({
   );
   final accounts = DriftAccountRepo(db);
   final gallery = PluginGalleryStore(plugin);
+  final settings = SharedPrefsSettingsRepo();
+  final notifications = NotificationService(
+    port: FlutterLocalNotificationsPort(),
+    settings: settings,
+    lookups: RepoNotificationLookups(
+      targets: DriftTargetRepo(db),
+      content: DriftContentRepo(db),
+    ),
+    log: diagnostics.log,
+  );
+  // Never throws; channels exist before the first notification.
+  await notifications.initialize();
   final parts = CompositionParts(
     db: db,
-    settings: SharedPrefsSettingsRepo(),
+    settings: settings,
     sessions: SecureStorageSessionStore(
       SecureStorageSessionStore.defaultStorage(),
       onUnreadable: markLoggedOutOnUnreadable(accounts),
@@ -91,6 +106,7 @@ Future<AppComposition> composeProduction({
     seenStore: SharedPrefsSeenBreakerStore(),
     log: diagnostics.log,
     crashMarker: diagnostics.marker,
+    notifications: notifications,
     setupOps: productionSetupOps(plugin),
     scheduler: scheduler,
     enqueuer: scheduler,

@@ -2182,6 +2182,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log out'**
   String get accLogOutConfirm;
+
+  /// Notification channel name for new stories (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'New stories'**
+  String get ntfChannelNewStories;
+
+  /// Notification channel name for new posts (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'New posts'**
+  String get ntfChannelNewPosts;
+
+  /// Notification channel name for login alerts (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'Login problems'**
+  String get ntfChannelLoginProblems;
+
+  /// Notification channel name for storage alerts (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get ntfChannelStorage;
+
+  /// Silent notification channel name for check progress (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'Background checks'**
+  String get ntfChannelBackground;
+
+  /// Notification channel name for exports (T-022).
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get ntfChannelExport;
+
+  /// Grouped notification text for one target's new stories (UX system notifications).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new story from @{username}} other{{count} new stories from @{username}}}'**
+  String ntfStoriesFromAccount(int count, String username);
+
+  /// Grouped notification text for one target's new posts (UX system notifications).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new post from @{username}} other{{count} new posts from @{username}}}'**
+  String ntfPostsFromAccount(int count, String username);
+
+  /// Group summary for new stories over several targets (EC-8).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new story} other{{count} new stories}} from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfStoriesSummary(int count, int accounts);
+
+  /// Group summary for new posts over several targets (EC-8).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 new post} other{{count} new posts}} from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfPostsSummary(int count, int accounts);
+
+  /// High-priority login alert (UX system notifications).
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram login needs attention — checks are paused'**
+  String get ntfLoginNeeded;
+
+  /// High-priority storage alert (UX system notifications).
+  ///
+  /// In en, this message translates to:
+  /// **'Storage almost full — downloads paused'**
+  String get ntfStorageFull;
+
+  /// Silent background notification while checks run (UX system notifications).
+  ///
+  /// In en, this message translates to:
+  /// **'Checking {accounts, plural, one{1 account} other{{accounts} accounts}}…'**
+  String ntfChecking(int accounts);
 }
 
 class _AppLocalizationsDelegate

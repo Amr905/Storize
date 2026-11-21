@@ -16,6 +16,7 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   clock: c.clock,
   enqueuer: c.parts.enqueuer,
   log: c.log,
+  notifier: c.parts.notifications,
 );
 
 /// Runs the GitHub release check and stores the time (`lastUpdateCheckAt`).

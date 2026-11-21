@@ -1257,4 +1257,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accLogOutConfirm => 'Log out';
+
+  @override
+  String get ntfChannelNewStories => 'New stories';
+
+  @override
+  String get ntfChannelNewPosts => 'New posts';
+
+  @override
+  String get ntfChannelLoginProblems => 'Login problems';
+
+  @override
+  String get ntfChannelStorage => 'Storage';
+
+  @override
+  String get ntfChannelBackground => 'Background checks';
+
+  @override
+  String get ntfChannelExport => 'Export';
+
+  @override
+  String ntfStoriesFromAccount(int count, String username) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new stories from @$username',
+      one: '1 new story from @$username',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ntfPostsFromAccount(int count, String username) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new posts from @$username',
+      one: '1 new post from @$username',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ntfStoriesSummary(int count, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new stories',
+      one: '1 new story',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return '$_temp0 from $_temp1';
+  }
+
+  @override
+  String ntfPostsSummary(int count, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new posts',
+      one: '1 new post',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return '$_temp0 from $_temp1';
+  }
+
+  @override
+  String get ntfLoginNeeded =>
+      'Instagram login needs attention — checks are paused';
+
+  @override
+  String get ntfStorageFull => 'Storage almost full — downloads paused';
+
+  @override
+  String ntfChecking(int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return 'Checking $_temp0…';
+  }
 }

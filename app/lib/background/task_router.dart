@@ -2,6 +2,23 @@ import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 
+/// Shows the notifications of a finished task (T-022). Implemented by
+/// `NotificationService`; tests use a recording fake. Never throws.
+abstract interface class TaskNotifier {
+  /// The items a run saved, per target and kind (EC-8). [check] is the check
+  /// whose stored items the downloads came from, when there was one.
+  Future<void> newItemsSaved(
+    DownloadPendingResult downloads, {
+    CheckRunResult? check,
+  });
+
+  /// The session of the active account changed to [status].
+  Future<void> sessionChanged(AccountStatus status);
+
+  /// The downloads stopped for lack of space.
+  Future<void> storageFull();
+}
+
 /// Runs [RunCheck] (the use case, or a fake in tests).
 typedef CheckRunner = Future<CheckRunResult> Function({
   required CheckScope scope,
@@ -40,6 +57,7 @@ final class TaskRouter {
     required this._clock,
     required this._enqueuer,
     this._log,
+    this._notifier,
     this.budget = const Duration(minutes: 8),
   });
 
@@ -54,6 +72,7 @@ final class TaskRouter {
   final Clock _clock;
   final DownloadEnqueuer _enqueuer;
   final DiagnosticLog? _log;
+  final TaskNotifier? _notifier;
 
   /// Runs the task [name] with [input] (the WorkManager input data).
   ///
@@ -104,7 +123,8 @@ final class TaskRouter {
       targetId: targetId,
       deadline: deadline,
     );
-    await _downloads(deadline, manual: manual);
+    await _downloads(deadline, manual: manual, check: checked);
+    await _notifySession(checked);
 
     final retry =
         checked.result == CheckResult.failed &&
@@ -119,12 +139,17 @@ final class TaskRouter {
 
   /// Downloads until [deadline]; hands the rest to a new `download` task when
   /// the deadline stopped the run with files left.
-  Future<void> _downloads(DateTime deadline, {required bool manual}) async {
+  Future<DownloadPendingResult> _downloads(
+    DateTime deadline, {
+    required bool manual,
+    CheckRunResult? check,
+  }) async {
     final settings = await _settings.get();
     final policy = (manual || settings.pageModeInBackground)
         ? ExtractionPolicy.directThenPage
         : ExtractionPolicy.directOnly;
     final result = await _download(deadline: deadline, policy: policy);
+    await _notifyDownloads(result, check);
     if (result.stopReason == DownloadStopReason.deadline &&
         result.remaining > 0) {
       await _enqueuer.enqueueDownload(wifiOnly: settings.wifiOnly);
@@ -134,5 +159,51 @@ final class TaskRouter {
         'download_rollover remaining=${result.remaining}',
       );
     }
+    return result;
+  }
+
+  /// Sends the item and storage alerts of a download run. Never throws.
+  Future<void> _notifyDownloads(
+    DownloadPendingResult result,
+    CheckRunResult? check,
+  ) async {
+    final notifier = _notifier;
+    if (notifier == null) return;
+    try {
+      await notifier.newItemsSaved(result, check: check);
+      if (result.stopReason == DownloadStopReason.storagePaused ||
+          result.stopReason == DownloadStopReason.galleryStorageFull) {
+        await notifier.storageFull();
+      }
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+    }
+  }
+
+  /// Sends the login alert when this check ended the session (a status
+  /// change only: a later run finds the account inactive and says nothing).
+  Future<void> _notifySession(CheckRunResult check) async {
+    final notifier = _notifier;
+    if (notifier == null) return;
+    final status = switch (check.run.errorCode) {
+      'session_needs_relogin' => AccountStatus.needsRelogin,
+      'session_restricted' => AccountStatus.restricted,
+      _ => null,
+    };
+    if (status == null) return;
+    try {
+      await notifier.sessionChanged(status);
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+    }
+  }
+
+  void _logNotifyFailure(Object error) {
+    // The type only.
+    _log?.log(
+      LogLevel.warn,
+      'background',
+      'notify_failed type=${error.runtimeType}',
+    );
   }
 }
