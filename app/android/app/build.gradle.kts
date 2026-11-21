@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.amr905.storize"
-    compileSdk = 36
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
