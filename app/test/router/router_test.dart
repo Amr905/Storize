@@ -11,6 +11,8 @@ import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
+import 'package:storize_app/features/targets/add_target_page.dart';
+import 'package:storize_app/features/targets/targets_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/router/routes.dart';
@@ -41,8 +43,6 @@ void main() {
       final h = await pumpApp(t);
       const cases = {
         '/post/3': 'TODO(T-029)',
-        '/targets': 'TODO(T-030)',
-        '/targets/add': 'TODO(T-030)',
         '/targets/9': 'TODO(T-031)',
       };
       for (final e in cases.entries) {
@@ -53,6 +53,14 @@ void main() {
       expect(_story(3), findsOneWidget, reason: '/story/3');
       // Onboarding pages are real. S-01 redirects to the Library once
       // onboarding is complete, so it is covered by the gates group.
+      await h.go('/targets');
+      expect(find.byType(TargetsPage), findsOneWidget, reason: '/targets');
+      await h.go('/targets/add');
+      expect(
+        find.byType(AddTargetPage),
+        findsOneWidget,
+        reason: '/targets/add',
+      );
       await h.go('/settings');
       expect(find.byType(SettingsPage), findsOneWidget, reason: '/settings');
       await h.go('/account');
@@ -187,7 +195,7 @@ void main() {
 
       // Tapping the active tab pops back to its root.
       await tapTab('Targets');
-      expect(find.text('TODO(T-030)'), findsOneWidget);
+      expect(find.byType(TargetsPage), findsOneWidget);
       expect(find.text('targetId=9'), findsNothing);
     });
 

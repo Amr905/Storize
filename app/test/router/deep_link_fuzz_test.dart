@@ -10,6 +10,8 @@ import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
 import 'package:storize_app/features/onboarding/welcome_page.dart';
 import 'package:storize_app/features/settings/settings_page.dart';
+import 'package:storize_app/features/targets/add_target_page.dart';
+import 'package:storize_app/features/targets/targets_page.dart';
 import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 
@@ -156,6 +158,8 @@ void main() {
             find.byType(LibraryPage).evaluate().length +
             find.byType(StoryViewerPage).evaluate().length +
             find.byType(SettingsPage).evaluate().length +
+            find.byType(TargetsPage).evaluate().length +
+            find.byType(AddTargetPage).evaluate().length +
             find.byType(AccountPage).evaluate().length +
             find.byType(LoginPage).evaluate().length +
             find.byType(SetupPage).evaluate().length +

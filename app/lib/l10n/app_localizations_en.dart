@@ -1040,6 +1040,169 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actAccountRemoved => 'Removed account';
 
   @override
+  String tgtCountLimit(int count, int limit) {
+    return 'Targets ($count/$limit)';
+  }
+
+  @override
+  String get tgtCheckNow => 'Check now';
+
+  @override
+  String get tgtCheckNowDisabled => 'Log in again to check now.';
+
+  @override
+  String tgtCheckDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new items',
+      one: '1 new item',
+      zero: 'Nothing new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tgtCheckFailed => 'The check could not run.';
+
+  @override
+  String get tgtRateLimitBar =>
+      'Instagram is limiting requests. Storize has slowed checks down.';
+
+  @override
+  String tgtMetaChecked(String time) {
+    return 'Checked $time';
+  }
+
+  @override
+  String get tgtMetaNever => 'Not checked yet';
+
+  @override
+  String tgtMetaLastNew(String time) {
+    return 'Last new $time';
+  }
+
+  @override
+  String tgtMetaLine(String first, String second) {
+    return '$first · $second';
+  }
+
+  @override
+  String get tgtActionPause => 'Pause';
+
+  @override
+  String get tgtActionResume => 'Resume';
+
+  @override
+  String get tgtUpdateFailed => 'The change could not be saved.';
+
+  @override
+  String get tgtEmptyTitle => 'Track your first account';
+
+  @override
+  String get tgtEmptyBody =>
+      'Add an Instagram account to start saving its stories and posts.';
+
+  @override
+  String get tgtAddAccount => 'Add account';
+
+  @override
+  String get tgtFormTitle => 'Add account';
+
+  @override
+  String get tgtClose => 'Close';
+
+  @override
+  String get tgtUsernameLabel => 'Username or profile link';
+
+  @override
+  String get tgtUsernameHint => '@username or instagram.com/name';
+
+  @override
+  String get tgtUsernameInvalid =>
+      'Enter a valid Instagram username or profile link.';
+
+  @override
+  String get tgtCategoryLabel => 'Category *';
+
+  @override
+  String get tgtCategoryRequired => 'Choose a category.';
+
+  @override
+  String get tgtTrackLabel => 'Track';
+
+  @override
+  String get tgtTrackStories => 'Stories';
+
+  @override
+  String get tgtTrackPosts => 'Posts';
+
+  @override
+  String get tgtTrackReels => 'Reels';
+
+  @override
+  String get tgtTrackRequired => 'Choose at least one.';
+
+  @override
+  String get tgtTrackHint =>
+      'New posts are saved from now on — older posts aren\'t downloaded.';
+
+  @override
+  String get tgtNoteLabel => 'Note (optional)';
+
+  @override
+  String get tgtNoteHint => 'e.g. consent by email 3/11';
+
+  @override
+  String get tgtNoteTooLong => 'Keep the note to 200 characters or fewer.';
+
+  @override
+  String tgtNotFound(String username) {
+    return 'No Instagram account named $username.';
+  }
+
+  @override
+  String tgtNotVisiblePrivate(String username, String login) {
+    return '$username is private and $login doesn\'t follow it. Follow it first from Instagram.';
+  }
+
+  @override
+  String tgtNotVisibleBlocked(String username) {
+    return '$username can\'t be seen from the logged-in account.';
+  }
+
+  @override
+  String tgtDuplicate(String username) {
+    return 'Already tracked as $username.';
+  }
+
+  @override
+  String get tgtOpen => 'Open';
+
+  @override
+  String get tgtSessionInactive => 'Log in again to add accounts.';
+
+  @override
+  String get tgtRestricted =>
+      'Instagram restricted the login account. Checks are paused.';
+
+  @override
+  String tgtOverLimit(int limit) {
+    return 'More than $limit accounts increases the risk of a ban.';
+  }
+
+  @override
+  String get tgtAddAndVerify => 'Add & verify';
+
+  @override
+  String get tgtVerifying => 'Verifying…';
+
+  @override
+  String tgtAdded(String username) {
+    return 'Tracking $username. First check running…';
+  }
+
+  @override
   String get setSectionInstagram => 'Instagram';
 
   @override
