@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
+import 'package:storize_app/notifications/notification_taps.dart';
 import 'package:storize_app/router/app_router.dart';
 import 'package:storize_app/ui/ui.dart';
 
@@ -34,6 +35,11 @@ class _StorizeAppView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(notificationTapsProvider, (_, next) {
+      if (next case AsyncData(:final value)) {
+        ref.read(routerProvider).go(value);
+      }
+    });
     final forced = textDirection;
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
