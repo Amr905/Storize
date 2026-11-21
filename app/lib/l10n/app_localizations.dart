@@ -1036,6 +1036,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleting…'**
   String get libDeleting;
+
+  /// S-11 filter chip: every entry.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get actFilterAll;
+
+  /// S-11 filter chip: download entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get actFilterDownloads;
+
+  /// S-11 filter chip: problem entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors'**
+  String get actFilterErrors;
+
+  /// S-11 filter chip: gap entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaps'**
+  String get actFilterGaps;
+
+  /// S-11 subtitle under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get actSubtitle;
+
+  /// S-11 day header for today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get actToday;
+
+  /// S-11 day header for yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get actYesterday;
+
+  /// S-11 empty state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet.'**
+  String get actEmptyTitle;
+
+  /// S-11 entry: a check finished without failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {count} accounts · No errors'**
+  String actCheckDoneOk(int count);
+
+  /// S-11 entry: a check finished with failed accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {count} accounts · {failed} failed'**
+  String actCheckDoneFailed(int count, int failed);
+
+  /// S-11 entry: stories were downloaded for an account.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stories downloaded · {account}'**
+  String actDownloadedStories(int count, String account);
+
+  /// S-11 entry: posts were downloaded for an account.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} posts downloaded · {account}'**
+  String actDownloadedPosts(int count, String account);
+
+  /// S-11 info entry (EC-7): content vanished before it was downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed before download · {account} · not an error'**
+  String actRemovedBeforeDownload(String account);
+
+  /// S-11 warning entry: no checks ran in this time range.
+  ///
+  /// In en, this message translates to:
+  /// **'Gap: no checks from {from} to {to}'**
+  String actGap(String from, String to);
+
+  /// S-11 gap entry action; opens S-03.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix battery settings'**
+  String get actFixBattery;
+
+  /// S-11 session entry action; opens S-13.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix'**
+  String get actFix;
+
+  /// S-11 warning entry (EC-15).
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram slowed us down · checks slowed'**
+  String get actRateLimited;
+
+  /// S-11 error entry (EC-1/2); opens S-13.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram login needs attention'**
+  String get actSessionProblem;
+
+  /// S-11 error entry (EC-14).
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram changed — update Storize'**
+  String get actPlatformChanged;
+
+  /// S-11 info entry: the headless page fallback ran.
+  ///
+  /// In en, this message translates to:
+  /// **'Page mode used for a check'**
+  String get actPageModeUsed;
+
+  /// S-11 warning entry (NFR-13).
+  ///
+  /// In en, this message translates to:
+  /// **'Storage is low'**
+  String get actStorageLow;
+
+  /// S-11 error entry (NFR-13).
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads paused · storage full'**
+  String get actStoragePaused;
+
+  /// S-11 info entry: a tracked account changed status.
+  ///
+  /// In en, this message translates to:
+  /// **'Account status changed · {account}'**
+  String actTargetStatus(String account);
+
+  /// S-11 warning entry: a saved file is gone from the gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'File missing from gallery · {account}'**
+  String actFileMissing(String account);
+
+  /// S-11 error entry: crash marker from the previous run.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize closed unexpectedly'**
+  String get actAppCrash;
+
+  /// Account label in S-11 entries.
+  ///
+  /// In en, this message translates to:
+  /// **'@{username}'**
+  String actAccountHandle(String username);
+
+  /// S-11 account label when the target was removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed account'**
+  String get actAccountRemoved;
 }
 
 class _AppLocalizationsDelegate
