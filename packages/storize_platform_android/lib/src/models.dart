@@ -108,3 +108,15 @@ class StorageStats {
   /// Total bytes of the volume.
   final int totalBytes;
 }
+
+/// Result of `requestPermission`.
+enum PermissionStatus {
+  /// Granted (also when the permission does not apply to this Android version).
+  granted,
+
+  /// Denied; the prompt may be shown again.
+  denied,
+
+  /// Denied for good; only the app settings can change it.
+  permanentlyDenied,
+}

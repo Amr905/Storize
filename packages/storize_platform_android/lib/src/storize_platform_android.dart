@@ -182,6 +182,44 @@ class StorizePlatformAndroid {
     ];
   }
 
+  /// The Android API level of this device (26 = Android 8).
+  Future<int> sdkInt() async {
+    final value = await _call<int>(_system, 'sdkInt');
+    if (value == null || value <= 0) throw _bad('sdkInt', value);
+    return value;
+  }
+
+  /// Whether the runtime permission [name] is granted, without prompting.
+  /// Only `POST_NOTIFICATIONS` and `WRITE_EXTERNAL_STORAGE` are accepted.
+  /// A permission that does not apply to this Android version counts as
+  /// granted.
+  Future<bool> checkPermission(String name) async => _requireBool(
+    'checkPermission',
+    await _call<bool>(_system, 'checkPermission', {'name': name}),
+  );
+
+  /// Shows the system prompt for [name] (`POST_NOTIFICATIONS` on Android 13+,
+  /// `WRITE_EXTERNAL_STORAGE` on Android 8-9; granted at once elsewhere). With
+  /// no activity on screen the answer is [PermissionStatus.denied].
+  Future<PermissionStatus> requestPermission(String name) async {
+    final raw = await _call<String>(_system, 'requestPermission', {
+      'name': name,
+    });
+    return switch (raw) {
+      'granted' => PermissionStatus.granted,
+      'denied' => PermissionStatus.denied,
+      'permanentlyDenied' => PermissionStatus.permanentlyDenied,
+      _ => throw _bad('requestPermission', raw),
+    };
+  }
+
+  /// Opens this app's system settings page. Returns false if it could not be
+  /// opened.
+  Future<bool> openAppSettings() async => _requireBool(
+    'openAppSettings',
+    await _call<bool>(_system, 'openAppSettings'),
+  );
+
   Future<T?> _call<T>(
     MethodChannel channel,
     String method, [
