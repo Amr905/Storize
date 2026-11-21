@@ -1,16 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
-import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/deep_link.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_data/update/update.dart';
 import 'package:storize_domain/storize_domain.dart';
-import 'package:storize_model/storize_model.dart';
 
 import 'settings_rig.dart';
 
