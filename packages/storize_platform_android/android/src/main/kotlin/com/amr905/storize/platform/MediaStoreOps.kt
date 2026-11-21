@@ -254,6 +254,119 @@ class MediaStoreOps(private val context: Context) {
         return sizeOf(uri)
     }
 
+    /**
+     * Finds a file this app saved earlier under [relativeDir] with exactly [displayName]
+     * (a kill between "saved" and "row updated" leaves such a file, NFR-7).
+     *
+     * Owner-scoped: on API 29+ only rows whose OWNER_PACKAGE_NAME is this app, finished
+     * (IS_PENDING = 0), in `Pictures/Storize/<dir>/` or `Movies/Storize/<dir>/`. On API <= 28
+     * only the file at `<Storize root>/<dir>/<name>`. Returns null when nothing matches.
+     * Errors never carry a path.
+     */
+    fun findByName(
+        relativeDir: String?,
+        displayName: String?,
+    ): Map<String, Any?>? {
+        val dir = InputValidation.requireRelativeDir(relativeDir)
+        val name = InputValidation.requireDisplayName(displayName)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            findScoped(dir, name)
+        } else {
+            findLegacy(dir, name)
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.Q)
+    private fun findScoped(
+        dir: String,
+        name: String,
+    ): Map<String, Any?>? {
+        val collections =
+            listOf(
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+                MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            )
+        for (top in listOf("Pictures", "Movies")) {
+            val relativePath = InputValidation.relativePath(top, dir)
+            for (collection in collections) {
+                val found = queryOwned(collection, name, relativePath)
+                if (found != null) return found
+            }
+        }
+        return null
+    }
+
+    @TargetApi(Build.VERSION_CODES.Q)
+    private fun queryOwned(
+        collection: Uri,
+        name: String,
+        relativePath: String,
+    ): Map<String, Any?>? =
+        try {
+            resolver
+                .query(
+                    collection,
+                    arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.SIZE),
+                    "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND " +
+                        "${MediaStore.MediaColumns.RELATIVE_PATH} = ? AND " +
+                        "${MediaStore.MediaColumns.IS_PENDING} = 0 AND " +
+                        "${MediaStore.MediaColumns.OWNER_PACKAGE_NAME} = ?",
+                    arrayOf(name, relativePath, context.packageName),
+                    null,
+                )?.use {
+                    if (!it.moveToFirst()) {
+                        null
+                    } else {
+                        val uri = android.content.ContentUris.withAppendedId(collection, it.getLong(0))
+                        val size = if (it.isNull(1)) sizeOf(uri) ?: 0L else it.getLong(1)
+                        mapOf(
+                            "uri" to uri.toString(),
+                            "size" to size,
+                            "displayName" to name,
+                            "relativePath" to relativePath,
+                        )
+                    }
+                }
+        } catch (e: RuntimeException) {
+            null
+        }
+
+    @Suppress("DEPRECATION")
+    private fun findLegacy(
+        dir: String,
+        name: String,
+    ): Map<String, Any?>? {
+        val root = guard.legacyRoot()
+        val file = File(File(root, dir), name)
+        if (!FileNames.isInside(root, file) || !file.isFile) return null
+        val uri = legacyMediaUri(file) ?: Uri.fromFile(file)
+        return mapOf(
+            "uri" to uri.toString(),
+            "size" to file.length(),
+            "displayName" to name,
+            "relativePath" to "Pictures/Storize/$dir/",
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun legacyMediaUri(file: File): Uri? {
+        val files = MediaStore.Files.getContentUri("external")
+        return try {
+            resolver
+                .query(
+                    files,
+                    arrayOf(MediaStore.MediaColumns._ID),
+                    "${MediaStore.MediaColumns.DATA} = ?",
+                    arrayOf(file.absolutePath),
+                    null,
+                )?.use {
+                    if (it.moveToFirst()) android.content.ContentUris.withAppendedId(files, it.getLong(0)) else null
+                }
+        } catch (e: RuntimeException) {
+            null
+        }
+    }
+
     private fun sizeOf(uri: Uri): Long? {
         val fd =
             try {

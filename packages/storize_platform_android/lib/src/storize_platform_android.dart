@@ -80,6 +80,31 @@ class StorizePlatformAndroid {
     throw _bad('size', value);
   }
 
+  /// Finds a finished file this app saved under `Storize/<relativeDir>/` with
+  /// exactly [displayName], or null. Only files the app owns are returned.
+  /// Used to adopt a file saved just before a kill (NFR-7).
+  Future<InsertedMedia?> findByName({
+    required String relativeDir,
+    required String displayName,
+  }) async {
+    final map = await _call<Map<Object?, Object?>>(_media, 'findByName', {
+      'relativeDir': relativeDir,
+      'displayName': displayName,
+    });
+    if (map == null) return null;
+    final uri = map['uri'];
+    final size = map['size'];
+    final relativePath = map['relativePath'];
+    final name = map['displayName'];
+    if (uri is! String || size is! int) throw _bad('findByName', map);
+    return InsertedMedia(
+      uri: uri,
+      size: size,
+      displayName: name is String ? name : displayName,
+      relativePath: relativePath is String ? relativePath : null,
+    );
+  }
+
   /// Free and total bytes of the primary shared storage (the gallery volume).
   Future<StorageStats> storageStats() async {
     final raw = await _call<Object?>(_media, 'storageStats');
