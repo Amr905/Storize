@@ -2440,6 +2440,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log out'**
   String get accLogOutConfirm;
+
+  /// S-09 overflow menu button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get tdtMenuTooltip;
+
+  /// S-09 overflow menu item that opens S-10.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get tdtRemove;
+
+  /// S-09 shown when the target ID does not exist.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is no longer tracked.'**
+  String get tdtNotFound;
+
+  /// S-09 category row label and sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get tdtCategoryLabel;
+
+  /// S-09 note row label and sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get tdtNoteLabel;
+
+  /// S-09 note row when the note is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No note yet.'**
+  String get tdtNoteNone;
+
+  /// S-09 icon button tooltip for the category row.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get tdtEditCategory;
+
+  /// S-09 icon button tooltip for the note row.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit note'**
+  String get tdtEditNote;
+
+  /// S-09 stats tile label: saved stories.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get tdtStatStories;
+
+  /// S-09 stats tile label: saved posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get tdtStatPosts;
+
+  /// S-09 stats tile label: stored bytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Space'**
+  String get tdtStatSpace;
+
+  /// S-09 status card for a not-visible target.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is private and {login} doesn\'t follow it (or blocked it). Past downloads are kept.'**
+  String tdtStatusNotVisible(String login);
+
+  /// S-09 status card for an unavailable target.
+  ///
+  /// In en, this message translates to:
+  /// **'This account no longer exists.'**
+  String get tdtStatusUnavailable;
+
+  /// S-09 status card for an error: the last error text and its time.
+  ///
+  /// In en, this message translates to:
+  /// **'{error} ({time})'**
+  String tdtStatusErrorBody(String error, String time);
+
+  /// S-09 status card for an error without a reason.
+  ///
+  /// In en, this message translates to:
+  /// **'The last check failed.'**
+  String get tdtStatusErrorNone;
+
+  /// Replaces @login in the not-visible text when the login account is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'your account'**
+  String get tdtLoginFallback;
+
+  /// S-09 meta line: date of the newest post.
+  ///
+  /// In en, this message translates to:
+  /// **'Last new post {date}'**
+  String tdtMetaNewPost(String date);
+
+  /// S-09 recent section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get tdtRecentLabel;
+
+  /// S-09 link to S-04 filtered to this account.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get tdtSeeAll;
+
+  /// S-09 recent empty state, stories.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories saved yet.'**
+  String get tdtEmptyStories;
+
+  /// S-09 recent empty state, posts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts saved yet.'**
+  String get tdtEmptyPosts;
+
+  /// S-10 dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop tracking {username}?'**
+  String tdtRemoveTitle(String username);
+
+  /// S-10 dialog counts line.
+  ///
+  /// In en, this message translates to:
+  /// **'{stories} stories, {posts} posts saved.'**
+  String tdtRemoveCounts(int stories, int posts);
+
+  /// S-10 option, default and safe choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep downloads (in gallery)'**
+  String get tdtRemoveKeep;
+
+  /// S-10 option that deletes the saved files.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete downloads too (removes them from gallery)'**
+  String get tdtRemoveDelete;
+
+  /// S-10 confirm button when delete is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove & delete'**
+  String get tdtRemoveConfirmDelete;
+
+  /// S-07 snackbar after removal.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped tracking {username}.'**
+  String tdtRemoved(String username);
+
+  /// S-10 error when some files could not be deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Some downloads could not be deleted. Try again.'**
+  String get tdtRemovePartial;
+
+  /// S-10 error when removal failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The account could not be removed.'**
+  String get tdtRemoveFailed;
 }
 
 class _AppLocalizationsDelegate
