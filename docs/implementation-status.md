@@ -28,6 +28,8 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
+| T-030 | frontend-developer (haiku) | `app/lib/features/targets/**` except `target_detail_page.dart`, `app/test/features/targets/**`, `app_en.arb` (`tgt*` keys only) | 21:20 |
+| T-033 | frontend-developer (haiku) | `app/lib/features/settings/**`, `app/lib/features/account/**`, their tests, `app_en.arb` (`set*`/`acc*` keys only) | 21:20 |
 | T-026 | frontend-developer (sonnet) | `app/lib/features/onboarding/**`, `app/test/features/onboarding/**`, `app_en.arb` (append `onb*` keys only) | 04:00 |
 | T-028 | frontend-developer (haiku) | `app/lib/features/viewer/story_*`, `app/test/features/viewer/story_*`, `app_en.arb` (append `story*` keys only) | 04:00 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
@@ -172,3 +174,4 @@
 - 2026-11-21 04:00 — **T-018, T-020, T-017 done** (31/43, 72%), merged; Lead exported all domain use cases; main green (domain 461). **Checkpoint 6** (Lead): full suite green. Lead added deps `video_player`, `workmanager` (app) and `workmanager` (data). Started T-021 (sonnet), T-026 (sonnet, security), T-028 (haiku), T-032 (haiku).
 - 2026-11-21 05:10 — **T-032 done** (32/43, 74%): Lead review + CI 44857007618 green; merged 747c681; app 628 tests. Lock released. T-021 dev done (4509bb5, findByName added); CI + QA next.
 - 2026-11-21 05:45 — **T-021 done** (33/43, 77%): QA PASS (15 tests, `05-reviews/T-021.md`), F1 fixed by Lead, CI 44858825809 green, merged 22c57ba; storize_data now exports `scheduler/`. Full suite green. AC5 (reboot/force-stop) carried to T-037. Lock released.
+- 2026-11-21 23:20 — Resumed after usage limit. T-026 wiring/permissions restarted (sonnet; lock extended to composition, gates, router/fuzz tests, platform plugin new methods). T-028 CI fix (format). Started T-030 and T-033 (haiku).
