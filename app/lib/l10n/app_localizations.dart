@@ -1289,6 +1289,390 @@ abstract class AppLocalizations {
   /// **'Gallery folder'**
   String get storyInfoFolder;
 
+  /// S-01 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Save stories automatically, before they disappear.'**
+  String get onbWelcomeTagline;
+
+  /// S-01 risk card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you continue'**
+  String get onbRiskTitle;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.'**
+  String get onbRisk1;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'People you track will see that account in their story viewers.'**
+  String get onbRisk2;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a dedicated account, not your personal one.'**
+  String get onbRisk3;
+
+  /// S-01 risk bullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Only track your own/client accounts, people who agreed, or public creators.'**
+  String get onbRisk4;
+
+  /// S-01 checkbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand these risks'**
+  String get onbRiskCheckbox;
+
+  /// S-01 primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get onbContinue;
+
+  /// S-02 info strip.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the login session is saved, never your password.'**
+  String get onbLoginInfo;
+
+  /// S-02 help link.
+  ///
+  /// In en, this message translates to:
+  /// **'Why use a dedicated account?'**
+  String get onbLoginHelp;
+
+  /// S-02 help dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize views stories as this account, and Instagram may challenge or ban it. A dedicated account keeps your personal one safe.'**
+  String get onbLoginHelpBody;
+
+  /// Dialog close button.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get onbLoginClose;
+
+  /// S-02 back button semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel login'**
+  String get onbLoginCancel;
+
+  /// S-02 while the session is verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get onbLoginConnecting;
+
+  /// S-02 success.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as @{username}'**
+  String onbLoginConnected(String username);
+
+  /// S-02 progress bar semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the login page'**
+  String get onbLoginPageLoading;
+
+  /// S-02 error button.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get onbTryAgain;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet'**
+  String get onbErrNetworkTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get onbErrNetworkBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'The page didn\'t load'**
+  String get onbErrPageTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram\'s login page could not be loaded.'**
+  String get onbErrPageBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram needs to verify this account'**
+  String get onbErrCheckpointTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Instagram on another device, confirm it\'s you, then try again. Or use another account.'**
+  String get onbErrCheckpointBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect this account'**
+  String get onbErrUnusableTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again or use another account.'**
+  String get onbErrUnusableBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not switched'**
+  String get onbErrWrongAccountTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks keep using @{username}.'**
+  String onbErrWrongAccountBody(String username);
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Login isn\'t available right now'**
+  String get onbErrBusyTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize is using the web engine for a check. Try again in a moment.'**
+  String get onbErrBusyBody;
+
+  /// S-02 error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Login cancelled'**
+  String get onbErrCancelledTitle;
+
+  /// S-02 error body.
+  ///
+  /// In en, this message translates to:
+  /// **'No account was connected.'**
+  String get onbErrCancelledBody;
+
+  /// S-02 switch dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to @{username}?'**
+  String onbSwitchTitle(String username);
+
+  /// S-02 switch dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks will use this account from now on.'**
+  String get onbSwitchBody;
+
+  /// S-02 switch dialog confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get onbSwitchConfirm;
+
+  /// S-02 switch dialog cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current'**
+  String get onbSwitchKeep;
+
+  /// S-03 eyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 3 OF 3 · SETUP'**
+  String get onbSetupEyebrow;
+
+  /// S-03 intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Android may stop background checks to save battery. These steps keep your archive complete.'**
+  String get onbSetupIntro;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get onbNotifTitle;
+
+  /// S-03 step body.
+  ///
+  /// In en, this message translates to:
+  /// **'Get told about new stories and login problems.'**
+  String get onbNotifBody;
+
+  /// S-03 permission button.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get onbAllow;
+
+  /// S-03 link after a permission was denied twice.
+  ///
+  /// In en, this message translates to:
+  /// **'Open app settings'**
+  String get onbOpenAppSettings;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization'**
+  String get onbBatteryTitle;
+
+  /// S-03 step body.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Storize to Unrestricted in battery settings.'**
+  String get onbBatteryBody;
+
+  /// S-03 button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open battery settings'**
+  String get onbBatteryOpen;
+
+  /// S-03 step title.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra step for {oem}'**
+  String onbOemTitle(String oem);
+
+  /// S-03 step subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected on this phone.'**
+  String get onbOemDetected;
+
+  /// Samsung steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize'**
+  String get onbOemSamsung;
+
+  /// Xiaomi steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions'**
+  String get onbOemXiaomi;
+
+  /// Oppo/Realme steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Storize\n2. Allow background activity and auto-launch'**
+  String get onbOemOppo;
+
+  /// Vivo steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > Background power consumption\n2. Storize > Allow'**
+  String get onbOemVivo;
+
+  /// Huawei steps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background'**
+  String get onbOemHuawei;
+
+  /// Other phones steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your phone\'s battery settings and allow Storize to run in the background and start automatically.'**
+  String get onbOemOther;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung'**
+  String get onbOemSamsungName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaomi'**
+  String get onbOemXiaomiName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Oppo or Realme'**
+  String get onbOemOppoName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Vivo'**
+  String get onbOemVivoName;
+
+  /// Manufacturer name.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei'**
+  String get onbOemHuaweiName;
+
+  /// Manufacturer name (generic).
+  ///
+  /// In en, this message translates to:
+  /// **'your phone'**
+  String get onbOemOtherName;
+
+  /// S-03 step title (Android 8-9).
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get onbStorageTitle;
+
+  /// S-03 step body (Android 8-9).
+  ///
+  /// In en, this message translates to:
+  /// **'Needed to save into your gallery.'**
+  String get onbStorageBody;
+
+  /// S-03 inline warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without the battery step, checks may be delayed or missed.'**
+  String get onbBatteryWarning;
+
+  /// S-03 primary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get onbDone;
+
+  /// S-03 secondary button.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get onbSkip;
+
+  /// S-03 step spinner semantics label.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get onbChecking;
+
   /// S-11 filter chip: every entry.
   ///
   /// In en, this message translates to:

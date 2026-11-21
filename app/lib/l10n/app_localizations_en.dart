@@ -724,6 +724,223 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storyInfoFolder => 'Gallery folder';
 
   @override
+  String get onbWelcomeTagline =>
+      'Save stories automatically, before they disappear.';
+
+  @override
+  String get onbRiskTitle => 'Before you continue';
+
+  @override
+  String get onbRisk1 =>
+      'Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.';
+
+  @override
+  String get onbRisk2 =>
+      'People you track will see that account in their story viewers.';
+
+  @override
+  String get onbRisk3 => 'Use a dedicated account, not your personal one.';
+
+  @override
+  String get onbRisk4 =>
+      'Only track your own/client accounts, people who agreed, or public creators.';
+
+  @override
+  String get onbRiskCheckbox => 'I understand these risks';
+
+  @override
+  String get onbContinue => 'Continue';
+
+  @override
+  String get onbLoginInfo =>
+      'Only the login session is saved, never your password.';
+
+  @override
+  String get onbLoginHelp => 'Why use a dedicated account?';
+
+  @override
+  String get onbLoginHelpBody =>
+      'Storize views stories as this account, and Instagram may challenge or ban it. A dedicated account keeps your personal one safe.';
+
+  @override
+  String get onbLoginClose => 'Close';
+
+  @override
+  String get onbLoginCancel => 'Cancel login';
+
+  @override
+  String get onbLoginConnecting => 'Connecting…';
+
+  @override
+  String onbLoginConnected(String username) {
+    return 'Connected as @$username';
+  }
+
+  @override
+  String get onbLoginPageLoading => 'Loading the login page';
+
+  @override
+  String get onbTryAgain => 'Try again';
+
+  @override
+  String get onbErrNetworkTitle => 'No internet';
+
+  @override
+  String get onbErrNetworkBody => 'Check your connection and try again.';
+
+  @override
+  String get onbErrPageTitle => 'The page didn\'t load';
+
+  @override
+  String get onbErrPageBody => 'Instagram\'s login page could not be loaded.';
+
+  @override
+  String get onbErrCheckpointTitle => 'Instagram needs to verify this account';
+
+  @override
+  String get onbErrCheckpointBody =>
+      'Open Instagram on another device, confirm it\'s you, then try again. Or use another account.';
+
+  @override
+  String get onbErrUnusableTitle => 'Couldn\'t connect this account';
+
+  @override
+  String get onbErrUnusableBody => 'Try again or use another account.';
+
+  @override
+  String get onbErrWrongAccountTitle => 'Account not switched';
+
+  @override
+  String onbErrWrongAccountBody(String username) {
+    return 'Checks keep using @$username.';
+  }
+
+  @override
+  String get onbErrBusyTitle => 'Login isn\'t available right now';
+
+  @override
+  String get onbErrBusyBody =>
+      'Storize is using the web engine for a check. Try again in a moment.';
+
+  @override
+  String get onbErrCancelledTitle => 'Login cancelled';
+
+  @override
+  String get onbErrCancelledBody => 'No account was connected.';
+
+  @override
+  String onbSwitchTitle(String username) {
+    return 'Switch to @$username?';
+  }
+
+  @override
+  String get onbSwitchBody => 'Checks will use this account from now on.';
+
+  @override
+  String get onbSwitchConfirm => 'Switch';
+
+  @override
+  String get onbSwitchKeep => 'Keep current';
+
+  @override
+  String get onbSetupEyebrow => 'STEP 3 OF 3 · SETUP';
+
+  @override
+  String get onbSetupIntro =>
+      'Android may stop background checks to save battery. These steps keep your archive complete.';
+
+  @override
+  String get onbNotifTitle => 'Notifications';
+
+  @override
+  String get onbNotifBody => 'Get told about new stories and login problems.';
+
+  @override
+  String get onbAllow => 'Allow';
+
+  @override
+  String get onbOpenAppSettings => 'Open app settings';
+
+  @override
+  String get onbBatteryTitle => 'Battery optimization';
+
+  @override
+  String get onbBatteryBody =>
+      'Set Storize to Unrestricted in battery settings.';
+
+  @override
+  String get onbBatteryOpen => 'Open battery settings';
+
+  @override
+  String onbOemTitle(String oem) {
+    return 'Extra step for $oem';
+  }
+
+  @override
+  String get onbOemDetected => 'Detected on this phone.';
+
+  @override
+  String get onbOemSamsung =>
+      '1. Settings > Battery > Background usage limits\n2. Never sleeping apps > + Storize';
+
+  @override
+  String get onbOemXiaomi =>
+      '1. Settings > Apps > Manage apps > Storize\n2. Autostart on, Battery saver > No restrictions';
+
+  @override
+  String get onbOemOppo =>
+      '1. Settings > Battery > Storize\n2. Allow background activity and auto-launch';
+
+  @override
+  String get onbOemVivo =>
+      '1. Settings > Battery > Background power consumption\n2. Storize > Allow';
+
+  @override
+  String get onbOemHuawei =>
+      '1. Settings > Battery > App launch > Storize\n2. Manage manually: auto-launch, secondary launch, run in background';
+
+  @override
+  String get onbOemOther =>
+      'Open your phone\'s battery settings and allow Storize to run in the background and start automatically.';
+
+  @override
+  String get onbOemSamsungName => 'Samsung';
+
+  @override
+  String get onbOemXiaomiName => 'Xiaomi';
+
+  @override
+  String get onbOemOppoName => 'Oppo or Realme';
+
+  @override
+  String get onbOemVivoName => 'Vivo';
+
+  @override
+  String get onbOemHuaweiName => 'Huawei';
+
+  @override
+  String get onbOemOtherName => 'your phone';
+
+  @override
+  String get onbStorageTitle => 'Storage';
+
+  @override
+  String get onbStorageBody => 'Needed to save into your gallery.';
+
+  @override
+  String get onbBatteryWarning =>
+      'Without the battery step, checks may be delayed or missed.';
+
+  @override
+  String get onbDone => 'Done';
+
+  @override
+  String get onbSkip => 'Skip for now';
+
+  @override
+  String get onbChecking => 'Checking';
+
+  @override
   String get actFilterAll => 'All';
 
   @override
