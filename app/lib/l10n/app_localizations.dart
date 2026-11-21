@@ -1198,6 +1198,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed account'**
   String get actAccountRemoved;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get setSectionInstagram;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get setSectionChecking;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get setSectionNotifications;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get setSectionStorage;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get setSectionSecurity;
+
+  /// S-12 section header.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get setSectionAbout;
+
+  /// S-12 row title and sheet title for the story interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Check stories every'**
+  String get setStoryInterval;
+
+  /// S-12 row title and sheet title for the post interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Check posts every'**
+  String get setPostInterval;
+
+  /// Interval value shorter than an hour.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String setIntervalMinutes(int minutes);
+
+  /// Interval value of whole hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String setIntervalHours(int hours);
+
+  /// Hint under the post interval when it is 1 h.
+  ///
+  /// In en, this message translates to:
+  /// **'More requests increase the ban risk.'**
+  String get setPostOneHourWarning;
+
+  /// S-12 switch: download only on an unmetered network.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi only'**
+  String get setWifiOnly;
+
+  /// S-12 row that opens S-03 (background permissions).
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Storize running'**
+  String get setKeepRunning;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'New stories'**
+  String get setNotifyStories;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'New posts'**
+  String get setNotifyPosts;
+
+  /// S-12 notification switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Login problems'**
+  String get setNotifyLogin;
+
+  /// Warning shown while the login-problems notification is off.
+  ///
+  /// In en, this message translates to:
+  /// **'You may not notice when checks stop.'**
+  String get setNotifyLoginOffWarning;
+
+  /// S-12 info row: the fixed gallery location.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Pictures/Storize'**
+  String get setStorageLocation;
+
+  /// S-12 storage row while figures load.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating…'**
+  String get setStorageCalculating;
+
+  /// S-12 storage row when the figures cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage unknown'**
+  String get setStorageUnknown;
+
+  /// S-12 storage row.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used} · free {free}'**
+  String setStorageUsedFree(String used, String free);
+
+  /// S-12 storage row when free space is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used}'**
+  String setStorageUsedOnly(String used);
+
+  /// Sheet title of the per-account storage list.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage by account'**
+  String get setStorageByAccount;
+
+  /// Per-account storage sheet when nothing is stored.
+  ///
+  /// In en, this message translates to:
+  /// **'No downloads stored yet.'**
+  String get setStorageNone;
+
+  /// Byte size in gigabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} GB'**
+  String setSizeGb(String value);
+
+  /// Byte size in megabytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String setSizeMb(String value);
+
+  /// Byte size in kilobytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} KB'**
+  String setSizeKb(String value);
+
+  /// Byte size under one kilobyte.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} B'**
+  String setSizeBytes(String value);
+
+  /// S-12 row title and sheet title for retention.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep downloads'**
+  String get setKeepDownloads;
+
+  /// Retention choice: keep everything.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get setKeepForever;
+
+  /// S-12 retention value when retention is on.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{After 1 day} other{After {days} days}}'**
+  String setKeepAfterDays(int days);
+
+  /// Retention sheet radio label for the N-days option.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get setRetentionAfter;
+
+  /// Retention sheet text field label (integer 1 to 3650).
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get setRetentionDaysLabel;
+
+  /// Validation message for the retention days field.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number from 1 to 3650.'**
+  String get setRetentionDaysError;
+
+  /// Retention confirmation dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete older downloads now?'**
+  String get setRetentionConfirmTitle;
+
+  /// Retention confirmation body (FR-54).
+  ///
+  /// In en, this message translates to:
+  /// **'Items older than {days} days ({count, plural, =1{1 item} other{{count} items}}, {size}) will be deleted now.'**
+  String setRetentionConfirmBody(int days, int count, String size);
+
+  /// Retention confirmation button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete now'**
+  String get setRetentionConfirm;
+
+  /// Cancel button in S-12 sheets and dialogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get setCancel;
+
+  /// Save button in the retention sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get setSave;
+
+  /// S-12 about row.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String setVersion(String version);
+
+  /// S-12 row when a newer release exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get setUpdateAvailable;
+
+  /// S-12 row when the installed version is below min-supported.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get setUpdateRequired;
+
+  /// Version value of the update row.
+  ///
+  /// In en, this message translates to:
+  /// **'v{version}'**
+  String setUpdateVersion(String version);
+
+  /// S-13 connection date.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {date}'**
+  String accConnected(String date);
+
+  /// S-13 and S-12 gray status for no usable login.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get accNotConnected;
+
+  /// S-13 health card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get accHealthTitle;
+
+  /// S-13 health line.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful check {time}'**
+  String accLastCheck(String time);
+
+  /// S-13 health line when no check has succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'No successful check yet'**
+  String get accLastCheckNever;
+
+  /// S-13 health line.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate-limit events (7 days): {count}'**
+  String accRateLimitEvents(int count);
+
+  /// S-13 amber state message.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram ended the session or asked for verification. Checks are paused.'**
+  String get accNeedsReloginBody;
+
+  /// S-13 red state message.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram may have restricted this account. Checks are stopped. Consider logging in with a different dedicated account.'**
+  String get accRestrictedBody;
+
+  /// S-13 button when not connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get accLogIn;
+
+  /// S-13 primary button in the needs re-login state.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in again'**
+  String get accLogInAgain;
+
+  /// S-13 primary button in the restricted state.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in with another account'**
+  String get accLogInAnother;
+
+  /// S-13 button that clears the saved session.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get accLogOut;
+
+  /// S-13 log-out confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of Instagram?'**
+  String get accLogOutTitle;
+
+  /// S-13 log-out confirmation body (from UX.md S-13).
+  ///
+  /// In en, this message translates to:
+  /// **'Stop all checks and remove the saved session? Your downloads and targets are kept.'**
+  String get accLogOutBody;
+
+  /// S-13 log-out confirmation button.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get accLogOutConfirm;
 }
 
 class _AppLocalizationsDelegate

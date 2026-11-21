@@ -20,9 +20,7 @@ class AppLockRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final enabled = ref.watch(
-      lockControllerProvider.select((s) => s.enabled),
-    );
+    final enabled = ref.watch(lockControllerProvider.select((s) => s.enabled));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
