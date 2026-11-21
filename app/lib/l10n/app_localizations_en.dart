@@ -158,9 +158,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expand => 'Expand';
 
   @override
-  String get collapse => 'Collapse';
-
-  @override
   String get pinDelete => 'Delete';
 
   @override

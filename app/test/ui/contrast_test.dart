@@ -108,16 +108,26 @@ void main() {
     expect(contrast(s.primary, s.surface), greaterThanOrEqualTo(_minRatio));
   });
 
-  test(
-    'KNOWN FAILURE pending UX decision: light warning text on surface (QA F3)',
-    () {
-      const s = StorizeTheme.lightScheme;
-      const c = StorizeColors.light;
+  test('light warning text on surface meets 4.5:1 (QA F3, T-038)', () {
+    const s = StorizeTheme.lightScheme;
+    const c = StorizeColors.light;
+    expect(
+      contrast(c.warning.color, s.surface),
+      greaterThanOrEqualTo(_minRatio),
+    );
+    expect(
+      contrast(c.warning.color, c.warning.container),
+      greaterThanOrEqualTo(_minRatio),
+    );
+  });
+
+  for (final entry in themes.entries) {
+    test('SnackBar action (inversePrimary on inverseSurface) ${entry.key}', () {
+      final s = entry.value.$1;
       expect(
-        contrast(c.warning.color, s.surface),
+        contrast(s.inversePrimary, s.inverseSurface),
         greaterThanOrEqualTo(_minRatio),
       );
-    },
-    skip: 'pending UX decision on light warning text (QA F3)',
-  );
+    });
+  }
 }

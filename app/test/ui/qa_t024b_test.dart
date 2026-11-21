@@ -41,7 +41,6 @@ void main() {
       l10n.all: 'All',
       l10n.loading: 'Loading',
       l10n.expand: 'Expand',
-      l10n.collapse: 'Collapse',
       l10n.pinDelete: 'Delete',
       l10n.pinBiometric: 'Use biometrics',
       l10n.pinProgress(3, 4): '3 of 4 digits entered',

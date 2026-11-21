@@ -371,12 +371,6 @@ abstract class AppLocalizations {
   /// **'Expand'**
   String get expand;
 
-  /// Semantics label of a control that collapses a section.
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse'**
-  String get collapse;
-
   /// PIN pad backspace key semantics label.
   ///
   /// In en, this message translates to:
@@ -401,73 +395,73 @@ abstract class AppLocalizations {
   /// **'Try again in {time}'**
   String pinCooldown(String time);
 
-  /// No description provided for @emptyNoDataTitle.
+  /// Empty state title when there is nothing to show yet.
   ///
   /// In en, this message translates to:
   /// **'Nothing here yet'**
   String get emptyNoDataTitle;
 
-  /// No description provided for @emptyNoDataBody.
+  /// Empty state body when there is nothing to show yet.
   ///
   /// In en, this message translates to:
   /// **'Items will show up here when there is something to see.'**
   String get emptyNoDataBody;
 
-  /// No description provided for @emptyFilteredTitle.
+  /// Empty state title when the active filters hide every item.
   ///
   /// In en, this message translates to:
   /// **'No matches'**
   String get emptyFilteredTitle;
 
-  /// No description provided for @emptyFilteredBody.
+  /// Empty state body suggesting how to change the filters.
   ///
   /// In en, this message translates to:
   /// **'Try changing or clearing the filters.'**
   String get emptyFilteredBody;
 
-  /// No description provided for @errorNetworkTitle.
+  /// Error state title when the device is offline.
   ///
   /// In en, this message translates to:
   /// **'No internet connection'**
   String get errorNetworkTitle;
 
-  /// No description provided for @errorNetworkBody.
+  /// Error state body when the device is offline.
   ///
   /// In en, this message translates to:
   /// **'Check your connection and try again.'**
   String get errorNetworkBody;
 
-  /// No description provided for @errorRateLimitedTitle.
+  /// Error state title when Instagram limits requests.
   ///
   /// In en, this message translates to:
   /// **'Instagram is limiting requests'**
   String get errorRateLimitedTitle;
 
-  /// No description provided for @errorRateLimitedBody.
+  /// Error state body when Instagram limits requests.
   ///
   /// In en, this message translates to:
   /// **'Storize will try again later.'**
   String get errorRateLimitedBody;
 
-  /// No description provided for @errorPlatformChangedTitle.
+  /// Error state title when the Instagram pages changed and the app cannot read them.
   ///
   /// In en, this message translates to:
   /// **'Instagram changed'**
   String get errorPlatformChangedTitle;
 
-  /// No description provided for @errorPlatformChangedBody.
+  /// Error state body asking the user to update Storize.
   ///
   /// In en, this message translates to:
   /// **'Update Storize to keep saving content.'**
   String get errorPlatformChangedBody;
 
-  /// No description provided for @errorUnknownTitle.
+  /// Error state title for an unexpected failure.
   ///
   /// In en, this message translates to:
   /// **'Something went wrong'**
   String get errorUnknownTitle;
 
-  /// No description provided for @errorUnknownBody.
+  /// Error state body for an unexpected failure.
   ///
   /// In en, this message translates to:
   /// **'Please try again.'**
