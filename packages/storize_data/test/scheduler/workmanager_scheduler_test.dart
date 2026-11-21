@@ -141,7 +141,7 @@ void main() {
       );
     });
 
-    test('network is required; unmetered only when Wi-Fi only is set', () async {
+    test('network required, unmetered only if Wi-Fi only', () async {
       await scheduler.apply(storyMin: 15, postMin: 60, wifiOnly: false);
       expect(
         client.byUnique('check-stories').constraints!.networkType,

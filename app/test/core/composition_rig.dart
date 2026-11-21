@@ -52,6 +52,7 @@ final class CompositionRig {
     this.background = false,
     DateTime? now,
     MediaCache Function(FakeMediaCache inner)? wrapCache,
+    bool closeDbOnDispose = true,
   }) : clock = FakeClock(now ?? t0) {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     db = StorizeDatabase.forTesting(NativeDatabase.memory());
@@ -87,7 +88,7 @@ final class CompositionRig {
       clock: clock,
       closers: [
         () async => closed++,
-        db.close,
+        if (closeDbOnDispose) db.close,
       ],
     );
     composition = AppComposition.assemble(parts, background: background);
@@ -156,6 +157,7 @@ final class CompositionRig {
 
   Future<void> dispose() async {
     await composition.dispose();
+    await db.close();
     if (tmp.existsSync()) tmp.deleteSync(recursive: true);
   }
 }
