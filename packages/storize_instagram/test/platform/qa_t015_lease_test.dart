@@ -210,25 +210,34 @@ void main() {
       expect(await b.tryAcquire('login'), isTrue);
     });
 
-    test('PIN (QA-T015-F2): the process is frozen past the TTL (no renewal '
-        'ticks), another isolate takes the row, and the first one still '
-        'reports isHeld until its next tick; after it, loss is only a log '
-        'line and tryAcquire of the same owner still answers true', () async {
-      final ta = _Ticker();
-      final a = lease('iso-a', ticker: ta);
-      final b = lease('iso-b');
-      expect(await a.tryAcquire('login'), isTrue);
-      clock.advance(const Duration(minutes: 3));
-      expect(await b.tryAcquire('page_mode:1'), isTrue);
-      expect(a.isHeld && b.isHeld, isTrue, reason: 'both believe they hold');
-      await ta.fire();
-      expect(a.isHeld, isFalse);
-      expect(logText(log), contains('lease_lost'));
-      // WANTED: false (the S-02 owner no longer owns the lease).
-      expect(await a.tryAcquire('login'), isTrue);
-      // The stale owner blocks every other owner in this isolate.
-      expect(await a.tryAcquire('page_mode:1'), isFalse);
-    });
+    test(
+      'FIXED (QA-T015-F2): the process is frozen past the TTL (no renewal '
+      'ticks), another isolate takes the row; at the next tick the loss is '
+      'signalled, and tryAcquire of the old owner really asks again',
+      () async {
+        final ta = _Ticker();
+        final a = lease('iso-a', ticker: ta);
+        final b = lease('iso-b');
+        expect(await a.tryAcquire('login'), isTrue);
+        clock.advance(const Duration(minutes: 3));
+        expect(await b.tryAcquire('page_mode:1'), isTrue);
+        expect(a.isHeld && b.isHeld, isTrue, reason: 'both believe they hold');
+        var lost = 0;
+        final sub = a.onLost.listen((_) => lost++);
+        await ta.fire();
+        await Future<void>.delayed(Duration.zero);
+        expect(lost, 1);
+        await sub.cancel();
+        expect(a.isHeld, isFalse);
+        expect(a.owners, isEmpty);
+        expect(logText(log), contains('lease_lost'));
+        // b holds the row: the old owner does not get a stale true.
+        expect(await a.tryAcquire('login'), isFalse);
+        // The stale owner no longer blocks another owner here once b is gone.
+        await b.release('page_mode:1');
+        expect(await a.tryAcquire('page_mode:1'), isTrue);
+      },
+    );
 
     test('renewals that throw for longer than the TTL: the row lapses, '
         'another isolate takes it, the loss is detected at the next good '
@@ -341,10 +350,9 @@ void main() {
   });
 
   group('late acquire answers', () {
-    test('PIN (QA-T015-F5): a late answer of attempt 1 releases the row '
-        'while attempt 2 (same isolate, same holder) is still in flight; '
-        'the second attempt then reports success on a row that is already '
-        'released and another isolate can take it', () async {
+    test('FIXED (QA-T015-F5): a late answer of attempt 1 does NOT release the '
+        'row while attempt 2 (same isolate, same holder) is in flight; '
+        'another isolate cannot take it', () async {
       final slow = _SlowAnswerRepo(repo)..slow = true;
       final a = lease('iso-a', over: slow);
       final b = lease('iso-b');
@@ -360,9 +368,9 @@ void main() {
       }
       slow.gates[1].complete();
       expect(await second, isTrue);
-      // WANTED: b cannot take the row while a holds it.
-      expect(await b.tryAcquire('page_mode:1'), isTrue);
-      expect(a.isHeld && b.isHeld, isTrue);
+      expect(await b.tryAcquire('page_mode:1'), isFalse);
+      expect(a.isHeld, isTrue);
+      expect(b.isHeld, isFalse);
     });
   });
 
@@ -400,13 +408,17 @@ void main() {
       expect(g.tripped, isTrue);
     });
 
-    test('PIN (QA-T015-F6): a store read that never completes hangs refresh '
-        '(no timeout), so a story fallback would hang', () async {
-      final g = SeenGuard(store: _HangStore());
-      await expectLater(
-        g.refresh().timeout(const Duration(milliseconds: 150)),
-        throwsA(isA<TimeoutException>()),
+    test('FIXED (QA-T015-F6): a store read that never completes times out '
+        'and fails closed for this load, with a log line', () async {
+      final log = FakeDiagnosticLog();
+      final g = SeenGuard(
+        store: _HangStore(),
+        refreshTimeout: const Duration(milliseconds: 50),
+        log: log,
       );
+      expect(await g.refresh().timeout(const Duration(seconds: 2)), isTrue);
+      expect(g.tripped, isTrue);
+      expect(logText(log), contains('refresh_timeout'));
     });
 
     test('reset: a failing clear leaves memory tripped; a pending trip write '
@@ -442,17 +454,15 @@ void main() {
       expect(await cache.usernameOf('u1'), 'new_name');
     });
 
-    test('PIN (QA-T015-F7): the in-memory overlay wins over the row for ever '
-        'in this process, so a rename recorded in the repo by another '
-        'isolate is masked by the older overlay name', () async {
+    test('FIXED (QA-T015-F7): a rename recorded in the repo after the overlay '
+        'was learned (by another isolate) is newer and wins', () async {
       final targets = FakeTargetRepo();
       final t = await targets.insert(_target('u1', 'old_name'));
       final cache = TargetRepoUsernameCache(targets);
       await cache.remember('u1', 'second_name');
       // The background isolate records the NEWER rename in the repo.
       await targets.update(t.copyWith(username: 'third_name'));
-      // WANTED: third_name (the repo is the newer authority for a target).
-      expect(await cache.usernameOf('u1'), 'second_name');
+      expect(await cache.usernameOf('u1'), 'third_name');
     });
 
     test('an empty stored username is a miss, not an empty name', () async {

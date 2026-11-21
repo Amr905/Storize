@@ -338,9 +338,9 @@ void main() {
 
   group('stories loop (one page load per user)', () {
     test(
-      'PIN (QA-T015-F1): user 1 loads, user 2 is username_unknown -> the '
-      'platform reports the direct SchemaChanged and does NOT count the '
-      'page mode use, although one page was loaded and cost 3 tokens',
+      'FIXED (QA-T015-F1): user 1 loads, user 2 is username_unknown -> the '
+      'platform reports the direct SchemaChanged, counts the page mode use '
+      'once (one page was loaded) and keeps what was loaded',
       () async {
         final rig = _Rig()..directFails(_schema);
         rig.page.stories = (ids) => ids.single == 'u1'
@@ -351,14 +351,16 @@ void main() {
           'u2',
         ], policy: ExtractionPolicy.directThenPage);
         expect(rig.calls.where((c) => c == 'page.fetchStories'), hasLength(2));
-        // WANTED: pageModeUses == 1 (a page was loaded for u1).
-        expect(rig.platform.takeSignals().pageModeUses, 0);
+        expect(rig.platform.takeSignals().pageModeUses, 1);
         expect(r.failureOrNull, _schema);
+        final partial = rig.platform.takePartialStories()!;
+        expect(partial.loaded.keys, ['u1']);
+        expect(partial.skipped, 1);
       },
     );
 
-    test('PIN (QA-T015-F1): same for a breaker that trips (other isolate) '
-        'between two users: page 1 loaded, result "not run"', () async {
+    test('FIXED (QA-T015-F1): same for a breaker that trips (other isolate) '
+        'between two users: page 1 loaded, the use is counted', () async {
       final store = CountingSeenStore();
       final rig = _Rig(guard: SeenGuard(store: store))..directFails(_schema);
       rig.page.stories = (ids) {
@@ -375,7 +377,7 @@ void main() {
         'u2',
       ], policy: ExtractionPolicy.directThenPage);
       expect(r.failureOrNull, _schema);
-      expect(rig.platform.takeSignals().pageModeUses, 0);
+      expect(rig.platform.takeSignals().pageModeUses, 1);
     });
 
     test(

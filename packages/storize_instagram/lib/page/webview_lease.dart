@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/page/seen_breaker_store.dart';
 
 /// Who may use the app's WebView (QA-F7).
@@ -62,8 +65,17 @@ final class NoopWebViewLease implements WebViewLease {
 /// on its own never reads the store.
 final class SeenGuard {
   /// Creates a guard that has not tripped. Tests make their own.
-  SeenGuard({SeenBreakerStore? store})
-    : _store = store ?? InMemorySeenBreakerStore();
+  SeenGuard({
+    SeenBreakerStore? store,
+    this.refreshTimeout = const Duration(seconds: 3),
+    this.log,
+  }) : _store = store ?? InMemorySeenBreakerStore();
+
+  /// The longest [refresh] waits for the store.
+  final Duration refreshTimeout;
+
+  /// Where a refresh timeout is logged (no values).
+  final DiagnosticLog? log;
 
   /// The process-wide guard, the default of every `PageExtractor`. It is
   /// backed by memory only; the app replaces it with a guard on a persistent
@@ -80,9 +92,16 @@ final class SeenGuard {
   /// Reads the store and returns whether the breaker is tripped. A stored
   /// "tripped" is latched into memory; a stored "not tripped" never clears a
   /// memory trip. A store that throws counts as tripped (fail closed).
+  ///
+  /// The read is bounded by [refreshTimeout] (T-015a F6): a store that never
+  /// answers also counts as tripped **for this load** (fail closed), and the
+  /// timeout is logged without any value. Nothing is written.
   Future<bool> refresh() async {
     try {
-      if (await _store.isTripped()) _tripped = true;
+      if (await _store.isTripped().timeout(refreshTimeout)) _tripped = true;
+    } on TimeoutException {
+      _tripped = true;
+      log?.log(LogLevel.warn, 'seen_guard', 'refresh_timeout fail_closed');
     } on Object {
       _tripped = true;
     }

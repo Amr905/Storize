@@ -60,13 +60,24 @@ final class CdnMediaOpener {
   }
 }
 
-/// `Content-Range: bytes 100-199/500` gives 100; anything else null.
-int? _rangeStart(String? header) {
+/// A parsed `Content-Range: bytes <start>-<end>/<total>` (total may be `*`).
+final class _ContentRange {
+  const _ContentRange(this.start, this.total);
+
+  final int start;
+  final int? total;
+}
+
+/// `Content-Range: bytes 100-199/500` gives start 100, total 500; anything
+/// else is null.
+_ContentRange? _parseContentRange(String? header) {
   if (header == null) return null;
-  final match = RegExp(r'^\s*bytes\s+(\d+)-\d+/(?:\d+|\*)\s*$').firstMatch(
-    header,
-  );
-  return match == null ? null : int.tryParse(match.group(1)!);
+  final match = RegExp(r'^\s*bytes\s+(\d+)-\d+/(\d+|\*)\s*$')
+      .firstMatch(header);
+  if (match == null) return null;
+  final start = int.tryParse(match.group(1)!);
+  if (start == null) return null;
+  return _ContentRange(start, int.tryParse(match.group(2)!));
 }
 
 final class _OpenSession {
@@ -141,10 +152,18 @@ final class _OpenSession {
       return _fail(const ExpiredMediaUrl(), 'expired', status: status);
     }
     if (status == 206) {
-      final start = _rangeStart(response.contentRange);
-      if (_fromByte > 0 && start != _fromByte) {
+      // The start must match the request: `fromByte` with a Range header, 0
+      // without one (T-015a F3). A missing or broken header is a mismatch.
+      final range = _parseContentRange(response.contentRange);
+      if (range == null || range.start != _fromByte) {
         unawaited(response.body.listen((_) {}).cancel());
         return _failure('range_mismatch', status: status);
+      }
+      // Without a Content-Length the total of the range says how many bytes
+      // must arrive, so a short body is `truncated` (F4).
+      final total = range.total;
+      if (response.contentLength == null && total != null) {
+        _expected = total - range.start;
       }
     } else if (status == 200) {
       _toSkip = _fromByte;
@@ -155,7 +174,7 @@ final class _OpenSession {
         status: status,
       );
     }
-    _expected = response.contentLength;
+    _expected ??= response.contentLength;
     _sub = response.body
         .timeout(_owner.idleTimeout)
         .listen(

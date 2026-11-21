@@ -1,5 +1,6 @@
 import 'package:storize_instagram/direct/direct_extractor.dart';
 import 'package:storize_instagram/page/page_extractor.dart';
+import 'package:storize_instagram/platform/page_open_counter.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// The operations both extraction modes offer, as `InstagramPlatform` uses
@@ -38,7 +39,12 @@ abstract interface class DirectOps implements ExtractionOps {
 }
 
 /// Page mode: the WebView fallback.
-abstract interface class PageOps implements ExtractionOps {}
+abstract interface class PageOps implements ExtractionOps {
+  /// How many WebView sessions this mode has opened so far, or null when it
+  /// does not know. The platform compares the value before and after a call
+  /// to tell "page mode ran" from "page mode was refused before loading".
+  int? get pagesOpened;
+}
 
 /// [DirectOps] over a [DirectExtractor].
 final class DirectExtractorOps implements DirectOps {
@@ -77,11 +83,18 @@ final class DirectExtractorOps implements DirectOps {
 
 /// [PageOps] over a [PageExtractor].
 final class PageExtractorOps implements PageOps {
-  /// Wraps [extractor].
-  const PageExtractorOps(this.extractor);
+  /// Wraps [extractor]. Give the [counter] that the page driver of
+  /// [extractor] reports to (see `CountingPageDriver`).
+  const PageExtractorOps(this.extractor, {this.counter});
 
   /// The wrapped extractor.
   final PageExtractor extractor;
+
+  /// Counts the sessions the driver opened, or null if not counted.
+  final PageOpenCounter? counter;
+
+  @override
+  int? get pagesOpened => counter?.opened;
 
   @override
   Future<Result<RemoteUser>> resolveUser(String username) =>

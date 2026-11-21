@@ -86,9 +86,25 @@ final class GovernorWebViewLease implements WebViewLease {
   bool _acquiring = false;
   bool _ticking = false;
   Timer? _timer;
+  int _generation = 0;
+  DateTime? _lastRenewedAt;
+  final StreamController<void> _lost = StreamController<void>.broadcast();
 
-  /// Whether this isolate currently holds the row (owner or hold).
+  /// Whether this isolate currently holds the row (owner or hold). False at
+  /// once after a detected loss.
   bool get isHeld => _held;
+
+  /// Fires once each time the lease is **lost** while it was held (T-015a F2):
+  /// a renewal found the row gone and it could not be taken back, or renewals
+  /// kept failing for [ttl] so the row has expired and another isolate may
+  /// own it. S-02 (T-026) listens and closes its login WebView, because page
+  /// mode in another isolate may now wipe the app-wide cookie jar.
+  ///
+  /// At that moment [isHeld] is already false, every owner and hold of this
+  /// isolate has been dropped (a stale owner never blocks the others) and the
+  /// renewal timer is stopped. [tryAcquire] then really asks the repo again.
+  /// A broadcast stream: subscribe before you acquire.
+  Stream<void> get onLost => _lost.stream;
 
   /// The owners that hold the lease in this isolate.
   Set<String> get owners => Set.unmodifiable(_owners);
@@ -104,9 +120,11 @@ final class GovernorWebViewLease implements WebViewLease {
 
   @override
   Future<bool> tryAcquire(String owner) async {
-    if (_owners.contains(owner)) return true;
+    if (_held && _owners.contains(owner)) return true;
     if (_owners.isNotEmpty || _liveHolds > 0 || _acquiring) return false;
     _acquiring = true;
+    // F5: a later attempt makes the late answer of an earlier one irrelevant.
+    final generation = ++_generation;
     final attempt = _repo.acquire(
       accountId: reservedAccountId,
       holder: instanceId,
@@ -118,6 +136,7 @@ final class GovernorWebViewLease implements WebViewLease {
       if (lease == null) return false;
       _owners.add(owner);
       _held = true;
+      _lastRenewedAt = _clock.now();
       _startTimer();
       return true;
     } on TimeoutException {
@@ -126,7 +145,13 @@ final class GovernorWebViewLease implements WebViewLease {
       unawaited(
         attempt.then<void>(
           (late) async {
-            if (late != null && _owners.isEmpty && _liveHolds == 0) {
+            // Only the newest attempt may give the row back: an older late
+            // answer must not release what a newer attempt just won (F5).
+            if (late != null &&
+                generation == _generation &&
+                !_acquiring &&
+                _owners.isEmpty &&
+                _liveHolds == 0) {
               await _releaseRow();
             }
           },
@@ -173,6 +198,7 @@ final class GovernorWebViewLease implements WebViewLease {
   }
 
   Future<void> _releaseRow() async {
+    _lastRenewedAt = null;
     _timer?.cancel();
     _timer = null;
     _held = false;
@@ -188,6 +214,16 @@ final class GovernorWebViewLease implements WebViewLease {
         'release_failed type=${error.runtimeType}',
       );
     }
+  }
+
+  void _declareLost() {
+    _held = false;
+    _owners.clear();
+    _holds.clear();
+    _timer?.cancel();
+    _timer = null;
+    _log?.log(LogLevel.warn, 'webview_lease', 'lease_lost');
+    if (!_lost.isClosed) _lost.add(null);
   }
 
   void _startTimer() {
@@ -209,7 +245,10 @@ final class GovernorWebViewLease implements WebViewLease {
           holder: instanceId,
           ttl: ttl,
         );
-        if (renewed) return;
+        if (renewed) {
+          _lastRenewedAt = _clock.now();
+          return;
+        }
         final again = await _repo.acquire(
           accountId: reservedAccountId,
           holder: instanceId,
@@ -217,18 +256,23 @@ final class GovernorWebViewLease implements WebViewLease {
           initialBucket: _emptyBucket,
         );
         if (again == null) {
-          _held = false;
-          _timer?.cancel();
-          _timer = null;
-          _log?.log(LogLevel.warn, 'webview_lease', 'lease_lost');
+          _declareLost();
+        } else {
+          _lastRenewedAt = _clock.now();
         }
       } on Object catch (error) {
-        // Try again at the next tick; the row still has its TTL.
         _log?.log(
           LogLevel.warn,
           'webview_lease',
           'renew_failed type=${error.runtimeType}',
         );
+        // Try again at the next tick while the row still has its TTL. Once the
+        // last good renewal is a full TTL old the row has expired and may be
+        // owned elsewhere: that is a loss.
+        final last = _lastRenewedAt;
+        if (last != null && _clock.now().difference(last) >= ttl) {
+          _declareLost();
+        }
       }
     } finally {
       _ticking = false;
