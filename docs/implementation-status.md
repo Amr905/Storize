@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 31 / 43 tasks done (72%)** — original plan 25 / 37 (68%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 32 / 43 tasks done (74%)** — original plan 26 / 37 (70%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -31,7 +31,6 @@
 | T-021 | backend-developer (sonnet) | `app/lib/background/**` (new), `packages/storize_data/lib/scheduler/**` (new), `app/lib/main.dart` + new `app/lib/core/composition*.dart` (composition root), `app/android/app/src/main/AndroidManifest.xml` (workmanager/boot only), tests | 04:00 |
 | T-026 | frontend-developer (sonnet) | `app/lib/features/onboarding/**`, `app/test/features/onboarding/**`, `app_en.arb` (append `onb*` keys only) | 04:00 |
 | T-028 | frontend-developer (haiku) | `app/lib/features/viewer/story_*`, `app/test/features/viewer/story_*`, `app_en.arb` (append `story*` keys only) | 04:00 |
-| T-032 | frontend-developer (haiku) | `app/lib/features/activity/**`, `app/test/features/activity/**`, `app_en.arb` (append `act*` keys only) | 04:00 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -74,7 +73,7 @@
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | todo | — | — |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | todo | — | — |
 | T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | todo | — | — |
-| T-032 | Activity S-11 | Medium | sonnet | Frontend Developer | T-025, T-020 | in_progress | 1 | — |
+| T-032 | Activity S-11 | Medium | haiku | Frontend Developer | T-025, T-020 | done | 1 | Lead review |
 | T-033 | Settings S-12 + Instagram account S-13 | Medium | sonnet | Frontend Developer | T-025, T-021, T-020, T-023 | todo | — | — |
 | T-034 | App lock S-14 + PIN setup + lock gate | High | sonnet | Frontend Developer | T-025, T-008 | **done** | 2 | QA PASS r2 (3 majors fixed) + CI [44523291566](https://github.com/Amr905/Storize/actions/runs/44523291566) · `05-reviews/T-034.md` |
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
@@ -172,3 +171,4 @@
 - 2026-11-21 02:45 — A server restart stopped all 4 agents (T-015a, T-016, T-018, T-027 QA r2). **T-027 done**: per the new cost rules the Lead verified round 2 (library +124 stable under TZ=America/New_York ×3; only the 10 synthetic fixtures tracked under `failures/`), CI green, merged; main green (app 605). **Checkpoint 5** (26 done) run by the Lead: full melos suite green on main. T-015a/T-016/T-018 relaunched on their partial work with lean briefs.
 - 2026-11-21 03:35 — **T-016 done** (Lead review + CI; haiku) and **T-015a done** (Lead review + CI; one transient APK-build CI failure, re-run green), merged; Lead exported `add_target`; main green (domain 298, instagram 1244). Another server restart stopped T-018; relaunched and delivered (a8ab91f) → QA (High). Next: T-017, T-020.
 - 2026-11-21 04:00 — **T-018, T-020, T-017 done** (31/43, 72%), merged; Lead exported all domain use cases; main green (domain 461). **Checkpoint 6** (Lead): full suite green. Lead added deps `video_player`, `workmanager` (app) and `workmanager` (data). Started T-021 (sonnet), T-026 (sonnet, security), T-028 (haiku), T-032 (haiku).
+- 2026-11-21 05:10 — **T-032 done** (32/43, 74%): Lead review + CI 44857007618 green; merged 747c681; app 628 tests. Lock released. T-021 dev done (4509bb5, findByName added); CI + QA next.

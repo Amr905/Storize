@@ -5,9 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/features/library/library_page.dart';
+import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/router/deep_link.dart';
 
 import '../helpers/app_harness.dart';
+
 
 String where(AppHarness h) {
   final c = h.router.routerDelegate.currentConfiguration;
@@ -147,7 +149,8 @@ void main() {
         }
         final pages =
             find.textContaining('TODO(').evaluate().length +
-            find.byType(LibraryPage).evaluate().length;
+            find.byType(LibraryPage).evaluate().length +
+            find.byType(StoryViewerPage).evaluate().length;
         if (!isError && pages != 1) {
           failures.add('$raw -> $at: no single placeholder page');
         }

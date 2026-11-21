@@ -11,12 +11,14 @@ import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/lock/lock_flows.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
+import 'package:storize_app/features/viewer/story_viewer_page.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_data/security/pin_vault.dart';
 
 import '../../helpers/app_harness.dart';
 import 'lock_fakes.dart';
+
 
 // QA tests for T-034 (independent of the developer's tests).
 
@@ -265,13 +267,13 @@ void main() {
       await t.pumpAndSettle();
       await h.go('/targets/3');
       await h.push('/story/9');
-      expect(find.text('contentId=9'), findsOneWidget);
+      expect(_story(9), findsOneWidget);
       _background(t);
       f.clock.advance(const Duration(seconds: 61));
       _foreground(t);
       await t.pumpAndSettle();
       expect(find.byType(LockPage), findsOneWidget);
-      expect(find.text('contentId=9'), findsNothing);
+      expect(_story(9), findsNothing);
       expect(find.text('targetId=3'), findsNothing);
       expect(find.byType(LibraryPage), findsNothing);
     });
@@ -634,3 +636,8 @@ void tall(WidgetTester t) {
     ..devicePixelRatio = 1;
   addTearDown(t.view.reset);
 }
+
+Finder _story(int id) => find.byWidgetPredicate(
+  (w) => w is StoryViewerPage && w.contentId == id,
+  description: 'StoryViewerPage(contentId: $id)',
+);
