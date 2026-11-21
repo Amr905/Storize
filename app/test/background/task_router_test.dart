@@ -67,15 +67,15 @@ final class _Rig {
   DownloadPendingResult downloadResult = _downloaded(
     DownloadStopReason.completed,
   );
-  Object? checkThrows;
+  Exception? checkThrows;
 
   late final TaskRouter router = TaskRouter(
     runCheck:
         ({
           required scope,
           required trigger,
-          int? targetId,
-          DateTime? deadline,
+          targetId,
+          deadline,
         }) async {
           order.add('check-${scope.name}');
           checks.add((
@@ -90,8 +90,8 @@ final class _Rig {
         },
     download:
         ({
-          DateTime? deadline,
-          ExtractionPolicy policy = ExtractionPolicy.directOnly,
+          deadline,
+          policy = ExtractionPolicy.directOnly,
         }) async {
           order.add('download');
           downloads.add((deadline: deadline, policy: policy));
@@ -317,12 +317,13 @@ void main() {
     });
 
     test('an unexpected error is a retry and logs only its type', () async {
-      final r = _Rig()..checkThrows = StateError('https://secret.invalid/x');
+      final r = _Rig()
+        ..checkThrows = const FormatException('https://secret.invalid/x');
       expect(await r.router.route(TaskNames.checkStories), isFalse);
 
       final messages = r.log.entries.map((e) => e.message).join('\n');
       expect(messages, contains('task_failed task=check-stories'));
-      expect(messages, contains('StateError'));
+      expect(messages, contains('FormatException'));
       expect(messages, isNot(contains('secret')));
     });
   });

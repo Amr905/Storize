@@ -390,7 +390,10 @@ final class AppComposition {
       () => leases.acquire(
         accountId: DownloadPending.leaseKey,
         holder: '$holder-sweep',
-        ttl: const Duration(minutes: 2),
+        // At least the downloads' own ttl: the lease table treats a lease
+        // that ends further away than the asked ttl as a clock jump and
+        // takes it over.
+        ttl: DownloadPending.leaseTtl,
         initialBucket: GovernorBucket(
           tokens: 0,
           lastRefillAt: clock.now().toUtc(),
