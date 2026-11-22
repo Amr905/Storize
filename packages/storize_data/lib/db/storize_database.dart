@@ -47,17 +47,24 @@ class StorizeDatabase extends _$StorizeDatabase {
   /// `.sqlite` to the name.
   ///
   /// Isolate safety (the workmanager background isolate and the UI isolate
-  /// both open this): `shareAcrossIsolates: true` makes drift_flutter host the
-  /// connection in one dedicated isolate registered by name, and every other
-  /// isolate in the process connects to it, so writes are serialised. As a
-  /// second line of defence for the case where two processes ever open the
-  /// file, the connection uses WAL and a 5 s `busy_timeout`.
+  /// both open this): every isolate opens its **own** connection to the same
+  /// file. SQLite serialises writers across connections; WAL lets readers run
+  /// beside a writer, and the 5 s `busy_timeout` makes a writer wait instead
+  /// of failing.
+  ///
+  /// `shareAcrossIsolates: true` is NOT used: drift_flutter then hosts the
+  /// connection in an isolate owned by whichever engine opened the database
+  /// first. When that is the workmanager engine, Android tears it down after
+  /// the task and every other isolate's queries hang (seen on device: the
+  /// first login could never take its lease). Cross-isolate change
+  /// notifications are lost instead; the app re-runs its queries on resume
+  /// and while in the foreground (`ForegroundDbRefresher`).
   StorizeDatabase.open()
     : super(
         driftDatabase(
           name: databaseName,
           native: DriftNativeOptions(
-            shareAcrossIsolates: true,
+            // shareAcrossIsolates stays false (default): see the doc above.
             databaseDirectory: getApplicationSupportDirectory,
             setup: (db) {
               db
@@ -85,4 +92,9 @@ class StorizeDatabase extends _$StorizeDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Re-runs every watch query of this connection. Writes from another
+  /// isolate's connection do not notify this one, so the foreground calls this
+  /// on resume and periodically.
+  void refreshFromDisk() => markTablesUpdated(allTables);
 }

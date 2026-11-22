@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -294,10 +295,12 @@ class _ErrorView extends ConsumerWidget {
         l10n.onbErrCancelledBody,
       ),
     };
+    final detail = state.detail;
     return EmptyState(
       icon: icon,
       title: title,
-      body: body,
+      // Dev builds name the cause so a tester can report it.
+      body: detail != null && appFlavor == 'dev' ? '$body\n\n[$detail]' : body,
       actionLabel: l10n.onbTryAgain,
       onAction: () => ref.read(loginControllerProvider.notifier).retry(),
     );

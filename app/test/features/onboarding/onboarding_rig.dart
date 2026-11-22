@@ -44,6 +44,9 @@ class FakeWeb implements LoginWebViewController {
 
 /// Lease double that records calls.
 class FakeLease implements LoginLease {
+  @override
+  String? get lastFailure => null;
+
   bool available = true;
 
   /// Refusals before [available] applies (a slow first database open).

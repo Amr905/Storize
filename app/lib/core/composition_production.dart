@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/misc.dart';
 import 'package:storize_app/core/composition.dart';
+import 'package:storize_app/core/foreground_db_refresher.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_services.dart';
@@ -169,6 +170,7 @@ final class SchedulerCheckNowAction implements CheckNowAction {
 /// The app-lock test bypass is deliberately not overridden: it stays at its
 /// default (`false`), so the lock gate always applies.
 List<Override> appOverrides(AppComposition c) => [
+  dbRefreshProvider.overrideWithValue(c.parts.db.refreshFromDisk),
   targetRepoProvider.overrideWithValue(c.targets),
   contentRepoProvider.overrideWithValue(c.content),
   accountRepoProvider.overrideWithValue(c.accounts),

@@ -112,6 +112,9 @@ Widget _stubLoginWebView(BuildContext context, LoginWebViewEvents events) =>
 
 class _StubLease implements LoginLease {
   @override
+  String? get lastFailure => null;
+
+  @override
   Future<bool> tryAcquire(String owner) async => true;
 
   @override

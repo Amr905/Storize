@@ -168,9 +168,9 @@ final class StartReport {
 
 /// The composition root (TECH_SPEC section 2): every port, repo and use case,
 /// wired once per isolate. The foreground isolate and the background isolate
-/// each build their own (`background` differs); they share the database
-/// through drift's `shareAcrossIsolates`, and the request budget through the
-/// lease table.
+/// each build their own (`background` differs). Each opens its own database
+/// connection to the same file (see `StorizeDatabase.open`) and they share
+/// the request budget through the lease table.
 final class AppComposition {
   AppComposition._({
     required this.background,

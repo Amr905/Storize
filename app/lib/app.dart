@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/core/foreground_db_refresher.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/notifications/notification_taps.dart';
 import 'package:storize_app/router/app_router.dart';
@@ -20,7 +21,9 @@ class StorizeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ProviderScope(
     overrides: overrides,
-    child: _StorizeAppView(textDirection: textDirection),
+    child: ForegroundDbRefresher(
+      child: _StorizeAppView(textDirection: textDirection),
+    ),
   );
 }
 
