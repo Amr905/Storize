@@ -1295,25 +1295,25 @@ abstract class AppLocalizations {
   /// **'Before you continue'**
   String get onbRiskTitle;
 
-  /// S-01 risk bullet.
+  /// S-01 risk bullet. Text between ** markers is rendered bold.
   ///
   /// In en, this message translates to:
-  /// **'Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.'**
+  /// **'Storize uses an Instagram account to view stories. Instagram may **challenge or ban** that account.'**
   String get onbRisk1;
 
-  /// S-01 risk bullet.
+  /// S-01 risk bullet. Text between ** markers is rendered bold.
   ///
   /// In en, this message translates to:
-  /// **'People you track will see that account in their story viewers.'**
+  /// **'People you track will see that account **in their story viewers**.'**
   String get onbRisk2;
 
-  /// S-01 risk bullet.
+  /// S-01 risk bullet. Text between ** markers is rendered bold.
   ///
   /// In en, this message translates to:
-  /// **'Use a dedicated account, not your personal one.'**
+  /// **'Use a **dedicated account**, not your personal one.'**
   String get onbRisk3;
 
-  /// S-01 risk bullet.
+  /// S-01 risk bullet. Text between ** markers is rendered bold.
   ///
   /// In en, this message translates to:
   /// **'Only track your own/client accounts, people who agreed, or public creators.'**
