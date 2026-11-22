@@ -45,7 +45,7 @@ class KindSwitch extends StatelessWidget {
         borderRadius: StorizeRadii.fullRadius,
       ),
       child: Padding(
-        padding: const EdgeInsetsDirectional.all(StorizeSpacing.s4),
+        padding: EdgeInsets.zero,
         child: Row(
           children: [
             Expanded(
@@ -107,44 +107,61 @@ class _Segment extends StatelessWidget {
             minHeight: StorizeSpacing.minTouchTarget,
           ),
           alignment: AlignmentDirectional.center,
-          decoration: BoxDecoration(
-            color: selected ? scheme.surface : Colors.transparent,
-            borderRadius: StorizeRadii.fullRadius,
-          ),
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: StorizeSpacing.s12,
-          ),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: StorizeSpacing.s8,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-                ),
-              ),
-              if (count != null)
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                    borderRadius: StorizeRadii.fullRadius,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.symmetric(
-                      horizontal: StorizeSpacing.s8,
-                      vertical: 2,
+          padding: const EdgeInsets.all(StorizeSpacing.s4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            decoration: BoxDecoration(
+              color: selected ? scheme.surface : Colors.transparent,
+              borderRadius: StorizeRadii.fullRadius,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: scheme.shadow.withValues(alpha: 0.12),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                  : null,
+            ),
+            alignment: Alignment.center,
+            child: Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: StorizeSpacing.s8,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: selected
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
                     ),
-                    child: Text(
-                      '$count',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: selected ? scheme.onPrimary : scheme.surface,
+                  ),
+                  if (count != null)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
+                        borderRadius: StorizeRadii.fullRadius,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: StorizeSpacing.s8,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: selected ? scheme.onPrimary : scheme.surface,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

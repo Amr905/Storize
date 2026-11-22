@@ -137,11 +137,8 @@ class _StepCardState extends State<StepCard> {
               Semantics(
                 button: true,
                 expanded: _expanded,
-                label: AppLocalizations.of(context).stepSemantics(
-                  widget.number,
-                  widget.title,
-                  statusText,
-                ),
+                label: AppLocalizations.of(context)
+                    .stepSemantics(widget.number, widget.title, statusText),
                 excludeSemantics: true,
                 onTap: _toggle,
                 child: InkWell(
@@ -158,11 +155,8 @@ class _StepCardState extends State<StepCard> {
             else
               Semantics(
                 container: true,
-                label: AppLocalizations.of(context).stepSemantics(
-                  widget.number,
-                  widget.title,
-                  statusText,
-                ),
+                label: AppLocalizations.of(context)
+                    .stepSemantics(widget.number, widget.title, statusText),
                 excludeSemantics: true,
                 child: header,
               ),

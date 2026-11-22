@@ -22,6 +22,9 @@ abstract final class StorizeTypography {
   /// Display 28/36 Medium.
   static final TextStyle display = _style(28, 36, FontWeight.w500);
 
+  /// Large page title (app bar of top-level screens) 24/32 Medium.
+  static final TextStyle pageTitle = _style(24, 32, FontWeight.w500);
+
   /// Title 20/28 Medium.
   static final TextStyle title = _style(20, 28, FontWeight.w500);
 
@@ -37,6 +40,7 @@ abstract final class StorizeTypography {
   /// The text theme (colours are applied by the theme).
   static TextTheme get textTheme => TextTheme(
     displaySmall: display,
+    headlineMedium: pageTitle,
     headlineSmall: title,
     titleLarge: title,
     titleMedium: _style(15, 22, FontWeight.w500),

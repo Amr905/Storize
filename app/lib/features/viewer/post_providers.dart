@@ -29,10 +29,7 @@ final FutureProviderFamily<PostViewerData?, int> postViewerProvider =
       final target = await ref
           .watch(targetRepoProvider)
           .getById(opened.content.targetId);
-      return PostViewerData(
-        item: opened,
-        username: target?.username ?? '',
-      );
+      return PostViewerData(item: opened, username: target?.username ?? '');
     });
 
 /// Removes one slide from the library (EC-20 "Remove slide"). Returns true

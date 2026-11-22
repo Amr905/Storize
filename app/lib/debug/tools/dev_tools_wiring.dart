@@ -110,9 +110,7 @@ Future<List<String>> readLogTail(RotatingLogFile files, int count) async {
   final out = <String>[];
   // Files are newest first; collect lines backwards until enough.
   for (final file in files.files) {
-    final lines = const LineSplitter().convert(
-      await file.readAsString(),
-    );
+    final lines = const LineSplitter().convert(await file.readAsString());
     out.insertAll(0, lines);
     if (out.length >= count) break;
   }

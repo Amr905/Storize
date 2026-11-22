@@ -152,10 +152,7 @@ class SetupController extends Notifier<SetupState> {
 
   /// Taps Allow on the storage card (Android 8-9).
   Future<void> allowStorage() async {
-    final outcome = await _guard(
-      _ops.requestStorage,
-      PermissionOutcome.denied,
-    );
+    final outcome = await _guard(_ops.requestStorage, PermissionOutcome.denied);
     state = outcome == PermissionOutcome.granted
         ? state.copyWith(storage: SetupStepState.done)
         : state.copyWith(

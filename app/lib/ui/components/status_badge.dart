@@ -88,9 +88,8 @@ class StatusBadge extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelMedium?.copyWith(color: tone.onContainer),
+                    style: Theme.of(context).textTheme.labelMedium
+                        ?.copyWith(color: tone.onContainer),
                   ),
                 ),
               ],

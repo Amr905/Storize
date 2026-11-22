@@ -160,15 +160,13 @@ class _Chip extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsetsDirectional.symmetric(
                   horizontal: StorizeSpacing.s16,
-                  vertical: StorizeSpacing.s8,
+                  vertical: 7,
                 ),
                 child: Text(
                   label,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                    color: selected
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurface,
+                    color: selected ? scheme.primary : scheme.onSurface,
                   ),
                 ),
               ),

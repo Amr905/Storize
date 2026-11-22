@@ -39,10 +39,7 @@ class StoryViewerSet {
 /// Loads the stories of the account that owns the content (S-06 swipes
 /// between them).
 final FutureProviderFamily<StoryViewerSet, int> storyViewerSetProvider =
-    FutureProvider.family<StoryViewerSet, int>((
-      ref,
-      contentId,
-    ) async {
+    FutureProvider.family<StoryViewerSet, int>((ref, contentId) async {
       final repo = ref.watch(contentRepoProvider);
       final opened = await repo.getById(contentId);
       if (opened == null || opened.content.kind != ContentKind.story) {

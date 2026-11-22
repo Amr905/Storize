@@ -44,9 +44,8 @@ class CategoryTag extends StatelessWidget {
         ),
         child: Text(
           label ?? defaultLabel(l10n, kind),
-          style: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(color: tone.onContainer),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: tone.onContainer),
         ),
       ),
     );

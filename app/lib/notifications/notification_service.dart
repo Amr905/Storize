@@ -173,9 +173,7 @@ final class NotificationService implements TaskNotifier {
       ];
       if (wanted.isEmpty || !await _port.areEnabled()) return;
 
-      final items = await _lookups.itemsOf(
-        check?.newContentIds ?? const [],
-      );
+      final items = await _lookups.itemsOf(check?.newContentIds ?? const []);
       for (final kind in ContentKind.values) {
         final group = [
           for (final c in wanted)

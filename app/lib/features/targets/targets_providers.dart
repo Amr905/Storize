@@ -54,9 +54,7 @@ final targetsRateLimitedProvider = Provider<bool>((ref) {
 
 /// True while a "Check now" run is in progress. Rows show "Checking".
 final targetCheckRunningProvider =
-    NotifierProvider<TargetCheckController, bool>(
-      TargetCheckController.new,
-    );
+    NotifierProvider<TargetCheckController, bool>(TargetCheckController.new);
 
 /// Runs "Check now" through [checkNowActionProvider] and tracks its state.
 class TargetCheckController extends Notifier<bool> {
@@ -122,11 +120,7 @@ class AddTargetForm {
     this.username = '',
     this.note = '',
     this.category,
-    this.tracks = const {
-      TrackKind.stories,
-      TrackKind.posts,
-      TrackKind.reels,
-    },
+    this.tracks = const {TrackKind.stories, TrackKind.posts, TrackKind.reels},
     this.submitted = false,
     this.trackRejected = false,
     this.verifying = false,

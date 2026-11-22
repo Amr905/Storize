@@ -78,10 +78,7 @@ final class RetentionPreview {
 /// The preview for `days`, computed with [isRetentionEligible] so it matches
 /// what [ApplyRetention] deletes.
 final FutureProviderFamily<RetentionPreview, int> retentionPreviewProvider =
-    FutureProvider.family<RetentionPreview, int>((
-      ref,
-      days,
-    ) async {
+    FutureProvider.family<RetentionPreview, int>((ref, days) async {
       final cutoff = ref
           .watch(clockProvider)
           .now()

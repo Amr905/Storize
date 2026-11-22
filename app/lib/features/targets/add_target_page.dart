@@ -210,10 +210,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                           contentPadding: EdgeInsets.zero,
                           value: c,
                           title: Text(
-                            CategoryTag.defaultLabel(
-                              l10n,
-                              _categoryKind(c),
-                            ),
+                            CategoryTag.defaultLabel(l10n, _categoryKind(c)),
                           ),
                         ),
                     ],
@@ -339,9 +336,8 @@ class _Notice extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: tone.onContainer),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: tone.onContainer),
             ),
           ),
         ],

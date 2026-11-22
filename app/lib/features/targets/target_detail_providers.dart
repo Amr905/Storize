@@ -23,15 +23,13 @@ targetDetailContentProvider = StreamProvider.autoDispose
 
 /// Stored bytes of one target (FR-53), through [ComputeStorage].
 final FutureProviderFamily<int, int> targetDetailStorageProvider =
-    FutureProvider.autoDispose.family<int, int>(
-      (ref, id) async {
-        final report = await ComputeStorage(
-          content: ref.watch(contentRepoProvider),
-          storage: ref.watch(storageInfoProvider),
-        ).call();
-        return report.bytesByTarget[id] ?? 0;
-      },
-    );
+    FutureProvider.autoDispose.family<int, int>((ref, id) async {
+      final report = await ComputeStorage(
+        content: ref.watch(contentRepoProvider),
+        storage: ref.watch(storageInfoProvider),
+      ).call();
+      return report.bytesByTarget[id] ?? 0;
+    });
 
 /// The S-10 use case (BR-6). The only way to remove a target from the UI.
 final removeTargetUseCaseProvider = Provider<RemoveTarget>(

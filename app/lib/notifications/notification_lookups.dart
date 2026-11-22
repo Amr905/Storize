@@ -4,11 +4,7 @@ import 'package:storize_model/storize_model.dart';
 /// A content item the notifications point at.
 final class NewItem {
   /// Creates the item.
-  const NewItem({
-    required this.id,
-    required this.targetId,
-    required this.kind,
-  });
+  const NewItem({required this.id, required this.targetId, required this.kind});
 
   /// The content id (the `storize://story/{id}` or `post/{id}` target).
   final int id;

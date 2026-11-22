@@ -109,7 +109,10 @@ abstract final class StorizeTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: textTheme.titleLarge,
+        toolbarHeight: 64,
+        centerTitle: false,
+        titleSpacing: StorizeSpacing.s16,
+        titleTextStyle: textTheme.headlineMedium,
       ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,
@@ -198,7 +201,24 @@ abstract final class StorizeTheme {
         backgroundColor: scheme.surfaceContainer,
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
-        labelTextStyle: WidgetStatePropertyAll(textTheme.labelMedium),
+        indicatorShape: const StadiumBorder(),
+        height: 80,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: 26,
+            color: states.contains(WidgetState.selected)
+                ? scheme.onPrimaryContainer
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                )
+              : textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
+        ),
       ),
     );
   }

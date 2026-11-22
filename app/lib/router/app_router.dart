@@ -74,10 +74,7 @@ GoRouter createRouter({
       isLocked: isLocked(),
     ),
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (_, _) => Routes.libraryPath,
-      ),
+      GoRoute(path: '/', redirect: (_, _) => Routes.libraryPath),
       // Onboarding (S-01, S-02, S-03) and lock (S-14).
       GoRoute(
         path: Routes.welcomePath,

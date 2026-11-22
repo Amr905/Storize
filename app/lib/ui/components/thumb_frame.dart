@@ -37,7 +37,7 @@ class ThumbFrame extends StatelessWidget {
   /// Badge placed at the bottom start corner (e.g. duration).
   final Widget? bottomStart;
 
-  static const double _ring = 2;
+  static const double _ring = 3;
   static const double _gap = 2;
 
   @override
@@ -139,10 +139,7 @@ class ThumbFrame extends StatelessWidget {
                   width: _ring,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(_gap),
-                child: media,
-              ),
+              child: Padding(padding: const EdgeInsets.all(_gap), child: media),
             ),
           ),
         ),
@@ -164,7 +161,7 @@ class MediaBadge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.mediaScrim,
-        borderRadius: StorizeRadii.chipRadius,
+        borderRadius: const BorderRadius.all(Radius.circular(6)),
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.symmetric(
@@ -179,9 +176,8 @@ class MediaBadge extends StatelessWidget {
             if (text != null)
               Text(
                 text!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onMediaScrim),
+                style: Theme.of(context).textTheme.labelMedium
+                    ?.copyWith(color: colors.onMediaScrim),
               ),
           ],
         ),
