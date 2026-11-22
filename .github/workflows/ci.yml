@@ -41,6 +41,21 @@ jobs:
       - name: Build debug APK (dev flavor)
         working-directory: app
         run: flutter build apk --debug --flavor dev
+      - name: Upload dev APK (for phone testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: storize-dev-debug-apk
+          path: app/build/app/outputs/flutter-apk/app-dev-debug.apk
+          retention-days: 14
+      - name: Build dev-tools APK (debug menu for DEVICE_TESTS.md)
+        working-directory: app
+        run: flutter build apk --debug --flavor dev -t lib/main_dev_tools.dart
+      - name: Upload dev-tools APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: storize-dev-tools-apk
+          path: app/build/app/outputs/flutter-apk/app-dev-debug.apk
+          retention-days: 14
 
       - name: Kotlin unit tests (native plugin)
         working-directory: app/android
