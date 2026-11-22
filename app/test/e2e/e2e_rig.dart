@@ -1,14 +1,13 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:storize_app/background/task_router.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_providers.dart';
 import 'package:storize_app/features/onboarding/login_web_view.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
-import 'package:storize_app/background/task_router.dart';
 import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
@@ -17,9 +16,9 @@ import 'package:storize_model/storize_model.dart';
 import '../features/library/library_rig.dart' show RecordingShare, fakeThumb;
 import '../features/onboarding/onboarding_rig.dart'
     show FakeLease, FakeSetupOps, FakeWeb;
+import '../features/viewer/story_rig.dart' show FakeStoryPlayer;
 import '../helpers/app_harness.dart';
 import '../ui/golden_helpers.dart' show fakeMedia;
-import '../features/viewer/story_rig.dart' show FakeStoryPlayer;
 
 /// The fixed "now" of every end-to-end flow.
 final DateTime e2eNow = DateTime.utc(2026, 11, 21, 12);
@@ -243,7 +242,7 @@ class E2eRig {
     ),
   ];
 
-  /// Launches the real [StorizeApp] over this rig.
+  /// Launches the real `StorizeApp` over this rig.
   Future<AppHarness> launch(WidgetTester t, {String? initialLocation}) async {
     t.view
       ..devicePixelRatio = 1

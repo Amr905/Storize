@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/features/targets/add_target_page.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -108,7 +108,7 @@ void registerE2eFlows() {
     });
 
     testWidgets(
-      '3 a check stores a story and a post; Library shows both; S-06 and S-15 open',
+      '3 a check stores a story and a post; the Library shows both',
       (t) async {
         final rig = E2eRig();
         await rig.addAccount();

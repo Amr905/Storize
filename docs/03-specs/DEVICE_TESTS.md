@@ -1,358 +1,202 @@
-# Device tests for page mode and the extraction spike
+# Device tests and soak checklist
 
-Status: draft v0.1 (T-014 round 2, 2026-11-20). Owner: the user, with the Lead.
-Covers: T-014 AC9 (page mode on device), the old T-002 AC4 (phone hook check), the T-013 live probe (AC7) and the assumptions
-that nothing off-device can test. ADR-0003 (Addendum) is the binding rule for seen-blocking, document-start and the WebView lease.
+Status: v0.2 (T-037, 2026-11-22). Owner: the user. Everything here needs a real phone; nothing off-device can check it.
+Consolidates: T-002 AC4, T-014 AC9, T-013 AC7, T-005 F-6, T-021 AC5, T-022, T-026, T-029a, T-027 and T-037 AC2.
+Binding rules: ADR-0003 Addendum (seen is always blocked, document-start hook, WebView lease), ADR-0009 (governor).
 
-**How to use this file.** Each test has numbered steps and an **Expected** result. Write PASS or FAIL and one line of notes in the
-"Result" column of the summary table at the end. Anything that does not match "Expected" is a FAIL: stop that test, do not retry
-on a real account, and tell the Lead.
+**How to use it.** Do the parts in order (A, B, C). Write PASS or FAIL plus one line in the table at the end. Any mismatch with
+**Expected** is a FAIL: stop that test, do not retry on a real account, and tell the Lead. Each test starts with **Needs:** (what must
+exist first). If a "Needs" is missing, skip the test and write "blocked".
 
 ## 0. Before you start
-
-### What you need
 | Item | Why |
 |---|---|
-| Two Android phones (P-4): **Phone A** a Samsung, **Phone B** a Xiaomi or Oppo. If you can, one of them runs **Android 9 or lower** | Background behaviour differs by maker and Android version |
-| The **test Instagram account** (P-3) logged in on both phones (the app's own login) | Never use your own personal account |
-| A **second Instagram account that you own** ("Owner account") with a **photo story** and a **video story** posted in the last 24 hours | To see whether anyone "viewed" the story |
-| The Owner account logged in on a third device (another phone, or the Instagram website on a PC) | To read the story's viewers list |
-| A debug build of the app on each phone (`cd app && flutter run --flavor dev`), USB cable, a PC with Chrome | To start the build and to see the WebView |
-| The phones on Wi-Fi, charged above 50 % | Stable start |
+| Two Android phones (P-4): **A** Samsung, **B** Xiaomi or Oppo; one on Android 9 or lower if you can | Background rules differ by maker and version |
+| The **test Instagram account** (P-3), logged in inside the app, on both phones | Never use a personal account |
+| An **Owner account** you own, with one photo and one video story posted in the last 24 h, plus a third device or PC to read its viewers list | To see whether the test account "viewed" |
+| Debug builds: `cd app && flutter run --flavor dev` (inspector: `-t lib/main_debug_inspector.dart`), USB, a PC with Chrome | Build and WebView debugging |
+| Wi-Fi, battery above 50 % | Stable start |
 
-### Safety rules (read them)
-1. **Test account only** for every step in this file. The only exception is the Owner account, which only *owns* stories.
-2. Every Instagram request in the app goes through the request budget (the governor). Do **not** repeat a test quickly. Wait at
-   least **10 minutes** between two page loads of the same user and **do not run more than 6 page loads per hour** in total.
-3. If Instagram shows "Please wait", a login screen, a checkpoint or an "action blocked" message, **stop everything** and tell the
-   Lead. Do not log in again on your own.
-4. Never copy cookies, tokens, the full URL of a story file, or other people's content into a message, a screenshot, a bug report
-   or this file. The repository is public. Screenshots may show only the app's own screens and the viewers list **count**.
-5. Write results as status codes and key names only.
+**Safety rules.**
+1. Test account only. The Owner account only owns stories.
+2. Every Instagram request goes through the governor. Wait **10 minutes** between two page loads of one user; at most **6 page loads per hour**.
+3. If Instagram shows "Please wait", a login screen, a checkpoint or "action blocked": stop everything and tell the Lead. Do not log in again.
+4. Never copy cookies, tokens, full story-file URLs or other people's content into a message, screenshot, bug report or this file (the repo is public). Record status codes and key names only.
 
-### Words used here
-- **Page mode**: the app loads the real Instagram page in a hidden browser (WebView) and reads what the page itself fetched.
-- **Hook**: the small script (`assets/hook.js`) injected into that page.
-- **Seen**: Instagram marks a story as viewed by the account that opened it. The story's owner can see this. It cannot be undone.
-- **Blocked**: the hook answers a "mark as seen" request itself and never sends it.
-- **Lease**: a "do not touch" flag that stops page mode from using the browser while the login screen is open.
+Words: **page mode** = the app loads the real Instagram page in a hidden WebView and reads what the page fetched. **Hook** = the script
+(`assets/hook.js`) injected into it. **Seen** = Instagram tells the story owner who viewed (cannot be undone). **Blocked** = the hook
+answers the "mark as seen" request itself, so it never leaves the phone.
 
 ---
 
-## 1. Phone hook check (old T-002 AC4)
+## Part A. Page mode and extraction (T-002, T-013, T-014)
 
-Goal: the injected hook really runs in the phone's WebView and the app receives its messages.
+### A1. Hook runs in the phone WebView (old T-002 AC4)
+**Needs:** inspector build (visible WebView). This proves the hook, not the headless adapter.
+1. Phone A: log in inside the inspector with the test account, open `instagram.com`, wait 10 s, open the log list.
+2. PC: `chrome://inspect`, open the WebView console, type `window.__storizeHookInstalled`.
 
-1. On Phone A, install the debug inspector build: `cd app && flutter run --flavor dev -t lib/main_debug_inspector.dart`.
-2. Log in inside the inspector with the **test account**.
-3. In the address bar type `instagram.com` and open the page.
-4. Wait 10 seconds without touching anything.
-5. Open the inspector's log list.
+**Expected:** several log lines with status 200 and top-level key names (one has `data`), **no values, query strings, cookies or tokens**; the console prints `true`. Repeat on Phone B. If a phone shows nothing, note its Android and WebView versions (Settings, Apps, Android System WebView).
 
-**Expected:** the log shows several lines (status 200 and a list of top-level key names, **no values, no query strings**). At least
-one line has the key name `data`. No line shows a cookie, a token or a full URL.
+### A2. Document-start support fails closed
+**Needs:** a page-mode story trigger (debug action "page-mode story load", T-015/T-021 wiring).
+1. Note the Android System WebView version on each phone. Run one story load of the Owner account.
 
-6. On the PC open `chrome://inspect`, choose the WebView, open the Console and type `window.__storizeHookInstalled`.
+**Expected:** no `page_hook_unsupported` log line; the load proceeds.
+2. *Optional, developer only:* on an emulator or old phone with an old WebView, repeat. **Expected:** `page_hook_unsupported`, no page opens, viewers list unchanged.
 
-**Expected:** it prints `true`.
+### A3. The seen mutation is never sent (UD-3, most important)
+**Needs:** the real page-mode trigger (the inspector alone does not exercise `webview.dart`). Run for a photo and a video story, on both phones.
+1. On the third device write down the viewers **count** of both stories (no names).
+2. Phone A: trigger a page-mode story load of the Owner account. Wait for `op=fetchStories ok`.
+3. Read the log line `accepted=... blocked=...`.
 
-7. Repeat steps 1 to 6 on Phone B.
+**Expected:** `blocked` is 1 or more; no `seen_block_leak` line. After 2 minutes the viewers list of both stories is unchanged and the test account is not in it.
+4. Repeat on Phone B, and for a link-sticker or close-friends story if available.
+5. *Optional:* in the inspector console run `fetch('/api/v1/stories/reel/seen/', {method:'POST', body:'x=1'}).then(r => r.status)`. **Expected:** `200` and a `blocked` notice.
 
-**Expected:** same as Phone A. If a phone shows nothing, that phone cannot use page mode: note the Android and WebView versions
-(Settings, Apps, Android System WebView, version).
+If the test account **is** in the viewers list: **FAIL (critical)**. Stop all page-mode story loads and tell the Lead (phone, story type, log lines around `blocked`).
 
----
+### A4. The page tolerates the fake reply
+**Needs:** A3 trigger. Watch Chrome DevTools (Network, filter `graphql`) for 30 s during one load.
 
-## 2. Document-start support (fail closed)
+**Expected:** at most one blocked notice per story page; no stream of repeated requests; no error toast on the page.
 
-Goal: page mode refuses to load when the hook cannot be installed before the page's own scripts (QA-F5, ADR-0003 Addendum).
+### A5. Unverified assumptions of the story page (report only, do not change code)
+**Needs:** inspector build and, for 5c, desktop Chrome logged in as the **Owner** account (never the test account, which would mark the story seen).
+- **5a** A followed account with no story: one page-mode load. Expected: ends on the profile page, "no stories" after about 2 s (not a 20 s timeout). Write what really happened.
+- **5b** Open `instagram.com/stories/<owner>/` without a media id. Expected: it loads the reel. If not, page mode needs the id: ask the Lead.
+- **5c** Owner views its own story with DevTools open; find the `SeenMutation` request. Write how it was sent: fetch, XHR or beacon. Confirm the owner is not listed as its own viewer.
+- **5d** Count `ReelPage` requests. Expected: one or two. If two, is the first empty?
 
-1. On each phone open Settings, Apps, **Android System WebView** and write down the version. (Document-start scripts need a
-   reasonably recent WebView; the oldest phone is the one that matters.)
-2. With the debug build of the app, run **one** story page load of the Owner account (see test 3 for how). Look at the app log.
+### A6. Cookie cleanup
+**Needs:** A3 trigger and a debug action that prints the `instagram.com` cookie **count** (names and values must not be shown; the headless WebView is gone after a run so DevTools cannot attach). If that action does not exist: blocked.
+1. After one finished load: count must be 0 (and no web storage).
+2. Start a load, swipe the app away mid-run, reopen, check the count. Known limitation: it may be above 0.
+3. Run one more load to the end. **Expected:** the count is 0 again (the wipe happens at the start of each run). If the killed run's cookies survive this run: FAIL.
 
-**Expected on a modern WebView:** no `page_hook_unsupported` line; the load proceeds.
+### A7. WebView lease against the login screen
+**Needs:** T-015 and T-026 wiring.
+1. Open the login screen (S-02), do not finish. Trigger a page-mode load. **Expected:** `webview_busy` at once, no hidden browser, login keeps working.
+2. Finish the login, trigger again. **Expected:** runs normally.
+3. Start a load, then open S-02. **Expected:** it waits or says try again, never a login that fails for no reason.
+4. Kill the app on S-02, reopen, trigger page mode after 5 minutes. **Expected:** runs (the lease expired).
 
-3. If one phone has an old WebView (or you can install an old one): repeat the load on that phone.
+### A8. Headless WebView in the workmanager isolate (T-014 AC9)
+**Needs:** T-021 wiring, Settings "page mode in background" **on**, a debug "run check now". Both phones (one on Android 9 if possible).
+- **8a** Screen on, app open, one page-mode load. **Expected:** `op=fetchStories ok`, `accepted=` 1 or more.
+- **8b** Start "run check now", go to the home screen. **Expected:** a page-mode run inside the background task that ends; no crash, no `webview_unavailable`.
+- **8c** Unplug, screen off 30 min, then `adb shell dumpsys deviceidle force-idle`; run the job with `adb shell cmd jobscheduler run -f <dev package id> <job id>` (the debug menu shows both) or wait for the schedule; later `adb shell dumpsys deviceidle unforce`. **Expected:** the check ran and ended, or the system deferred it and it ran later. A log line `op=... start` with no end, or a crash, is a FAIL.
+- **8d** Battery saver on (Xiaomi: app battery option "No restrictions" once, "Battery saver" once). **Expected:** record whether it ran; if stopped, the app shows "skipped" or "deferred", never a stuck "running".
+- **8e** After 3 runs check Settings, Battery, App usage. **Expected:** no leftover WebView process; app not in the foreground.
 
-**Expected on an unsupported WebView:** the app log shows `page_hook_unsupported`, **no page opens**, and the Owner account's
-viewers list stays unchanged. There must be **no** story load at all.
+### A9. The 20 s timeout on a slow network
+**Needs:** A3 trigger. Phone A, cold start (reboot first), weak or throttled network.
+1. Start one page-mode profile load; note the time from the start to the result lines. Repeat up to 5 times in an hour (6 loads per hour limit).
 
-4. Write the result per phone in the summary table, with the WebView version.
+**Expected:** 3 to 12 s on Wi-Fi; the slowest load is under 20 s. A `page_timeout` for a page that would have loaded seconds later means 20 s is too short: report the times. More than one `page_open_timeout`: report with the phone model.
+2. Network off, start a load. **Expected:** a failure within about 20 s, no hang, no hidden browser left.
 
----
+### A10. Live probe (direct mode) and the story media plain GET (T-013 AC7)
+**Needs:** the debug action that calls `IgProbe.run` and `IgProbe.checkCdn`. Phone A, test account. Run each **once** per day.
+1. Probe: 5 calls IG-1 to IG-5. **Expected:** 5 lines like `IG-3 status=200 keys=[user]`; no value, URL or cookie. Give the Lead the table (it goes into INSTAGRAM_EXTRACTION.md "Live probe").
+2. CDN check: one photo and one video story file of the Owner account via a plain HTTPS GET. **Expected:** status 200, `image/...` or `video/...`, size above 0 for both. Do not open or save the content outside the app.
+3. Also confirm the discovered `doc_id` and tokens let direct mode work.
 
-## 3. The seen mutation is never sent (UD-3)
+On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 
-Goal: loading a story in page mode must not appear in the Owner account's viewers list. This is the most important device test.
-It is repeated for a photo story and a video story, on both phones.
-
-Preparation: the Owner account has one photo story and one video story, both posted in the last 24 hours. The test account follows
-the Owner account. Open the Owner account's viewers list on the third device and write down the viewers **count** (not the names)
-for each story. It must be **0** for both stories before you start (a count above 0 from before is fine, then it must **not
-change**).
-
-1. On Phone A start a page-mode story load for the Owner account (debug build: use the debug screen action "page-mode story
-   load" when T-015/T-021 wiring exists; until then use the inspector build with the same hook configuration and open
-   `instagram.com/stories/<owner username>/` in the inspector address bar).
-2. Wait until the app log shows the end of the run (`op=fetchStories ok` or the inspector shows the story items).
-3. In the app log read the line `accepted=... blocked=...`.
-
-**Expected:** `blocked` is **1 or more**. There is **no** line containing `seen_block_leak`.
-
-4. On the third device refresh the viewers list of **both** stories.
-
-**Expected:** the test account is **not** in the viewers list of either story, and the count did not change. (Instagram can take a
-minute to show viewers: wait 2 minutes and refresh again.)
-
-5. Repeat steps 1 to 4 on Phone B.
-6. Also try, on Phone A, a story that is a **video**, and a story with a **link sticker** or a **close-friends** story if the
-   Owner account has one.
-
-**Expected:** same as step 4 for each one.
-
-7. Optional hardening check: in the inspector (Chrome DevTools console on the page) run
-   `fetch('/api/v1/stories/reel/seen/', {method:'POST', body:'x=1'}).then(r => r.status)`.
-
-**Expected:** it prints `200`, and the hook log shows a `blocked` notice. (The request never reached Instagram.)
-
-If the test account **does** appear in the viewers list, it is a **FAIL (critical)**: stop all story loads in page mode, tell the
-Lead, and note which phone, which story type and the app log lines around `blocked`.
-
----
-
-## 4. Does the page tolerate the fake reply?
-
-Goal: the hook answers the blocked request with a fake "ok" (HTTP 200, `{"data":{},...}`). The page must not retry in a loop,
-show an error banner or fire a second mutation.
-
-1. Repeat test 3 step 1 on Phone A with the Chrome DevTools open (`chrome://inspect`, Network tab, filter `graphql`).
-2. Watch for 30 seconds.
-
-**Expected:** at most **one** blocked notice per story page, no stream of repeated identical requests, no error toast on the page.
-The count of `blocked` in the app log does not keep growing.
+### A11. Requests from a worker or iframe
+**Needs:** inspector build and Chrome DevTools. Owner account viewing its own story is safe.
+1. Network tab, filter `SeenMutation`, check the **Initiator** and the frame selector. **Expected:** main frame, not a worker or iframe (otherwise FAIL, report before any real story load).
+2. Sources tab, look for Workers and Service workers. Write what you see.
 
 ---
 
-## 5. Unverified assumptions of the story page
+## Part B. Background, storage and system (T-005, T-021, T-022, T-026, T-029a, T-027)
 
-These are guesses made from the T-002 capture. Each one is checked once and written down. Do not change code; report the result.
+### B1. Database opens in the background isolate (T-005 F-6)
+**Needs:** T-021 wiring. 1. Install the dev build, add one target, close the app. 2. Run "run check now" from the debug menu (or wait for the schedule) with the app **not** running. 3. Open the app, then Activity.
 
-### 5a. A user without stories (redirect)
-1. Pick a followed account of the test account that has **no** story right now.
-2. Run one page-mode story load for it.
-3. Read the app log (and, if possible, the inspector's `NavigationEvent` / address bar).
+**Expected:** the check appears in Activity (its row was written by the background isolate and read by the UI without a "database locked" error); no crash log from `StorizeDatabase.open`. Repeat 3 times while using the app at the same time.
 
-**Expected (assumption):** the page ends on the user's profile page (`/<username>/`) and the result is "no stories" after about
-2 seconds, not a timeout after 20 seconds. Write what really happened: redirect to profile, redirect elsewhere, an error page, or
-the page stays on `/stories/<username>/` with an empty reel list.
+### B2. Schedules survive reboot and force-stop (T-021 AC5)
+**Needs:** T-021 wiring, one active target, story interval 15 min (Settings). Both phones.
+1. Reboot the phone and do **not** open the app. After 30 min check Activity or the log. **Expected:** at least one periodic check ran after boot.
+2. Settings, Apps, Storize, Force stop. Open the app once. After 30 min check again. **Expected:** the schedule is back and checks run. (Some makers block background starts after a force-stop until the app is opened: write which.)
+3. Log out (S-13). **Expected:** no checks run afterwards.
 
-### 5b. Is the media id in the URL needed?
-1. In the inspector open `instagram.com/stories/<owner username>/` (no number).
-2. Then open `instagram.com/stories/<owner username>/<story media id>/` (copy the id from the address bar after step 1 lets
-   the page move on).
+### B3. Notifications and deep links (T-022)
+**Needs:** T-022 wiring, Settings notifications on, POST_NOTIFICATIONS granted, a target that gets a new story and one that gets a new post (use the Owner account as a target).
+1. Let a check find 3 or more new items for one target. **Expected:** one grouped notification (summary plus items), not a flood.
+2. **Cold start:** swipe the app away, tap a story notification. **Expected:** opens S-06 (or S-15 for a post) on that item, back goes to the Library.
+3. **Warm start:** app in the background, tap again. **Expected:** same destination, no duplicate screens.
+4. Session problem notification (log the test account out on the web, wait for a check). **Expected:** a login-problem notification that opens Account (S-13).
+5. Turn each notification type off in Settings. **Expected:** no notification of that type.
 
-**Expected (assumption):** both URLs load the story reel and fire the same reel query. Write down whether the first one (no id)
-works. If it does not, page mode needs the media id and the plan must change (open a question for the Lead).
+### B4. Permission prompts and battery settings (T-026)
+**Needs:** T-026 wiring. A freshly installed build on each phone (one on Android 13+ for notifications, one on Android 8 or 9 for storage if available).
+1. S-03 "Allow" for notifications. **Expected:** the system prompt (Android 13+); deny twice, then "Open app settings" appears and works.
+2. Android 8 or 9 only: the Storage card appears, the prompt works, and the first download then lands in `Pictures/Storize/<username>/` in the gallery app.
+3. "Open battery settings": **Expected:** the right system page for the maker. Per OEM, follow the steps shown (Samsung: Never sleeping apps; Xiaomi: Autostart on and No restrictions; Oppo: allow background activity and auto-launch). Return to the app. **Expected:** the warning clears after Unrestricted is set.
 
-### 5c. Which way does the "seen" request travel?
-1. Use a normal desktop Chrome (no hook) logged in as the **Owner account** and open its **own** story with DevTools open (Network tab,
-   filter `graphql`). Viewing your own story does not add a viewer. **Never do this with the test account**, because without the
-   hook the story would be marked as seen.
-2. Find the request whose name contains `SeenMutation` and write down how it was sent: **fetch**, **XHR**, or **beacon**
-   (DevTools shows the initiator column).
+### B5. Full-size photo and owner scoping (T-029a)
+**Needs:** T-029a wiring and at least one saved story photo, one Android 10+ phone and one on Android 9 or lower.
+1. Open a saved photo story (S-06) and a post slide (S-15); pinch to zoom. **Expected:** sharp full-size image (not the thumbnail), no crash on a 4000 px photo.
+2. Put a copy of a photo you took yourself into `Pictures/Storize/<username>/` with a file manager and try to open it through the app's code path if a debug action exists. **Expected:** the app refuses files it does not own (owner scoping); if no debug action exists write "not testable".
+3. Delete a saved file in the gallery app, reopen the item. **Expected:** "This file is missing" with Remove from library.
 
-**Expected (assumption):** it is a `fetch` POST with a form body. The hook covers all three ways, so any answer is fine; the
-answer tells us which test scenario matters most.
+### B6. Library timing with real drift (T-027)
+**Needs:** around 2,000 saved items (the soak produces some; otherwise use the debug seed action if present). 1. Cold-start the app and open the Library; time to the first tiles and to smooth scrolling. 2. Switch Stories and Posts. **Expected:** first tiles under about 1 s, no dropped-frame stutter while scrolling, no ANR. Write the item count and times.
 
-### 5d. Is the story query fired twice?
-1. In the same DevTools session look at how many requests have `ReelPage` in the name.
-
-**Expected (assumption):** one or two. If two, note whether the first one is empty (the app waits for the target's reel or for
-the page to finish loading plus 2 seconds before it says "no stories").
-
----
-
-## 6. Cookie cleanup after a run (QA-F10)
-
-Goal: no Instagram cookie or web storage is left in the phone's browser after a page-mode run, even if the app is killed.
-
-1. Do a page-mode load (any plan) on Phone A.
-2. As soon as the app log shows the end of the run, open the inspector build's cookie check, or on the PC in `chrome://inspect`
-   open the Application tab, Cookies for `instagram.com`.
-
-**Expected:** no cookies, no local storage, no IndexedDB for `instagram.com`.
-
-3. Start another page-mode load and, while it is running (before it ends), **swipe the app away** from the recent apps list.
-4. Open the app again, do **not** start a load, and look at the cookie list as in step 2.
-
-**Expected (known limitation):** cookies may still be there after a kill. Write what you see.
-
-5. Now start one more page-mode load and let it finish.
-
-**Expected:** the cookies from the killed run are gone after this run (the wipe happens at the start of every run). If the cookies
-of the killed run stay after the next run, it is a FAIL.
+### B7. The automated end-to-end flows on a device (T-037 AC1)
+**Needs:** a connected phone or emulator. Run `cd app && flutter test integration_test --flavor dev -d <device id>`.
+**Expected:** all 6 tests pass (they use fakes only, so no Instagram traffic).
 
 ---
 
-## 7. The WebView lease against the login screen (QA-F7)
+## Part C. 24 h soak (T-037 AC2, NFR-2, NFR-3)
+**Needs:** Parts A8, B1 to B4 passed, about **20 test targets** (public accounts that post stories often; do not use people who did not agree to be tracked; the Owner account is one of them), story interval 30 min, page mode in background per your A8 result, notifications on, battery Unrestricted. Both phones, same targets.
 
-Goal: page mode must never wipe the login WebView's cookies while the user is logging in. The real lease is built in T-015 and
-T-026; this test is run when both exist. Until then only steps 1 to 3 of the "design check" below apply.
+**Start.**
+1. Charge to 100 %, unplug, note the start time and battery %. Settings, Battery: reset or note the Storize usage.
+2. Add the targets (S-08). Use the phone normally. Do not open the app more than 3 times a day.
+3. Post 1 test story from the Owner account every 4 hours (6 in total, photo and video mixed) so you know the expected count.
 
-1. Open the login screen of the app (S-02) and enter the test account's username. Do **not** finish the login.
-2. While the login screen is open, trigger a page-mode load (a foreground retry, or force the background task from the debug
-   menu).
+**During (check each 4 hours, 30 s each).** Note battery %, and in Activity any error or "skipped" lines. Do not retry on Instagram problems: stop and tell the Lead.
 
-**Expected:** the page-mode load returns `webview_busy` at once, **no** hidden browser opens, and the login screen keeps its cookies
-(you can finish the login normally afterwards).
+**End (after 24 h).**
+1. Missed stories: of the Owner stories you posted, how many are in the Library? Missed = posted minus saved. Also count other targets' stories you saw on the web but not in the Library.
+2. Gaps: Activity or Settings gap list (more than 2 h between successful story checks). Write the longest.
+3. Battery: Storize share of battery in Settings, Battery, App usage (target: under 3 % per day), and total drop.
+4. Number of checks run, number of failures, any checkpoint or "login problem" event, any crash.
 
-3. Finish the login. Trigger a page-mode load again.
-
-**Expected:** the load runs normally now. (The lease is free again.)
-
-4. Start a page-mode load, then open the login screen while it runs.
-
-**Expected:** the login screen either waits or tells you to try again in a moment. It must not show a login that "fails for no
-reason".
-
-5. Kill the app while the login screen is open, reopen it, and trigger page mode after 5 minutes.
-
-**Expected:** page mode runs (the lease expired by itself and a crash does not lock page mode forever).
-
----
-
-## 8. The background isolate on two phones (T-014 AC9)
-
-Goal: the hidden browser starts, receives hook messages and ends inside the background task, with the screen off, on both phones.
-Needs T-015 and T-021 wiring. Setting "page mode in background" must be **on** in Settings for this test.
-
-For each phone (A: Samsung, B: Xiaomi or Oppo; use the Android 9 phone as one of them if you have one):
-
-### 8a. Screen on, foreground
-1. Open the app, trigger one page-mode story load for a test user.
-
-**Expected:** the run ends with `op=fetchStories ok`. The app log shows `accepted=` with 1 or more.
-
-### 8b. Background, screen on
-1. Start the background check from the debug menu ("run check now"). Leave the app on the home screen.
-
-**Expected:** the log shows a page-mode run with `accepted=1` or more inside the background task, and it ends. No crash, no
-`webview_unavailable`.
-
-### 8c. Screen off and Doze
-1. Plug the phone out of the charger. Turn the screen off and leave it for **30 minutes**.
-2. Over USB debugging force Doze: `adb shell dumpsys deviceidle force-idle` (undo later with
-   `adb shell dumpsys deviceidle unforce`).
-3. Wait for the next scheduled check, or trigger it with
-   `adb shell cmd jobscheduler run -f <package name> <job id>` (the debug menu shows the job id).
-4. Wake the phone and read the app log.
-
-**Expected:** either the check ran and ended (with `accepted=` 1 or more), or it was **deferred** by the system and ran later when
-the phone woke up. A hung run (a log line `op=... start` without an end) or a crash is a FAIL.
-
-### 8d. Battery saver
-1. Turn on Battery saver (and, on Xiaomi, set the app's battery option to "No restrictions" for one run and to "Battery saver"
-   for another run).
-2. Trigger the background check as in 8c.
-
-**Expected:** record whether page mode ran. If the system stops the task, the app must show it as "skipped" or "deferred", never as
-a stuck "running" state.
-
-### 8e. After the run
-1. Look at the phone's memory and battery use of the app after 3 runs (Settings, Battery, App usage).
-
-**Expected:** no leftover WebView process. The app does not stay in the foreground.
-
-Write per phone: Android version, WebView version, and for 8a to 8e PASS or FAIL.
-
----
-
-## 9. The 20 second timeout on a slow network
-
-Goal: the 20 s timeout is right for a cold WebView and a slow network. (Also checks the 10 s open timeout.)
-
-1. On Phone A turn on Wi-Fi throttling or use mobile data with weak signal (or Chrome DevTools "Slow 3G" on the inspector).
-2. Reboot the phone (cold WebView), open the app, and start one page-mode profile load. Write down the time between the start and
-   the result (the log has the start and end lines).
-3. Repeat 5 times over an hour, keeping to the "6 page loads per hour" rule. Write down each time.
-
-**Expected:** a normal load ends in 3 to 12 seconds on Wi-Fi. On slow data, write down the slowest time.
-
-**Pass rule:** the slowest load must be **under 20 seconds**. If any load ends with `page_timeout` while the page would have
-loaded a few seconds later, the 20 s value is too short: write the times and report. If you see `page_open_timeout` (the hidden
-browser took more than 10 seconds to start) more than once, write it down with the phone model.
-
-4. Turn the network off completely and start a load.
-
-**Expected:** a network failure within about 20 seconds, not a hang. No session or hidden browser is left (check test 6).
-
----
-
-## 10. Live probe of direct mode (T-013 AC7)
-
-Goal: record which Instagram REST calls work for the account, and check that the story CDN files download with a plain GET.
-Needs the T-015 wiring or the debug menu action that calls `IgProbe.run`.
-
-1. Use the **test account** logged in on Phone A.
-2. Run the probe once. It makes **5 calls** (IG-1 to IG-5), one each, through the request budget.
-3. Copy only the printed table: for each call the **status** and the **top-level key names**. Do not copy anything else.
-
-**Expected:** 5 lines like `IG-3 status=200 keys=[user]` with `proven` shown for those that work. No line holds a value, a URL or a
-cookie. Write the table into `docs/03-specs/INSTAGRAM_EXTRACTION.md` section "Live probe" (the Lead does this).
-
-4. Run the CDN check (`IgProbe.checkCdn`): it downloads the files of one photo story and one video story of the Owner account with a
-   plain HTTPS GET and prints the status, content type and size.
-
-**Expected:** status 200, content type `image/...` or `video/...`, size above 0 for both. Do **not** open or save the content outside
-the app.
-
-5. Wait 10 minutes. Do **not** run the probe a second time the same day.
-
-If any call returns 401, 403, 429 or a checkpoint, write the status and stop: do not retry.
-
----
-
-## 11. Other places a request could come from (worker, iframe)
-
-Goal: the hook cannot see requests from a Web Worker, a service worker, or a frame the page creates itself. The app's canary
-(`seen_block_leak`) is the safety net; this test looks for such a request on a real story page.
-
-1. On the PC with DevTools open on the inspector's WebView, load the Owner account's story page (the Owner account viewing its
-   own story is safe).
-2. In the Network tab, filter `SeenMutation`. Look at the **Initiator** column and the frame/worker selector at the top of the
-   Network or Sources panel.
-
-**Expected:** the request comes from the page's main frame (a script on the page), not from a worker or an iframe.
-If it comes from a worker or iframe, it is a FAIL: report it before any page-mode story load on a real account.
-
-3. In the Sources tab, look for "Workers" or "Service workers" under the page.
-
-**Expected:** none, or none that send GraphQL requests. Write what you see.
+**Expected (NFR-2, NFR-3):** no story missed while the phone was online; battery use under 3 % per day; no checkpoint. Fill `docs/05-reviews/SOAK.md`.
 
 ---
 
 ## Summary table
-
 | # | Test | Phone A | Phone B | Result and notes |
 |---|---|---|---|---|
-| 1 | Phone hook check (old T-002 AC4) | | | |
-| 2 | Document-start support | | | |
-| 3 | Seen mutation never sent (photo and video) | | | |
-| 4 | Page tolerates the fake reply | | | |
-| 5a | User without stories | | | |
-| 5b | Media id in the URL needed? | | | |
-| 5c | Seen request: fetch, XHR or beacon? | | | |
-| 5d | Reel query fired once or twice? | | | |
-| 6 | Cookie cleanup after a run and after a kill | | | |
-| 7 | WebView lease against the login screen | | | |
-| 8 | Background isolate (screen off, Doze, battery saver) | | | |
-| 9 | 20 s timeout on a slow network | | | |
-| 10 | Live probe (5 calls) and story CDN plain GET | | | |
-| 11 | Worker or iframe requests | | | |
+| A1 | Hook check (inspector) | | | |
+| A2 | Document-start fails closed | | | |
+| A3 | Seen mutation never sent | | | |
+| A4 | Page tolerates the fake reply | | | |
+| A5 | Story page assumptions (5a to 5d) | | | |
+| A6 | Cookie cleanup | | | |
+| A7 | WebView lease vs login | | | |
+| A8 | Headless WebView in background (8a to 8e) | | | |
+| A9 | 20 s timeout | | | |
+| A10 | Live probe and story media GET | | | |
+| A11 | Worker or iframe requests | | | |
+| B1 | Database in the background isolate | | | |
+| B2 | Reboot and force-stop | | | |
+| B3 | Notifications and deep links | | | |
+| B4 | Permissions and battery settings | | | |
+| B5 | Full-size photo and owner scoping | | | |
+| B6 | Library timing | | | |
+| B7 | integration_test on a device | | | |
+| C | 24 h soak (see SOAK.md) | | | |
 
 ## Open questions
-- The debug menu actions mentioned in tests 3, 8 and 10 ("page-mode story load", "run check now", "run the probe") belong to the
-  app wiring (T-015, T-021, T-037). Until they exist, use the inspector build (`app/lib/debug/**`, not part of T-014).
-- Test 5c needs the Owner account to open its own story; Instagram does not list an owner as a viewer of their own story. Confirm
-  this once before relying on it.
+- The debug actions named above ("page-mode story load", "run check now", "run the probe", cookie count, Library seed) belong to the app wiring. Any that do not exist yet make their tests "blocked"; the Lead decides whether to add them before the soak.
+- A5c: confirm once that Instagram does not list an owner as a viewer of their own story.
