@@ -5,6 +5,7 @@ import 'package:storize_instagram/direct/failure_classifier.dart';
 import 'package:storize_instagram/direct/ig_http.dart';
 import 'package:storize_instagram/direct/ig_session.dart';
 import 'package:storize_instagram/direct/ig_transport.dart';
+import 'package:storize_instagram/direct/rest_transport.dart';
 import 'package:storize_instagram/direct/username_cache.dart';
 import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/mapper/mapper.dart';
@@ -121,7 +122,17 @@ final class DirectExtractor {
   ) async {
     final session = await IgSession.load(_sessions, accountId, appId: appId);
     final own = session?.userId ?? '';
-    final r = await transport.viewer(own, call);
+    var r = await transport.viewer(own, call);
+    // Bootstrap: GraphQL needs a `doc_id` and page tokens that only a page
+    // load discovers, and on the very first login nothing has been loaded
+    // yet. The session check then uses IG-4 (REST `accounts/current_user`)
+    // once; every other operation stays on GraphQL (ADR-0003 addendum,
+    // amendment 2026-11-22).
+    if (r case Err(failure: SchemaChanged(:final where))
+        when where.startsWith('doc_id:') || where == 'page_tokens') {
+      _log?.log(LogLevel.info, 'direct', 'op=verifySession rest_bootstrap');
+      r = await const RestTransport().viewer(own, call);
+    }
     switch (r) {
       case Err(:final failure):
         return Err(failure);

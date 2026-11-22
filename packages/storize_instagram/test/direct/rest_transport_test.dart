@@ -96,6 +96,37 @@ void main() {
     },
   );
 
+  for (final (label, docIds, tokens) in [
+    (
+      'no doc_id',
+      FakeDocIds(missing: GraphqlQuery.values.toSet()),
+      FakeTokens(),
+    ),
+    ('no page tokens', FakeDocIds(), FakeTokens(available: false)),
+  ]) {
+    test(
+      'first login ($label): GraphQL cannot verify yet, so verifySession '
+      'uses IG-4 once (bootstrap)',
+      () async {
+        final rig = Rig(
+          transport: GraphqlTransport(docIds: docIds, tokens: tokens),
+          sessionUserId: 'ZZFAKE_viewer',
+          responder: _byPath,
+        );
+        final r = await rig.run(rig.extractor.verifySession());
+        expect(r.isOk, isTrue, reason: '$r');
+        expect(
+          rig.http.requests.single.uri.path,
+          '/api/v1/accounts/current_user/',
+        );
+        // Other operations stay on GraphQL: no REST fallback for content.
+        final stories = await rig.run(rig.extractor.fetchStories(['user_1']));
+        expect(stories.failureOrNull, isA<SchemaChanged>());
+        expect(rig.http.requests, hasLength(1));
+      },
+    );
+  }
+
   test(
     'IG-4 verifySession: current_user, viewer id compared with ds_user_id',
     () async {
