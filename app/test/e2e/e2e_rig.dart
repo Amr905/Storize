@@ -226,6 +226,7 @@ class E2eRig {
     sessionStoreProvider.overrideWithValue(sessions),
     shareServiceProvider.overrideWithValue(share),
     loginLeaseProvider.overrideWithValue(lease),
+    loginAcquireBackoffProvider.overrideWithValue(const []),
     loginWebViewBuilderProvider.overrideWithValue(_fakeWebView),
     setupOpsProvider.overrideWithValue(ops),
     libraryThumbBuilderProvider.overrideWithValue(fakeThumb),

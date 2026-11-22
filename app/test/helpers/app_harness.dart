@@ -162,6 +162,7 @@ List<Override> _onboardingFakes({required List<Override> except}) {
 
 List<Override> _allOnboardingFakes() => [
   loginLeaseProvider.overrideWithValue(_StubLease()),
+  loginAcquireBackoffProvider.overrideWithValue(const []),
   loginWebViewBuilderProvider.overrideWithValue(_stubLoginWebView),
   setupOpsProvider.overrideWithValue(_StubSetupOps()),
   loginPlatformProvider.overrideWithValue(FakeContentPlatform()),

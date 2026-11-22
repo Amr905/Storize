@@ -124,6 +124,7 @@ class LoginController extends Notifier<LoginState>
   late ContentPlatform _platform;
   late AccountRepo _accounts;
   late Clock _clock;
+  late List<Duration> _backoff;
 
   @override
   LoginState get state => super.state;
@@ -140,6 +141,7 @@ class LoginController extends Notifier<LoginState>
     _platform = ref.read(loginPlatformProvider);
     _accounts = ref.read(accountRepoProvider);
     _clock = ref.read(clockProvider);
+    _backoff = ref.read(loginAcquireBackoffProvider);
     ref.onDispose(() {
       _disposed = true;
       close();
@@ -164,7 +166,15 @@ class LoginController extends Notifier<LoginState>
   Future<void> start() async {
     state = const LoginState();
     _lostSub ??= _lease.onLost.listen((_) => _onLeaseLost());
-    final ok = await _lease.tryAcquire(LoginLease.owner);
+    var ok = await _lease.tryAcquire(LoginLease.owner);
+    // Nothing else should hold the WebView at login, so a refusal is most
+    // likely a slow first database open: retry a few times before "busy".
+    for (final wait in _backoff) {
+      if (ok || _disposed) break;
+      await Future<void>.delayed(wait);
+      if (_disposed) return;
+      ok = await _lease.tryAcquire(LoginLease.owner);
+    }
     if (_disposed) {
       if (ok) await _lease.release(LoginLease.owner);
       return;
