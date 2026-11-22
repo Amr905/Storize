@@ -43,8 +43,8 @@ class AppShell extends StatelessWidget {
               label: l10n.navTargets,
             ),
             NavigationDestination(
-              icon: const Icon(Icons.monitor_heart_outlined),
-              selectedIcon: const Icon(Icons.monitor_heart_outlined),
+              icon: const Icon(Icons.show_chart_rounded),
+              selectedIcon: const Icon(Icons.show_chart_rounded),
               label: l10n.navActivity,
             ),
             NavigationDestination(

@@ -40,6 +40,7 @@ abstract final class StorizeTypography {
   /// The text theme (colours are applied by the theme).
   static TextTheme get textTheme => TextTheme(
     displaySmall: display,
+    headlineMedium: pageTitle,
     headlineSmall: title,
     titleLarge: title,
     titleMedium: _style(15, 22, FontWeight.w500),

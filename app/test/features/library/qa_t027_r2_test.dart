@@ -245,7 +245,9 @@ void main() {
 
     /// The sticky overlay must name the day of the first tile under it.
     void expectStickyMatches(WidgetTester t, {required String where}) {
-      final top = t.getTopLeft(find.byType(Scaffold).first).dy + kToolbarHeight;
+      final top =
+          t.getTopLeft(find.byType(Scaffold).first).dy +
+          t.getSize(find.byType(AppBar).first).height;
       // First tile whose bottom is below the overlay's bottom edge.
       LibraryTile? first;
       var best = double.infinity;

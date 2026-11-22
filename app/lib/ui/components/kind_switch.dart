@@ -108,7 +108,8 @@ class _Segment extends StatelessWidget {
           ),
           alignment: AlignmentDirectional.center,
           padding: const EdgeInsets.all(StorizeSpacing.s4),
-          child: DecoratedBox(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 9),
             decoration: BoxDecoration(
               color: selected ? scheme.surface : Colors.transparent,
               borderRadius: StorizeRadii.fullRadius,
@@ -122,6 +123,7 @@ class _Segment extends StatelessWidget {
                     ]
                   : null,
             ),
+            alignment: Alignment.center,
             child: Center(
               child: Wrap(
                 alignment: WrapAlignment.center,

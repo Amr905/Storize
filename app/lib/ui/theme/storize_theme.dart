@@ -112,9 +112,7 @@ abstract final class StorizeTheme {
         toolbarHeight: 64,
         centerTitle: false,
         titleSpacing: StorizeSpacing.s16,
-        titleTextStyle: StorizeTypography.pageTitle.copyWith(
-          color: scheme.onSurface,
-        ),
+        titleTextStyle: textTheme.headlineMedium,
       ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,
