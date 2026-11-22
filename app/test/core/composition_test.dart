@@ -6,6 +6,7 @@ import 'package:storize_app/core/composition_production.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/main.dart';
+import 'package:storize_app/startup_error.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -457,7 +458,7 @@ void main() {
     });
 
     test(
-      'a failing composition starts the app unwired instead of blank',
+      'a failing composition shows the start-up error, not an unwired app',
       () async {
         final widget = await buildApp(
           diagnostics: rig.diagnostics,
@@ -465,8 +466,10 @@ void main() {
           initializeWorkmanager: () async {},
         );
 
-        expect(widget, isA<StorizeApp>());
-        expect((widget as StorizeApp).overrides, isEmpty);
+        expect(widget, isA<StartupErrorApp>());
+        final details = (widget as StartupErrorApp).details();
+        expect(details, contains('type=StateError'));
+        expect(details, contains('db'));
       },
     );
   });

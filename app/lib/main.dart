@@ -8,6 +8,7 @@ import 'package:storize_app/core/composition.dart';
 import 'package:storize_app/core/composition_production.dart';
 import 'package:storize_app/notifications/notification_taps.dart';
 import 'package:storize_app/router/app_router.dart';
+import 'package:storize_app/startup_error.dart';
 import 'package:storize_data/log/log.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:workmanager/workmanager.dart';
@@ -74,7 +75,7 @@ Future<Widget> buildApp({
       'composition_failed type=${error.runtimeType}',
       stack: stack,
     );
-    return const StorizeApp();
+    return StartupErrorApp(error: error, stack: stack);
   }
 }
 
