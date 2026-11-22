@@ -45,12 +45,19 @@ class FakeWeb implements LoginWebViewController {
 /// Lease double that records calls.
 class FakeLease implements LoginLease {
   bool available = true;
+
+  /// Refusals before [available] applies (a slow first database open).
+  int refuseFirst = 0;
   final List<String> calls = [];
   final StreamController<void> lost = StreamController<void>.broadcast();
 
   @override
   Future<bool> tryAcquire(String owner) async {
     calls.add('acquire:$owner');
+    if (refuseFirst > 0) {
+      refuseFirst--;
+      return false;
+    }
     return available;
   }
 
@@ -142,6 +149,7 @@ class OnbRig {
     Size size = const Size(400, 800),
     bool pushLogin = false,
     ContentPlatform? platformOverride,
+    List<Duration> acquireBackoff = const [],
     AccountRepo? accountsOverride,
     SessionStore? sessionsOverride,
   }) async {
@@ -168,6 +176,7 @@ class OnbRig {
     container = ProviderContainer(
       overrides: [
         loginLeaseProvider.overrideWithValue(lease),
+        loginAcquireBackoffProvider.overrideWithValue(acquireBackoff),
         loginWebViewBuilderProvider.overrideWithValue(fakeWebView),
         setupOpsProvider.overrideWithValue(ops),
         sessionStoreProvider.overrideWithValue(sessionsOverride ?? sessions),

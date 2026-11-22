@@ -56,6 +56,27 @@ void main() {
     expect(rig.lease.calls, ['acquire:login']);
   });
 
+  testWidgets('retries the lease before showing busy (slow first DB open)', (
+    t,
+  ) async {
+    final rig = OnbRig()..lease.refuseFirst = 2;
+    await rig.pump(
+      t,
+      initial: Routes.loginPath,
+      acquireBackoff: const [Duration(seconds: 1), Duration(seconds: 2)],
+    );
+    await t.pump(const Duration(seconds: 1));
+    await t.pump(const Duration(seconds: 2));
+    await t.pump();
+    expect(find.text("Login isn't available right now"), findsNothing);
+    expect(find.byKey(const ValueKey('fake-web')), findsOneWidget);
+    expect(rig.lease.calls, [
+      'acquire:login',
+      'acquire:login',
+      'acquire:login',
+    ]);
+  });
+
   testWidgets('losing the lease stops the login and wipes the WebView', (
     t,
   ) async {

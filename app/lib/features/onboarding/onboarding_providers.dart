@@ -28,6 +28,19 @@ final setupOpsProvider = Provider<SetupOps>(
 /// The platform S-02 verifies a new session with. It reads the staging
 /// session (`LoginAccount.unsavedId`), not the active account's. Wired by the
 /// composition root.
+/// Waits between login lease attempts before S-02 shows "Login isn't
+/// available right now". The first lease call is also the app's first
+/// database call after install, and on a phone (debug builds above all) the
+/// database can take longer to open than one attempt waits. Tests override
+/// this with an empty list.
+final loginAcquireBackoffProvider = Provider<List<Duration>>(
+  (ref) => const [
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 3),
+  ],
+);
+
 final loginPlatformProvider = Provider<ContentPlatform>(
   (ref) => throw UnimplementedError(
     'loginPlatformProvider is not wired. Override it in main() or in the test.',
