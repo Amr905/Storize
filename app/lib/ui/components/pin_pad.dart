@@ -84,7 +84,8 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
     final scheme = theme.colorScheme;
     final colors = StorizeColors.of(context);
     final hasError = widget.errorText != null;
-    final dotColor = hasError ? colors.error.color : scheme.primary;
+    final dotColor = hasError ? colors.error.color : scheme.onSurface;
+    final emptyDotColor = hasError ? colors.error.color : scheme.outline;
 
     final dots = AnimatedBuilder(
       animation: _shake,
@@ -110,7 +111,10 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: i < widget.filled ? dotColor : Colors.transparent,
-                    border: Border.all(color: dotColor, width: 2),
+                    border: Border.all(
+                      color: i < widget.filled ? dotColor : emptyDotColor,
+                      width: 2,
+                    ),
                   ),
                   child: const SizedBox.square(dimension: 16),
                 ),
@@ -196,6 +200,7 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
                             semanticLabel: AppLocalizations.of(context)
                                 .pinBiometric,
                             onPressed: widget.onBiometric!,
+                            bare: true,
                             child: const Icon(Icons.fingerprint_rounded),
                           ),
                   ),
@@ -213,6 +218,7 @@ class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
                       enabled: !_locked,
                       semanticLabel: AppLocalizations.of(context).pinDelete,
                       onPressed: widget.onBackspace,
+                      bare: true,
                       child: const Icon(Icons.backspace_outlined),
                     ),
                   ),
@@ -232,8 +238,11 @@ class _Key extends StatelessWidget {
     required this.onPressed,
     required this.child,
     this.semanticLabel,
+    this.bare = false,
   });
 
+  /// Bare keys (biometric, backspace) have no fill and use the primary tint.
+  final bool bare;
   final bool enabled;
   final VoidCallback onPressed;
   final Widget child;
@@ -250,7 +259,7 @@ class _Key extends StatelessWidget {
         message: semanticLabel ?? '',
         excludeFromSemantics: true,
         child: Material(
-          color: scheme.surfaceContainer,
+          color: bare ? Colors.transparent : scheme.surfaceContainer,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -261,7 +270,7 @@ class _Key extends StatelessWidget {
                 child: IconTheme.merge(
                   data: IconThemeData(
                     color: enabled
-                        ? scheme.onSurface
+                        ? (bare ? scheme.primary : scheme.onSurface)
                         : scheme.onSurface.withValues(alpha: 0.38),
                     size: 28,
                   ),

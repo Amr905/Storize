@@ -161,6 +161,10 @@
   "@stepDone": {
     "description": "Setup step status when the step is complete."
   },
+  "stepAllowed": "Allowed",
+  "@stepAllowed": {
+    "description": "Status of a completed permission step such as notifications."
+  },
   "stepPending": "To do",
   "@stepPending": {
     "description": "Setup step status when the step is not complete."
