@@ -293,10 +293,11 @@ void main() {
         await _login(t, rig);
         await t.pumpAndSettle();
         expect(find.textContaining('SECRET'), findsNothing);
-        expect(
-          rig.container.read(loginControllerProvider).error,
-          LoginError.unusable,
-        );
+        final state = rig.container.read(loginControllerProvider);
+        expect(state.error, LoginError.unusable);
+        // The dev diagnostic names the step and the type, never the message.
+        expect(state.detail, startsWith('verify_threw type='));
+        expect(state.detail, isNot(contains('SECRET')));
         expect(rig.sessions.accountIds, isEmpty);
       },
     );
