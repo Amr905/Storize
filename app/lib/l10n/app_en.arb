@@ -216,10 +216,6 @@
   "@expand": {
     "description": "Semantics label of a control that expands a section."
   },
-  "collapse": "Collapse",
-  "@collapse": {
-    "description": "Semantics label of a control that collapses a section."
-  },
   "pinDelete": "Delete",
   "@pinDelete": {
     "description": "PIN pad backspace key semantics label."
@@ -250,17 +246,29 @@
     }
   },
   "emptyNoDataTitle": "Nothing here yet",
+  "@emptyNoDataTitle": {"description": "Empty state title when there is nothing to show yet."},
   "emptyNoDataBody": "Items will show up here when there is something to see.",
+  "@emptyNoDataBody": {"description": "Empty state body when there is nothing to show yet."},
   "emptyFilteredTitle": "No matches",
+  "@emptyFilteredTitle": {"description": "Empty state title when the active filters hide every item."},
   "emptyFilteredBody": "Try changing or clearing the filters.",
+  "@emptyFilteredBody": {"description": "Empty state body suggesting how to change the filters."},
   "errorNetworkTitle": "No internet connection",
+  "@errorNetworkTitle": {"description": "Error state title when the device is offline."},
   "errorNetworkBody": "Check your connection and try again.",
+  "@errorNetworkBody": {"description": "Error state body when the device is offline."},
   "errorRateLimitedTitle": "Instagram is limiting requests",
+  "@errorRateLimitedTitle": {"description": "Error state title when Instagram limits requests."},
   "errorRateLimitedBody": "Storize will try again later.",
+  "@errorRateLimitedBody": {"description": "Error state body when Instagram limits requests."},
   "errorPlatformChangedTitle": "Instagram changed",
+  "@errorPlatformChangedTitle": {"description": "Error state title when the Instagram pages changed and the app cannot read them."},
   "errorPlatformChangedBody": "Update Storize to keep saving content.",
+  "@errorPlatformChangedBody": {"description": "Error state body asking the user to update Storize."},
   "errorUnknownTitle": "Something went wrong",
+  "@errorUnknownTitle": {"description": "Error state title for an unexpected failure."},
   "errorUnknownBody": "Please try again.",
+  "@errorUnknownBody": {"description": "Error state body for an unexpected failure."},
   "retry": "Retry",
   "@retry": {
     "description": "Retry button."
@@ -1166,9 +1174,18 @@
     "description": "S-11 info entry (EC-7): content vanished before it was downloaded.",
     "placeholders": {"account": {"type": "String"}}
   },
-  "actGap": "Gap: no checks from {from} to {to}",
+  "actGap": "Gap: no checks",
   "@actGap": {
-    "description": "S-11 warning entry: no checks ran in this time range.",
+    "description": "S-11 warning entry title: no checks ran during the time range shown on the second line."
+  },
+  "a11yMoreAccounts": "{count, plural, =1{1 more account} other{{count} more accounts}}",
+  "@a11yMoreAccounts": {
+    "description": "Semantics label of the account chip that stands for the accounts hidden behind it.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "actGapRange": "{from}–{to}",
+  "@actGapRange": {
+    "description": "S-11 gap entry second line: the time range without checks.",
     "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
   },
   "actFixBattery": "Fix battery settings",

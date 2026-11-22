@@ -158,9 +158,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expand => 'Expand';
 
   @override
-  String get collapse => 'Collapse';
-
-  @override
   String get pinDelete => 'Delete';
 
   @override
@@ -990,8 +987,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String actGap(String from, String to) {
-    return 'Gap: no checks from $from to $to';
+  String get actGap => 'Gap: no checks';
+
+  @override
+  String a11yMoreAccounts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more accounts',
+      one: '1 more account',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String actGapRange(String from, String to) {
+    return '$from–$to';
   }
 
   @override

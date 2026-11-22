@@ -67,7 +67,7 @@ abstract final class StorizeTheme {
     scrim: Color(0xFF000000),
     inverseSurface: Color(0xFFECE6E1),
     onInverseSurface: Color(0xFF1E1E21),
-    inversePrimary: Color(0xFFC93F17),
+    inversePrimary: Color(0xFFA8380F),
   );
 
   /// Light theme.

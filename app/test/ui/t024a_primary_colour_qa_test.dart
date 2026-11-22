@@ -57,7 +57,8 @@ void main() {
     expect(s.primary, ember);
     expect(s.secondary, ember);
     expect(c.info.color, ember);
-    expect(StorizeTheme.darkScheme.inversePrimary, ember);
+    // T-038: dark inversePrimary darkened to A8380F for SnackBar contrast.
+    expect(StorizeTheme.darkScheme.inversePrimary, const Color(0xFFA8380F));
     expect(s.onSecondary, s.onPrimary);
     expect(s.secondaryContainer, s.primaryContainer);
   });
@@ -72,7 +73,7 @@ void main() {
     final now = _ratio(_rgb(d.inversePrimary), _rgb(d.inverseSurface));
     final before = _ratio(0xD9481F, _rgb(d.inverseSurface));
     expect(now, greaterThan(before));
-    // Informational: 4.03 is still below 4.5 (SnackBar action text).
-    expect(now, greaterThanOrEqualTo(3.0));
+    // T-038: now meets 4.5:1 (SnackBar action text); see contrast_test.dart.
+    expect(now, greaterThanOrEqualTo(4.5));
   });
 }

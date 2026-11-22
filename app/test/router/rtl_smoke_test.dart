@@ -1,5 +1,7 @@
 // QA: RTL render smoke of the shell with the banner on every tab, at a large
-// text scale. Fails on any layout overflow or framework exception.
+// text scale. Fails on any layout overflow or framework exception. Covers
+// S-04 (/library), S-07 (/targets), S-09 (/targets/:id), S-11 (/activity),
+// S-12 (/settings) and S-13 (/account), T-038 AC3.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/ui/ui.dart';
@@ -31,6 +33,12 @@ void main() {
     ]) {
       await h.go(path);
       expect(t.takeException(), isNull, reason: path);
+      // Every routed page inherits the RTL direction (T-038 AC3).
+      expect(
+        Directionality.of(t.element(find.byType(Scaffold).first)),
+        TextDirection.rtl,
+        reason: path,
+      );
       expect(
         find.byType(SessionBanner).evaluate().length,
         ['/library', '/targets', '/activity'].contains(path) ? 1 : 0,

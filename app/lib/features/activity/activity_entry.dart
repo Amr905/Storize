@@ -12,6 +12,7 @@ class ActivityEntry {
     required this.icon,
     required this.tone,
     required this.text,
+    this.subtitle,
     this.location,
     this.actionLabel,
   });
@@ -24,6 +25,9 @@ class ActivityEntry {
 
   /// Pre-formatted sentence.
   final String text;
+
+  /// Optional second line (gap: the time range).
+  final String? subtitle;
 
   /// Where tapping the entry leads, or null when it is read-only.
   final String? location;
@@ -100,7 +104,8 @@ ActivityEntry describeActivity(
       return ActivityEntry(
         icon: Icons.warning_amber_rounded,
         tone: ActivityTone.warning,
-        text: l10n.actGap(time(p['fromMs']), time(p['toMs'])),
+        text: l10n.actGap,
+        subtitle: l10n.actGapRange(time(p['fromMs']), time(p['toMs'])),
         location: Routes.setupPath,
         actionLabel: l10n.actFixBattery,
       );

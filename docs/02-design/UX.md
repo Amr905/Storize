@@ -581,7 +581,7 @@ Notation: ASCII wireframes at phone width. `[ ]` = button, `( )` = chip, `▢` =
 | `onSurfaceVariant` | `#6B635C` | `#A69E97` | Secondary text |
 | `outline` | `#D8D0C8` | `#3A3836` | Dividers, borders |
 | `success` | `#1F7A4D` | `#5BD69A` | Active |
-| `warning` | `#B26A00` | `#FFB74D` | Needs re-login, gaps, rate limit |
+| `warning` | `#955A00` (≥ 4.5:1 on surface; T-038) | `#FFB74D` | Needs re-login, gaps, rate limit |
 | `error` | `#C62828` | `#FF8A80` | Restricted, errors, destructive actions |
 | `neutralStatus` | `#8A847E` | `#8A847E` | Paused, not visible |
 
