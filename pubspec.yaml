@@ -42,3 +42,11 @@ melos:
       packageFilters:
         scope: storize_app
         dirExists: test
+
+# The JNI-based Android implementations (path_provider_android 2.3.x,
+# shared_preferences_android 2.5.x) throw a JThrowable on a Galaxy S24 Ultra
+# (Android 17): the database path lookup failed, so the login lease never
+# opened. Pin the last Pigeon/method-channel releases until that is fixed.
+dependency_overrides:
+  path_provider_android: 2.2.23
+  shared_preferences_android: 2.4.28
