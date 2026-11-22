@@ -9,6 +9,7 @@ import 'package:storize_app/features/viewer/post_info_sheet.dart';
 import 'package:storize_app/features/viewer/post_providers.dart';
 import 'package:storize_app/features/viewer/post_slide.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
+import 'package:storize_app/features/viewer/viewer_action.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
@@ -157,7 +158,8 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
     final scheme = Theme.of(context).colorScheme;
     final colors = StorizeColors.of(context);
     final text = Theme.of(context).textTheme;
-    final onScrim = colors.onMediaScrim;
+    final onSurface = scheme.onSurface;
+    final onMedia = colors.onMediaScrim;
     final async = ref.watch(postViewerProvider(widget.contentId));
     final data = async.value;
 
@@ -168,7 +170,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
           body: Center(
             child: IconButton(
               tooltip: l10n.storyClose,
-              icon: Icon(Icons.close_rounded, color: onScrim),
+              icon: Icon(Icons.close_rounded, color: onMedia),
               onPressed: _close,
             ),
           ),
@@ -197,7 +199,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
     final typeLabel = postTypeLabel(l10n, item.content, media);
 
     return Scaffold(
-      backgroundColor: scheme.scrim,
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -218,7 +220,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                     ),
                     tooltip: MaterialLocalizations.of(context)
                         .backButtonTooltip,
-                    color: onScrim,
+                    color: onSurface,
                     icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: _close,
                   ),
@@ -228,16 +230,15 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                     child: Text(
                       l10n.storyAccount(username),
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: onScrim,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: text.titleMedium?.copyWith(color: onSurface),
                     ),
                   ),
                   if (total > 0)
                     Text(
                       l10n.postCounter(_index + 1, total),
-                      style: TextStyle(color: onScrim),
+                      style: text.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   IconButton(
                     key: _moreKey,
@@ -246,7 +247,7 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                       minHeight: StorizeSpacing.minTouchTarget,
                     ),
                     tooltip: l10n.postMoreTooltip,
-                    color: onScrim,
+                    color: onSurface,
                     icon: const Icon(Icons.more_vert_rounded),
                     onPressed: () => unawaited(_showMore(media)),
                   ),
@@ -255,19 +256,22 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
             ),
             // Media pager.
             Expanded(
-              child: PageView.builder(
-                controller: _pages,
-                itemCount: total,
-                onPageChanged: (i) => setState(() => _index = i),
-                itemBuilder: (context, i) => Semantics(
-                  label: l10n.postSlideSemantics(i + 1, total),
-                  child: PostSlideView(
-                    key: ValueKey('slide-${media[i].id}'),
-                    contentId: item.content.id,
-                    media: media[i],
-                    onRemove: ref.watch(postSlideRemoverProvider) == null
-                        ? null
-                        : () => unawaited(_removeSlide(media[i].slideIndex)),
+              child: ColoredBox(
+                color: scheme.scrim,
+                child: PageView.builder(
+                  controller: _pages,
+                  itemCount: total,
+                  onPageChanged: (i) => setState(() => _index = i),
+                  itemBuilder: (context, i) => Semantics(
+                    label: l10n.postSlideSemantics(i + 1, total),
+                    child: PostSlideView(
+                      key: ValueKey('slide-${media[i].id}'),
+                      contentId: item.content.id,
+                      media: media[i],
+                      onRemove: ref.watch(postSlideRemoverProvider) == null
+                          ? null
+                          : () => unawaited(_removeSlide(media[i].slideIndex)),
+                    ),
                   ),
                 ),
               ),
@@ -293,8 +297,8 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: i == _index
-                                ? onScrim
-                                : onScrim.withValues(alpha: 0.4),
+                                ? scheme.primary
+                                : scheme.outline,
                           ),
                         ),
                     ],
@@ -320,7 +324,9 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                           _when(item.content.postedAt),
                           typeLabel,
                         ),
-                        style: text.bodySmall?.copyWith(color: onScrim),
+                        style: text.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                       if (caption != null && caption.isNotEmpty) ...[
                         const SizedBox(height: StorizeSpacing.s4),
@@ -330,11 +336,11 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                           overflow: _captionOpen
                               ? TextOverflow.visible
                               : TextOverflow.ellipsis,
-                          style: text.bodyMedium?.copyWith(color: onScrim),
+                          style: text.bodyLarge?.copyWith(color: onSurface),
                         ),
                         TextButton(
                           style: TextButton.styleFrom(
-                            foregroundColor: onScrim,
+                            foregroundColor: scheme.onSurfaceVariant,
                             minimumSize: const Size(
                               0,
                               StorizeSpacing.minTouchTarget,
@@ -355,41 +361,31 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
               ),
             ),
             // Action bar: share this slide, info, delete the post.
-            Padding(
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: StorizeSpacing.s8,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: scheme.outline)),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: onScrim,
-                        minimumSize: const Size(
-                          0,
-                          StorizeSpacing.minTouchTarget,
-                        ),
-                      ),
-                      icon: const Icon(Icons.share_outlined),
-                      label: Text(l10n.storyShare),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: StorizeSpacing.s8,
+                  vertical: StorizeSpacing.s8,
+                ),
+                child: Row(
+                  children: [
+                    ViewerAction(
+                      icon: Icons.share_outlined,
+                      label: l10n.storyShare,
+                      color: onSurface,
                       onPressed: _busy || total == 0
                           ? null
                           : () => unawaited(
                               _share([media[_index.clamp(0, total - 1)]]),
                             ),
                     ),
-                  ),
-                  Expanded(
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: onScrim,
-                        minimumSize: const Size(
-                          0,
-                          StorizeSpacing.minTouchTarget,
-                        ),
-                      ),
-                      icon: const Icon(Icons.info_outline_rounded),
-                      label: Text(l10n.storyInfo),
+                    ViewerAction(
+                      icon: Icons.info_outline_rounded,
+                      label: l10n.storyInfo,
+                      color: onSurface,
                       onPressed: () => unawaited(
                         showPostInfoSheet(
                           context,
@@ -398,22 +394,14 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: onScrim,
-                        minimumSize: const Size(
-                          0,
-                          StorizeSpacing.minTouchTarget,
-                        ),
-                      ),
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      label: Text(l10n.storyDelete),
+                    ViewerAction(
+                      icon: Icons.delete_outline_rounded,
+                      label: l10n.storyDelete,
+                      color: onSurface,
                       onPressed: _busy ? null : () => unawaited(_delete(item)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

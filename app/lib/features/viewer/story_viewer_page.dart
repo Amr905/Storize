@@ -8,6 +8,7 @@ import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_app/features/viewer/story_info_sheet.dart';
 import 'package:storize_app/features/viewer/story_media.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
+import 'package:storize_app/features/viewer/viewer_action.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
@@ -253,7 +254,7 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                             child: ClipRRect(
                               borderRadius: StorizeRadii.fullRadius,
                               child: LinearProgressIndicator(
-                                minHeight: StorizeSpacing.s4,
+                                minHeight: 2,
                                 value: i < _index
                                     ? 1
                                     : i == _index
@@ -285,10 +286,8 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                         children: [
                           Text(
                             l10n.storyAccount(username),
-                            style: TextStyle(
-                              color: onScrim,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: onScrim),
                           ),
                           Text(
                             l10n.storyPostedLine(
@@ -299,7 +298,10 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                               ),
                               _ago(l10n, item.content.postedAt, now),
                             ),
-                            style: TextStyle(color: onScrim),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: onScrim.withValues(alpha: 0.85),
+                                ),
                           ),
                         ],
                       ),
@@ -402,61 +404,37 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: onScrim,
-                          minimumSize: const Size(
-                            0,
-                            StorizeSpacing.minTouchTarget,
-                          ),
-                        ),
-                        icon: const Icon(Icons.share_outlined),
-                        label: Text(l10n.storyShare),
-                        onPressed: _busy ? null : () => _share(item),
-                      ),
+                    ViewerAction(
+                      icon: Icons.share_outlined,
+                      label: l10n.storyShare,
+                      color: onScrim,
+                      onPressed: _busy ? null : () => _share(item),
                     ),
-                    Expanded(
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: onScrim,
-                          minimumSize: const Size(
-                            0,
-                            StorizeSpacing.minTouchTarget,
-                          ),
-                        ),
-                        icon: const Icon(Icons.info_outline_rounded),
-                        label: Text(l10n.storyInfo),
-                        onPressed: () => unawaited(
-                          showStoryInfoSheet(
-                            context,
-                            item: item,
-                            username: username,
-                          ),
+                    ViewerAction(
+                      icon: Icons.info_outline_rounded,
+                      label: l10n.storyInfo,
+                      color: onScrim,
+                      onPressed: () => unawaited(
+                        showStoryInfoSheet(
+                          context,
+                          item: item,
+                          username: username,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: onScrim,
-                          minimumSize: const Size(
-                            0,
-                            StorizeSpacing.minTouchTarget,
-                          ),
-                        ),
-                        icon: const Icon(Icons.delete_outline_rounded),
-                        label: Text(l10n.storyDelete),
-                        onPressed: _busy
-                            ? null
-                            : () => unawaited(
-                                _delete(
-                                  title: l10n.storyDeleteTitle,
-                                  body: l10n.storyDeleteBody,
-                                  confirmLabel: l10n.storyDelete,
-                                ),
+                    ViewerAction(
+                      icon: Icons.delete_outline_rounded,
+                      label: l10n.storyDelete,
+                      color: onScrim,
+                      onPressed: _busy
+                          ? null
+                          : () => unawaited(
+                              _delete(
+                                title: l10n.storyDeleteTitle,
+                                body: l10n.storyDeleteBody,
+                                confirmLabel: l10n.storyDelete,
                               ),
-                      ),
+                            ),
                     ),
                   ],
                 ),
