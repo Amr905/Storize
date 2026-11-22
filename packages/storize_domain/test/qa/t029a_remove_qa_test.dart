@@ -179,7 +179,7 @@ void main() {
     });
 
     Future<int> seed() async {
-      final c = s.content(targetId: alice.id, remoteId: 'r1');
+      final c = s.content(targetId: alice.id);
       return (await content.insertIfNew(c, [
         s.media(),
         s.media(slideIndex: 1),
