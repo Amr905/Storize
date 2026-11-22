@@ -118,6 +118,7 @@ class _SetupPageState extends ConsumerState<SetupPage>
               title: l10n.onbNotifTitle,
               body: l10n.onbNotifBody,
               status: status(s.notifications),
+              doneLabel: l10n.stepAllowed,
               actionLabel: s.notifications == SetupStepState.done
                   ? null
                   : l10n.onbAllow,

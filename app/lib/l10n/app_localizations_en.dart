@@ -131,6 +131,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stepDone => 'Done';
 
   @override
+  String get stepAllowed => 'Allowed';
+
+  @override
   String get stepPending => 'To do';
 
   @override

@@ -329,6 +329,12 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get stepDone;
 
+  /// Status of a completed permission step such as notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get stepAllowed;
+
   /// Setup step status when the step is not complete.
   ///
   /// In en, this message translates to:

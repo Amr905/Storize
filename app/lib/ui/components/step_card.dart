@@ -15,6 +15,7 @@ class StepCard extends StatefulWidget {
     required this.title,
     required this.body,
     this.status = StepStatus.pending,
+    this.doneLabel,
     this.actionLabel,
     this.onAction,
     this.expandable = false,
@@ -34,6 +35,9 @@ class StepCard extends StatefulWidget {
 
   /// Pending or done.
   final StepStatus status;
+
+  /// Status text when done; defaults to the generic "Done".
+  final String? doneLabel;
 
   /// Action button text.
   final String? actionLabel;
@@ -69,52 +73,34 @@ class _StepCardState extends State<StepCard> {
     final colors = StorizeColors.of(context);
     final done = widget.status == StepStatus.done;
     final statusText = done
-        ? AppLocalizations.of(context).stepDone
+        ? (widget.doneLabel ?? AppLocalizations.of(context).stepDone)
         : AppLocalizations.of(context).stepPending;
     final showBody = !widget.expandable || _expanded;
 
+    final badge = DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: done ? colors.success.color : scheme.surface,
+        border: done ? null : Border.all(color: scheme.outlineVariant),
+      ),
+      child: SizedBox.square(
+        dimension: 32,
+        child: Center(
+          child: done
+              ? Icon(Icons.check_rounded, size: 18, color: scheme.onPrimary)
+              : Text(
+                  '${widget.number}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+        ),
+      ),
+    );
+
     final header = Row(
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: done ? colors.success.container : scheme.primaryContainer,
-          ),
-          child: SizedBox.square(
-            dimension: 32,
-            child: Center(
-              child: done
-                  ? Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: colors.success.color,
-                    )
-                  : Text(
-                      '${widget.number}',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: scheme.onPrimaryContainer,
-                      ),
-                    ),
-            ),
-          ),
-        ),
-        const SizedBox(width: StorizeSpacing.s12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.title, style: theme.textTheme.titleMedium),
-              Text(
-                statusText,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: done
-                      ? colors.success.onContainer
-                      : scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
+        Expanded(child: Text(widget.title, style: theme.textTheme.titleMedium)),
         if (widget.expandable)
           Icon(
             _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
@@ -123,6 +109,44 @@ class _StepCardState extends State<StepCard> {
       ],
     );
 
+    final semanticsLabel = AppLocalizations.of(context)
+        .stepSemantics(widget.number, widget.title, statusText);
+
+    final details = <Widget>[
+      if (showBody) ...[
+        Text(
+          widget.body,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        if (done)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_rounded,
+                  size: 18,
+                  color: colors.success.color,
+                ),
+                const SizedBox(width: StorizeSpacing.s8),
+                Text(
+                  statusText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colors.success.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (widget.actionLabel != null) ...[
+          const SizedBox(height: StorizeSpacing.s12),
+          TonalButton(label: widget.actionLabel!, onPressed: widget.onAction),
+        ],
+      ],
+    ];
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
@@ -130,58 +154,50 @@ class _StepCardState extends State<StepCard> {
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.all(StorizeSpacing.cardPadding),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.expandable)
-              Semantics(
-                button: true,
-                expanded: _expanded,
-                label: AppLocalizations.of(context)
-                    .stepSemantics(widget.number, widget.title, statusText),
-                excludeSemantics: true,
-                onTap: _toggle,
-                child: InkWell(
-                  onTap: _toggle,
-                  borderRadius: StorizeRadii.chipRadius,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: StorizeSpacing.minTouchTarget,
+            Semantics(
+              container: true,
+              label: semanticsLabel,
+              excludeSemantics: true,
+              child: badge,
+            ),
+            const SizedBox(width: StorizeSpacing.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.expandable)
+                    Semantics(
+                      button: true,
+                      expanded: _expanded,
+                      label: semanticsLabel,
+                      excludeSemantics: true,
+                      onTap: _toggle,
+                      child: InkWell(
+                        onTap: _toggle,
+                        borderRadius: StorizeRadii.chipRadius,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minHeight: StorizeSpacing.minTouchTarget,
+                          ),
+                          child: header,
+                        ),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 32),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: header,
+                      ),
                     ),
-                    child: header,
-                  ),
-                ),
-              )
-            else
-              Semantics(
-                container: true,
-                label: AppLocalizations.of(context)
-                    .stepSemantics(widget.number, widget.title, statusText),
-                excludeSemantics: true,
-                child: header,
+                  ...details,
+                ],
               ),
-            if (showBody) ...[
-              const SizedBox(height: StorizeSpacing.s8),
-              Text(
-                widget.body,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              if (widget.actionLabel != null) ...[
-                const SizedBox(height: StorizeSpacing.s12),
-                if (done)
-                  TonalButton(
-                    label: widget.actionLabel!,
-                    onPressed: widget.onAction,
-                  )
-                else
-                  PrimaryButton(
-                    label: widget.actionLabel!,
-                    onPressed: widget.onAction,
-                  ),
-              ],
-            ],
+            ),
           ],
         ),
       ),
