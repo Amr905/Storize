@@ -4,6 +4,7 @@ import 'package:storize_app/core/composition_production.dart';
 import 'package:storize_app/debug/tools/dev_tools_screen.dart';
 import 'package:storize_app/debug/tools/dev_tools_wiring.dart';
 import 'package:storize_app/main.dart' show installDiagnostics;
+import 'package:storize_app/startup_error.dart';
 import 'package:workmanager/workmanager.dart';
 
 /// Dev-only entry point for the phone test checklist (T-037a).
@@ -17,22 +18,27 @@ import 'package:workmanager/workmanager.dart';
 /// `main.dart`, contains none of this code.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final diagnostics = await installDiagnostics();
-  if (diagnostics == null) {
-    throw StateError('diagnostics_unavailable');
-  }
-  final composition = await composeProduction(
-    background: false,
-    diagnostics: diagnostics,
-  );
-  await Workmanager().initialize(callbackDispatcher);
-  runApp(
-    MaterialApp(
-      title: 'Storize dev tools',
-      debugShowCheckedModeBanner: false,
-      home: DevToolsScreen(
-        actions: buildDevToolsActions(composition, diagnostics.files),
+  try {
+    final diagnostics = await installDiagnostics();
+    if (diagnostics == null) {
+      throw StateError('diagnostics_unavailable');
+    }
+    final composition = await composeProduction(
+      background: false,
+      diagnostics: diagnostics,
+    );
+    await Workmanager().initialize(callbackDispatcher);
+    runApp(
+      MaterialApp(
+        title: 'Storize dev tools',
+        debugShowCheckedModeBanner: false,
+        home: DevToolsScreen(
+          actions: buildDevToolsActions(composition, diagnostics.files),
+        ),
       ),
-    ),
-  );
+    );
+  } on Object catch (error, stack) {
+    // Before, a start-up failure left a blank screen.
+    runApp(StartupErrorApp(error: error, stack: stack, showDetails: true));
+  }
 }

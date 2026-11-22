@@ -18,7 +18,10 @@ final _patterns = <RegExp>[
 
 /// Path prefixes (relative to app/lib) whose literals are not user-facing.
 /// debug/ is the developer WebView inspector (main_debug_inspector.dart only).
-const _allowedDirs = ['l10n/', 'debug/'];
+/// startup_error.dart is the screen shown when the app could not start: it
+/// must not depend on anything that may have failed, so it stays plain
+/// English (a fallback screen, not regular UI).
+const _allowedDirs = ['l10n/', 'debug/', 'startup_error.dart'];
 
 final _hasLetters = RegExp(r'\p{L}', unicode: true);
 final _interpolation = RegExp(r'\$\{[^}]*\}|\$\w+');
