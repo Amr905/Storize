@@ -146,6 +146,7 @@ DevToolsActions buildDevToolsActions(AppComposition c, RotatingLogFile logs) {
         sessions: c.parts.sessions,
         http: c.parts.igHttp,
         log: c.log,
+        appId: instagramWebAppId,
       );
       final report = await probe.run(username: username, userId: userId);
       // The CDN check needs the media of a real story, fetched through the
