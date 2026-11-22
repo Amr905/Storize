@@ -126,7 +126,7 @@ void main() {
         detectedAt: rigNow,
       );
       await pumpAccount(t, rig);
-      await t.tap(find.widgetWithText(TonalButton, 'Log out'));
+      await t.tap(find.widgetWithText(OutlinedButton, 'Log out'));
       await t.pumpAndSettle();
       await t.tap(find.widgetWithText(PrimaryButton, 'Log out'));
       await t.pumpAndSettle();

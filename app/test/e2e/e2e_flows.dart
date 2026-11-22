@@ -89,6 +89,10 @@ void registerE2eFlows() {
       await t.tap(find.text(l10n.tgtCatOwnTitle));
       await t.pumpAndSettle();
       // The add use case reads repo streams with real async.
+      await t.ensureVisible(
+        find.widgetWithText(FilledButton, l10n.tgtAddAndVerify),
+      );
+      await t.pumpAndSettle();
       await t.runAsync(() async {
         await t.tap(find.widgetWithText(FilledButton, l10n.tgtAddAndVerify));
         await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -291,6 +295,10 @@ void registerE2eFlows() {
         'nour_k',
       );
       await t.tap(find.text(l10n.tgtCatOwnTitle));
+      await t.pumpAndSettle();
+      await t.ensureVisible(
+        find.widgetWithText(FilledButton, l10n.tgtAddAndVerify),
+      );
       await t.pumpAndSettle();
       await t.runAsync(() async {
         await t.tap(find.widgetWithText(FilledButton, l10n.tgtAddAndVerify));
