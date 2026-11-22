@@ -17,7 +17,8 @@ void main() {
       expect(s.error, const Color(0xFFC62828));
       const x = StorizeColors.light;
       expect(x.success.color, const Color(0xFF1F7A4D));
-      expect(x.warning.color, const Color(0xFFB26A00));
+      // T-038: darkened from B26A00 to reach 4.5:1 on surfaces (contrast).
+      expect(x.warning.color, const Color(0xFF955A00));
       expect(x.error.color, const Color(0xFFC62828));
       expect(x.neutralStatus.color, const Color(0xFF8A847E));
     });

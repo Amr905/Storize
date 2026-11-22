@@ -105,6 +105,8 @@ class AccountChipRow extends StatelessWidget {
             const SizedBox(width: StorizeSpacing.s8),
             _Chip(
               label: '+$hidden',
+              semanticLabel: AppLocalizations.of(context)
+                  .a11yMoreAccounts(hidden),
               selected: false,
               onTap: onOverflowTap,
             ),

@@ -1174,9 +1174,18 @@
     "description": "S-11 info entry (EC-7): content vanished before it was downloaded.",
     "placeholders": {"account": {"type": "String"}}
   },
-  "actGap": "Gap: no checks from {from} to {to}",
+  "actGap": "Gap: no checks",
   "@actGap": {
-    "description": "S-11 warning entry: no checks ran in this time range.",
+    "description": "S-11 warning entry title: no checks ran during the time range shown on the second line."
+  },
+  "a11yMoreAccounts": "{count, plural, =1{1 more account} other{{count} more accounts}}",
+  "@a11yMoreAccounts": {
+    "description": "Semantics label of the account chip that stands for the accounts hidden behind it.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "actGapRange": "{from}–{to}",
+  "@actGapRange": {
+    "description": "S-11 gap entry second line: the time range without checks.",
     "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
   },
   "actFixBattery": "Fix battery settings",

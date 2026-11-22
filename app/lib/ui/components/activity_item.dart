@@ -12,6 +12,7 @@ class ActivityItem extends StatelessWidget {
     required this.tone,
     required this.time,
     required this.text,
+    this.subtitle,
     this.actionLabel,
     this.onAction,
     super.key,
@@ -28,6 +29,9 @@ class ActivityItem extends StatelessWidget {
 
   /// Description.
   final String text;
+
+  /// Optional second line under [text] (e.g. a time range).
+  final String? subtitle;
 
   /// Optional action text (e.g. "Fix", "Retry").
   final String? actionLabel;
@@ -74,6 +78,13 @@ class ActivityItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(text, style: theme.textTheme.bodyLarge),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   Text(
                     time,
                     style: theme.textTheme.bodySmall?.copyWith(

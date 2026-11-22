@@ -160,9 +160,8 @@ class _ActivityList extends StatelessWidget {
         final entry = describeActivity(context, event, view.targetsById);
         return _EntryTile(
           entry: entry,
-          time: MaterialLocalizations.of(
-            context,
-          ).formatTimeOfDay(TimeOfDay.fromDateTime(event.at.toLocal())),
+          time: MaterialLocalizations.of(context)
+              .formatTimeOfDay(TimeOfDay.fromDateTime(event.at.toLocal())),
         );
       },
     );
@@ -193,15 +192,13 @@ class _EntryTile extends StatelessWidget {
       tone: entry.tone,
       time: time,
       text: entry.text,
+      subtitle: entry.subtitle,
       actionLabel: entry.actionLabel,
       onAction: location == null
           ? null
           : () => unawaited(context.push(location)),
     );
     if (location == null) return item;
-    return InkWell(
-      onTap: () => unawaited(context.push(location)),
-      child: item,
-    );
+    return InkWell(onTap: () => unawaited(context.push(location)), child: item);
   }
 }

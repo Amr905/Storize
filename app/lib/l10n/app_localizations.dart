@@ -1745,11 +1745,23 @@ abstract class AppLocalizations {
   /// **'Removed before download · {account} · not an error'**
   String actRemovedBeforeDownload(String account);
 
-  /// S-11 warning entry: no checks ran in this time range.
+  /// S-11 warning entry title: no checks ran during the time range shown on the second line.
   ///
   /// In en, this message translates to:
-  /// **'Gap: no checks from {from} to {to}'**
-  String actGap(String from, String to);
+  /// **'Gap: no checks'**
+  String get actGap;
+
+  /// Semantics label of the account chip that stands for the accounts hidden behind it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more account} other{{count} more accounts}}'**
+  String a11yMoreAccounts(int count);
+
+  /// S-11 gap entry second line: the time range without checks.
+  ///
+  /// In en, this message translates to:
+  /// **'{from}–{to}'**
+  String actGapRange(String from, String to);
 
   /// S-11 gap entry action; opens S-03.
   ///
