@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 40 / 43 tasks done (93%)** — original plan 34 / 37 (92%) + follow-ups 5 / 5 (T-010a, T-012a, T-019a, T-024a, T-024b). (+1 Could, T-035, not counted) · Checkpoint 1 GREEN · Checkpoint 2 GREEN · Checkpoint 3 **GREEN** (854e001, CI 44525869942) · Checkpoint 4 **GREEN** (8a621b4, CI 44588301184) · next checkpoint after 25 done.
+- **Progress: 42 / 44 tasks done (95%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a) all done. (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN · next checkpoint at T-037. Remaining: **T-036** (needs P-5 keystore) and **T-037** (E2E; device part needs P-4 phones).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,8 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-029a | backend-developer (sonnet) | `packages/storize_domain/lib/src/repos/content_repo.dart` (+1 method, Lead-approved), fakes, new use case `remove_media_file`, `packages/storize_data/lib/repo/**` (content repo), `packages/storize_platform_android/**` (read method only), `app/lib/features/viewer/**`, `app/lib/features/targets/targets_providers.dart`, `target_detail_page.dart`, `app/lib/background/**`, `app/lib/core/composition*.dart`, `app/lib/main.dart`, tests for these | 03:10 |
-| T-038 | frontend-developer (haiku) | `app/lib/ui/**`, `app/lib/features/**` except `viewer/**`, `targets_providers.dart`, `target_detail_page.dart`; `app/lib/l10n/app_en.arb` (descriptions, new `a11y*` keys); `analysis_options.yaml`; app tests except viewer/targets-detail | 03:10 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -70,6 +68,7 @@
 | T-027 | Library S-04 (stories/posts) + filters S-05 + selection/delete | Medium | sonnet | Frontend Developer | T-025, T-019 | **done** | 2 | QA PASS r1 + Lead-verified r2 + CI [44844665040](https://github.com/Amr905/Storize/actions/runs/44844665040) · `05-reviews/T-027.md` |
 | T-028 | Story viewer S-06 | Medium | sonnet | Frontend Developer | T-027 | done | 1 | — |
 | T-029 | Post viewer S-15 | Medium | sonnet | Frontend Developer | T-027 | done | — | — |
+| T-029a | Viewer follow-ups: per-slide removal (port), full-size photo read, per-target Check now, staging clear | Medium | sonnet | Backend Developer | T-029, T-026 | done | 1 | QA PASS (15 tests) + CI 44965684777 · `05-reviews/T-029a.md` |
 | T-030 | Targets S-07 + Add target S-08 | Medium | sonnet | Frontend Developer | T-025, T-016, T-021 | done | — | — |
 | T-031 | Target detail S-09 + Remove dialog S-10 | Medium | sonnet | Frontend Developer | T-030, T-019 | done | — | — |
 | T-032 | Activity S-11 | Medium | haiku | Frontend Developer | T-025, T-020 | done | 1 | Lead review |
@@ -78,7 +77,7 @@
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
 | T-036 | Release pipeline (`release.yml`) + README install guide | Medium | sonnet | Backend Developer | T-001, P-5 | todo | — | — |
 | T-037 | End-to-end tests + device soak checklist | Medium | sonnet | QA Engineer | T-021…T-034 | todo | — | — |
-| T-038 | Accessibility & RTL pass + string audit | Low | haiku | Frontend Developer | T-026…T-034 | todo | — | — |
+| T-038 | Accessibility & RTL pass + string audit | Low | haiku | Frontend Developer | T-026…T-034 | done | — | — |
 
 ## Carry-forward notes (from QA findings)
 - **T-005:** enforce `CHECK (track_stories + track_posts + track_reels >= 1)` in SQL (T-004 F-1); `check_run.scope` only STORIES/POSTS, never ALL (T-003 F-3).
@@ -180,3 +179,4 @@
 - 2026-11-22 02:10 — **T-029 done** (38/43, 88%): Lead review; post-route tests use the real page; "Remove slide" hidden until a per-media port exists. CI 44959246953 green; merged. **Follow-up T-029a** (Lead-approved port change): `ContentRepo` per-media delete + use case, and full-size photo read path for S-06/S-15. T-022 dev done (wiring by Lead next); T-031 started.
 - 2026-11-22 02:45 — **T-031 done** (39/43, 91%): Lead review; no route placeholders remain; CI 44961143437 green; merged. Gap: S-09 Check now checks all targets (carried to T-038). Note: f4be7e3 on main had committed merge markers (Lead error: commit chained after a conflicted merge); fixed in f875463, CI green. Rule: never chain a commit after `git merge` without checking for unmerged paths.
 - 2026-11-22 03:00 — **T-022 done** (40/43, 93%): Lead review; Lead added warm-tap routing, core library desugaring and **compileSdk 37** (flutter_local_notifications 23 needs it; targetSdk stays 36); CI 44961986939 green; merged. melos `test`/`golden:update` now run with `TZ=UTC`. **Checkpoint 8 GREEN** (Lead): melos run test SUCCESS (app 962 ~1, domain 464, instagram 1244 ~3, model 73, platform 98, data), analyze clean, gitleaks no leaks. Remaining: T-036 (needs P-5 keystore), T-037 (needs P-4 phones), T-038 (a11y + carry-forwards); follow-up T-029a; Could T-035.
+- 2026-11-22 04:10 — **T-029a done** (QA PASS; C2 silent 'Checking…' notice parked: needs a notifications-port `cancel`) and **T-038 done** (Lead review; contrast tokens fixed, UX §5.2 updated). Both CI green, merged cleanly; main suite green (app 988, domain 478, platform 104, instagram 1244, model 73, data). **42/44 (95%).**
