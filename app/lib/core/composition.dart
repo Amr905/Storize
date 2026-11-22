@@ -166,6 +166,13 @@ final class StartReport {
   final Gap? gap;
 }
 
+/// The public `X-IG-App-ID` of instagram.com's own web client (the value the
+/// site's JavaScript sends with every API call). Without it the web API
+/// answers HTTP 400, seen on device on the first-login session check
+/// (2026-11-22). Not a secret: it names the web app, not a user. Kept here,
+/// not in `storize_instagram` (its guardrail forbids such literals there).
+const instagramWebAppId = '936619743392459';
+
 /// The composition root (TECH_SPEC section 2): every port, repo and use case,
 /// wired once per isolate. The foreground isolate and the background isolate
 /// each build their own (`background` differs). Each opens its own database
@@ -246,6 +253,7 @@ final class AppComposition {
         pageDriver: parts.pageDriver,
         hookSource: source,
         targets: targets,
+        appId: instagramWebAppId,
         log: log,
         // No `activity`: RunCheck writes PAGE_MODE_USED from the signals.
         clock: clock,

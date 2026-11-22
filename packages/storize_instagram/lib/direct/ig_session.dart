@@ -4,8 +4,8 @@ import 'package:storize_model/storize_model.dart';
 /// Builds the request headers for a stored session (AC6): the cookies, the
 /// WebView User-Agent, the CSRF token and the Referer.
 ///
-/// The exact header set is not captured yet (INSTAGRAM_EXTRACTION.md, Pending),
-/// so `appId` is configuration and is sent only when given, never hard-coded.
+/// `appId` is configuration: the app's composition passes it (no literal
+/// here, see guardrails_test).
 final class IgSession {
   /// Creates the headers source for [blob].
   IgSession(this.blob, {this.appId});
@@ -68,6 +68,8 @@ final class IgSession {
       'Referer': 'https://www.instagram.com/',
       'X-CSRFToken': ?csrf,
       'X-IG-App-ID': ?appId,
+      // Sent by the site's own API calls; some endpoints answer 400 without.
+      'X-Requested-With': 'XMLHttpRequest',
     };
   }
 
