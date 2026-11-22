@@ -65,7 +65,12 @@ class LoginState {
     this.error,
     this.username,
     this.previousUsername,
+    this.detail,
   });
+
+  /// A short diagnostic code for the error (dev builds show it). Never a
+  /// cookie, id or URL.
+  final String? detail;
 
   /// The phase.
   final LoginPhase phase;
@@ -180,7 +185,11 @@ class LoginController extends Notifier<LoginState>
       return;
     }
     if (!ok) {
-      state = const LoginState(phase: LoginPhase.error, error: LoginError.busy);
+      state = LoginState(
+        phase: LoginPhase.error,
+        error: LoginError.busy,
+        detail: _lease.lastFailure,
+      );
       return;
     }
     _leaseHeld = true;

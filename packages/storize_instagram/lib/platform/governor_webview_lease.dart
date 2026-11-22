@@ -106,6 +106,12 @@ final class GovernorWebViewLease implements WebViewLease {
   /// A broadcast stream: subscribe before you acquire.
   Stream<void> get onLost => _lost.stream;
 
+  /// Why the last [tryAcquire] returned false, or null after a success. A
+  /// short code for diagnostics (`held_by_other`, `busy_here`,
+  /// `acquire_timeout`, `acquire_failed type=...`); no ids or values.
+  String? get lastFailure => _lastFailure;
+  String? _lastFailure;
+
   /// The owners that hold the lease in this isolate.
   Set<String> get owners => Set.unmodifiable(_owners);
 
@@ -120,8 +126,14 @@ final class GovernorWebViewLease implements WebViewLease {
 
   @override
   Future<bool> tryAcquire(String owner) async {
-    if (_held && _owners.contains(owner)) return true;
-    if (_owners.isNotEmpty || _liveHolds > 0 || _acquiring) return false;
+    if (_held && _owners.contains(owner)) {
+      _lastFailure = null;
+      return true;
+    }
+    if (_owners.isNotEmpty || _liveHolds > 0 || _acquiring) {
+      _lastFailure = 'busy_here';
+      return false;
+    }
     _acquiring = true;
     // F5: a later attempt makes the late answer of an earlier one irrelevant.
     final generation = ++_generation;
@@ -133,7 +145,11 @@ final class GovernorWebViewLease implements WebViewLease {
     );
     try {
       final lease = await attempt.timeout(acquireTimeout);
-      if (lease == null) return false;
+      if (lease == null) {
+        _lastFailure = 'held_by_other';
+        return false;
+      }
+      _lastFailure = null;
       _owners.add(owner);
       _held = true;
       _lastRenewedAt = _clock.now();
@@ -159,6 +175,7 @@ final class GovernorWebViewLease implements WebViewLease {
         ),
       );
       _log?.log(LogLevel.warn, 'webview_lease', 'acquire_timeout');
+      _lastFailure = 'acquire_timeout';
       return false;
     } on Object catch (error) {
       _log?.log(
@@ -166,6 +183,7 @@ final class GovernorWebViewLease implements WebViewLease {
         'webview_lease',
         'acquire_failed type=${error.runtimeType}',
       );
+      _lastFailure = 'acquire_failed type=${error.runtimeType}';
       return false;
     } finally {
       _acquiring = false;

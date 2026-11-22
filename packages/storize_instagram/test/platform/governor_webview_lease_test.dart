@@ -236,6 +236,23 @@ void main() {
       expect(await b.tryAcquire('y'), isTrue);
     });
 
+    test(
+      'lastFailure names why acquire failed, and clears on success',
+      () async {
+        final a = lease('a');
+        final b = lease('b');
+        expect(await a.tryAcquire('x'), isTrue);
+        expect(a.lastFailure, isNull);
+        expect(await a.tryAcquire('y'), isFalse);
+        expect(a.lastFailure, 'busy_here');
+        expect(await b.tryAcquire('y'), isFalse);
+        expect(b.lastFailure, 'held_by_other');
+        await a.release('x');
+        expect(await b.tryAcquire('y'), isTrue);
+        expect(b.lastFailure, isNull);
+      },
+    );
+
     test('concurrent tryAcquire calls: exactly one wins', () async {
       final l = lease('a');
       final results = await Future.wait([

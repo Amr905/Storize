@@ -16,6 +16,9 @@ abstract interface class LoginLease {
 
   /// Emits when a held lease was lost (renewal failed).
   Stream<void> get onLost;
+
+  /// Why the last [tryAcquire] failed, for dev diagnostics. Null if unknown.
+  String? get lastFailure => null;
 }
 
 /// [LoginLease] over the shared [GovernorWebViewLease] (key -1).
@@ -33,4 +36,7 @@ final class GovernorLoginLease implements LoginLease {
 
   @override
   Stream<void> get onLost => _lease.onLost;
+
+  @override
+  String? get lastFailure => _lease.lastFailure;
 }
