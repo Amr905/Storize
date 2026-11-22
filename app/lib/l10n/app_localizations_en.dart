@@ -218,6 +218,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockTitle => 'Storize is locked';
 
   @override
+  String get lockSubtitle => 'Use your fingerprint or PIN';
+
+  @override
   String get lockWrongPin => 'Wrong PIN';
 
   @override

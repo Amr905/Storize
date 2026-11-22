@@ -277,6 +277,8 @@
   "@lockTitle": {
     "description": "S-14 heading."
   },
+  "lockSubtitle": "Use your fingerprint or PIN",
+  "@lockSubtitle": {"description": "S-14 line under the heading."},
   "lockWrongPin": "Wrong PIN",
   "@lockWrongPin": {
     "description": "S-14 error under the PIN dots."

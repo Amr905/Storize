@@ -22,11 +22,15 @@ class LockPanel extends ConsumerStatefulWidget {
     required this.title,
     required this.biometricReason,
     required this.onSuccess,
+    this.subtitle,
     super.key,
   });
 
   /// Heading above the dots.
   final String title;
+
+  /// Optional line under the heading.
+  final String? subtitle;
 
   /// Text of the system fingerprint prompt.
   final String biometricReason;
@@ -222,6 +226,16 @@ class _LockPanelState extends ConsumerState<LockPanel> {
           style: theme.textTheme.headlineSmall,
           textAlign: TextAlign.center,
         ),
+        if (widget.subtitle != null) ...[
+          const SizedBox(height: StorizeSpacing.s4),
+          Text(
+            widget.subtitle!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
         const SizedBox(height: StorizeSpacing.s24),
         if (methods.hasPin)
           PinPad(

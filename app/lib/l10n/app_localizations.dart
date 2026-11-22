@@ -479,6 +479,12 @@ abstract class AppLocalizations {
   /// **'Storize is locked'**
   String get lockTitle;
 
+  /// S-14 line under the heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint or PIN'**
+  String get lockSubtitle;
+
   /// S-14 error under the PIN dots.
   ///
   /// In en, this message translates to:
