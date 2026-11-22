@@ -60,10 +60,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: scheme.primary,
-                          borderRadius: StorizeRadii.cardRadius,
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: SizedBox.square(
-                          dimension: 56,
+                          dimension: 52,
                           child: Icon(
                             Icons.download_rounded,
                             color: scheme.onPrimary,
@@ -71,19 +71,27 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: StorizeSpacing.s16),
+                    const SizedBox(height: StorizeSpacing.s24),
                     Semantics(
                       header: true,
                       child: Text(
                         l10n.appTitle,
-                        style: theme.textTheme.displaySmall,
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontSize: 44,
+                          height: 1.1,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                     const SizedBox(height: StorizeSpacing.s8),
-                    Text(
-                      l10n.onbWelcomeTagline,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 260),
+                      child: Text(
+                        l10n.onbWelcomeTagline,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                     const SizedBox(height: StorizeSpacing.s24),
@@ -113,7 +121,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                   child: Text(
                                     l10n.onbRiskTitle,
                                     style: theme.textTheme.titleMedium
-                                        ?.copyWith(color: warning.onContainer),
+                                        ?.copyWith(color: scheme.onSurface),
                                   ),
                                 ),
                               ],
@@ -129,18 +137,14 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                   children: [
                                     Text(
                                       '•  ',
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            color: warning.onContainer,
-                                          ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(color: scheme.onSurface),
                                     ),
                                     Expanded(
-                                      child: Text(
+                                      child: _RiskText(
                                         r,
-                                        style: theme.textTheme.bodyLarge
-                                            ?.copyWith(
-                                              color: warning.onContainer,
-                                            ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(color: scheme.onSurface),
                                       ),
                                     ),
                                   ],
@@ -149,6 +153,19 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                           ],
                         ),
                       ),
+                    ),
+                    const SizedBox(height: StorizeSpacing.s12),
+                    CheckboxListTile(
+                      key: const ValueKey('onb-risk-checkbox'),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: _understood,
+                      title: Text(
+                        l10n.onbRiskCheckbox,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      onChanged: (v) =>
+                          setState(() => _understood = v ?? false),
                     ),
                   ],
                 ),
@@ -161,32 +178,43 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                 StorizeSpacing.screenMargin,
                 StorizeSpacing.s16,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CheckboxListTile(
-                    key: const ValueKey('onb-risk-checkbox'),
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    value: _understood,
-                    title: Text(
-                      l10n.onbRiskCheckbox,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    onChanged: (v) => setState(() => _understood = v ?? false),
-                  ),
-                  PrimaryButton(
-                    key: const ValueKey('onb-continue'),
-                    label: l10n.onbContinue,
-                    expand: true,
-                    loading: _saving,
-                    onPressed: _understood ? _continue : null,
-                  ),
-                ],
+              child: PrimaryButton(
+                key: const ValueKey('onb-continue'),
+                label: l10n.onbContinue,
+                expand: true,
+                loading: _saving,
+                onPressed: _understood ? _continue : null,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Renders text where `**phrase**` segments are bold.
+class _RiskText extends StatelessWidget {
+  const _RiskText(this.text, {this.style});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = text.split('**');
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          for (var i = 0; i < parts.length; i++)
+            TextSpan(
+              text: parts[i],
+              style: i.isOdd
+                  ? const TextStyle(fontWeight: FontWeight.w700)
+                  : null,
+            ),
+        ],
       ),
     );
   }

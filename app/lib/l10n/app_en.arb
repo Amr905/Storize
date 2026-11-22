@@ -277,6 +277,8 @@
   "@lockTitle": {
     "description": "S-14 heading."
   },
+  "lockSubtitle": "Use your fingerprint or PIN",
+  "@lockSubtitle": {"description": "S-14 line under the heading."},
   "lockWrongPin": "Wrong PIN",
   "@lockWrongPin": {
     "description": "S-14 error under the PIN dots."
@@ -865,21 +867,21 @@
   "@onbRiskTitle": {
     "description": "S-01 risk card title."
   },
-  "onbRisk1": "Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.",
+  "onbRisk1": "Storize uses an Instagram account to view stories. Instagram may **challenge or ban** that account.",
   "@onbRisk1": {
-    "description": "S-01 risk bullet."
+    "description": "S-01 risk bullet. Text between ** markers is rendered bold."
   },
-  "onbRisk2": "People you track will see that account in their story viewers.",
+  "onbRisk2": "People you track will see that account **in their story viewers**.",
   "@onbRisk2": {
-    "description": "S-01 risk bullet."
+    "description": "S-01 risk bullet. Text between ** markers is rendered bold."
   },
-  "onbRisk3": "Use a dedicated account, not your personal one.",
+  "onbRisk3": "Use a **dedicated account**, not your personal one.",
   "@onbRisk3": {
-    "description": "S-01 risk bullet."
+    "description": "S-01 risk bullet. Text between ** markers is rendered bold."
   },
   "onbRisk4": "Only track your own/client accounts, people who agreed, or public creators.",
   "@onbRisk4": {
-    "description": "S-01 risk bullet."
+    "description": "S-01 risk bullet. Text between ** markers is rendered bold."
   },
   "onbRiskCheckbox": "I understand these risks",
   "@onbRiskCheckbox": {

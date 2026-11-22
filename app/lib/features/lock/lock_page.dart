@@ -27,16 +27,25 @@ class LockPage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ExcludeSemantics(
-                  child: Icon(
-                    Icons.lock_outline_rounded,
-                    size: 56,
-                    color: scheme.primary,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: SizedBox.square(
+                      dimension: 52,
+                      child: Icon(
+                        Icons.download_rounded,
+                        color: scheme.onPrimary,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: StorizeSpacing.s16),
                 switch (state.phase) {
                   LockPhase.locked => LockPanel(
                     title: l10n.lockTitle,
+                    subtitle: l10n.lockSubtitle,
                     biometricReason: l10n.lockBiometricReason,
                     onSuccess: controller.unlock,
                   ),
