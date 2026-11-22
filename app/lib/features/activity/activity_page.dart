@@ -38,27 +38,25 @@ class ActivityPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.screenActivity)),
+      appBar: AppBar(
+        toolbarHeight: 72,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.screenActivity),
+            Text(
+              l10n.actSubtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           const SessionBannerSlot(),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(
-              StorizeSpacing.s16,
-              0,
-              StorizeSpacing.s16,
-              StorizeSpacing.s8,
-            ),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                l10n.actSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: StorizeSpacing.s16,
@@ -69,6 +67,7 @@ class ActivityPage extends ConsumerWidget {
                 for (final f in ActivityFilter.values)
                   FilterChip(
                     label: Text(_filterLabel(l10n, f)),
+                    showCheckmark: false,
                     selected: filter == f,
                     onSelected: (_) =>
                         ref.read(activityFilterProvider.notifier).select(f),
@@ -187,7 +186,7 @@ class _EntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = entry.location;
-    final item = ActivityItem(
+    final item = _ActivityRow(
       icon: entry.icon,
       tone: entry.tone,
       time: time,
@@ -200,5 +199,96 @@ class _EntryTile extends StatelessWidget {
     );
     if (location == null) return item;
     return InkWell(onTap: () => unawaited(context.push(location)), child: item);
+  }
+}
+
+/// One feed entry as in the mockup: icon, title and second line, time at the
+/// end, optional action pill under the text.
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({
+    required this.icon,
+    required this.tone,
+    required this.time,
+    required this.text,
+    this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final ActivityTone tone;
+  final String time;
+  final String text;
+  final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final c = StorizeColors.of(context);
+    final t = switch (tone) {
+      ActivityTone.neutral => c.neutralStatus,
+      ActivityTone.info => c.info,
+      ActivityTone.success => c.success,
+      ActivityTone.warning => c.warning,
+      ActivityTone.error => c.error,
+    };
+    final muted = theme.textTheme.bodyMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    return Padding(
+      padding: const EdgeInsetsDirectional.symmetric(
+        horizontal: StorizeSpacing.s16,
+        vertical: StorizeSpacing.s12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: t.container,
+              ),
+              child: SizedBox.square(
+                dimension: 44,
+                child: Icon(icon, size: 22, color: t.color),
+              ),
+            ),
+          ),
+          const SizedBox(width: StorizeSpacing.s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(text, style: theme.textTheme.titleMedium),
+                if (subtitle != null) Text(subtitle!, style: muted),
+                if (actionLabel != null) ...[
+                  const SizedBox(height: StorizeSpacing.s8),
+                  TextButton(
+                    onPressed: onAction,
+                    style: TextButton.styleFrom(
+                      backgroundColor: scheme.primaryContainer,
+                      foregroundColor: scheme.onPrimaryContainer,
+                      minimumSize: const Size(0, StorizeSpacing.minTouchTarget),
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: StorizeSpacing.s24,
+                      ),
+                      shape: const StadiumBorder(),
+                      textStyle: theme.textTheme.titleMedium,
+                    ),
+                    child: Text(actionLabel!),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: StorizeSpacing.s12),
+          Text(time, style: muted),
+        ],
+      ),
+    );
   }
 }

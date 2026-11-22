@@ -39,9 +39,7 @@ void main() {
       expect(rtlIcon, greaterThan(rtlText));
     });
 
-    testWidgets('badge hugs the start edge in both directions', (
-      tester,
-    ) async {
+    testWidgets('badge hugs the start edge in both directions', (tester) async {
       await _pump(tester, const StatusBadge(status: StorizeStatus.active));
       expect(tester.getTopLeft(find.byType(StatusBadge)).dx, 0);
       await _pump(
@@ -117,9 +115,7 @@ void main() {
 
     testWidgets(
       'asymmetric padding mirrors (fails on EdgeInsets.only(left:))',
-      (
-        tester,
-      ) async {
+      (tester) async {
         // SessionBanner pads start 16 / end 8. The icon's gap to the start edge
         // must be 16 in both directions, the Fix button's gap to the end edge
         // must be the same in both directions.
@@ -182,9 +178,7 @@ void main() {
   group('Touch targets >= 48 dp (AC-4)', () {
     testWidgets(
       'interactive components meet the Android tap-target guideline',
-      (
-        tester,
-      ) async {
+      (tester) async {
         final handle = tester.ensureSemantics();
         await tester.pumpWidget(
           themed(
@@ -281,10 +275,7 @@ void main() {
               postsLabel: 'P',
               onChanged: (_) {},
             ),
-            SessionBanner(
-              kind: SessionBannerKind.restricted,
-              onFix: () {},
-            ),
+            SessionBanner(kind: SessionBannerKind.restricted, onFix: () {}),
           ],
         ),
       );

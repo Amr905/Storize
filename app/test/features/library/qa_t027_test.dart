@@ -138,10 +138,7 @@ void main() {
 
       await t.tap(find.widgetWithText(FilledButton, 'Delete'));
       await t.pumpAndSettle();
-      expect(spy.deletes.toSet(), {
-        'content://fake/3/0',
-        'content://fake/6/0',
-      });
+      expect(spy.deletes.toSet(), {'content://fake/3/0', 'content://fake/6/0'});
       expect(spy.deletes, hasLength(2));
       final remaining = await _remainingIds(rig);
       expect(remaining.contains(3), isFalse);
@@ -373,10 +370,10 @@ void main() {
       await _selectTiles(t, [0, 2]);
       await t.tap(find.byTooltip('Share'));
       await t.pumpAndSettle();
-      expect(
-        rig.share.calls.single.map((f) => f.contentUri).toSet(),
-        {'content://fake/1/0', 'content://fake/3/0'},
-      );
+      expect(rig.share.calls.single.map((f) => f.contentUri).toSet(), {
+        'content://fake/1/0',
+        'content://fake/3/0',
+      });
     });
 
     testWidgets('broken tile: cancel keeps it, confirm removes only it', (
@@ -542,11 +539,8 @@ void main() {
         item(3, 1, DateTime(2026, 11, 13)),
         item(4, 1, DateTime(2026, 11, 9, 23, 59)),
       ];
-      LibraryFilters range(DateTime a, DateTime b) => LibraryFilters(
-        date: DatePreset.custom,
-        customFrom: a,
-        customTo: b,
-      );
+      LibraryFilters range(DateTime a, DateTime b) =>
+          LibraryFilters(date: DatePreset.custom, customFrom: a, customTo: b);
       expect(
         ids(
           all,
@@ -789,12 +783,7 @@ void main() {
         await seedStandard(rig);
         t.platformDispatcher.textScaleFactorTestValue = 1.5;
         addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
-        await pumpLibrary(
-          t,
-          rig,
-          direction: dir,
-          size: const Size(360, 800),
-        );
+        await pumpLibrary(t, rig, direction: dir, size: const Size(360, 800));
         expect(t.takeException(), isNull);
         await t.longPress(_tiles().first);
         await t.pumpAndSettle();

@@ -1724,8 +1724,20 @@ abstract class AppLocalizations {
   /// S-11 entry: a check finished without failures.
   ///
   /// In en, this message translates to:
-  /// **'Checked {count} accounts · No errors'**
+  /// **'Checked {count} accounts'**
   String actCheckDoneOk(int count);
+
+  /// S-11 second line of a clean check entry.
+  ///
+  /// In en, this message translates to:
+  /// **'No errors'**
+  String get actCheckDoneOkSub;
+
+  /// S-11 second line of a check entry with failures.
+  ///
+  /// In en, this message translates to:
+  /// **'{failed} failed'**
+  String actCheckFailedSub(int failed);
 
   /// S-11 entry: a check finished with failed accounts.
   ///
@@ -1733,23 +1745,41 @@ abstract class AppLocalizations {
   /// **'Checked {count} accounts · {failed} failed'**
   String actCheckDoneFailed(int count, int failed);
 
-  /// S-11 entry: stories were downloaded for an account.
+  /// S-11 entry title: stories were downloaded (the account is the second line).
   ///
   /// In en, this message translates to:
-  /// **'{count} stories downloaded · {account}'**
-  String actDownloadedStories(int count, String account);
+  /// **'{count} stories downloaded'**
+  String actDownloadedStories(int count);
 
-  /// S-11 entry: posts were downloaded for an account.
+  /// S-11 entry title: posts were downloaded (the account is the second line).
   ///
   /// In en, this message translates to:
-  /// **'{count} posts downloaded · {account}'**
-  String actDownloadedPosts(int count, String account);
+  /// **'{count} posts downloaded'**
+  String actDownloadedPosts(int count);
 
-  /// S-11 info entry (EC-7): content vanished before it was downloaded.
+  /// S-11 info entry second line (EC-7): which account, and that it is not an error.
   ///
   /// In en, this message translates to:
-  /// **'Removed before download · {account} · not an error'**
+  /// **'{account} · not an error'**
   String actRemovedBeforeDownload(String account);
+
+  /// S-11 info entry title (EC-7).
+  ///
+  /// In en, this message translates to:
+  /// **'Story removed before download'**
+  String get actRemovedTitle;
+
+  /// S-11 warning entry title with the time range.
+  ///
+  /// In en, this message translates to:
+  /// **'Gap: no checks from {from} to {to}'**
+  String actGapTitle(String from, String to);
+
+  /// S-11 gap entry second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Android may have stopped Storize'**
+  String get actGapSub;
 
   /// S-11 warning entry title: no checks ran during the time range shown on the second line.
   ///
@@ -1784,8 +1814,14 @@ abstract class AppLocalizations {
   /// S-11 warning entry (EC-15).
   ///
   /// In en, this message translates to:
-  /// **'Instagram slowed us down · checks slowed'**
+  /// **'Instagram slowed us down'**
   String get actRateLimited;
+
+  /// S-11 rate-limit entry second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks were slowed down to be safe'**
+  String get actRateLimitedSub;
 
   /// S-11 error entry (EC-1/2); opens S-13.
   ///
@@ -1793,11 +1829,23 @@ abstract class AppLocalizations {
   /// **'Instagram login needs attention'**
   String get actSessionProblem;
 
+  /// S-11 session entry second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks are paused until you log in again'**
+  String get actSessionProblemSub;
+
   /// S-11 error entry (EC-14).
   ///
   /// In en, this message translates to:
   /// **'Instagram changed — update Storize'**
   String get actPlatformChanged;
+
+  /// S-11 platform-changed entry second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks may fail until the app is updated'**
+  String get actPlatformChangedSub;
 
   /// S-11 info entry: the headless page fallback ran.
   ///
@@ -1814,20 +1862,26 @@ abstract class AppLocalizations {
   /// S-11 error entry (NFR-13).
   ///
   /// In en, this message translates to:
-  /// **'Downloads paused · storage full'**
+  /// **'Downloads paused'**
   String get actStoragePaused;
 
-  /// S-11 info entry: a tracked account changed status.
+  /// S-11 storage-paused entry second line.
   ///
   /// In en, this message translates to:
-  /// **'Account status changed · {account}'**
-  String actTargetStatus(String account);
+  /// **'Storage is full'**
+  String get actStoragePausedSub;
 
-  /// S-11 warning entry: a saved file is gone from the gallery.
+  /// S-11 info entry title: a tracked account changed status (the account is the second line).
   ///
   /// In en, this message translates to:
-  /// **'File missing from gallery · {account}'**
-  String actFileMissing(String account);
+  /// **'Account status changed'**
+  String get actTargetStatus;
+
+  /// S-11 warning entry title: a saved file is gone from the gallery (the account is the second line).
+  ///
+  /// In en, this message translates to:
+  /// **'File missing from gallery'**
+  String get actFileMissing;
 
   /// S-11 error entry: crash marker from the previous run.
   ///
@@ -1850,8 +1904,86 @@ abstract class AppLocalizations {
   /// Targets title with the tracked count and the recommended limit (S-07).
   ///
   /// In en, this message translates to:
-  /// **'Targets ({count}/{limit})'**
+  /// **'{count} of {limit} recommended'**
   String tgtCountLimit(int count, int limit);
+
+  /// Category name on S-07, S-08, S-09 (design wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Own / Client'**
+  String get tgtCatOwn;
+
+  /// S-08 category option title.
+  ///
+  /// In en, this message translates to:
+  /// **'Own / Client account'**
+  String get tgtCatOwnTitle;
+
+  /// S-08 helper line under the own/client category.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts you or your clients own'**
+  String get tgtCatOwnHint;
+
+  /// Category name on S-07, S-08, S-09 (design wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Person who agreed'**
+  String get tgtCatConsented;
+
+  /// S-08 helper line under the consented category.
+  ///
+  /// In en, this message translates to:
+  /// **'They know and consented to archiving'**
+  String get tgtCatConsentedHint;
+
+  /// S-08 category name.
+  ///
+  /// In en, this message translates to:
+  /// **'Public creator / brand'**
+  String get tgtCatPublic;
+
+  /// S-07, S-09 short category tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Public creator'**
+  String get tgtCatPublicShort;
+
+  /// S-08 helper line under the public category.
+  ///
+  /// In en, this message translates to:
+  /// **'Public account'**
+  String get tgtCatPublicHint;
+
+  /// S-07 extended floating button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get tgtAddShort;
+
+  /// S-07 row meta, number of saved items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} saved'**
+  String tgtMetaSaved(int count);
+
+  /// S-07 row note for a paused target.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused by you'**
+  String get tgtMetaPausedByYou;
+
+  /// S-07 row note for a target that is not visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Private — not followed'**
+  String get tgtMetaPrivate;
+
+  /// S-07 row note for an unavailable target.
+  ///
+  /// In en, this message translates to:
+  /// **'Account no longer exists'**
+  String get tgtMetaGone;
 
   /// S-07 action: check all active targets now (FR-21).
   ///
@@ -2339,6 +2471,18 @@ abstract class AppLocalizations {
   /// **'Keep Storize running'**
   String get setKeepRunning;
 
+  /// S-12 second line under Wi-Fi only.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause downloads on mobile data'**
+  String get setWifiOnlyHint;
+
+  /// S-12 second line under Keep Storize running.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery & background setup'**
+  String get setKeepRunningHint;
+
   /// S-12 notification switch.
   ///
   /// In en, this message translates to:
@@ -2537,6 +2681,18 @@ abstract class AppLocalizations {
   /// **'Health'**
   String get accHealthTitle;
 
+  /// S-13 health row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful check'**
+  String get accLastCheckLabel;
+
+  /// S-13 health row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate-limit events (7 days)'**
+  String get accRateLimitLabel;
+
   /// S-13 health line.
   ///
   /// In en, this message translates to:
@@ -2558,7 +2714,7 @@ abstract class AppLocalizations {
   /// S-13 amber state message.
   ///
   /// In en, this message translates to:
-  /// **'Instagram ended the session or asked for verification. Checks are paused.'**
+  /// **'Instagram ended the session or asked to confirm it\'s you. All checks are paused.'**
   String get accNeedsReloginBody;
 
   /// S-13 red state message.
@@ -2744,20 +2900,32 @@ abstract class AppLocalizations {
   /// S-10 dialog counts line.
   ///
   /// In en, this message translates to:
-  /// **'{stories} stories, {posts} posts saved.'**
+  /// **'{stories} stories and {posts} posts are saved for this account.'**
   String tdtRemoveCounts(int stories, int posts);
 
   /// S-10 option, default and safe choice.
   ///
   /// In en, this message translates to:
-  /// **'Keep downloads (in gallery)'**
+  /// **'Keep downloads'**
   String get tdtRemoveKeep;
 
   /// S-10 option that deletes the saved files.
   ///
   /// In en, this message translates to:
-  /// **'Delete downloads too (removes them from gallery)'**
+  /// **'Delete downloads too'**
   String get tdtRemoveDelete;
+
+  /// S-10 second line under the keep option.
+  ///
+  /// In en, this message translates to:
+  /// **'They stay in your Library and gallery'**
+  String get tdtRemoveKeepHint;
+
+  /// S-10 second line under the delete option.
+  ///
+  /// In en, this message translates to:
+  /// **'Also removes them from your gallery. Can\'t be undone'**
+  String get tdtRemoveDeleteHint;
 
   /// S-10 confirm button when delete is selected.
   ///

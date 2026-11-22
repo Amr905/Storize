@@ -489,10 +489,7 @@ void main() {
     });
 
     testWidgets('the default action is a stub that completes', (t) async {
-      expect(
-        await const StubCheckNowAction()(),
-        const CheckNowResult(),
-      );
+      expect(await const StubCheckNowAction()(), const CheckNowResult());
       await const NoOpShareService().share(const []);
     });
   });

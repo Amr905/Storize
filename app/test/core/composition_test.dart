@@ -206,10 +206,9 @@ void main() {
     });
 
     test('with no account every call fails closed and sends nothing', () async {
-      final result = await c().platform.fetchStories(
-        const ['1'],
-        policy: ExtractionPolicy.directOnly,
-      );
+      final result = await c().platform.fetchStories(const [
+        '1',
+      ], policy: ExtractionPolicy.directOnly);
 
       expect(result.failureOrNull, isA<SessionInvalid>());
       expect(rig.network.sends, 0);

@@ -966,7 +966,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String actCheckDoneOk(int count) {
-    return 'Checked $count accounts · No errors';
+    return 'Checked $count accounts';
+  }
+
+  @override
+  String get actCheckDoneOkSub => 'No errors';
+
+  @override
+  String actCheckFailedSub(int failed) {
+    return '$failed failed';
   }
 
   @override
@@ -975,19 +983,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String actDownloadedStories(int count, String account) {
-    return '$count stories downloaded · $account';
+  String actDownloadedStories(int count) {
+    return '$count stories downloaded';
   }
 
   @override
-  String actDownloadedPosts(int count, String account) {
-    return '$count posts downloaded · $account';
+  String actDownloadedPosts(int count) {
+    return '$count posts downloaded';
   }
 
   @override
   String actRemovedBeforeDownload(String account) {
-    return 'Removed before download · $account · not an error';
+    return '$account · not an error';
   }
+
+  @override
+  String get actRemovedTitle => 'Story removed before download';
+
+  @override
+  String actGapTitle(String from, String to) {
+    return 'Gap: no checks from $from to $to';
+  }
+
+  @override
+  String get actGapSub => 'Android may have stopped Storize';
 
   @override
   String get actGap => 'Gap: no checks';
@@ -1015,13 +1034,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actFix => 'Fix';
 
   @override
-  String get actRateLimited => 'Instagram slowed us down · checks slowed';
+  String get actRateLimited => 'Instagram slowed us down';
+
+  @override
+  String get actRateLimitedSub => 'Checks were slowed down to be safe';
 
   @override
   String get actSessionProblem => 'Instagram login needs attention';
 
   @override
+  String get actSessionProblemSub => 'Checks are paused until you log in again';
+
+  @override
   String get actPlatformChanged => 'Instagram changed — update Storize';
+
+  @override
+  String get actPlatformChangedSub =>
+      'Checks may fail until the app is updated';
 
   @override
   String get actPageModeUsed => 'Page mode used for a check';
@@ -1030,17 +1059,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actStorageLow => 'Storage is low';
 
   @override
-  String get actStoragePaused => 'Downloads paused · storage full';
+  String get actStoragePaused => 'Downloads paused';
 
   @override
-  String actTargetStatus(String account) {
-    return 'Account status changed · $account';
-  }
+  String get actStoragePausedSub => 'Storage is full';
 
   @override
-  String actFileMissing(String account) {
-    return 'File missing from gallery · $account';
-  }
+  String get actTargetStatus => 'Account status changed';
+
+  @override
+  String get actFileMissing => 'File missing from gallery';
 
   @override
   String get actAppCrash => 'Storize closed unexpectedly';
@@ -1055,8 +1083,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tgtCountLimit(int count, int limit) {
-    return 'Targets ($count/$limit)';
+    return '$count of $limit recommended';
   }
+
+  @override
+  String get tgtCatOwn => 'Own / Client';
+
+  @override
+  String get tgtCatOwnTitle => 'Own / Client account';
+
+  @override
+  String get tgtCatOwnHint => 'Accounts you or your clients own';
+
+  @override
+  String get tgtCatConsented => 'Person who agreed';
+
+  @override
+  String get tgtCatConsentedHint => 'They know and consented to archiving';
+
+  @override
+  String get tgtCatPublic => 'Public creator / brand';
+
+  @override
+  String get tgtCatPublicShort => 'Public creator';
+
+  @override
+  String get tgtCatPublicHint => 'Public account';
+
+  @override
+  String get tgtAddShort => 'Add';
+
+  @override
+  String tgtMetaSaved(int count) {
+    return '$count saved';
+  }
+
+  @override
+  String get tgtMetaPausedByYou => 'Paused by you';
+
+  @override
+  String get tgtMetaPrivate => 'Private — not followed';
+
+  @override
+  String get tgtMetaGone => 'Account no longer exists';
 
   @override
   String get tgtCheckNow => 'Check now';
@@ -1362,6 +1431,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setKeepRunning => 'Keep Storize running';
 
   @override
+  String get setWifiOnlyHint => 'Pause downloads on mobile data';
+
+  @override
+  String get setKeepRunningHint => 'Battery & background setup';
+
+  @override
   String get setNotifyStories => 'New stories';
 
   @override
@@ -1495,6 +1570,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accHealthTitle => 'Health';
 
   @override
+  String get accLastCheckLabel => 'Last successful check';
+
+  @override
+  String get accRateLimitLabel => 'Rate-limit events (7 days)';
+
+  @override
   String accLastCheck(String time) {
     return 'Last successful check $time';
   }
@@ -1509,7 +1590,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accNeedsReloginBody =>
-      'Instagram ended the session or asked for verification. Checks are paused.';
+      'Instagram ended the session or asked to confirm it\'s you. All checks are paused.';
 
   @override
   String get accRestrictedBody =>
@@ -1613,15 +1694,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tdtRemoveCounts(int stories, int posts) {
-    return '$stories stories, $posts posts saved.';
+    return '$stories stories and $posts posts are saved for this account.';
   }
 
   @override
-  String get tdtRemoveKeep => 'Keep downloads (in gallery)';
+  String get tdtRemoveKeep => 'Keep downloads';
 
   @override
-  String get tdtRemoveDelete =>
-      'Delete downloads too (removes them from gallery)';
+  String get tdtRemoveDelete => 'Delete downloads too';
+
+  @override
+  String get tdtRemoveKeepHint => 'They stay in your Library and gallery';
+
+  @override
+  String get tdtRemoveDeleteHint =>
+      'Also removes them from your gallery. Can\'t be undone';
 
   @override
   String get tdtRemoveConfirmDelete => 'Remove & delete';

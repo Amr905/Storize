@@ -27,7 +27,7 @@ void main() {
       // The username is in the app bar and under the display name.
       expect(find.text('@nour_k'), findsNWidgets(2));
       expect(find.text(l10n.statusActive), findsOneWidget);
-      expect(find.text(l10n.categoryConsented), findsOneWidget);
+      expect(find.text(l10n.tgtCatConsented), findsOneWidget);
       expect(find.text('consent by email 3/11'), findsOneWidget);
       expect(find.byTooltip(l10n.tdtEditCategory), findsOneWidget);
       expect(find.byTooltip(l10n.tdtEditNote), findsOneWidget);
@@ -43,10 +43,7 @@ void main() {
       await pumpDetail(tester, rig: rig, targetId: target.id);
       final l10n = await _l10n(tester);
 
-      expect(
-        find.text(l10n.tdtStatusNotVisible('@loginacc')),
-        findsOneWidget,
-      );
+      expect(find.text(l10n.tdtStatusNotVisible('@loginacc')), findsOneWidget);
     });
 
     testWidgets('no status card for an active account', (tester) async {
@@ -89,7 +86,7 @@ void main() {
 
       await tester.tap(find.byTooltip(l10n.tdtEditCategory));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(l10n.categoryPublic));
+      await tester.tap(find.text(l10n.tgtCatPublicShort));
       await tester.pumpAndSettle();
 
       final saved = await rig.targets.getById(target.id);
@@ -212,7 +209,9 @@ void main() {
       await pumpDetail(tester, rig: rig, targetId: target.id);
       final l10n = await _l10n(tester);
 
-      await tester.tap(find.widgetWithText(TonalButton, l10n.tgtActionPause));
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, l10n.tgtActionPause),
+      );
       await tester.pumpAndSettle();
       expect(
         (await rig.targets.getById(target.id))!.status,
@@ -220,7 +219,9 @@ void main() {
       );
       expect(find.text(l10n.tgtActionResume), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(TonalButton, l10n.tgtActionResume));
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, l10n.tgtActionResume),
+      );
       await tester.pumpAndSettle();
       expect(
         (await rig.targets.getById(target.id))!.status,
@@ -241,7 +242,7 @@ void main() {
 
       await tester.tap(
         find.descendant(
-          of: find.byType(KindSwitch),
+          of: find.byType(ChoiceChip),
           matching: find.text(l10n.libPostsTab),
         ),
       );

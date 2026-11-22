@@ -40,9 +40,7 @@ void main() {
       expect(find.text('2 / 3'), findsOneWidget);
     });
 
-    testWidgets('a photo slide is wrapped in an InteractiveViewer', (
-      t,
-    ) async {
+    testWidgets('a photo slide is wrapped in an InteractiveViewer', (t) async {
       final id = await addPost(rig, brand, slides: _photos);
       await pumpPostViewer(t, rig, contentId: id);
       expect(

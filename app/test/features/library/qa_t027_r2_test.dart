@@ -316,9 +316,7 @@ void main() {
       });
     }
 
-    testWidgets('50,000 items: open, built widgets, per-frame cost', (
-      t,
-    ) async {
+    testWidgets('50,000 items: open, built widgets, per-frame cost', (t) async {
       final rig = LibraryRig();
       final ts = await targets(rig);
       final items = [

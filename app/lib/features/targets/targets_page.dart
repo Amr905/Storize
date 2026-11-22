@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/ui_state.dart';
 import 'package:storize_app/core/ui_state_view.dart';
 import 'package:storize_app/features/shared/session_banner_slot.dart';
+import 'package:storize_app/features/targets/target_list_row.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -33,10 +34,20 @@ class TargetsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          count == null
-              ? l10n.screenTargets
-              : l10n.tgtCountLimit(count, TargetLimits.recommendedMax),
+        toolbarHeight: count == null ? null : 72,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.screenTargets),
+            if (count != null)
+              Text(
+                l10n.tgtCountLimit(count, TargetLimits.recommendedMax),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
         actions: [
           _CheckNowButton(
@@ -46,10 +57,13 @@ class TargetsPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         tooltip: l10n.tgtAddAccount,
         onPressed: () => unawaited(context.push(Routes.addTargetPath)),
-        child: const Icon(Icons.add_rounded),
+        icon: const Icon(Icons.add_rounded),
+        label: Text(l10n.tgtAddShort),
       ),
       body: Column(
         children: [
@@ -119,15 +133,29 @@ class _CheckNowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final button = TextButton.icon(
       onPressed: enabled ? onPressed : null,
-      icon: const Icon(Icons.sync_rounded, size: 18),
+      style: TextButton.styleFrom(
+        backgroundColor: scheme.primaryContainer,
+        foregroundColor: scheme.onPrimaryContainer,
+        minimumSize: const Size(0, StorizeSpacing.minTouchTarget),
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: StorizeSpacing.s20,
+        ),
+        shape: const StadiumBorder(),
+        textStyle: Theme.of(context).textTheme.titleMedium,
+      ),
+      icon: const Icon(Icons.sync_rounded, size: 22),
       label: Text(l10n.tgtCheckNow),
     );
     final sessionOk = enabled || running;
-    return sessionOk
-        ? button
-        : Tooltip(message: l10n.tgtCheckNowDisabled, child: button);
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: StorizeSpacing.s16),
+      child: sessionOk
+          ? button
+          : Tooltip(message: l10n.tgtCheckNowDisabled, child: button),
+    );
   }
 }
 
@@ -170,19 +198,22 @@ class _TargetList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final saved = ref.watch(savedCountsProvider).value;
     return ListView.builder(
+      padding: const EdgeInsetsDirectional.only(bottom: 88),
       itemCount: targets.length,
       itemBuilder: (context, i) {
         final target = targets[i];
         final paused = target.status == TargetStatus.paused;
         final l10n = AppLocalizations.of(context);
-        return TargetRow(
+        return TargetListRow(
           username: target.username,
           category: _categoryKind(target.category),
           status: checking && target.status == TargetStatus.active
               ? StorizeStatus.checking
               : _status(target.status),
-          meta: _meta(context, target),
+          note: _note(context, target),
+          checkedLine: _checkedLine(context, target, saved?[target.id]),
           onTap: () =>
               unawaited(context.push(Routes.targetDetailLocation(target.id))),
           swipeAction: TargetRowSwipeAction(
@@ -226,17 +257,40 @@ class _TargetList extends ConsumerWidget {
     TargetStatus.error => StorizeStatus.error,
   };
 
-  static String? _meta(BuildContext context, Target target) {
+  static String _time(BuildContext context, DateTime at) =>
+      MaterialLocalizations.of(context)
+          .formatTimeOfDay(TimeOfDay.fromDateTime(at.toLocal()));
+
+  /// The text beside the category tag (mockup S-07).
+  static String? _note(BuildContext context, Target target) {
     final l10n = AppLocalizations.of(context);
-    final localizations = MaterialLocalizations.of(context);
-    String time(DateTime at) =>
-        localizations.formatTimeOfDay(TimeOfDay.fromDateTime(at.toLocal()));
+    switch (target.status) {
+      case TargetStatus.paused:
+        return l10n.tgtMetaPausedByYou;
+      case TargetStatus.notVisible:
+        return l10n.tgtMetaPrivate;
+      case TargetStatus.unavailable:
+        return l10n.tgtMetaGone;
+      case TargetStatus.active:
+      case TargetStatus.error:
+        final newAt = target.lastNewStoryAt;
+        return newAt == null
+            ? null
+            : l10n.tgtMetaLastNew(_time(context, newAt));
+    }
+  }
+
+  /// "Checked 10:42 · 128 saved".
+  static String? _checkedLine(BuildContext context, Target target, int? saved) {
+    final l10n = AppLocalizations.of(context);
     final checked = target.lastStoriesCheckAt;
-    final checkedText = checked == null
-        ? l10n.tgtMetaNever
-        : l10n.tgtMetaChecked(time(checked));
-    final newAt = target.lastNewStoryAt;
-    if (newAt == null) return checkedText;
-    return l10n.tgtMetaLine(checkedText, l10n.tgtMetaLastNew(time(newAt)));
+    final parts = <String>[
+      if (checked != null)
+        l10n.tgtMetaChecked(_time(context, checked))
+      else if (target.status != TargetStatus.paused)
+        l10n.tgtMetaNever,
+      if (saved != null) l10n.tgtMetaSaved(saved),
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
   }
 }

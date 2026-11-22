@@ -47,12 +47,8 @@ class _FailingAccounts implements AccountRepo {
     AccountStatus status, {
     String? reason,
     DateTime? lastSuccessAt,
-  }) => inner.setStatus(
-    id,
-    status,
-    reason: reason,
-    lastSuccessAt: lastSuccessAt,
-  );
+  }) =>
+      inner.setStatus(id, status, reason: reason, lastSuccessAt: lastSuccessAt);
 }
 
 /// A store whose `save` fails for [failingId] (never prints the blob).
@@ -175,11 +171,7 @@ void main() {
   ) async {
     final rig = OnbRig();
     final sessions = _FailingSessions(rig.sessions, staging);
-    await rig.pump(
-      t,
-      initial: Routes.loginPath,
-      sessionsOverride: sessions,
-    );
+    await rig.pump(t, initial: Routes.loginPath, sessionsOverride: sessions);
     await _loggedIn(t, rig);
     expect(rig.sessions.accountIds, isEmpty);
     expect(rig.platform.calls, isEmpty);

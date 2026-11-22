@@ -13,10 +13,7 @@ void main() {
     var fixed = 0;
     await _pump(
       tester,
-      SessionBanner(
-        kind: SessionBannerKind.needsRelogin,
-        onFix: () => fixed++,
-      ),
+      SessionBanner(kind: SessionBannerKind.needsRelogin, onFix: () => fixed++),
     );
     expect(find.text('Instagram login needs attention'), findsOneWidget);
     await tester.tap(find.text('Fix'));
@@ -93,12 +90,7 @@ void main() {
 
     test('rejects lengths outside 4-6', () {
       expect(
-        () => PinPad(
-          length: 3,
-          filled: 0,
-          onDigit: (_) {},
-          onBackspace: () {},
-        ),
+        () => PinPad(length: 3, filled: 0, onDigit: (_) {}, onBackspace: () {}),
         throwsAssertionError,
       );
     });

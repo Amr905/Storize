@@ -37,12 +37,7 @@ void main() {
   });
 
   _both('library_posts', (t, rig, b) async {
-    await pumpLibrary(
-      t,
-      rig,
-      brightness: b,
-      size: _phone,
-    );
+    await pumpLibrary(t, rig, brightness: b, size: _phone);
     await t.tap(find.text('Posts').first);
     await t.pumpAndSettle();
   });

@@ -250,3 +250,16 @@ class AddTargetFormController extends Notifier<AddTargetForm> {
     return result;
   }
 }
+
+/// Saved items per target id, for the "N saved" meta on S-07.
+final StreamProvider<Map<int, int>>
+savedCountsProvider = StreamProvider.autoDispose<Map<int, int>>(
+  (ref) =>
+      ref.watch(contentRepoProvider).watchLibrary(ContentFilter()).map((items) {
+        final counts = <int, int>{};
+        for (final item in items) {
+          counts.update(item.content.targetId, (n) => n + 1, ifAbsent: () => 1);
+        }
+        return counts;
+      }),
+);

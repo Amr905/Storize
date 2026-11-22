@@ -57,14 +57,8 @@ List<String> scanForHardCodedStrings(String libDir) {
 
 void main() {
   test('scanner catches a hard-coded Text literal (self-check)', () {
-    expect(
-      _patterns.any((p) => p.hasMatch("Text('Save changes')")),
-      isTrue,
-    );
-    expect(
-      _patterns.any((p) => p.hasMatch("tooltip: 'Clear list'")),
-      isTrue,
-    );
+    expect(_patterns.any((p) => p.hasMatch("Text('Save changes')")), isTrue);
+    expect(_patterns.any((p) => p.hasMatch("tooltip: 'Clear list'")), isTrue);
     // Non-copy literals are allowed by the letter rule.
     expect(
       scanForHardCodedStrings('lib').where((f) => f.contains("'@")),

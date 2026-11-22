@@ -67,97 +67,175 @@ class _AccountBody extends ConsumerWidget {
       AccountHealth.active => null,
     };
 
-    return ListView(
+    final problem =
+        health == AccountHealth.needsRelogin ||
+        health == AccountHealth.restricted;
+    final tone = health == AccountHealth.restricted
+        ? StorizeColors.of(context).error
+        : StorizeColors.of(context).warning;
+    final muted = theme.textTheme.bodyLarge?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final value = theme.textTheme.bodyLarge;
+
+    return Padding(
       padding: const EdgeInsetsDirectional.all(StorizeSpacing.screenMargin),
-      children: [
-        Row(
-          children: [
-            StorizeAvatar(
-              initial: a == null || a.username.isEmpty
-                  ? null
-                  : a.username[0].toUpperCase(),
-            ),
-            const SizedBox(width: StorizeSpacing.s12),
-            Expanded(
-              child: Text(
-                a == null
-                    ? l10n.accNotConnected
-                    : l10n.actAccountHandle(a.username),
-                style: theme.textTheme.titleLarge,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: StorizeSpacing.s8),
-        Wrap(
-          spacing: StorizeSpacing.s8,
-          runSpacing: StorizeSpacing.s8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            StatusBadge(
-              status: badgeStatusOf(health),
-              label: health == AccountHealth.notConnected
-                  ? l10n.accNotConnected
-                  : null,
-            ),
-            if (a != null)
-              Text(
-                l10n.accConnected(
-                  MaterialLocalizations.of(context)
-                      .formatMediumDate(a.connectedAt.toLocal()),
-                ),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
-        if (health == AccountHealth.needsRelogin ||
-            health == AccountHealth.restricted) ...[
-          const SizedBox(height: StorizeSpacing.s16),
-          Text(
-            health == AccountHealth.needsRelogin
-                ? l10n.accNeedsReloginBody
-                : l10n.accRestrictedBody,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ],
-        if (a != null) ...[
-          const SizedBox(height: StorizeSpacing.s16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsetsDirectional.all(
-                StorizeSpacing.cardPadding,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.accHealthTitle, style: theme.textTheme.titleSmall),
-                  const SizedBox(height: StorizeSpacing.s8),
-                  Text(
-                    a.lastSuccessAt == null
-                        ? l10n.accLastCheckNever
-                        : l10n.accLastCheck(
-                            _when(context, ref, a.lastSuccessAt!),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: ListView(
+              children: [
+                Row(
+                  children: [
+                    StorizeAvatar(
+                      initial: a == null || a.username.isEmpty
+                          ? null
+                          : a.username[0].toUpperCase(),
+                      size: 56,
+                    ),
+                    const SizedBox(width: StorizeSpacing.s16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            a == null
+                                ? l10n.accNotConnected
+                                : l10n.actAccountHandle(a.username),
+                            style: theme.textTheme.titleLarge,
                           ),
+                          if (a != null)
+                            Text(
+                              l10n.accConnected(
+                                MaterialLocalizations.of(
+                                  context,
+                                ).formatMediumDate(a.connectedAt.toLocal()),
+                              ),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          if (!problem) ...[
+                            const SizedBox(height: StorizeSpacing.s4),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: DotStatusBadge(
+                                status: badgeStatusOf(health),
+                                label: health == AccountHealth.notConnected
+                                    ? l10n.accNotConnected
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (problem) ...[
+                  const SizedBox(height: StorizeSpacing.s16),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: tone.container,
+                      borderRadius: StorizeRadii.cardRadius,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.all(
+                        StorizeSpacing.cardPadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                StatusBadge.iconFor(badgeStatusOf(health)),
+                                color: tone.onContainer,
+                              ),
+                              const SizedBox(width: StorizeSpacing.s12),
+                              Expanded(
+                                child: Text(
+                                  StatusBadge.defaultLabel(
+                                    l10n,
+                                    badgeStatusOf(health),
+                                  ),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: tone.onContainer,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: StorizeSpacing.s8),
+                          Text(
+                            health == AccountHealth.needsRelogin
+                                ? l10n.accNeedsReloginBody
+                                : l10n.accRestrictedBody,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: tone.onContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  Text(l10n.accRateLimitEvents(rateEvents)),
                 ],
-              ),
+                if (a != null) ...[
+                  const SizedBox(height: StorizeSpacing.s16),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainer,
+                      borderRadius: StorizeRadii.cardRadius,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: StorizeSpacing.s20,
+                        vertical: StorizeSpacing.s16,
+                      ),
+                      child: Column(
+                        children: [
+                          _HealthRow(
+                            label: l10n.accLastCheckLabel,
+                            value: a.lastSuccessAt == null
+                                ? l10n.accLastCheckNever
+                                : _when(context, ref, a.lastSuccessAt!),
+                            labelStyle: muted,
+                            valueStyle: value,
+                          ),
+                          const SizedBox(height: StorizeSpacing.s16),
+                          _HealthRow(
+                            label: l10n.accRateLimitLabel,
+                            value: '$rateEvents',
+                            labelStyle: muted,
+                            valueStyle: value,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+          const SizedBox(height: StorizeSpacing.s16),
+          ?primaryAction,
+          if (a != null && health != AccountHealth.notConnected) ...[
+            const SizedBox(height: StorizeSpacing.s12),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+                shape: const StadiumBorder(),
+                side: BorderSide(color: theme.colorScheme.outline),
+                foregroundColor: theme.colorScheme.error,
+                textStyle: theme.textTheme.titleMedium,
+              ),
+              onPressed: () => _logOut(context, ref, a),
+              child: Text(l10n.accLogOut),
+            ),
+          ],
         ],
-        const SizedBox(height: StorizeSpacing.s24),
-        ?primaryAction,
-        if (a != null && health != AccountHealth.notConnected) ...[
-          const SizedBox(height: StorizeSpacing.s12),
-          TonalButton(
-            label: l10n.accLogOut,
-            expand: true,
-            onPressed: () => _logOut(context, ref, a),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -190,4 +268,30 @@ class _AccountBody extends ConsumerWidget {
     if (!confirmed) return;
     await ref.read(accountActionsProvider).logOut(account);
   }
+}
+
+class _HealthRow extends StatelessWidget {
+  const _HealthRow({
+    required this.label,
+    required this.value,
+    required this.labelStyle,
+    required this.valueStyle,
+  });
+
+  final String label;
+  final String value;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Flexible(child: Text(label, style: labelStyle)),
+      const SizedBox(width: StorizeSpacing.s12),
+      Flexible(
+        child: Text(value, style: valueStyle, textAlign: TextAlign.end),
+      ),
+    ],
+  );
 }

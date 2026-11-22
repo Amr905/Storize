@@ -56,11 +56,7 @@ final class CompositionRig {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     db = StorizeDatabase.forTesting(NativeDatabase.memory());
     tmp = Directory.systemTemp.createTempSync('storize_rig');
-    diagnostics = StorizeDiagnostics.create(
-      tmp,
-      clock: clock,
-      release: true,
-    );
+    diagnostics = StorizeDiagnostics.create(tmp, clock: clock, release: true);
     parts = CompositionParts(
       db: db,
       settings: settings,
@@ -85,10 +81,7 @@ final class CompositionRig {
       biometric: FakeBiometric(),
       crashMarker: diagnostics.marker,
       clock: clock,
-      closers: [
-        () async => closed++,
-        if (closeDbOnDispose) db.close,
-      ],
+      closers: [() async => closed++, if (closeDbOnDispose) db.close],
     );
     composition = AppComposition.assemble(parts, background: background);
   }

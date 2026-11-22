@@ -49,9 +49,7 @@ void main() {
     debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     await tester.pumpWidget(
-      MaterialApp(
-        home: DebugInspectorScreen(loadHookSource: () async => ''),
-      ),
+      MaterialApp(home: DebugInspectorScreen(loadHookSource: () async => '')),
     );
     expect(find.text('WebView is only available on Android.'), findsOneWidget);
   });

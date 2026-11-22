@@ -117,9 +117,7 @@ void main() {
 
     test('a single post target uses the singular texts', () async {
       final r = _Rig()..lookups.usernames[7] = 'brandx';
-      await r.service.newItemsSaved(
-        _saved([_counts(7, ContentKind.post)]),
-      );
+      await r.service.newItemsSaved(_saved([_counts(7, ContentKind.post)]));
 
       expect(r.shown.map((n) => n.title), [
         '1 new post from @brandx',
@@ -139,19 +137,12 @@ void main() {
     test('a deleted target is left out of its per-target line', () async {
       final r = _Rig()..lookups.usernames[2] = 'brandx';
       await r.service.newItemsSaved(
-        _saved([
-          _counts(1, ContentKind.story),
-          _counts(2, ContentKind.story),
-        ]),
+        _saved([_counts(1, ContentKind.story), _counts(2, ContentKind.story)]),
       );
       expect(r.shown.map((n) => n.title), contains('1 new story from @brandx'));
       expect(
         r.shown.map((n) => n.title),
-        isNot(
-          contains(
-            '1 new story from @null',
-          ),
-        ),
+        isNot(contains('1 new story from @null')),
       );
     });
   });
@@ -207,10 +198,7 @@ void main() {
       final r = _Rig(settings: const AppSettings(notifyStories: false))
         ..lookups.usernames.addAll({1: 'a', 2: 'b'});
       await r.service.newItemsSaved(
-        _saved([
-          _counts(1, ContentKind.story),
-          _counts(2, ContentKind.post),
-        ]),
+        _saved([_counts(1, ContentKind.story), _counts(2, ContentKind.post)]),
       );
       expect(r.shown.map((n) => n.channelId), everyElement('new_posts'));
     });

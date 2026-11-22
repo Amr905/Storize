@@ -8,6 +8,7 @@ export 'package:storize_app/ui/components/buttons.dart';
 export 'package:storize_app/ui/components/category_tag.dart';
 export 'package:storize_app/ui/components/confirm_dialog.dart';
 export 'package:storize_app/ui/components/date_header.dart';
+export 'package:storize_app/ui/components/dot_status_badge.dart';
 export 'package:storize_app/ui/components/empty_state.dart';
 export 'package:storize_app/ui/components/kind_switch.dart';
 export 'package:storize_app/ui/components/pin_pad.dart';

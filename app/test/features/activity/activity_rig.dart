@@ -171,10 +171,7 @@ Future<GoRouter> pumpActivity(
 GoRouter buildActivityRouter() => GoRouter(
   initialLocation: Routes.activityPath,
   routes: [
-    GoRoute(
-      path: Routes.activityPath,
-      builder: (_, _) => const ActivityPage(),
-    ),
+    GoRoute(path: Routes.activityPath, builder: (_, _) => const ActivityPage()),
     GoRoute(
       path: Routes.setupPath,
       builder: (_, _) => const Scaffold(body: Text('S-03 setup')),

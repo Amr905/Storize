@@ -87,16 +87,29 @@ class _RemoveTargetDialogState extends ConsumerState<RemoveTargetDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final failure = _failure;
     return AlertDialog(
-      title: Text(l10n.tdtRemoveTitle(widget.target.username)),
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(28)),
+      ),
+      titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+        color: scheme.onSurface,
+      ),
+      title: Text(l10n.tdtRemoveTitle('@${widget.target.username}')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.tdtRemoveCounts(widget.storyCount, widget.postCount)),
-          const SizedBox(height: StorizeSpacing.s8),
+          Text(
+            l10n.tdtRemoveCounts(widget.storyCount, widget.postCount),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: StorizeSpacing.s16),
           RadioGroup<bool>(
             groupValue: _deleteMedia,
             onChanged: _running
@@ -108,14 +121,28 @@ class _RemoveTargetDialogState extends ConsumerState<RemoveTargetDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 RadioListTile<bool>(
+                  isThreeLine: false,
                   contentPadding: EdgeInsets.zero,
                   value: false,
                   title: Text(l10n.tdtRemoveKeep),
+                  subtitle: Text(
+                    l10n.tdtRemoveKeepHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
                 RadioListTile<bool>(
+                  isThreeLine: false,
                   contentPadding: EdgeInsets.zero,
                   value: true,
                   title: Text(l10n.tdtRemoveDelete),
+                  subtitle: Text(
+                    l10n.tdtRemoveDeleteHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),

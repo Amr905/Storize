@@ -49,12 +49,8 @@ class _StrictAccountRepo implements AccountRepo {
     AccountStatus status, {
     String? reason,
     DateTime? lastSuccessAt,
-  }) => inner.setStatus(
-    id,
-    status,
-    reason: reason,
-    lastSuccessAt: lastSuccessAt,
-  );
+  }) =>
+      inner.setStatus(id, status, reason: reason, lastSuccessAt: lastSuccessAt);
 }
 
 void main() {

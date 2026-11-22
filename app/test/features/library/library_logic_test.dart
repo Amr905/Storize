@@ -55,17 +55,14 @@ void main() {
 
   group('LibraryFilters', () {
     test('presets use local midnights', () {
-      final today = LibraryFilters(
-        date: DatePreset.today,
-      ).toContentFilter(LibraryKind.stories, now);
+      final today = LibraryFilters(date: DatePreset.today)
+          .toContentFilter(LibraryKind.stories, now);
       expect(today.from, DateTime(2026, 11, 20).toUtc());
-      final d7 = LibraryFilters(
-        date: DatePreset.days7,
-      ).toContentFilter(LibraryKind.stories, now);
+      final d7 = LibraryFilters(date: DatePreset.days7)
+          .toContentFilter(LibraryKind.stories, now);
       expect(d7.from, DateTime(2026, 11, 14).toUtc());
-      final d30 = LibraryFilters(
-        date: DatePreset.days30,
-      ).toContentFilter(LibraryKind.stories, now);
+      final d30 = LibraryFilters(date: DatePreset.days30)
+          .toContentFilter(LibraryKind.stories, now);
       expect(d30.from, DateTime(2026, 10, 22).toUtc());
     });
 
@@ -80,9 +77,8 @@ void main() {
     });
 
     test('type maps to media type, kind to content kind', () {
-      final f = LibraryFilters(
-        type: TypeFilter.videos,
-      ).toContentFilter(LibraryKind.posts, now);
+      final f = LibraryFilters(type: TypeFilter.videos)
+          .toContentFilter(LibraryKind.posts, now);
       expect(f.mediaType, MediaType.video);
       expect(f.kind, ContentKind.post);
     });

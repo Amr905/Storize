@@ -45,12 +45,7 @@ void main() {
         ],
       },
     );
-    await pumpStoryViewer(
-      t,
-      rig,
-      contentId: older,
-      brightness: b,
-    );
+    await pumpStoryViewer(t, rig, contentId: older, brightness: b);
   });
 
   _both('video', (t, rig, b) async {

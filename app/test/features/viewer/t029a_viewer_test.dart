@@ -63,9 +63,7 @@ void main() {
       expect(await rig.content.getById(id), isNull);
     });
 
-    testWidgets('a failed gallery delete keeps the row and says so', (
-      t,
-    ) async {
+    testWidgets('a failed gallery delete keeps the row and says so', (t) async {
       final id = await addPost(
         rig,
         brand,
@@ -145,9 +143,7 @@ void main() {
         t,
         rig,
         contentId: id,
-        extra: [
-          fullPhotoReaderProvider.overrideWithValue((_) async => null),
-        ],
+        extra: [fullPhotoReaderProvider.overrideWithValue((_) async => null)],
       );
       expect(_fullImage(), findsNothing);
       expect(find.byType(InteractiveViewer), findsOneWidget);
@@ -179,9 +175,7 @@ void main() {
         t,
         rig,
         contentId: story,
-        extra: [
-          fullPhotoReaderProvider.overrideWithValue((_) async => bytes),
-        ],
+        extra: [fullPhotoReaderProvider.overrideWithValue((_) async => bytes)],
       );
       await t.pump();
       expect(_fullImage(), findsOneWidget);

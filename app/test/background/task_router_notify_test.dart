@@ -68,16 +68,10 @@ final class _Rig {
   );
 
   late final TaskRouter router = TaskRouter(
-    runCheck: ({
-      required scope,
-      required trigger,
-      targetId,
-      deadline,
-    }) async => checkResult,
-    download: ({
-      deadline,
-      policy = ExtractionPolicy.directOnly,
-    }) async => downloadResult,
+    runCheck: ({required scope, required trigger, targetId, deadline}) async =>
+        checkResult,
+    download: ({deadline, policy = ExtractionPolicy.directOnly}) async =>
+        downloadResult,
     retention: () async => null,
     updateCheck: () async => null,
     settings: FakeSettingsRepo(),

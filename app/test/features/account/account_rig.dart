@@ -23,10 +23,7 @@ Future<void> pumpAccount(
   final router = GoRouter(
     initialLocation: Routes.accountPath,
     routes: [
-      GoRoute(
-        path: Routes.accountPath,
-        builder: (_, _) => const AccountPage(),
-      ),
+      GoRoute(path: Routes.accountPath, builder: (_, _) => const AccountPage()),
       GoRoute(
         path: Routes.loginPath,
         builder: (_, _) => const Scaffold(body: Text('S-02 login')),

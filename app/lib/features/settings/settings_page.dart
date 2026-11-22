@@ -98,12 +98,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SectionHeader(l10n.setSectionInstagram),
         const _AccountRow(),
         _SectionHeader(l10n.setSectionChecking),
-        SettingRow.value(
+        _ValueRow(
           title: l10n.setStoryInterval,
           value: intervalLabel(l10n, s.storyIntervalMin),
           onTap: () => unawaited(_pickStoryInterval(s)),
         ),
-        SettingRow.value(
+        _ValueRow(
           title: l10n.setPostInterval,
           value: intervalLabel(l10n, s.postIntervalMin),
           subtitle: s.postIntervalMin == 60 ? l10n.setPostOneHourWarning : null,
@@ -111,11 +111,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
         SettingRow.toggle(
           title: l10n.setWifiOnly,
+          subtitle: l10n.setWifiOnlyHint,
           switchValue: s.wifiOnly,
           onChanged: (on) => unawaited(actions.setWifiOnly(on: on)),
         ),
         SettingRow.navigation(
           title: l10n.setKeepRunning,
+          subtitle: l10n.setKeepRunningHint,
           onTap: () => unawaited(context.push(Routes.setupPath)),
         ),
         _SectionHeader(l10n.setSectionNotifications),
@@ -150,7 +152,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 leadingIcon: Icons.pie_chart_outline_rounded,
                 onTap: () => unawaited(_showStorage()),
               ),
-              SettingRow.value(
+              _ValueRow(
                 title: l10n.setKeepDownloads,
                 value: s.retentionDays == null
                     ? l10n.setKeepForever
@@ -239,9 +241,10 @@ class _SectionHeader extends StatelessWidget {
           StorizeSpacing.s8,
         ),
         child: Text(
-          title,
+          title.toUpperCase(),
           style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.primary,
+            letterSpacing: 0.8,
           ),
         ),
       ),
@@ -264,26 +267,77 @@ class _AccountRow extends ConsumerWidget {
     final chevron = Directionality.of(context) == TextDirection.rtl
         ? Icons.chevron_left_rounded
         : Icons.chevron_right_rounded;
+    final username = account?.username ?? '';
     return ListTile(
+      leading: StorizeAvatar(
+        initial: username.isEmpty ? null : username[0],
+        size: 44,
+      ),
       title: Text(
         account == null
             ? l10n.accLogIn
             : l10n.actAccountHandle(account.username),
+        style: Theme.of(context).textTheme.bodyLarge,
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          StatusBadge(
+      subtitle: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s4),
+          child: DotStatusBadge(
             status: badgeStatusOf(health),
             label: health == AccountHealth.notConnected
                 ? l10n.accNotConnected
                 : null,
           ),
-          const SizedBox(width: StorizeSpacing.s4),
+        ),
+      ),
+      trailing: Icon(chevron),
+      onTap: () => unawaited(context.push(Routes.accountPath)),
+    );
+  }
+}
+
+/// A row with the current value and a chevron that opens a picker.
+class _ValueRow extends StatelessWidget {
+  const _ValueRow({
+    required this.title,
+    required this.value,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  final String title;
+  final String value;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final chevron = Directionality.of(context) == TextDirection.rtl
+        ? Icons.chevron_left_rounded
+        : Icons.chevron_right_rounded;
+    return ListTile(
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: StorizeSpacing.s8),
           Icon(chevron),
         ],
       ),
-      onTap: () => unawaited(context.push(Routes.accountPath)),
+      onTap: onTap,
     );
   }
 }
