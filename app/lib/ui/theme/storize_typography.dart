@@ -22,6 +22,9 @@ abstract final class StorizeTypography {
   /// Display 28/36 Medium.
   static final TextStyle display = _style(28, 36, FontWeight.w500);
 
+  /// Large page title (app bar of top-level screens) 24/32 Medium.
+  static final TextStyle pageTitle = _style(24, 32, FontWeight.w500);
+
   /// Title 20/28 Medium.
   static final TextStyle title = _style(20, 28, FontWeight.w500);
 

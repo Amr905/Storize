@@ -231,9 +231,7 @@ class _StoryVideoState extends ConsumerState<_StoryVideo> {
   void _onValue() {
     final v = _player.value.value;
     if (v.duration > Duration.zero) {
-      widget.onProgress(
-        v.position.inMilliseconds / v.duration.inMilliseconds,
-      );
+      widget.onProgress(v.position.inMilliseconds / v.duration.inMilliseconds);
     }
     if (mounted) setState(() {});
   }

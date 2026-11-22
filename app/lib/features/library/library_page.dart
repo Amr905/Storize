@@ -632,9 +632,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     final last = view.lastCheck;
     final time = last == null
         ? null
-        : MaterialLocalizations.of(
-            context,
-          ).formatTimeOfDay(TimeOfDay.fromDateTime(last.toLocal()));
+        : MaterialLocalizations.of(context)
+              .formatTimeOfDay(TimeOfDay.fromDateTime(last.toLocal()));
     final body = switch ((stories, time)) {
       (true, null) => l10n.libWaitingStories,
       (true, final String t) => l10n.libWaitingStoriesAt(t),
@@ -741,9 +740,9 @@ class _AccountHeader extends StatelessWidget {
         children: [
           StorizeAvatar(
             initial: name.isEmpty ? null : name.substring(0, 1),
-            size: 24,
+            size: 28,
           ),
-          const SizedBox(width: StorizeSpacing.s8),
+          const SizedBox(width: StorizeSpacing.s12),
           Flexible(
             child: Text(
               isolateLtr('@$name'),

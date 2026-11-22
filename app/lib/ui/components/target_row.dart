@@ -89,9 +89,7 @@ class TargetRow extends StatelessWidget {
             child: Row(
               children: [
                 avatar ??
-                    StorizeAvatar(
-                      initial: username.isEmpty ? '' : username[0],
-                    ),
+                    StorizeAvatar(initial: username.isEmpty ? '' : username[0]),
                 const SizedBox(width: StorizeSpacing.s12),
                 Expanded(
                   child: Column(

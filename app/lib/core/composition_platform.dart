@@ -33,11 +33,7 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
     required AccountRepo accounts,
     required PlatformFactory factory,
     required int accountId,
-  }) : this(
-         accounts: accounts,
-         factory: factory,
-         fixedAccountId: accountId,
-       );
+  }) : this(accounts: accounts, factory: factory, fixedAccountId: accountId);
 
   final AccountRepo _accounts;
   final int? _fixedAccountId;

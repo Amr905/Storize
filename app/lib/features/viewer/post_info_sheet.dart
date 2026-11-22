@@ -20,9 +20,7 @@ Future<void> showPostInfoSheet(
   required String username,
 }) => showModalBottomSheet<void>(
   context: context,
-  shape: const RoundedRectangleBorder(
-    borderRadius: StorizeRadii.sheetRadius,
-  ),
+  shape: const RoundedRectangleBorder(borderRadius: StorizeRadii.sheetRadius),
   builder: (_) => PostInfoSheet(item: item, username: username),
 );
 
@@ -30,11 +28,7 @@ Future<void> showPostInfoSheet(
 /// posted time and the gallery folder. Rows without a value are left out.
 class PostInfoSheet extends StatefulWidget {
   /// Creates the sheet.
-  const PostInfoSheet({
-    required this.item,
-    required this.username,
-    super.key,
-  });
+  const PostInfoSheet({required this.item, required this.username, super.key});
 
   /// The post.
   final ContentWithMedia item;
@@ -162,9 +156,7 @@ class _PostInfoSheetState extends State<PostInfoSheet> {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Text(value, style: text.bodyMedium),
-                    ),
+                    Expanded(child: Text(value, style: text.bodyMedium)),
                   ],
                 ),
               ),

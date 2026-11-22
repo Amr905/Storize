@@ -9,11 +9,7 @@ import 'package:storize_app/ui/ui.dart';
 /// Root widget: `ProviderScope` then `MaterialApp.router`.
 class StorizeApp extends StatelessWidget {
   /// Creates the app. [overrides] and [textDirection] exist for tests.
-  const StorizeApp({
-    this.overrides = const [],
-    this.textDirection,
-    super.key,
-  });
+  const StorizeApp({this.overrides = const [], this.textDirection, super.key});
 
   /// Provider overrides (tests, and real wiring from `main`).
   final List<Override> overrides;

@@ -151,9 +151,8 @@ class _RateLimitBar extends StatelessWidget {
             Expanded(
               child: Text(
                 AppLocalizations.of(context).tgtRateLimitBar,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: tone.onContainer),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: tone.onContainer),
               ),
             ),
           ],
@@ -189,9 +188,8 @@ class _TargetList extends ConsumerWidget {
           swipeAction: TargetRowSwipeAction(
             label: paused ? l10n.tgtActionResume : l10n.tgtActionPause,
             icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-            onTriggered: () => unawaited(
-              _setPaused(context, ref, target, paused: !paused),
-            ),
+            onTriggered: () =>
+                unawaited(_setPaused(context, ref, target, paused: !paused)),
           ),
         );
       },
@@ -231,9 +229,8 @@ class _TargetList extends ConsumerWidget {
   static String? _meta(BuildContext context, Target target) {
     final l10n = AppLocalizations.of(context);
     final localizations = MaterialLocalizations.of(context);
-    String time(DateTime at) => localizations.formatTimeOfDay(
-      TimeOfDay.fromDateTime(at.toLocal()),
-    );
+    String time(DateTime at) =>
+        localizations.formatTimeOfDay(TimeOfDay.fromDateTime(at.toLocal()));
     final checked = target.lastStoriesCheckAt;
     final checkedText = checked == null
         ? l10n.tgtMetaNever

@@ -225,9 +225,8 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
                     key: ValueKey('filter-type-${t.name}'),
                     label: Text(label),
                     selected: type == t,
-                    onSelected: (_) => setState(
-                      () => _filters = _filters.copyWith(type: t),
-                    ),
+                    onSelected: (_) =>
+                        setState(() => _filters = _filters.copyWith(type: t)),
                   ),
               ],
             ),
@@ -249,9 +248,9 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
                 child: PrimaryButton(
                   label: l10n.libApply,
                   expand: true,
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pop((kind: _kind, filters: _filters)),
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .pop((kind: _kind, filters: _filters)),
                 ),
               ),
             ],

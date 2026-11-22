@@ -61,9 +61,9 @@ class SessionBanner extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsetsDirectional.only(
             start: StorizeSpacing.s16,
-            end: StorizeSpacing.s8,
-            top: StorizeSpacing.s8,
-            bottom: StorizeSpacing.s8,
+            end: StorizeSpacing.s12,
+            top: StorizeSpacing.s12,
+            bottom: StorizeSpacing.s12,
           ),
           child: Row(
             children: [
@@ -71,9 +71,10 @@ class SessionBanner extends StatelessWidget {
                 child: Icon(
                   relogin ? Icons.warning_amber_rounded : Icons.report_rounded,
                   color: tone.onContainer,
+                  size: 26,
                 ),
               ),
-              const SizedBox(width: StorizeSpacing.s12),
+              const SizedBox(width: StorizeSpacing.s16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,6 +83,7 @@ class SessionBanner extends StatelessWidget {
                       headline,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: tone.onContainer,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(

@@ -12,20 +12,14 @@ Future<void> showStoryInfoSheet(
   required String username,
 }) => showModalBottomSheet<void>(
   context: context,
-  shape: const RoundedRectangleBorder(
-    borderRadius: StorizeRadii.sheetRadius,
-  ),
+  shape: const RoundedRectangleBorder(borderRadius: StorizeRadii.sheetRadius),
   builder: (_) => StoryInfoSheet(item: item, username: username),
 );
 
 /// The Info sheet body. Rows without a value are left out.
 class StoryInfoSheet extends StatelessWidget {
   /// Creates the sheet.
-  const StoryInfoSheet({
-    required this.item,
-    required this.username,
-    super.key,
-  });
+  const StoryInfoSheet({required this.item, required this.username, super.key});
 
   /// The story.
   final ContentWithMedia item;
@@ -57,10 +51,7 @@ class StoryInfoSheet extends StatelessWidget {
       (l10n.storyInfoPosted, _when(context, item.content.postedAt)),
       if (media?.downloadedAt != null)
         (l10n.storyInfoDownloaded, _when(context, media!.downloadedAt!)),
-      (
-        l10n.storyInfoType,
-        isVideo ? l10n.storyTypeVideo : l10n.storyTypePhoto,
-      ),
+      (l10n.storyInfoType, isVideo ? l10n.storyTypeVideo : l10n.storyTypePhoto),
       if (isVideo && media?.durationMs != null)
         (
           l10n.storyInfoDuration,
@@ -71,9 +62,7 @@ class StoryInfoSheet extends StatelessWidget {
           l10n.storyInfoSize,
           size < 1024 * 1024
               ? l10n.storySizeKb((size / 1024).round().toString())
-              : l10n.storySizeMb(
-                  (size / (1024 * 1024)).toStringAsFixed(1),
-                ),
+              : l10n.storySizeMb((size / (1024 * 1024)).toStringAsFixed(1)),
         ),
       (l10n.storyInfoItemId, item.content.remoteId),
       (l10n.storyInfoFolder, folder),
@@ -112,9 +101,7 @@ class StoryInfoSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Text(value, style: text.bodyMedium),
-                    ),
+                    Expanded(child: Text(value, style: text.bodyMedium)),
                   ],
                 ),
               ),

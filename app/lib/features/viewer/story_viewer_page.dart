@@ -260,9 +260,7 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                                     ? (isVideo ? progress : 1)
                                     : 0,
                                 color: onScrim,
-                                backgroundColor: onScrim.withValues(
-                                  alpha: 0.4,
-                                ),
+                                backgroundColor: onScrim.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
