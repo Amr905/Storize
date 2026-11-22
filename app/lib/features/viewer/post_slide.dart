@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/viewer/full_photo.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
 import 'package:storize_app/features/viewer/story_video_player.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -136,8 +137,8 @@ class _Message extends StatelessWidget {
   }
 }
 
-/// A photo that can be zoomed. The builder decides how it is drawn (the
-/// cached preview for now).
+/// A photo that can be zoomed: the full-size file, or the cached preview
+/// while it loads or when it cannot be read.
 class _PostPhoto extends ConsumerWidget {
   const _PostPhoto({required this.media});
 
@@ -145,21 +146,10 @@ class _PostPhoto extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    if (media.thumbPath == null) {
-      return Center(
-        child: Text(
-          l10n.storyPhotoUnavailable,
-          style: TextStyle(color: StorizeColors.of(context).onMediaScrim),
-        ),
-      );
-    }
     return InteractiveViewer(
       minScale: 1,
       maxScale: 4,
-      child: Center(
-        child: ref.watch(storyPhotoBuilderProvider)(context, media),
-      ),
+      child: Center(child: FullPhoto(media: media)),
     );
   }
 }

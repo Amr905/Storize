@@ -10,6 +10,7 @@ import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
+import 'package:storize_app/features/viewer/story_providers.dart';
 import 'package:storize_app/notifications/flutter_local_notifications_port.dart';
 import 'package:storize_app/notifications/notification_lookups.dart';
 import 'package:storize_app/notifications/notification_service.dart';
@@ -97,6 +98,7 @@ Future<AppComposition> composeProduction({
     ),
     gallery: gallery,
     findExisting: gallery.findExisting,
+    fullPhotoReader: plugin.readBytes,
     cache: FileMediaCache.pathProvider(),
     storage: PluginStorageInfo(plugin),
     igHttp: DartIoHttp(),
@@ -152,9 +154,9 @@ final class SchedulerCheckNowAction implements CheckNowAction {
   final Scheduler _scheduler;
 
   @override
-  Future<CheckNowResult> call() async {
+  Future<CheckNowResult> call({int? targetId}) async {
     try {
-      await _scheduler.checkNow();
+      await _scheduler.checkNow(targetId: targetId);
       return const CheckNowResult();
     } on Object {
       return const CheckNowResult(failed: true);
@@ -186,6 +188,8 @@ List<Override> appOverrides(AppComposition c) => [
   checkNowActionProvider.overrideWithValue(
     SchedulerCheckNowAction(c.scheduler),
   ),
+  if (c.parts.fullPhotoReader case final read?)
+    fullPhotoReaderProvider.overrideWithValue(read),
   appVersionProvider.overrideWithValue(c.parts.currentVersion),
   loginLeaseProvider.overrideWithValue(c.loginLease),
   loginPlatformProvider.overrideWithValue(c.loginPlatform),

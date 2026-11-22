@@ -80,6 +80,26 @@ class StorizePlatformAndroid {
     throw _bad('size', value);
   }
 
+  /// The default cap of [readBytes]: 30 MB.
+  static const int defaultReadCap = 30 * 1024 * 1024;
+
+  /// The bytes of a file this app saved (a `content://media/` URI), for the
+  /// full-size viewer. Null when the file is missing, not owned by the app, or
+  /// bigger than [maxBytes] (default [defaultReadCap]). Errors carry no path.
+  Future<Uint8List?> readBytes(
+    String contentUri, {
+    int maxBytes = defaultReadCap,
+  }) async {
+    if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+    final value = await _call<Object?>(_media, 'readBytes', {
+      'uri': contentUri,
+      'maxBytes': maxBytes,
+    });
+    if (value == null) return null;
+    if (value is Uint8List) return value;
+    throw _bad('readBytes', value);
+  }
+
   /// Finds a finished file this app saved under `Storize/<relativeDir>/` with
   /// exactly [displayName], or null. Only files the app owns are returned.
   /// Used to adopt a file saved just before a kill (NFR-7).

@@ -339,7 +339,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
     final messenger = ScaffoldMessenger.of(context);
     final result = await ref
         .read(targetCheckRunningProvider.notifier)
-        .checkAll();
+        .checkAll(targetId: widget.targetId);
     if (result == null || !mounted) return;
     messenger.showSnackBar(
       SnackBar(

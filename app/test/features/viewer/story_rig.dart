@@ -230,6 +230,7 @@ Future<void> pumpStoryViewer(
   required int contentId,
   Brightness brightness = Brightness.light,
   Size size = const Size(400, 800),
+  List<Override> extra = const [],
 }) async {
   t.view
     ..devicePixelRatio = 1
@@ -252,7 +253,7 @@ Future<void> pumpStoryViewer(
   );
   await t.pumpWidget(
     ProviderScope(
-      overrides: rig.overrides,
+      overrides: [...rig.overrides, ...extra],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         localizationsDelegates: AppLocalizations.localizationsDelegates,

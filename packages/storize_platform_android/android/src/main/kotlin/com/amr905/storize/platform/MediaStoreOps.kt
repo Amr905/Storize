@@ -18,6 +18,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+private const val DEFAULT_READ_CAP = 30 * 1024 * 1024
+
 /**
  * Gallery operations (ADR-5, ADR-11). Everything here blocks, so the plugin calls it
  * from a background thread.
@@ -252,6 +254,50 @@ class MediaStoreOps(private val context: Context) {
         }
         if (guard.classify(uri) != RowCheck.ALLOWED) return null
         return sizeOf(uri)
+    }
+
+    /**
+     * Reads a whole file this app owns, for the full-size viewer. Only `content://media/`
+     * item URIs in the Storize folders (the same owner scoping as [exists]). Returns null
+     * when the file is missing, not owned, or bigger than [maxBytes]. Errors never carry a path.
+     */
+    fun readBytes(
+        uriString: String?,
+        maxBytes: Int?,
+    ): ByteArray? {
+        val cap = maxBytes ?: DEFAULT_READ_CAP
+        if (cap <= 0) throw PluginException(ErrorCodes.INVALID_ARGUMENT, "maxBytes must be positive")
+        val uri = managedUri(uriString)
+        if (uri.scheme != "content") {
+            throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Only content://media/ URIs are accepted")
+        }
+        if (guard.classify(uri) != RowCheck.ALLOWED) return null
+        val known = sizeOf(uri) ?: return null
+        if (known > cap) return null
+        return try {
+            resolver.openInputStream(uri)?.use { input ->
+                val out = java.io.ByteArrayOutputStream(if (known > 0) known.toInt() else 8192)
+                val buffer = ByteArray(8192)
+                var total = 0L
+                while (true) {
+                    val n = input.read(buffer)
+                    if (n < 0) break
+                    total += n
+                    // The size may have grown since it was checked: stop at the cap.
+                    if (total > cap) return null
+                    out.write(buffer, 0, n)
+                }
+                out.toByteArray()
+            }
+        } catch (e: FileNotFoundException) {
+            null
+        } catch (e: SecurityException) {
+            null
+        } catch (e: IllegalArgumentException) {
+            null
+        } catch (e: IOException) {
+            throw PluginException(ErrorCodes.IO_ERROR, "Could not read the file")
+        }
     }
 
     /**

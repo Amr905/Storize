@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:storize_app/core/composition_platform.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
@@ -49,6 +50,7 @@ final class CompositionParts {
     this.notifications,
     this.setupOps,
     this.findExisting,
+    this.fullPhotoReader,
     this.clock = const SystemClock(),
     this.governorConfig = const GovernorConfig(),
     this.closers = const [],
@@ -115,6 +117,10 @@ final class CompositionParts {
 
   /// Adopts a gallery file saved just before a kill (null in tests).
   final GalleryFileFinder? findExisting;
+
+  /// Reads a gallery photo for the full-size viewers (null in tests: the
+  /// viewers then keep the thumbnail).
+  final Future<Uint8List?> Function(String contentUri)? fullPhotoReader;
 
   /// The crash marker, to report a pending crash after the database opens.
   final CrashMarker? crashMarker;
@@ -474,6 +480,24 @@ final class AppComposition {
       partSweepSkipped: skipped,
       gap: gap,
     );
+  }
+
+  /// Removes a staging session left under [LoginAccount.unsavedId] by a login
+  /// that was killed before it finished (S-02 verifies under that id).
+  ///
+  /// Call it only in the foreground isolate, at start: a background task
+  /// could otherwise wipe the session of a login that is running. A failure
+  /// is ignored and not logged with values.
+  Future<void> clearStagingSession() async {
+    try {
+      await parts.sessions.clear(LoginAccount.unsavedId);
+    } on Object catch (error) {
+      log.log(
+        LogLevel.warn,
+        'start',
+        'staging_clear_failed type=${error.runtimeType}',
+      );
+    }
   }
 
   Future<T> _step<T>(String name, Future<T> Function() body, T fallback) async {
