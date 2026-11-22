@@ -106,9 +106,7 @@ void main() {
   test(
     'roll-over enqueues once per run and the run does not loop itself',
     () async {
-      final r = make(
-        download: () async => _dl(DownloadStopReason.deadline, 5),
-      );
+      final r = make(download: () async => _dl(DownloadStopReason.deadline, 5));
       expect(await r.route('download'), isTrue);
       expect(downloadRuns, 1);
       expect(enq.calls, 1);

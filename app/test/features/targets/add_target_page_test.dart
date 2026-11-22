@@ -23,6 +23,8 @@ void main() {
   /// Taps submit and lets the add use case finish. The use case reads the
   /// repo streams with real async, so the tap runs in `runAsync`.
   Future<void> submit(WidgetTester t) async {
+    await t.ensureVisible(submitButton());
+    await t.pumpAndSettle();
     await t.runAsync(() async {
       await t.tap(submitButton());
       for (var i = 0; i < 20; i++) {
@@ -34,7 +36,7 @@ void main() {
   }
 
   Future<void> pickOwn(WidgetTester t) async {
-    await t.tap(find.text(l10n.categoryOwn));
+    await t.tap(find.text(l10n.tgtCatOwnTitle));
     await t.pumpAndSettle();
   }
 
@@ -161,17 +163,13 @@ void main() {
     await rig.addAccount(status: AccountStatus.needsRelogin);
     await openForm(t, rig);
     expect(find.text(l10n.tgtSessionInactive), findsOneWidget);
-    final button = t.widget<PrimaryButton>(
-      find.byType(PrimaryButton),
-    );
+    final button = t.widget<PrimaryButton>(find.byType(PrimaryButton));
     expect(button.onPressed, isNull);
   });
 
   testWidgets(
     'AC4: a valid add stores the target, schedules a check and pops',
-    (
-      t,
-    ) async {
+    (t) async {
       final rig = TargetsRig();
       await rig.addAccount();
       await addOkUser(rig);
@@ -216,10 +214,7 @@ void main() {
     await t.enterText(usernameField(), 'nour_k');
     await pickOwn(t);
     await submit(t);
-    expect(
-      find.text(l10n.tgtNotFound('@nour_k')),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.tgtNotFound('@nour_k')), findsOneWidget);
   });
 
   testWidgets('AC4: a private account not followed shows the BR-2 message', (

@@ -37,11 +37,7 @@ void main() {
     await t.pumpAndSettle();
   });
 
-  _both(
-    'activity_empty',
-    (t, rig, b) async {
-      await pumpActivity(t, rig, brightness: b, size: const Size(400, 900));
-    },
-    seed: (_) async {},
-  );
+  _both('activity_empty', (t, rig, b) async {
+    await pumpActivity(t, rig, brightness: b, size: const Size(400, 900));
+  }, seed: (_) async {});
 }

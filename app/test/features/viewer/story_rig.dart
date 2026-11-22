@@ -209,10 +209,8 @@ class StoryRig {
     clockProvider.overrideWithValue(clock),
     shareServiceProvider.overrideWithValue(share),
     storyPhotoBuilderProvider.overrideWithValue(
-      (context, media) => fakeMedia(
-        const Color(0xFFE0854F),
-        const Color(0xFFB8400F),
-      ),
+      (context, media) =>
+          fakeMedia(const Color(0xFFE0854F), const Color(0xFFB8400F)),
     ),
     storyVideoPlayerFactoryProvider.overrideWithValue((uri) {
       final p = FakeStoryPlayer(uri)..failInit = failVideoInit;

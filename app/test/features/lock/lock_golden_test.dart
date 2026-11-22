@@ -104,11 +104,7 @@ void main() {
         return f;
       },
     );
-    _golden(
-      's14_reset_state',
-      const LockPage(),
-      fixture: LockFixture.new,
-    );
+    _golden('s14_reset_state', const LockPage(), fixture: LockFixture.new);
   });
 
   group('PIN setup goldens (S-12 flow)', () {

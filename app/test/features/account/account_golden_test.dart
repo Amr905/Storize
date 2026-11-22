@@ -17,10 +17,7 @@ void main() {
     for (final b in Brightness.values) {
       testWidgets('${entry.key} golden (${b.name})', (t) async {
         final rig = SettingsRig();
-        await rig.addAccount(
-          status: entry.value,
-          lastSuccessAt: rigNow,
-        );
+        await rig.addAccount(status: entry.value, lastSuccessAt: rigNow);
         await pumpAccount(t, rig, brightness: b);
         await expectLater(
           find.byType(MaterialApp),

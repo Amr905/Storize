@@ -139,10 +139,7 @@ void main() {
         },
       );
       await pumpStoryViewer(t, rig, contentId: id);
-      expect(
-        find.text('Link sticker: shop.example.com/new'),
-        findsOneWidget,
-      );
+      expect(find.text('Link sticker: shop.example.com/new'), findsOneWidget);
     });
 
     testWidgets('Info sheet shows the gallery folder and item details', (

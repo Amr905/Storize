@@ -10,9 +10,7 @@ void main() {
   group('S-13 health states (AC3)', () {
     testWidgets(
       'active: badge, last check, rate-limit count and Log out only',
-      (
-        t,
-      ) async {
+      (t) async {
         final rig = SettingsRig();
         await rig.addAccount(lastSuccessAt: rigNow);
         await rig.activity.add(

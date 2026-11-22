@@ -80,9 +80,7 @@ void main() {
 
     testWidgets(
       'New stories, New posts and Login problems toggle their flags',
-      (
-        t,
-      ) async {
+      (t) async {
         final rig = SettingsRig();
         await pumpSettings(t, rig);
         await t.tap(find.widgetWithText(SwitchListTile, 'New posts'));
@@ -305,12 +303,8 @@ void main() {
 
     testWidgets(
       'choosing Forever clears the retention without a confirmation',
-      (
-        t,
-      ) async {
-        final rig = SettingsRig(
-          settings: const AppSettings(retentionDays: 30),
-        );
+      (t) async {
+        final rig = SettingsRig(settings: const AppSettings(retentionDays: 30));
         await pumpSettings(t, rig);
         expect(find.text('After 30 days'), findsOneWidget);
         await t.tap(find.widgetWithText(ListTile, 'Keep downloads'));

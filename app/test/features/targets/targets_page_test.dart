@@ -33,18 +33,12 @@ void main() {
 
     expect(find.text(l10n.tgtCountLimit(2, 50)), findsOneWidget);
     expect(find.textContaining('nour_k'), findsOneWidget);
-    expect(find.text(l10n.categoryConsented), findsOneWidget);
+    expect(find.text(l10n.tgtCatConsented), findsOneWidget);
     expect(find.text(l10n.statusActive), findsOneWidget);
     expect(find.text(l10n.statusPaused), findsOneWidget);
-    expect(
-      find.text(
-        l10n.tgtMetaLine(
-          l10n.tgtMetaChecked('10:42 AM'),
-          l10n.tgtMetaLastNew('10:15 AM'),
-        ),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.tgtMetaLastNew('10:15 AM')), findsOneWidget);
+    expect(find.text(l10n.tgtMetaChecked('10:42 AM')), findsOneWidget);
+    expect(find.text(l10n.tgtMetaPausedByYou), findsOneWidget);
   });
 
   testWidgets('AC1: Check now is disabled with a tooltip without a session', (

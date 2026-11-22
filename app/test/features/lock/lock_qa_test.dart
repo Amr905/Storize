@@ -198,10 +198,7 @@ void main() {
     });
 
     test('clock moved back 1 ms while away: locked', () async {
-      expect(
-        await lockedAfterAway(const Duration(milliseconds: -1)),
-        isTrue,
-      );
+      expect(await lockedAfterAway(const Duration(milliseconds: -1)), isTrue);
     });
 
     test('inactive only (system biometric prompt), however long: '
@@ -588,21 +585,16 @@ void main() {
   group('QA LocalAuthBiometric wrapper', () {
     test('available only with a strong biometric', () async {
       expect(
-        await LocalAuthBiometric(
-          _FakeLocalAuth(types: [BiometricType.strong]),
-        ).isAvailable(),
+        await LocalAuthBiometric(_FakeLocalAuth(types: [BiometricType.strong]))
+            .isAvailable(),
         isTrue,
       );
       expect(
-        await LocalAuthBiometric(
-          _FakeLocalAuth(types: [BiometricType.weak]),
-        ).isAvailable(),
+        await LocalAuthBiometric(_FakeLocalAuth(types: [BiometricType.weak]))
+            .isAvailable(),
         isFalse,
       );
-      expect(
-        await LocalAuthBiometric(_FakeLocalAuth()).isAvailable(),
-        isFalse,
-      );
+      expect(await LocalAuthBiometric(_FakeLocalAuth()).isAvailable(), isFalse);
       expect(
         await LocalAuthBiometric(
           _FakeLocalAuth(canCheck: false, types: [BiometricType.strong]),

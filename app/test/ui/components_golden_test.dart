@@ -20,9 +20,7 @@ void main() {
     (_) => Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: [
-        for (final s in StorizeStatus.values) StatusBadge(status: s),
-      ],
+      children: [for (final s in StorizeStatus.values) StatusBadge(status: s)],
     ),
   );
 

@@ -70,9 +70,7 @@ void main() {
 
   _both('s02_login_checkpoint_error', (t, b) async {
     final rig = OnbRig();
-    rig.platform.verifySessionResults.addFailure(
-      const AccountRestricted(),
-    );
+    rig.platform.verifySessionResults.addFailure(const AccountRestricted());
     await rig.pump(t, initial: Routes.loginPath, brightness: b);
     rig.web.cookies = Map.of(OnbRig.goodCookies);
     rig.events!.onLoadStop(Uri.parse('https://www.instagram.com/'));

@@ -32,7 +32,7 @@ void main() {
       await rig.addContent(target);
       final l10n = await _openDialog(tester, rig, target);
 
-      expect(find.text(l10n.tdtRemoveTitle('nour_k')), findsOneWidget);
+      expect(find.text(l10n.tdtRemoveTitle('@nour_k')), findsOneWidget);
       expect(find.text(l10n.tdtRemoveCounts(1, 0)), findsOneWidget);
       expect(find.text(l10n.tdtRemoveConfirmDelete), findsNothing);
 
@@ -84,7 +84,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(await rig.targets.getById(target.id), isNotNull);
-      expect(find.text(l10n.tdtRemoveTitle('nour_k')), findsNothing);
+      expect(find.text(l10n.tdtRemoveTitle('@nour_k')), findsNothing);
     });
 
     testWidgets('a failed file delete keeps the dialog open with a message', (
@@ -105,7 +105,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.tdtRemovePartial), findsOneWidget);
-      expect(find.text(l10n.tdtRemoveTitle('nour_k')), findsOneWidget);
+      expect(find.text(l10n.tdtRemoveTitle('@nour_k')), findsOneWidget);
       expect(await rig.targets.getById(target.id), isNotNull);
     });
   });

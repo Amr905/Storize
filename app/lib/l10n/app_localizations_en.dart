@@ -1052,8 +1052,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tgtCountLimit(int count, int limit) {
-    return 'Targets ($count/$limit)';
+    return '$count of $limit recommended';
   }
+
+  @override
+  String get tgtCatOwn => 'Own / Client';
+
+  @override
+  String get tgtCatOwnTitle => 'Own / Client account';
+
+  @override
+  String get tgtCatOwnHint => 'Accounts you or your clients own';
+
+  @override
+  String get tgtCatConsented => 'Person who agreed';
+
+  @override
+  String get tgtCatConsentedHint => 'They know and consented to archiving';
+
+  @override
+  String get tgtCatPublic => 'Public creator / brand';
+
+  @override
+  String get tgtCatPublicShort => 'Public creator';
+
+  @override
+  String get tgtCatPublicHint => 'Public account';
+
+  @override
+  String get tgtAddShort => 'Add';
+
+  @override
+  String tgtMetaSaved(int count) {
+    return '$count saved';
+  }
+
+  @override
+  String get tgtMetaPausedByYou => 'Paused by you';
+
+  @override
+  String get tgtMetaPrivate => 'Private — not followed';
+
+  @override
+  String get tgtMetaGone => 'Account no longer exists';
 
   @override
   String get tgtCheckNow => 'Check now';
@@ -1610,15 +1651,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tdtRemoveCounts(int stories, int posts) {
-    return '$stories stories, $posts posts saved.';
+    return '$stories stories and $posts posts are saved for this account.';
   }
 
   @override
-  String get tdtRemoveKeep => 'Keep downloads (in gallery)';
+  String get tdtRemoveKeep => 'Keep downloads';
 
   @override
-  String get tdtRemoveDelete =>
-      'Delete downloads too (removes them from gallery)';
+  String get tdtRemoveDelete => 'Delete downloads too';
+
+  @override
+  String get tdtRemoveKeepHint => 'They stay in your Library and gallery';
+
+  @override
+  String get tdtRemoveDeleteHint =>
+      'Also removes them from your gallery. Can\'t be undone';
 
   @override
   String get tdtRemoveConfirmDelete => 'Remove & delete';

@@ -46,9 +46,7 @@ void main() {
     expect(rig.lease.calls, ['acquire:login', 'release:login']);
   });
 
-  testWidgets('shows the busy error when page mode holds the lease', (
-    t,
-  ) async {
+  testWidgets('shows the busy error when page mode holds the lease', (t) async {
     final rig = OnbRig()..lease.available = false;
     await rig.pump(t, initial: Routes.loginPath);
     expect(find.text("Login isn't available right now"), findsOneWidget);

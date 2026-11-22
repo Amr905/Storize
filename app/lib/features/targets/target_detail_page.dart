@@ -9,6 +9,7 @@ import 'package:storize_app/features/library/library_tile.dart';
 import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/targets/remove_target_dialog.dart';
 import 'package:storize_app/features/targets/target_detail_providers.dart';
+import 'package:storize_app/features/targets/target_list_row.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -100,7 +101,21 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             itemBuilder: (_) => [
               PopupMenuItem<_MenuAction>(
                 value: _MenuAction.remove,
-                child: Text(l10n.tdtRemove),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(width: StorizeSpacing.s12),
+                    Text(
+                      l10n.tdtRemove,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -118,7 +133,13 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             _StatusCard(status: status, text: text),
           _EditRow(
             label: l10n.tdtCategoryLabel,
-            value: CategoryTag(kind: _categoryKind(target.category)),
+            value: CategoryTag(
+              kind: _categoryKind(target.category),
+              label: TargetListRow.categoryLabel(
+                l10n,
+                _categoryKind(target.category),
+              ),
+            ),
             editTooltip: l10n.tdtEditCategory,
             onEdit: () => unawaited(_editCategory(target)),
           ),
@@ -128,6 +149,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
               target.note ?? l10n.tdtNoteNone,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
               style: target.note == null
                   ? TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -137,22 +159,23 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             editTooltip: l10n.tdtEditNote,
             onEdit: () => unawaited(_editNote(target)),
           ),
-          const SizedBox(height: StorizeSpacing.s16),
-          Text(
-            l10n.tgtTrackLabel,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: StorizeSpacing.s8),
-          Wrap(
-            spacing: StorizeSpacing.s8,
-            children: [
-              for (final kind in TrackKind.values)
-                FilterChip(
-                  label: Text(_trackLabel(l10n, kind)),
-                  selected: _isOn(target, kind),
-                  onSelected: (on) => unawaited(_toggleTrack(target, kind, on)),
-                ),
-            ],
+          _EditRow(
+            label: l10n.tgtTrackLabel,
+            value: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: StorizeSpacing.s8,
+              runSpacing: StorizeSpacing.s4,
+              children: [
+                for (final kind in TrackKind.values)
+                  FilterChip(
+                    label: Text(_trackLabel(l10n, kind)),
+                    selected: _isOn(target, kind),
+                    onSelected: (on) =>
+                        unawaited(_toggleTrack(target, kind, on)),
+                  ),
+              ],
+            ),
+            divider: false,
           ),
           const SizedBox(height: StorizeSpacing.s16),
           Row(
@@ -212,12 +235,24 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
                         ),
                       ),
               ),
-              const SizedBox(width: StorizeSpacing.s8),
+              const SizedBox(width: StorizeSpacing.s16),
               Expanded(
-                child: TonalButton(
-                  label: paused ? l10n.tgtActionResume : l10n.tgtActionPause,
-                  icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                  expand: true,
+                child: OutlinedButton.icon(
+                  icon: Icon(
+                    paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  ),
+                  label: Text(
+                    paused ? l10n.tgtActionResume : l10n.tgtActionPause,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const StadiumBorder(),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    textStyle: Theme.of(context).textTheme.titleMedium,
+                  ),
                   onPressed: () => unawaited(_setPaused(target, !paused)),
                 ),
               ),
@@ -227,13 +262,30 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  l10n.tdtRecentLabel,
-                  style: Theme.of(context).textTheme.titleMedium,
+                child: Wrap(
+                  spacing: StorizeSpacing.s8,
+                  children: [
+                    ChoiceChip(
+                      label: Text(l10n.libStoriesTab),
+                      selected: _kind == LibraryKind.stories,
+                      showCheckmark: false,
+                      onSelected: (_) =>
+                          setState(() => _kind = LibraryKind.stories),
+                    ),
+                    ChoiceChip(
+                      label: Text(l10n.libPostsTab),
+                      selected: _kind == LibraryKind.posts,
+                      showCheckmark: false,
+                      onSelected: (_) =>
+                          setState(() => _kind = LibraryKind.posts),
+                    ),
+                  ],
                 ),
               ),
-              StorizeTextButton(
-                label: l10n.tdtSeeAll,
+              TextButton.icon(
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.chevron_right_rounded),
+                label: Text(l10n.tdtSeeAll),
                 onPressed: () => unawaited(
                   context.push(
                     Routes.libraryLocation(
@@ -246,14 +298,6 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
                 ),
               ),
             ],
-          ),
-          KindSwitch(
-            selected: _kind,
-            onChanged: (kind) => setState(() => _kind = kind),
-            storiesLabel: l10n.libStoriesTab,
-            postsLabel: l10n.libPostsTab,
-            storiesCount: loaded ? storyCount : null,
-            postsCount: loaded ? postCount : null,
           ),
           const SizedBox(height: StorizeSpacing.s12),
           _recent(context, target, contentAsync),
@@ -533,28 +577,34 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final name = target.displayName?.trim();
+    final hasName = name != null && name.isNotEmpty;
     return Row(
       children: [
+        StorizeAvatar(initial: target.username[0], size: 56),
+        const SizedBox(width: StorizeSpacing.s16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                name == null || name.isEmpty ? '@${target.username}' : name,
-                style: theme.textTheme.headlineSmall,
+                hasName ? name : '@${target.username}',
+                style: theme.textTheme.titleLarge,
               ),
-              if (name != null && name.isNotEmpty)
+              if (hasName)
                 Text(
                   '@${target.username}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
+              const SizedBox(height: StorizeSpacing.s4),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: DotStatusBadge(status: status),
+              ),
             ],
           ),
         ),
-        const SizedBox(width: StorizeSpacing.s8),
-        StatusBadge(status: status),
       ],
     );
   }
@@ -604,33 +654,56 @@ class _EditRow extends StatelessWidget {
   const _EditRow({
     required this.label,
     required this.value,
-    required this.editTooltip,
-    required this.onEdit,
+    this.editTooltip,
+    this.onEdit,
+    this.divider = true,
   });
 
   final String label;
   final Widget value;
-  final String editTooltip;
-  final VoidCallback onEdit;
+  final String? editTooltip;
+  final VoidCallback? onEdit;
+  final bool divider;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(label, style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(width: StorizeSpacing.s12),
-        Expanded(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: value,
-          ),
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: divider
+            ? BorderDirectional(
+                bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+              )
+            : null,
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: StorizeSpacing.s12),
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: value,
+              ),
+            ),
+            if (onEdit != null)
+              IconButton(
+                tooltip: editTooltip,
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                onPressed: onEdit,
+              )
+            else
+              const SizedBox(width: StorizeSpacing.s8),
+          ],
         ),
-        IconButton(
-          tooltip: editTooltip,
-          icon: const Icon(Icons.edit_rounded),
-          onPressed: onEdit,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -671,7 +744,7 @@ class _CategorySheet extends StatelessWidget {
                   RadioListTile<TargetCategory>(
                     value: c,
                     title: Text(
-                      CategoryTag.defaultLabel(
+                      TargetListRow.categoryLabel(
                         l10n,
                         _TargetDetailPageState._categoryKind(c),
                       ),

@@ -134,6 +134,14 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     final sessionMessage = !sessionActive ? l10n.tgtSessionInactive : null;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final labelStyle = textTheme.titleSmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    OutlineInputBorder border(Color color, {double width = 1}) =>
+        OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: color, width: width),
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -167,6 +175,8 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                     tone: StorizeColors.of(context).warning,
                   ),
                 ),
+              Text(l10n.tgtUsernameLabel, style: labelStyle),
+              const SizedBox(height: StorizeSpacing.s12),
               TextField(
                 controller: _username,
                 enabled: !verifying,
@@ -175,11 +185,33 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 textInputAction: TextInputAction.next,
                 onChanged: notifier.setUsername,
                 decoration: InputDecoration(
-                  labelText: l10n.tgtUsernameLabel,
                   hintText: l10n.tgtUsernameHint,
-                  errorText: usernameError,
+                  prefixText: '@ ',
+                  prefixStyle: textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  contentPadding: const EdgeInsetsDirectional.symmetric(
+                    horizontal: StorizeSpacing.s16,
+                    vertical: StorizeSpacing.s20,
+                  ),
+                  enabledBorder: border(
+                    usernameError == null ? scheme.outline : scheme.error,
+                  ),
+                  focusedBorder: border(
+                    usernameError == null ? scheme.primary : scheme.error,
+                    width: 2,
+                  ),
+                  disabledBorder: border(scheme.outline),
+                  errorBorder: border(scheme.error),
+                  focusedErrorBorder: border(scheme.error, width: 2),
                 ),
               ),
+              if (usernameError != null)
+                _ErrorText(
+                  usernameError,
+                  color: scheme.error,
+                  icon: Icons.warning_amber_rounded,
+                ),
               if (failure is AddTargetDuplicate)
                 Align(
                   alignment: AlignmentDirectional.centerStart,
@@ -193,7 +225,8 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                   ),
                 ),
               const SizedBox(height: StorizeSpacing.s16),
-              Text(l10n.tgtCategoryLabel, style: textTheme.titleSmall),
+              Text(l10n.tgtCategoryLabel, style: labelStyle),
+              const SizedBox(height: StorizeSpacing.s12),
               IgnorePointer(
                 ignoring: verifying,
                 child: RadioGroup<TargetCategory>(
@@ -206,11 +239,44 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                   child: Column(
                     children: [
                       for (final c in TargetCategory.values)
-                        RadioListTile<TargetCategory>(
-                          contentPadding: EdgeInsets.zero,
-                          value: c,
-                          title: Text(
-                            CategoryTag.defaultLabel(l10n, _categoryKind(c)),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            bottom: StorizeSpacing.s12,
+                          ),
+                          child: Material(
+                            color: form.category == c
+                                ? scheme.primaryContainer.withValues(
+                                    alpha: 0.35,
+                                  )
+                                : scheme.surfaceContainerLowest,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(14),
+                              ),
+                              side: BorderSide(
+                                color: form.category == c
+                                    ? scheme.primary
+                                    : scheme.outline,
+                              ),
+                            ),
+                            child: RadioListTile<TargetCategory>(
+                              contentPadding: const EdgeInsetsDirectional.only(
+                                start: StorizeSpacing.s8,
+                                end: StorizeSpacing.s16,
+                              ),
+                              minTileHeight: 0,
+                              value: c,
+                              title: Text(
+                                _categoryTitle(l10n, c),
+                                style: textTheme.titleMedium,
+                              ),
+                              subtitle: Text(
+                                _categoryHint(l10n, c),
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                     ],
@@ -220,7 +286,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
               if (categoryError != null)
                 _ErrorText(categoryError, color: scheme.error),
               const SizedBox(height: StorizeSpacing.s16),
-              Text(l10n.tgtTrackLabel, style: textTheme.titleSmall),
+              Text(l10n.tgtTrackLabel, style: labelStyle),
               const SizedBox(height: StorizeSpacing.s8),
               Wrap(
                 spacing: StorizeSpacing.s8,
@@ -245,6 +311,8 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 ),
               ),
               const SizedBox(height: StorizeSpacing.s16),
+              Text(l10n.tgtNoteLabel, style: labelStyle),
+              const SizedBox(height: StorizeSpacing.s12),
               TextField(
                 controller: _note,
                 enabled: !verifying,
@@ -252,9 +320,16 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 maxLines: 2,
                 onChanged: notifier.setNote,
                 decoration: InputDecoration(
-                  labelText: l10n.tgtNoteLabel,
                   hintText: l10n.tgtNoteHint,
                   errorText: form.noteTooLong ? l10n.tgtNoteTooLong : null,
+                  contentPadding: const EdgeInsetsDirectional.all(
+                    StorizeSpacing.s16,
+                  ),
+                  enabledBorder: border(scheme.outline),
+                  focusedBorder: border(scheme.primary, width: 2),
+                  disabledBorder: border(scheme.outline),
+                  errorBorder: border(scheme.error),
+                  focusedErrorBorder: border(scheme.error, width: 2),
                 ),
               ),
               const SizedBox(height: StorizeSpacing.s24),
@@ -284,11 +359,19 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     );
   }
 
-  static CategoryKind _categoryKind(TargetCategory c) => switch (c) {
-    TargetCategory.ownClient => CategoryKind.ownClient,
-    TargetCategory.consented => CategoryKind.consented,
-    TargetCategory.public => CategoryKind.publicFigure,
-  };
+  static String _categoryTitle(AppLocalizations l10n, TargetCategory c) =>
+      switch (c) {
+        TargetCategory.ownClient => l10n.tgtCatOwnTitle,
+        TargetCategory.consented => l10n.tgtCatConsented,
+        TargetCategory.public => l10n.tgtCatPublic,
+      };
+
+  static String _categoryHint(AppLocalizations l10n, TargetCategory c) =>
+      switch (c) {
+        TargetCategory.ownClient => l10n.tgtCatOwnHint,
+        TargetCategory.consented => l10n.tgtCatConsentedHint,
+        TargetCategory.public => l10n.tgtCatPublicHint,
+      };
 
   static String _trackLabel(AppLocalizations l10n, TrackKind kind) =>
       switch (kind) {
@@ -299,19 +382,31 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
 }
 
 class _ErrorText extends StatelessWidget {
-  const _ErrorText(this.text, {required this.color});
+  const _ErrorText(this.text, {required this.color, this.icon});
 
   final String text;
   final Color color;
+  final IconData? icon;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s4),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: color,
+    );
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s8),
+      child: icon == null
+          ? Text(text, style: style)
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 18, color: color),
+                const SizedBox(width: StorizeSpacing.s8),
+                Expanded(child: Text(text, style: style)),
+              ],
+            ),
+    );
+  }
 }
 
 class _Notice extends StatelessWidget {

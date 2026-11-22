@@ -1844,8 +1844,86 @@ abstract class AppLocalizations {
   /// Targets title with the tracked count and the recommended limit (S-07).
   ///
   /// In en, this message translates to:
-  /// **'Targets ({count}/{limit})'**
+  /// **'{count} of {limit} recommended'**
   String tgtCountLimit(int count, int limit);
+
+  /// Category name on S-07, S-08, S-09 (design wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Own / Client'**
+  String get tgtCatOwn;
+
+  /// S-08 category option title.
+  ///
+  /// In en, this message translates to:
+  /// **'Own / Client account'**
+  String get tgtCatOwnTitle;
+
+  /// S-08 helper line under the own/client category.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts you or your clients own'**
+  String get tgtCatOwnHint;
+
+  /// Category name on S-07, S-08, S-09 (design wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Person who agreed'**
+  String get tgtCatConsented;
+
+  /// S-08 helper line under the consented category.
+  ///
+  /// In en, this message translates to:
+  /// **'They know and consented to archiving'**
+  String get tgtCatConsentedHint;
+
+  /// S-08 category name.
+  ///
+  /// In en, this message translates to:
+  /// **'Public creator / brand'**
+  String get tgtCatPublic;
+
+  /// S-07, S-09 short category tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Public creator'**
+  String get tgtCatPublicShort;
+
+  /// S-08 helper line under the public category.
+  ///
+  /// In en, this message translates to:
+  /// **'Public account'**
+  String get tgtCatPublicHint;
+
+  /// S-07 extended floating button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get tgtAddShort;
+
+  /// S-07 row meta, number of saved items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} saved'**
+  String tgtMetaSaved(int count);
+
+  /// S-07 row note for a paused target.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused by you'**
+  String get tgtMetaPausedByYou;
+
+  /// S-07 row note for a target that is not visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Private — not followed'**
+  String get tgtMetaPrivate;
+
+  /// S-07 row note for an unavailable target.
+  ///
+  /// In en, this message translates to:
+  /// **'Account no longer exists'**
+  String get tgtMetaGone;
 
   /// S-07 action: check all active targets now (FR-21).
   ///
@@ -2738,20 +2816,32 @@ abstract class AppLocalizations {
   /// S-10 dialog counts line.
   ///
   /// In en, this message translates to:
-  /// **'{stories} stories, {posts} posts saved.'**
+  /// **'{stories} stories and {posts} posts are saved for this account.'**
   String tdtRemoveCounts(int stories, int posts);
 
   /// S-10 option, default and safe choice.
   ///
   /// In en, this message translates to:
-  /// **'Keep downloads (in gallery)'**
+  /// **'Keep downloads'**
   String get tdtRemoveKeep;
 
   /// S-10 option that deletes the saved files.
   ///
   /// In en, this message translates to:
-  /// **'Delete downloads too (removes them from gallery)'**
+  /// **'Delete downloads too'**
   String get tdtRemoveDelete;
+
+  /// S-10 second line under the keep option.
+  ///
+  /// In en, this message translates to:
+  /// **'They stay in your Library and gallery'**
+  String get tdtRemoveKeepHint;
+
+  /// S-10 second line under the delete option.
+  ///
+  /// In en, this message translates to:
+  /// **'Also removes them from your gallery. Can\'t be undone'**
+  String get tdtRemoveDeleteHint;
 
   /// S-10 confirm button when delete is selected.
   ///

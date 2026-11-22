@@ -70,33 +70,23 @@ final class _Rig {
   Exception? checkThrows;
 
   late final TaskRouter router = TaskRouter(
-    runCheck:
-        ({
-          required scope,
-          required trigger,
-          targetId,
-          deadline,
-        }) async {
-          order.add('check-${scope.name}');
-          checks.add((
-            scope: scope,
-            trigger: trigger,
-            targetId: targetId,
-            deadline: deadline,
-          ));
-          final e = checkThrows;
-          if (e != null) throw e;
-          return checkResult;
-        },
-    download:
-        ({
-          deadline,
-          policy = ExtractionPolicy.directOnly,
-        }) async {
-          order.add('download');
-          downloads.add((deadline: deadline, policy: policy));
-          return downloadResult;
-        },
+    runCheck: ({required scope, required trigger, targetId, deadline}) async {
+      order.add('check-${scope.name}');
+      checks.add((
+        scope: scope,
+        trigger: trigger,
+        targetId: targetId,
+        deadline: deadline,
+      ));
+      final e = checkThrows;
+      if (e != null) throw e;
+      return checkResult;
+    },
+    download: ({deadline, policy = ExtractionPolicy.directOnly}) async {
+      order.add('download');
+      downloads.add((deadline: deadline, policy: policy));
+      return downloadResult;
+    },
     retention: () async {
       order.add('retention');
       retentions++;

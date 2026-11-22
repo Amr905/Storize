@@ -139,10 +139,7 @@ Future<GoRouter> pumpTargets(
   final router = GoRouter(
     initialLocation: initial,
     routes: [
-      GoRoute(
-        path: Routes.targetsPath,
-        builder: (_, _) => const TargetsPage(),
-      ),
+      GoRoute(path: Routes.targetsPath, builder: (_, _) => const TargetsPage()),
       GoRoute(
         path: Routes.addTargetPath,
         builder: (_, _) => const AddTargetPage(),

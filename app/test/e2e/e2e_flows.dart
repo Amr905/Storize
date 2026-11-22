@@ -20,9 +20,7 @@ void registerE2eFlows() {
   group('T-037 end-to-end', () {
     testWidgets(
       '1 first run: S-01, S-02 fake login, S-03 Done, empty Library',
-      (
-        t,
-      ) async {
+      (t) async {
         final rig = E2eRig(firstRun: true);
         final app = await rig.launch(t);
         expect(_path(app), Routes.welcomePath);
@@ -88,7 +86,7 @@ void registerE2eFlows() {
         'nour_k',
       );
       await t.pump();
-      await t.tap(find.text(l10n.categoryOwn));
+      await t.tap(find.text(l10n.tgtCatOwnTitle));
       await t.pumpAndSettle();
       // The add use case reads repo streams with real async.
       await t.runAsync(() async {
@@ -107,58 +105,57 @@ void registerE2eFlows() {
       expect(rig.scheduler.checkNowCalls, isNotEmpty);
     });
 
-    testWidgets(
-      '3 a check stores a story and a post; the Library shows both',
-      (t) async {
-        final rig = E2eRig();
-        await rig.addAccount();
-        final target = await rig.addTarget('nour_k');
-        rig.scriptRemoteContent(target);
-        final app = await rig.launch(t);
-        expect(find.text('No stories yet'), findsOneWidget);
+    testWidgets('3 a check stores a story and a post; the Library shows both', (
+      t,
+    ) async {
+      final rig = E2eRig();
+      await rig.addAccount();
+      final target = await rig.addTarget('nour_k');
+      rig.scriptRemoteContent(target);
+      final app = await rig.launch(t);
+      expect(find.text('No stories yet'), findsOneWidget);
 
-        await t.runAsync(rig.runChecks);
-        await t.pumpAndSettle();
+      await t.runAsync(rig.runChecks);
+      await t.pumpAndSettle();
 
-        // Downloads went through the fake gallery: 1 story file + 2 slides.
-        expect(rig.gallery.files, hasLength(3));
-        expect(
-          rig.gallery.files.every(
-            (f) => f.relativePath == 'Pictures/Storize/nour_k/',
-          ),
-          isTrue,
-        );
-        expect(rig.platform.callsTo('openMedia'), hasLength(3));
+      // Downloads went through the fake gallery: 1 story file + 2 slides.
+      expect(rig.gallery.files, hasLength(3));
+      expect(
+        rig.gallery.files.every(
+          (f) => f.relativePath == 'Pictures/Storize/nour_k/',
+        ),
+        isTrue,
+      );
+      expect(rig.platform.callsTo('openMedia'), hasLength(3));
 
-        // Stories tab.
-        final stories = await _library(t, rig, ContentKind.story);
-        final posts = await _library(t, rig, ContentKind.post);
-        expect(stories, hasLength(1));
-        expect(posts, hasLength(1));
-        expect(posts.single.media, hasLength(2));
-        expect(find.byKey(ValueKey(stories.single.content.id)), findsOneWidget);
+      // Stories tab.
+      final stories = await _library(t, rig, ContentKind.story);
+      final posts = await _library(t, rig, ContentKind.post);
+      expect(stories, hasLength(1));
+      expect(posts, hasLength(1));
+      expect(posts.single.media, hasLength(2));
+      expect(find.byKey(ValueKey(stories.single.content.id)), findsOneWidget);
 
-        // Posts tab via the switch.
-        await t.tap(find.text('Posts'));
-        await t.pumpAndSettle();
-        expect(find.byKey(ValueKey(posts.single.content.id)), findsOneWidget);
-        expect(find.byKey(ValueKey(stories.single.content.id)), findsNothing);
+      // Posts tab via the switch.
+      await t.tap(find.text('Posts'));
+      await t.pumpAndSettle();
+      expect(find.byKey(ValueKey(posts.single.content.id)), findsOneWidget);
+      expect(find.byKey(ValueKey(stories.single.content.id)), findsNothing);
 
-        // Post tile opens S-15.
-        await t.tap(find.byKey(ValueKey(posts.single.content.id)));
-        await t.pumpAndSettle();
-        expect(_path(app), Routes.postLocation(posts.single.content.id));
-        expect(find.text('1 / 2'), findsOneWidget);
-        await app.go(Routes.libraryPath);
+      // Post tile opens S-15.
+      await t.tap(find.byKey(ValueKey(posts.single.content.id)));
+      await t.pumpAndSettle();
+      expect(_path(app), Routes.postLocation(posts.single.content.id));
+      expect(find.text('1 / 2'), findsOneWidget);
+      await app.go(Routes.libraryPath);
 
-        // Story tile opens S-06.
-        await t.tap(find.text('Stories'));
-        await t.pumpAndSettle();
-        await t.tap(find.byKey(ValueKey(stories.single.content.id)));
-        await t.pumpAndSettle();
-        expect(_path(app), Routes.storyLocation(stories.single.content.id));
-      },
-    );
+      // Story tile opens S-06.
+      await t.tap(find.text('Stories'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(ValueKey(stories.single.content.id)));
+      await t.pumpAndSettle();
+      expect(_path(app), Routes.storyLocation(stories.single.content.id));
+    });
 
     testWidgets('4 delete the story from S-06 and the post from S-15', (
       t,
@@ -293,7 +290,7 @@ void registerE2eFlows() {
             .first,
         'nour_k',
       );
-      await t.tap(find.text(l10n.categoryOwn));
+      await t.tap(find.text(l10n.tgtCatOwnTitle));
       await t.pumpAndSettle();
       await t.runAsync(() async {
         await t.tap(find.widgetWithText(FilledButton, l10n.tgtAddAndVerify));
