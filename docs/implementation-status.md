@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 42 / 44 tasks done (95%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a) all done. (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN · next checkpoint at T-037. Remaining: **T-036** (needs P-5 keystore) and **T-037** (E2E; device part needs P-4 phones).
+- **Progress: 43 / 45 tasks done (96%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a, T-037a) all done. (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN. Remaining (both need the user): **T-036** (P-5 keystore) and **T-037** device checklist + 24 h soak (P-4 phones).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,7 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-037a | backend-developer (sonnet) | `app/lib/debug/tools/**`, `app/lib/main_dev_tools.dart`, `app/test/debug/**`, string-audit allowlist, `docs/05-reviews/T-037a.md` | 04:50 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -78,6 +77,7 @@
 | T-035 | *(Could)* ExportZip | Medium | sonnet | Frontend Developer | T-031 | todo | — | — |
 | T-036 | Release pipeline (`release.yml`) + README install guide | Medium | sonnet | Backend Developer | T-001, P-5 | todo | — | — |
 | T-037 | End-to-end tests + device soak checklist | Medium | sonnet | QA Engineer | T-021…T-034 | todo | — | — |
+| T-037a | Dev-only debug tools for the device checklist | Medium | sonnet | Backend Developer | T-037 | done | 1 | Lead review + CI 44969567733 · `05-reviews/T-037a.md` |
 | T-038 | Accessibility & RTL pass + string audit | Low | haiku | Frontend Developer | T-026…T-034 | done | — | — |
 
 ## Carry-forward notes (from QA findings)
@@ -182,3 +182,4 @@
 - 2026-11-22 03:00 — **T-022 done** (40/43, 93%): Lead review; Lead added warm-tap routing, core library desugaring and **compileSdk 37** (flutter_local_notifications 23 needs it; targetSdk stays 36); CI 44961986939 green; merged. melos `test`/`golden:update` now run with `TZ=UTC`. **Checkpoint 8 GREEN** (Lead): melos run test SUCCESS (app 962 ~1, domain 464, instagram 1244 ~3, model 73, platform 98, data), analyze clean, gitleaks no leaks. Remaining: T-036 (needs P-5 keystore), T-037 (needs P-4 phones), T-038 (a11y + carry-forwards); follow-up T-029a; Could T-035.
 - 2026-11-22 04:10 — **T-029a done** (QA PASS; C2 silent 'Checking…' notice parked: needs a notifications-port `cancel`) and **T-038 done** (Lead review; contrast tokens fixed, UX §5.2 updated). Both CI green, merged cleanly; main suite green (app 988, domain 478, platform 104, instagram 1244, model 73, data). **42/44 (95%).**
 - 2026-11-22 04:50 — **T-037 automated part merged** (CI 44968477153): 6 E2E flows in `app/test/e2e/` (+ `integration_test` wrapper), `DEVICE_TESTS.md` rewritten as one checklist, `SOAK.md` template. T-037 stays **in_progress** until the user runs the device checklist and 24 h soak (P-4). Started **T-037a** (dev-only debug tools the checklist needs).
+- 2026-11-22 05:20 — **T-037a done** (43/45, 96%): dev-only tools (`flutter run --flavor dev -t lib/main_dev_tools.dart`): run check now, page-mode story load, cookie count, probe, Library seed/clear, log tail. Lead review (reuses governor, lease and seen hook); CI green after a transient Maven re-run; merged. Waiting on the user for T-036 and T-037 device runs.
