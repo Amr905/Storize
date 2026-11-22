@@ -28,6 +28,7 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
+| T-037 | qa-engineer (sonnet) | `app/integration_test/**`, `app/test/e2e/**`, `app/pubspec.yaml` (dev: integration_test), `docs/03-specs/DEVICE_TESTS.md`, `docs/05-reviews/SOAK.md`, `docs/05-reviews/T-037.md` | 04:15 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
