@@ -28,6 +28,8 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
+| T-029a | backend-developer (sonnet) | `packages/storize_domain/lib/src/repos/content_repo.dart` (+1 method, Lead-approved), fakes, new use case `remove_media_file`, `packages/storize_data/lib/repo/**` (content repo), `packages/storize_platform_android/**` (read method only), `app/lib/features/viewer/**`, `app/lib/features/targets/targets_providers.dart`, `target_detail_page.dart`, `app/lib/background/**`, `app/lib/core/composition*.dart`, `app/lib/main.dart`, tests for these | 03:10 |
+| T-038 | frontend-developer (haiku) | `app/lib/ui/**`, `app/lib/features/**` except `viewer/**`, `targets_providers.dart`, `target_detail_page.dart`; `app/lib/l10n/app_en.arb` (descriptions, new `a11y*` keys); `analysis_options.yaml`; app tests except viewer/targets-detail | 03:10 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
