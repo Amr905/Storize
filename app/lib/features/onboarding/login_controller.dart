@@ -302,9 +302,11 @@ class LoginController extends Notifier<LoginState>
       if (gen != _generation) return;
       state = state.copyWith(phase: LoginPhase.connecting);
       await _finish(blob, gen);
-    } on Object {
+    } on Object catch (error) {
       // Never include the error text: it could carry cookie values.
-      if (gen == _generation) _fail(LoginError.unusable);
+      if (gen == _generation) {
+        _fail(LoginError.unusable, _describe('session_check', error));
+      }
     } finally {
       _checking = false;
     }
@@ -326,9 +328,11 @@ class LoginController extends Notifier<LoginState>
     final Result<RemoteUser> verified;
     try {
       verified = await _platform.verifySession();
-    } on Object {
+    } on Object catch (error) {
       await _wipeStaging();
-      if (gen == _generation) _fail(LoginError.unusable);
+      if (gen == _generation) {
+        _fail(LoginError.unusable, _describe('verify_threw', error));
+      }
       return;
     }
     if (gen != _generation) {
@@ -342,14 +346,17 @@ class LoginController extends Notifier<LoginState>
     if (user == null) {
       await _wipeStaging();
       final failure = verified.failureOrNull;
-      _fail(switch (failure) {
-        NetworkFailure() => LoginError.network,
-        AccountRestricted() ||
-        SessionInvalid(
-          reason: SessionReason.challenge,
-        ) => LoginError.checkpoint,
-        _ => LoginError.unusable,
-      });
+      _fail(
+        switch (failure) {
+          NetworkFailure() => LoginError.network,
+          AccountRestricted() ||
+          SessionInvalid(
+            reason: SessionReason.challenge,
+          ) => LoginError.checkpoint,
+          _ => LoginError.unusable,
+        },
+        failure == null ? null : _describe('verify', failure),
+      );
       return;
     }
     final accounts = _accounts;
@@ -416,9 +423,20 @@ class LoginController extends Notifier<LoginState>
     state = LoginState(phase: LoginPhase.connected, username: user.username);
   }
 
-  void _fail(LoginError error) {
+  void _fail(LoginError error, [String? detail]) {
     unawaited(_safeClear());
-    state = LoginState(phase: LoginPhase.error, error: error);
+    state = LoginState(phase: LoginPhase.error, error: error, detail: detail);
+  }
+
+  /// A short, secret-free cause for dev builds: the type, never the message
+  /// of an exception (it could carry cookie values); a [Failure]'s own
+  /// description is secret-free by contract.
+  static String _describe(String step, Object cause) {
+    final text = cause is Failure
+        ? cause.toString()
+        : 'type=${cause.runtimeType}';
+    final short = text.length > 140 ? '${text.substring(0, 140)}…' : text;
+    return '$step $short';
   }
 
   Future<void> _wipeStaging() async {
