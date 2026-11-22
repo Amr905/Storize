@@ -1149,31 +1149,47 @@
   "@actYesterday": {"description": "S-11 day header for yesterday."},
   "actEmptyTitle": "No activity yet.",
   "@actEmptyTitle": {"description": "S-11 empty state title."},
-  "actCheckDoneOk": "Checked {count} accounts · No errors",
+  "actCheckDoneOk": "Checked {count} accounts",
   "@actCheckDoneOk": {
     "description": "S-11 entry: a check finished without failures.",
     "placeholders": {"count": {"type": "int"}}
+  },
+  "actCheckDoneOkSub": "No errors",
+  "@actCheckDoneOkSub": {"description": "S-11 second line of a clean check entry."},
+  "actCheckFailedSub": "{failed} failed",
+  "@actCheckFailedSub": {
+    "description": "S-11 second line of a check entry with failures.",
+    "placeholders": {"failed": {"type": "int"}}
   },
   "actCheckDoneFailed": "Checked {count} accounts · {failed} failed",
   "@actCheckDoneFailed": {
     "description": "S-11 entry: a check finished with failed accounts.",
     "placeholders": {"count": {"type": "int"}, "failed": {"type": "int"}}
   },
-  "actDownloadedStories": "{count} stories downloaded · {account}",
+  "actDownloadedStories": "{count} stories downloaded",
   "@actDownloadedStories": {
-    "description": "S-11 entry: stories were downloaded for an account.",
-    "placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}
+    "description": "S-11 entry title: stories were downloaded (the account is the second line).",
+    "placeholders": {"count": {"type": "int"}}
   },
-  "actDownloadedPosts": "{count} posts downloaded · {account}",
+  "actDownloadedPosts": "{count} posts downloaded",
   "@actDownloadedPosts": {
-    "description": "S-11 entry: posts were downloaded for an account.",
-    "placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}
+    "description": "S-11 entry title: posts were downloaded (the account is the second line).",
+    "placeholders": {"count": {"type": "int"}}
   },
-  "actRemovedBeforeDownload": "Removed before download · {account} · not an error",
+  "actRemovedBeforeDownload": "{account} · not an error",
   "@actRemovedBeforeDownload": {
-    "description": "S-11 info entry (EC-7): content vanished before it was downloaded.",
+    "description": "S-11 info entry second line (EC-7): which account, and that it is not an error.",
     "placeholders": {"account": {"type": "String"}}
   },
+  "actRemovedTitle": "Story removed before download",
+  "@actRemovedTitle": {"description": "S-11 info entry title (EC-7)."},
+  "actGapTitle": "Gap: no checks from {from} to {to}",
+  "@actGapTitle": {
+    "description": "S-11 warning entry title with the time range.",
+    "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
+  },
+  "actGapSub": "Android may have stopped Storize",
+  "@actGapSub": {"description": "S-11 gap entry second line."},
   "actGap": "Gap: no checks",
   "@actGap": {
     "description": "S-11 warning entry title: no checks ran during the time range shown on the second line."
@@ -1192,27 +1208,35 @@
   "@actFixBattery": {"description": "S-11 gap entry action; opens S-03."},
   "actFix": "Fix",
   "@actFix": {"description": "S-11 session entry action; opens S-13."},
-  "actRateLimited": "Instagram slowed us down · checks slowed",
+  "actRateLimited": "Instagram slowed us down",
   "@actRateLimited": {"description": "S-11 warning entry (EC-15)."},
+  "actRateLimitedSub": "Checks were slowed down to be safe",
+  "@actRateLimitedSub": {"description": "S-11 rate-limit entry second line."},
   "actSessionProblem": "Instagram login needs attention",
   "@actSessionProblem": {"description": "S-11 error entry (EC-1/2); opens S-13."},
+  "actSessionProblemSub": "Checks are paused until you log in again",
+  "@actSessionProblemSub": {"description": "S-11 session entry second line."},
   "actPlatformChanged": "Instagram changed — update Storize",
   "@actPlatformChanged": {"description": "S-11 error entry (EC-14)."},
+  "actPlatformChangedSub": "Checks may fail until the app is updated",
+  "@actPlatformChangedSub": {"description": "S-11 platform-changed entry second line."},
   "actPageModeUsed": "Page mode used for a check",
   "@actPageModeUsed": {"description": "S-11 info entry: the headless page fallback ran."},
   "actStorageLow": "Storage is low",
   "@actStorageLow": {"description": "S-11 warning entry (NFR-13)."},
-  "actStoragePaused": "Downloads paused · storage full",
+  "actStoragePaused": "Downloads paused",
   "@actStoragePaused": {"description": "S-11 error entry (NFR-13)."},
-  "actTargetStatus": "Account status changed · {account}",
+  "actStoragePausedSub": "Storage is full",
+  "@actStoragePausedSub": {"description": "S-11 storage-paused entry second line."},
+  "actTargetStatus": "Account status changed",
   "@actTargetStatus": {
-    "description": "S-11 info entry: a tracked account changed status.",
-    "placeholders": {"account": {"type": "String"}}
+    "description": "S-11 info entry title: a tracked account changed status (the account is the second line).",
+    "placeholders": {}
   },
-  "actFileMissing": "File missing from gallery · {account}",
+  "actFileMissing": "File missing from gallery",
   "@actFileMissing": {
-    "description": "S-11 warning entry: a saved file is gone from the gallery.",
-    "placeholders": {"account": {"type": "String"}}
+    "description": "S-11 warning entry title: a saved file is gone from the gallery (the account is the second line).",
+    "placeholders": {}
   },
   "actAppCrash": "Storize closed unexpectedly",
   "@actAppCrash": {"description": "S-11 error entry: crash marker from the previous run."},

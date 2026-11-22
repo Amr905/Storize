@@ -963,7 +963,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String actCheckDoneOk(int count) {
-    return 'Checked $count accounts · No errors';
+    return 'Checked $count accounts';
+  }
+
+  @override
+  String get actCheckDoneOkSub => 'No errors';
+
+  @override
+  String actCheckFailedSub(int failed) {
+    return '$failed failed';
   }
 
   @override
@@ -972,19 +980,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String actDownloadedStories(int count, String account) {
-    return '$count stories downloaded · $account';
+  String actDownloadedStories(int count) {
+    return '$count stories downloaded';
   }
 
   @override
-  String actDownloadedPosts(int count, String account) {
-    return '$count posts downloaded · $account';
+  String actDownloadedPosts(int count) {
+    return '$count posts downloaded';
   }
 
   @override
   String actRemovedBeforeDownload(String account) {
-    return 'Removed before download · $account · not an error';
+    return '$account · not an error';
   }
+
+  @override
+  String get actRemovedTitle => 'Story removed before download';
+
+  @override
+  String actGapTitle(String from, String to) {
+    return 'Gap: no checks from $from to $to';
+  }
+
+  @override
+  String get actGapSub => 'Android may have stopped Storize';
 
   @override
   String get actGap => 'Gap: no checks';
@@ -1012,13 +1031,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actFix => 'Fix';
 
   @override
-  String get actRateLimited => 'Instagram slowed us down · checks slowed';
+  String get actRateLimited => 'Instagram slowed us down';
+
+  @override
+  String get actRateLimitedSub => 'Checks were slowed down to be safe';
 
   @override
   String get actSessionProblem => 'Instagram login needs attention';
 
   @override
+  String get actSessionProblemSub => 'Checks are paused until you log in again';
+
+  @override
   String get actPlatformChanged => 'Instagram changed — update Storize';
+
+  @override
+  String get actPlatformChangedSub =>
+      'Checks may fail until the app is updated';
 
   @override
   String get actPageModeUsed => 'Page mode used for a check';
@@ -1027,17 +1056,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actStorageLow => 'Storage is low';
 
   @override
-  String get actStoragePaused => 'Downloads paused · storage full';
+  String get actStoragePaused => 'Downloads paused';
 
   @override
-  String actTargetStatus(String account) {
-    return 'Account status changed · $account';
-  }
+  String get actStoragePausedSub => 'Storage is full';
 
   @override
-  String actFileMissing(String account) {
-    return 'File missing from gallery · $account';
-  }
+  String get actTargetStatus => 'Account status changed';
+
+  @override
+  String get actFileMissing => 'File missing from gallery';
 
   @override
   String get actAppCrash => 'Storize closed unexpectedly';

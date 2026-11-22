@@ -58,6 +58,8 @@ class TargetsPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         tooltip: l10n.tgtAddAccount,
         onPressed: () => unawaited(context.push(Routes.addTargetPath)),
         icon: const Icon(Icons.add_rounded),

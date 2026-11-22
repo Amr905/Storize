@@ -98,10 +98,7 @@ void main() {
       await pumpActivity(t, rig);
       await t.tap(find.widgetWithText(FilterChip, 'Errors'));
       await t.pumpAndSettle();
-      expect(
-        find.text('Instagram slowed us down · checks slowed'),
-        findsOneWidget,
-      );
+      expect(find.text('Instagram slowed us down'), findsOneWidget);
       expect(find.text('Instagram login needs attention'), findsOneWidget);
       expect(find.text('Instagram changed — update Storize'), findsOneWidget);
       expect(find.textContaining('downloaded'), findsNothing);
@@ -235,6 +232,10 @@ void main() {
       final rig = ActivityRig();
       await seedActivity(rig);
       await pumpActivity(t, rig);
+      await t.scrollUntilVisible(
+        find.textContaining('2 posts downloaded'),
+        200,
+      );
       expect(find.textContaining('9 posts downloaded'), findsNothing);
       expect(find.textContaining('2 posts downloaded'), findsOneWidget);
     });

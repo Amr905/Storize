@@ -125,14 +125,24 @@ class _RemoveTargetDialogState extends ConsumerState<RemoveTargetDialog> {
                   contentPadding: EdgeInsets.zero,
                   value: false,
                   title: Text(l10n.tdtRemoveKeep),
-                  subtitle: Text(l10n.tdtRemoveKeepHint),
+                  subtitle: Text(
+                    l10n.tdtRemoveKeepHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
                 RadioListTile<bool>(
                   isThreeLine: false,
                   contentPadding: EdgeInsets.zero,
                   value: true,
                   title: Text(l10n.tdtRemoveDelete),
-                  subtitle: Text(l10n.tdtRemoveDeleteHint),
+                  subtitle: Text(
+                    l10n.tdtRemoveDeleteHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),

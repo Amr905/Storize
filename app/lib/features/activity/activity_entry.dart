@@ -65,16 +65,17 @@ ActivityEntry describeActivity(
       return ActivityEntry(
         icon: Icons.check_rounded,
         tone: ActivityTone.success,
-        text: failed == 0
-            ? l10n.actCheckDoneOk(checked)
-            : l10n.actCheckDoneFailed(checked, failed),
+        text: l10n.actCheckDoneOk(checked),
+        subtitle: failed == 0
+            ? l10n.actCheckDoneOkSub
+            : l10n.actCheckFailedSub(failed),
       );
     case ActivityType.downloadedStories:
     case ActivityType.downloadedPosts:
       final isStory = event.type == ActivityType.downloadedStories;
       final text = isStory
-          ? l10n.actDownloadedStories(event.count, account)
-          : l10n.actDownloadedPosts(event.count, account);
+          ? l10n.actDownloadedStories(event.count)
+          : l10n.actDownloadedPosts(event.count);
       final contentId = p['contentId'];
       // Opens the viewer when the entry names the item; otherwise the
       // Library filtered to this account and kind.
@@ -89,45 +90,50 @@ ActivityEntry describeActivity(
       return ActivityEntry(
         icon: Icons.arrow_downward_rounded,
         tone: event.severity == Severity.info
-            ? ActivityTone.success
+            ? ActivityTone.info
             : ActivityTone.warning,
         text: text,
+        subtitle: account,
         location: location,
       );
     case ActivityType.removedBeforeDownload:
       return ActivityEntry(
         icon: Icons.info_outline_rounded,
         tone: ActivityTone.neutral,
-        text: l10n.actRemovedBeforeDownload(account),
+        text: l10n.actRemovedTitle,
+        subtitle: l10n.actRemovedBeforeDownload(account),
       );
     case ActivityType.gap:
       return ActivityEntry(
         icon: Icons.warning_amber_rounded,
         tone: ActivityTone.warning,
-        text: l10n.actGap,
-        subtitle: l10n.actGapRange(time(p['fromMs']), time(p['toMs'])),
+        text: l10n.actGapTitle(time(p['fromMs']), time(p['toMs'])),
+        subtitle: l10n.actGapSub,
         location: Routes.setupPath,
         actionLabel: l10n.actFixBattery,
       );
     case ActivityType.rateLimited:
       return ActivityEntry(
-        icon: Icons.speed_rounded,
+        icon: Icons.warning_amber_rounded,
         tone: ActivityTone.warning,
         text: l10n.actRateLimited,
+        subtitle: l10n.actRateLimitedSub,
       );
     case ActivityType.sessionProblem:
       return ActivityEntry(
-        icon: Icons.person_off_outlined,
+        icon: Icons.cancel_outlined,
         tone: ActivityTone.error,
         text: l10n.actSessionProblem,
+        subtitle: l10n.actSessionProblemSub,
         location: Routes.accountPath,
         actionLabel: l10n.actFix,
       );
     case ActivityType.platformChanged:
       return ActivityEntry(
-        icon: Icons.system_update_alt_rounded,
+        icon: Icons.cancel_outlined,
         tone: ActivityTone.error,
         text: l10n.actPlatformChanged,
+        subtitle: l10n.actPlatformChangedSub,
       );
     case ActivityType.pageModeUsed:
       return ActivityEntry(
@@ -146,18 +152,21 @@ ActivityEntry describeActivity(
         icon: Icons.pause_circle_outline_rounded,
         tone: ActivityTone.error,
         text: l10n.actStoragePaused,
+        subtitle: l10n.actStoragePausedSub,
       );
     case ActivityType.targetStatus:
       return ActivityEntry(
         icon: Icons.person_outline_rounded,
         tone: ActivityTone.info,
-        text: l10n.actTargetStatus(account),
+        text: l10n.actTargetStatus,
+        subtitle: account,
       );
     case ActivityType.fileMissing:
       return ActivityEntry(
         icon: Icons.broken_image_outlined,
         tone: ActivityTone.warning,
-        text: l10n.actFileMissing(account),
+        text: l10n.actFileMissing,
+        subtitle: account,
       );
     case ActivityType.appCrash:
       return ActivityEntry(
