@@ -181,19 +181,18 @@ class E2eRig {
       storage: storage,
       clock: clock,
       leases: leases,
-      displayName:
-          ({
-            required username,
-            required postedAt,
-            required remoteId,
-            required ext,
-            slideIndex,
-          }) => '$username-$remoteId${slideIndex ?? ''}.$ext',
+      displayName: ({
+        required username,
+        required postedAt,
+        required remoteId,
+        required ext,
+        slideIndex,
+      }) => '$username-$remoteId${slideIndex ?? ''}.$ext',
       relativeDir: (username) => 'Pictures/Storize/$username/',
     );
     return TaskRouter(
       runCheck: runCheck.call,
-      download: download.call,
+      download: download.run,
       retention: () async => null,
       updateCheck: () async => null,
       settings: settings,
