@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/debug/tools/dev_tools_actions.dart';
 import 'package:storize_app/debug/tools/dev_tools_screen.dart';
+import 'package:storize_app/debug/tools/dev_tools_wiring.dart';
+import 'package:storize_data/log/rotating_log_file.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_instagram/probe/probe.dart';
@@ -236,7 +238,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: DevToolsScreen(actions: rig.actions)),
     );
-    await tester.pumpAndSettle();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
     Future<void> tap(String label) async {
       await tester.ensureVisible(find.text(label));
       await tester.tap(find.text(label));
@@ -253,6 +256,17 @@ void main() {
     expect(rig.probeCalls, hasLength(1));
     await tap('Recent log (50)');
     expect(find.text('accepted=1 blocked=1'), findsOneWidget);
+  });
+
+  test('readLogTail returns the last lines across rotated files', () async {
+    final dir = Directory.systemTemp.createTempSync('devtools_log');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final files = RotatingLogFile(dir, maxBytes: 200);
+    for (var i = 0; i < 40; i++) {
+      files.append('line $i');
+    }
+    final tail = await readLogTail(files, 5);
+    expect(tail, ['line 35', 'line 36', 'line 37', 'line 38', 'line 39']);
   });
 
   test('prod main.dart does not import the dev tools', () {
