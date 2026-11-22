@@ -2465,6 +2465,18 @@ abstract class AppLocalizations {
   /// **'Keep Storize running'**
   String get setKeepRunning;
 
+  /// S-12 second line under Wi-Fi only.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause downloads on mobile data'**
+  String get setWifiOnlyHint;
+
+  /// S-12 second line under Keep Storize running.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery & background setup'**
+  String get setKeepRunningHint;
+
   /// S-12 notification switch.
   ///
   /// In en, this message translates to:
@@ -2663,6 +2675,18 @@ abstract class AppLocalizations {
   /// **'Health'**
   String get accHealthTitle;
 
+  /// S-13 health row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful check'**
+  String get accLastCheckLabel;
+
+  /// S-13 health row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate-limit events (7 days)'**
+  String get accRateLimitLabel;
+
   /// S-13 health line.
   ///
   /// In en, this message translates to:
@@ -2684,7 +2708,7 @@ abstract class AppLocalizations {
   /// S-13 amber state message.
   ///
   /// In en, this message translates to:
-  /// **'Instagram ended the session or asked for verification. Checks are paused.'**
+  /// **'Instagram ended the session or asked to confirm it\'s you. All checks are paused.'**
   String get accNeedsReloginBody;
 
   /// S-13 red state message.

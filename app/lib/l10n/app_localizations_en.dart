@@ -1428,6 +1428,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setKeepRunning => 'Keep Storize running';
 
   @override
+  String get setWifiOnlyHint => 'Pause downloads on mobile data';
+
+  @override
+  String get setKeepRunningHint => 'Battery & background setup';
+
+  @override
   String get setNotifyStories => 'New stories';
 
   @override
@@ -1561,6 +1567,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accHealthTitle => 'Health';
 
   @override
+  String get accLastCheckLabel => 'Last successful check';
+
+  @override
+  String get accRateLimitLabel => 'Rate-limit events (7 days)';
+
+  @override
   String accLastCheck(String time) {
     return 'Last successful check $time';
   }
@@ -1575,7 +1587,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accNeedsReloginBody =>
-      'Instagram ended the session or asked for verification. Checks are paused.';
+      'Instagram ended the session or asked to confirm it\'s you. All checks are paused.';
 
   @override
   String get accRestrictedBody =>

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show OutlinedButton;
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
@@ -26,8 +27,9 @@ void main() {
         expect(find.text('Active'), findsOneWidget);
         expect(find.textContaining('Connected'), findsOneWidget);
         expect(find.textContaining('Last successful check'), findsOneWidget);
-        expect(find.text('Rate-limit events (7 days): 1'), findsOneWidget);
-        expect(find.widgetWithText(TonalButton, 'Log out'), findsOneWidget);
+        expect(find.text('Rate-limit events (7 days)'), findsOneWidget);
+        expect(find.text('1'), findsOneWidget);
+        expect(find.widgetWithText(OutlinedButton, 'Log out'), findsOneWidget);
         expect(find.text('Log in again'), findsNothing);
       },
     );
@@ -41,8 +43,8 @@ void main() {
       expect(find.text('Needs re-login'), findsOneWidget);
       expect(
         find.text(
-          'Instagram ended the session or asked for verification. '
-          'Checks are paused.',
+          "Instagram ended the session or asked to confirm it's you. "
+          'All checks are paused.',
         ),
         findsOneWidget,
       );
@@ -78,7 +80,7 @@ void main() {
       await pumpAccount(t, rig);
       expect(find.text('Not connected'), findsWidgets);
       expect(find.widgetWithText(PrimaryButton, 'Log in'), findsOneWidget);
-      expect(find.widgetWithText(TonalButton, 'Log out'), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, 'Log out'), findsNothing);
     });
 
     testWidgets('a logged-out login is shown as Not connected', (t) async {
@@ -86,7 +88,7 @@ void main() {
       await rig.addAccount(status: AccountStatus.loggedOut);
       await pumpAccount(t, rig);
       expect(find.widgetWithText(PrimaryButton, 'Log in'), findsOneWidget);
-      expect(find.widgetWithText(TonalButton, 'Log out'), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, 'Log out'), findsNothing);
     });
   });
 
@@ -103,7 +105,7 @@ void main() {
         ),
       );
       await pumpAccount(t, rig);
-      await t.tap(find.widgetWithText(TonalButton, 'Log out'));
+      await t.tap(find.widgetWithText(OutlinedButton, 'Log out'));
       await t.pumpAndSettle();
       expect(
         find.text(
@@ -139,7 +141,7 @@ void main() {
           detectedAt: rigNow,
         );
         await pumpAccount(t, rig);
-        await t.tap(find.widgetWithText(TonalButton, 'Log out'));
+        await t.tap(find.widgetWithText(OutlinedButton, 'Log out'));
         await t.pumpAndSettle();
         await t.tap(find.widgetWithText(PrimaryButton, 'Log out'));
         await t.pumpAndSettle();
