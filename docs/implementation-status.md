@@ -28,7 +28,7 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-037 | qa-engineer (sonnet) | `app/integration_test/**`, `app/test/e2e/**`, `app/pubspec.yaml` (dev: integration_test), `docs/03-specs/DEVICE_TESTS.md`, `docs/05-reviews/SOAK.md`, `docs/05-reviews/T-037.md` | 04:15 |
+| T-037a | backend-developer (sonnet) | `app/lib/debug/tools/**`, `app/lib/main_dev_tools.dart`, `app/test/debug/**`, string-audit allowlist, `docs/05-reviews/T-037a.md` | 04:50 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -181,3 +181,4 @@
 - 2026-11-22 02:45 — **T-031 done** (39/43, 91%): Lead review; no route placeholders remain; CI 44961143437 green; merged. Gap: S-09 Check now checks all targets (carried to T-038). Note: f4be7e3 on main had committed merge markers (Lead error: commit chained after a conflicted merge); fixed in f875463, CI green. Rule: never chain a commit after `git merge` without checking for unmerged paths.
 - 2026-11-22 03:00 — **T-022 done** (40/43, 93%): Lead review; Lead added warm-tap routing, core library desugaring and **compileSdk 37** (flutter_local_notifications 23 needs it; targetSdk stays 36); CI 44961986939 green; merged. melos `test`/`golden:update` now run with `TZ=UTC`. **Checkpoint 8 GREEN** (Lead): melos run test SUCCESS (app 962 ~1, domain 464, instagram 1244 ~3, model 73, platform 98, data), analyze clean, gitleaks no leaks. Remaining: T-036 (needs P-5 keystore), T-037 (needs P-4 phones), T-038 (a11y + carry-forwards); follow-up T-029a; Could T-035.
 - 2026-11-22 04:10 — **T-029a done** (QA PASS; C2 silent 'Checking…' notice parked: needs a notifications-port `cancel`) and **T-038 done** (Lead review; contrast tokens fixed, UX §5.2 updated). Both CI green, merged cleanly; main suite green (app 988, domain 478, platform 104, instagram 1244, model 73, data). **42/44 (95%).**
+- 2026-11-22 04:50 — **T-037 automated part merged** (CI 44968477153): 6 E2E flows in `app/test/e2e/` (+ `integration_test` wrapper), `DEVICE_TESTS.md` rewritten as one checklist, `SOAK.md` template. T-037 stays **in_progress** until the user runs the device checklist and 24 h soak (P-4). Started **T-037a** (dev-only debug tools the checklist needs).
