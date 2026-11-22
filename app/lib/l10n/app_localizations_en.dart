@@ -218,6 +218,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockTitle => 'Storize is locked';
 
   @override
+  String get lockSubtitle => 'Use your fingerprint or PIN';
+
+  @override
   String get lockWrongPin => 'Wrong PIN';
 
   @override
@@ -729,14 +732,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onbRisk1 =>
-      'Storize uses an Instagram account to view stories. Instagram may challenge or ban that account.';
+      'Storize uses an Instagram account to view stories. Instagram may **challenge or ban** that account.';
 
   @override
   String get onbRisk2 =>
-      'People you track will see that account in their story viewers.';
+      'People you track will see that account **in their story viewers**.';
 
   @override
-  String get onbRisk3 => 'Use a dedicated account, not your personal one.';
+  String get onbRisk3 => 'Use a **dedicated account**, not your personal one.';
 
   @override
   String get onbRisk4 =>

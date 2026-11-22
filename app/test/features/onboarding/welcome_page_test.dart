@@ -14,9 +14,11 @@ void main() {
       ),
     );
     expect(button().onPressed, isNull);
+    await t.ensureVisible(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.tap(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.pump();
     expect(button().onPressed, isNotNull);
+    await t.ensureVisible(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.tap(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.pump();
     expect(button().onPressed, isNull);
@@ -26,6 +28,7 @@ void main() {
     final rig = OnbRig();
     await rig.pump(t);
     expect((await rig.settings.get()).riskAcknowledgedAt, isNull);
+    await t.ensureVisible(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.tap(find.byKey(const ValueKey('onb-risk-checkbox')));
     await t.pump();
     await t.tap(find.byKey(const ValueKey('onb-continue')));
