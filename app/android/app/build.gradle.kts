@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -8,7 +10,7 @@ plugins {
 // the SDK, so a machine with another NDK builds without a download (seen on a
 // developer PC where the automatic NDK download failed).
 fun pickNdkVersion(wanted: String): String {
-    val props = java.util.Properties()
+    val props = Properties()
     rootProject.file("local.properties").takeIf { it.exists() }
         ?.inputStream()?.use { props.load(it) }
     val sdk = props.getProperty("sdk.dir")
