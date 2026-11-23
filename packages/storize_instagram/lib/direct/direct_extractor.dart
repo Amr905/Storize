@@ -5,6 +5,7 @@ import 'package:storize_instagram/direct/failure_classifier.dart';
 import 'package:storize_instagram/direct/ig_http.dart';
 import 'package:storize_instagram/direct/ig_session.dart';
 import 'package:storize_instagram/direct/ig_transport.dart';
+import 'package:storize_instagram/direct/rest_requests.dart';
 import 'package:storize_instagram/direct/rest_transport.dart';
 import 'package:storize_instagram/direct/username_cache.dart';
 import 'package:storize_instagram/governor/governor.dart';
@@ -132,6 +133,13 @@ final class DirectExtractor {
         when where.startsWith('doc_id:') || where == 'page_tokens') {
       _log?.log(LogLevel.info, 'direct', 'op=verifySession rest_bootstrap');
       r = await const RestTransport().viewer(own, call);
+      // `current_user` belongs to the mobile API, so the web session may be
+      // refused (HTTP 400, seen on device). The web "Edit profile" form data
+      // is the web client's own source for the logged-in username.
+      if (r case Err(failure: UnknownFailure())) {
+        _log?.log(LogLevel.info, 'direct', 'op=verifySession web_form_data');
+        r = await _webFormViewer(own, call);
+      }
     }
     switch (r) {
       case Err(:final failure):
@@ -145,6 +153,40 @@ final class DirectExtractor {
         return _rememberResult(await transport.userById(own, call));
     }
   });
+
+  /// The viewer from `accounts/edit/web_form_data`: `form_data.username`
+  /// and `first_name`; the id is the session's own `ds_user_id`.
+  Future<Result<Viewer>> _webFormViewer(String own, IgCall call) async {
+    if (own.isEmpty) {
+      return const Err(SessionInvalid(SessionReason.loginRequired));
+    }
+    final reply = await call(RestRequests.webFormData());
+    switch (reply) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        final form = value['form_data'];
+        final username = form is Map<String, Object?> ? form['username'] : null;
+        if (username is! String || username.isEmpty) {
+          return const Err(SchemaChanged('form_data.username'));
+        }
+        final name = form is Map<String, Object?> ? form['first_name'] : null;
+        return Ok(
+          Viewer(
+            viewerId: own,
+            profile: UserProfile(
+              user: RemoteUser(
+                remoteUserId: own,
+                username: username,
+                displayName: name is String && name.isNotEmpty ? name : null,
+                followedByViewer: false,
+                blockedByViewer: false,
+              ),
+            ),
+          ),
+        );
+    }
+  }
 
   // --------------------------------------------------------------- stories
 

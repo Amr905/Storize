@@ -97,9 +97,25 @@ final class FailureClassifier {
     }
     if (reply.status == 404) return const TargetNotFound();
     if (!reply.isSuccess) {
-      return UnknownFailure(reply.status, 'http_${reply.status}');
+      return UnknownFailure(reply.status, 'http_${reply.status}${_hint(body)}');
     }
     return const UnknownFailure(null, 'status_fail');
+  }
+
+  /// A short, secret-free reason from an error body for diagnostics: the
+  /// `error_type`, or the `message` reduced to lowercase letters and
+  /// underscores (no digits, ids or URLs survive), at most 40 characters.
+  static String _hint(Map<String, Object?>? body) {
+    final raw = body?['error_type'] ?? body?['message'];
+    if (raw is! String) return '';
+    final cleaned = raw
+        .toLowerCase()
+        .replaceAll(RegExp('[^a-z ]'), '')
+        .trim()
+        .replaceAll(RegExp(' +'), '_');
+    if (cleaned.isEmpty) return '';
+    final short = cleaned.length > 40 ? cleaned.substring(0, 40) : cleaned;
+    return ':$short';
   }
 
   Duration? _cappedHint(Duration? hint) {
