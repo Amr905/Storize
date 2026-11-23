@@ -44,3 +44,5 @@ Option 3:
 Found on device: on the first login nothing has been discovered by a page load yet, so the GraphQL session check has no `doc_id` or page tokens (`SchemaChanged('doc_id:…')`/`page_tokens`), and S-02 showed "Couldn't connect this account".
 
 `DirectExtractor.verifySession` now makes **one** IG-4 call (`GET /api/v1/accounts/current_user/?edit=true`) in exactly that case. It is a read-only GET through the same governor, with the same session headers and the same `user.pk == ds_user_id` check. Every content operation stays on GraphQL, with page mode as the fallback. REST for content still needs `restProven`.
+
+Update the same day: on device, `current_user` returned HTTP 400 to the web session (it belongs to the mobile API). The bootstrap now falls back to the web client's own `GET /api/v1/accounts/edit/web_form_data/` (`form_data.username`, with the id taken from `ds_user_id`). Diagnostics carry a secret-free reason taken from the error body (`http_400:<letters only>`).

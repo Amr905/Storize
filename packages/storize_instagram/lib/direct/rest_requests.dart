@@ -27,6 +27,11 @@ abstract final class RestRequests {
     query: const [('edit', 'true')],
   );
 
+  /// The web client's "Edit profile" form data: the logged-in username
+  /// (first-login session check fallback, see `verifySession`).
+  static IgRequest webFormData() =>
+      IgRequest.get(path: '/api/v1/accounts/edit/web_form_data/');
+
   /// IG-5: latest posts of a user.
   static IgRequest userFeed(String userId, {int count = 12}) => IgRequest.get(
     path: '/api/v1/feed/user/${Uri.encodeComponent(userId)}/',

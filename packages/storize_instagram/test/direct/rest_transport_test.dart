@@ -128,6 +128,59 @@ void main() {
   }
 
   test(
+    'first login: current_user refused (400 useragent mismatch) falls back '
+    'to web_form_data; the failure hint is secret-free',
+    () async {
+      final rig = Rig(
+        transport: GraphqlTransport(
+          docIds: FakeDocIds(missing: GraphqlQuery.values.toSet()),
+          tokens: FakeTokens(),
+        ),
+        sessionUserId: 'ZZFAKE_viewer',
+        responder: (r) => switch (r.uri.path) {
+          '/api/v1/accounts/current_user/' => jsonReply({
+            'message': 'useragent mismatch',
+            'status': 'fail',
+          }, status: 400),
+          '/api/v1/accounts/edit/web_form_data/' => jsonReply({
+            'form_data': {'username': 'zzfake_me', 'first_name': 'ZZ Fake'},
+            'status': 'ok',
+          }),
+          _ => const IgReply(status: 404),
+        },
+      );
+      final r = await rig.run(rig.extractor.verifySession());
+      final user = r.valueOrNull!;
+      expect(user.remoteUserId, 'ZZFAKE_viewer');
+      expect(user.username, 'zzfake_me');
+      expect(user.displayName, 'ZZ Fake');
+      expect(rig.http.requests.map((q) => q.uri.path), [
+        '/api/v1/accounts/current_user/',
+        '/api/v1/accounts/edit/web_form_data/',
+      ]);
+    },
+  );
+
+  test('both refused: the failure names the cause without ids', () async {
+    final rig = Rig(
+      transport: GraphqlTransport(
+        docIds: FakeDocIds(missing: GraphqlQuery.values.toSet()),
+        tokens: FakeTokens(),
+      ),
+      sessionUserId: 'ZZFAKE_viewer',
+      responder: (_) => jsonReply({
+        'message': 'useragent mismatch 12345 https://x.y/z',
+        'status': 'fail',
+      }, status: 400),
+    );
+    final r = await rig.run(rig.extractor.verifySession());
+    expect(
+      r.failureOrNull,
+      const UnknownFailure(400, 'http_400:useragent_mismatch_httpsxyz'),
+    );
+  });
+
+  test(
     'IG-4 verifySession: current_user, viewer id compared with ds_user_id',
     () async {
       final ok = _rig();
