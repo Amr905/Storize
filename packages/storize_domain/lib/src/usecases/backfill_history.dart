@@ -410,7 +410,7 @@ final class BackfillHistory {
               ? 'challenge'
               : 'login_required',
         );
-        return BackfillStepResult(
+        return const BackfillStepResult(
           BackfillOutcome.sessionInvalid,
           sessionStatus: status,
         );

@@ -36,7 +36,32 @@ void main() {
         values: ContentKind.values,
         fromDb: ContentKind.fromDb,
         dbValueOf: (e) => e.dbValue,
-        expectedDbValues: ['STORY', 'POST'],
+        expectedDbValues: ['STORY', 'POST', 'HIGHLIGHT'],
+      );
+    });
+
+    test('HistoryRange', () {
+      expectDbContract(
+        values: HistoryRange.values,
+        fromDb: HistoryRange.fromDb,
+        dbValueOf: (e) => e.dbValue,
+        expectedDbValues: [
+          'NONE',
+          'TODAY',
+          'DAYS_7',
+          'DAYS_30',
+          'SINCE',
+          'ALL',
+        ],
+      );
+    });
+
+    test('HistoryState', () {
+      expectDbContract(
+        values: HistoryState.values,
+        fromDb: HistoryState.fromDb,
+        dbValueOf: (e) => e.dbValue,
+        expectedDbValues: ['IDLE', 'RUNNING', 'PAUSED', 'DONE', 'FAILED'],
       );
     });
 

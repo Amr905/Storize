@@ -35,6 +35,23 @@ final class ThrowingPlatform implements ContentPlatform {
   }
 
   @override
+  Future<Result<PostPage>> fetchPostPage(
+    String userId, {
+    required ExtractionPolicy policy,
+    String? cursor,
+  }) => inner.fetchPostPage(userId, cursor: cursor, policy: policy);
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(
+    String userId, {
+    required ExtractionPolicy policy,
+  }) => inner.fetchHighlights(userId, policy: policy);
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> ids, {
+    required ExtractionPolicy policy,
+  }) => inner.fetchHighlightItems(ids, policy: policy);
+
+  @override
   Future<Result<DateTime?>> latestPostTime(String u) => inner.latestPostTime(u);
   @override
   Future<Result<RemoteUser>> verifySession() => inner.verifySession();
