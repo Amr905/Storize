@@ -1114,6 +1114,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tgtCatPublicHint => 'Public account';
 
   @override
+  String tgtErrRateLimited(int minutes) {
+    return 'Instagram limit reached — try again in about $minutes min';
+  }
+
+  @override
   String get tgtAddShort => 'Add';
 
   @override

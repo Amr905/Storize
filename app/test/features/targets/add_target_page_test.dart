@@ -262,16 +262,23 @@ void main() {
     expect(find.widgetWithText(SnackBarAction, l10n.retry), findsOneWidget);
   });
 
-  testWidgets('AC4: a rate limit shows a snackbar', (t) async {
+  testWidgets('AC4: a rate limit shows the minutes inline, form editable', (
+    t,
+  ) async {
     final rig = TargetsRig();
     await rig.addAccount();
-    rig.platform.resolveUserResults.addFailure(const RateLimited(null));
+    rig.platform.resolveUserResults.addFailure(
+      const RateLimited(Duration(minutes: 7, seconds: 10)),
+    );
     await openForm(t, rig);
 
     await t.enterText(usernameField(), 'nour_k');
     await pickOwn(t);
     await submit(t);
-    expect(find.text(l10n.errorRateLimitedTitle), findsOneWidget);
+    expect(find.text(l10n.tgtErrRateLimited(8)), findsOneWidget);
+    // Not verifying any more: the field accepts input again.
+    await t.enterText(usernameField(), 'other_user');
+    expect(find.text('other_user'), findsOneWidget);
   });
 
   testWidgets('AC4: while verifying the button spins and the fields lock', (

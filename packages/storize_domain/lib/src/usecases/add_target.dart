@@ -163,9 +163,10 @@ final class AddTargetUnknown extends AddTargetResult {
 /// EC-16).
 ///
 /// Steps: validate the input locally (no network), resolve the user, check
-/// visibility and duplicates (by user ID), look up the newest post time for
-/// `posts_watermark_at`, store, then enqueue a first check. A scheduler error
-/// never undoes the add. Past posts are not downloaded (FR-63).
+/// visibility and duplicates (by user ID), store with `posts_watermark_at` at
+/// the start of today (device local time), then enqueue a first check. A
+/// scheduler error never undoes the add. Posts from before today are not
+/// downloaded (FR-63).
 final class AddTarget {
   /// Creates the use case.
   AddTarget({
@@ -290,13 +291,12 @@ final class AddTarget {
     );
     if (existing != null) return _duplicate(existing);
 
-    // FR-63: only posts newer than now (or the newest existing post) count.
+    // FR-63 (D-17): the watermark is the start of today in device local
+    // time, so today's posts and live stories arrive with the first check.
+    // No network call is needed (TECH_SPEC 17.4).
     final now = _clock.now();
-    final latest = await _platform.latestPostTime(user.remoteUserId);
-    final watermark = switch (latest) {
-      Ok(:final value) when value != null => value.toUtc(),
-      _ => now,
-    };
+    final local = now.toLocal();
+    final watermark = DateTime(local.year, local.month, local.day).toUtc();
 
     // A-12: the warning counts targets before this one.
     final count = (await _targets.watchAll().first).length;

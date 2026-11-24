@@ -1271,6 +1271,8 @@
   "@tgtCatPublicShort": {"description": "S-07, S-09 short category tag."},
   "tgtCatPublicHint": "Public account",
   "@tgtCatPublicHint": {"description": "S-08 helper line under the public category."},
+  "tgtErrRateLimited": "Instagram limit reached — try again in about {minutes} min",
+  "@tgtErrRateLimited": {"description": "S-08 inline error when the request budget is used up; the form stays editable.", "placeholders": {"minutes": {"type": "int"}}},
   "tgtAddShort": "Add",
   "@tgtAddShort": {"description": "S-07 extended floating button label."},
   "tgtMetaSaved": "{count} saved",
