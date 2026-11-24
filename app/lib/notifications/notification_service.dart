@@ -286,7 +286,9 @@ final class NotificationService implements TaskNotifier {
     }
   }
 
-  /// Shows the silent progress notification. Not wired yet (open question).
+  /// Shows the silent "Checking N accounts" notification (channel
+  /// `background`). `TaskRouter` posts it through [checkingStarted] while a
+  /// check runs and removes it with [checkingDone].
   Future<void> showChecking(int accounts) async {
     try {
       if (!await _port.areEnabled()) return;
@@ -302,6 +304,21 @@ final class NotificationService implements TaskNotifier {
       _logFailure('checking', error);
     }
   }
+
+  /// Removes the "Checking N accounts" notification. Never throws.
+  Future<void> hideChecking() async {
+    try {
+      await _port.cancel(NotificationIds.checking);
+    } on Object catch (error) {
+      _logFailure('checking_hide', error);
+    }
+  }
+
+  @override
+  Future<void> checkingStarted(int accounts) => showChecking(accounts);
+
+  @override
+  Future<void> checkingDone() => hideChecking();
 
   static String _storyPayload(int id) => 'storize://story/$id';
 

@@ -1,3 +1,4 @@
+import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_data/db/db.dart';
@@ -66,5 +67,22 @@ void main() {
     await repo.update(back.copyWith(historyProgress: null));
     expect((await repo.getById(stored.id))!.historyProgress, isNull);
     expect(ContentKind.fromDb('HIGHLIGHT'), ContentKind.highlight);
+  });
+
+  test('a database from a newer build is refused (v99)', () async {
+    final db = StorizeDatabase.forTesting(
+      NativeDatabase.memory(
+        setup: (raw) => raw.execute('PRAGMA user_version = 99'),
+      ),
+    );
+    addTearDown(db.close);
+    await expectLater(
+      db.customSelect('SELECT 1').get(),
+      throwsA(
+        isA<DatabaseTooNew>()
+            .having((e) => e.found, 'found', 99)
+            .having((e) => e.supported, 'supported', db.schemaVersion),
+      ),
+    );
   });
 }

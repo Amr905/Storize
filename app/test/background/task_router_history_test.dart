@@ -38,6 +38,12 @@ final class _Recorder implements TaskNotifier {
 
   @override
   Future<void> storageFull() async {}
+
+  @override
+  Future<void> checkingStarted(int accounts) async {}
+
+  @override
+  Future<void> checkingDone() async {}
 }
 
 final class _Rig {
@@ -132,10 +138,7 @@ void main() {
           rateLimited: true,
         );
       await r.router.route(TaskNames.history);
-      expect(
-        r.enqueuer.history.single.delay,
-        TaskRouter.historyRateLimitDelay,
-      );
+      expect(r.enqueuer.history.single.delay, TaskRouter.historyRateLimitDelay);
     });
 
     test('a lost session ends the chain and notifies', () async {

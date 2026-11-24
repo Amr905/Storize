@@ -35,6 +35,7 @@ final class _RecordingNotifier implements TaskNotifier {
   final List<CheckRunResult?> checksSeen = [];
   AccountStatus? status;
   bool throws = false;
+  bool failChecking = false;
 
   @override
   Future<void> newItemsSaved(
@@ -54,12 +55,28 @@ final class _RecordingNotifier implements TaskNotifier {
 
   @override
   Future<void> storageFull() async => calls.add('storage');
+
+  @override
+  Future<void> checkingStarted(int accounts) async {
+    calls.add('start:$accounts');
+    if (failChecking) throw StateError('notifier');
+  }
+
+  @override
+  Future<void> checkingDone() async {
+    calls.add('done');
+    if (failChecking) throw StateError('notifier');
+  }
 }
 
 final class _Rig {
-  _Rig({this.notifier = true});
+  _Rig({this.notifier = true, this.active});
 
   final bool notifier;
+
+  /// Active targets of the scope; null leaves the notice unwired.
+  final int? active;
+  Exception? checkThrows;
   final recorder = _RecordingNotifier();
   final log = FakeDiagnosticLog();
   CheckRunResult checkResult = _checked();
@@ -68,8 +85,13 @@ final class _Rig {
   );
 
   late final TaskRouter router = TaskRouter(
-    runCheck: ({required scope, required trigger, targetId, deadline}) async =>
-        checkResult,
+    runCheck: ({required scope, required trigger, targetId, deadline}) async {
+      if (active != null) recorder.calls.add('check');
+      final e = checkThrows;
+      if (e != null) throw e;
+      return checkResult;
+    },
+    activeTargets: active == null ? null : (scope, targetId) async => active!,
     download: ({deadline, policy = ExtractionPolicy.directOnly}) async =>
         downloadResult,
     retention: () async => null,
@@ -124,6 +146,33 @@ void main() {
       expect(await r.router.route(TaskNames.download), isTrue);
       expect(r.recorder.calls, ['items']);
       expect(r.recorder.checksSeen.single, isNull);
+    });
+  });
+
+  group('checking notice (T-043)', () {
+    test('wraps the check, then the downloads follow', () async {
+      final r = _Rig(active: 4);
+      await r.router.route(TaskNames.checkStories);
+      expect(r.recorder.calls, ['start:4', 'check', 'done', 'items']);
+    });
+
+    test('no active targets: no notice', () async {
+      final r = _Rig(active: 0);
+      await r.router.route(TaskNames.checkPosts);
+      expect(r.recorder.calls, ['check', 'items']);
+    });
+
+    test('is cancelled when the check throws', () async {
+      final r = _Rig(active: 2)..checkThrows = Exception('boom');
+      expect(await r.router.route(TaskNames.checkStories), isFalse);
+      expect(r.recorder.calls, ['start:2', 'check', 'done']);
+    });
+
+    test('a failing notifier never breaks the check', () async {
+      final r = _Rig(active: 1);
+      r.recorder.failChecking = true;
+      expect(await r.router.route(TaskNames.checkStories), isTrue);
+      expect(r.recorder.calls, contains('check'));
     });
   });
 

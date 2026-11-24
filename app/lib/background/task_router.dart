@@ -17,7 +17,19 @@ abstract interface class TaskNotifier {
 
   /// The downloads stopped for lack of space.
   Future<void> storageFull();
+
+  /// A check of [accounts] accounts started (silent progress notice).
+  Future<void> checkingStarted(int accounts);
+
+  /// The check ended, however it ended: removes the progress notice.
+  Future<void> checkingDone();
 }
+
+/// How many active targets a check of [scope] (and [targetId]) would visit.
+typedef ActiveTargetCounter = Future<int> Function(
+  CheckScope scope,
+  int? targetId,
+);
 
 /// Runs [RunCheck] (the use case, or a fake in tests).
 typedef CheckRunner = Future<CheckRunResult> Function({
@@ -74,6 +86,7 @@ final class TaskRouter {
     required this._enqueuer,
     this._log,
     this._notifier,
+    this._activeTargets,
     this._history,
     this._historyProbe,
     this._highlights,
@@ -92,6 +105,7 @@ final class TaskRouter {
   final DownloadEnqueuer _enqueuer;
   final DiagnosticLog? _log;
   final TaskNotifier? _notifier;
+  final ActiveTargetCounter? _activeTargets;
   final HistoryRunner? _history;
   final HistoryProbe? _historyProbe;
   final HighlightsRunner? _highlights;
@@ -151,12 +165,7 @@ final class TaskRouter {
         : (targetId == null ? CheckTrigger.manualAll : CheckTrigger.manualOne);
     final deadline = _clock.now().add(budget);
 
-    final checked = await _runCheck(
-      scope: scope,
-      trigger: trigger,
-      targetId: targetId,
-      deadline: deadline,
-    );
+    final checked = await _checkWithNotice(scope, trigger, targetId, deadline);
     final isPosts = scope == CheckScope.posts;
     if (isPosts && checked.result != CheckResult.skippedSession) {
       await _highlightsPass(deadline, manual: manual);
@@ -169,6 +178,52 @@ final class TaskRouter {
         checked.result == CheckResult.failed &&
         checked.run.errorCode == 'network';
     return !retry;
+  }
+
+  /// Runs the check with the silent "Checking N accounts" notice, shown only
+  /// when the scope has active targets and always removed afterwards (also
+  /// when the check throws or the deadline stops it).
+  Future<CheckRunResult> _checkWithNotice(
+    CheckScope scope,
+    CheckTrigger trigger,
+    int? targetId,
+    DateTime deadline,
+  ) async {
+    final shown = await _showChecking(scope, targetId);
+    try {
+      return await _runCheck(
+        scope: scope,
+        trigger: trigger,
+        targetId: targetId,
+        deadline: deadline,
+      );
+    } finally {
+      if (shown) await _hideChecking();
+    }
+  }
+
+  Future<bool> _showChecking(CheckScope scope, int? targetId) async {
+    final notifier = _notifier;
+    final count = _activeTargets;
+    if (notifier == null || count == null) return false;
+    try {
+      final n = await count(scope, targetId);
+      if (n < 1) return false;
+      await notifier.checkingStarted(n);
+      return true;
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+      // The start may have partly worked: clean up to be safe.
+      return true;
+    }
+  }
+
+  Future<void> _hideChecking() async {
+    try {
+      await _notifier?.checkingDone();
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+    }
   }
 
   /// Saves the highlights of the targets that have them on (FR-71). It runs

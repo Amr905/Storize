@@ -14,6 +14,29 @@ import 'package:storize_model/storize_model.dart';
 
 part 'storize_database.g.dart';
 
+/// Thrown when the database file was written by a newer build than this one
+/// (its `user_version` is above [StorizeDatabase.schemaVersion]).
+///
+/// Running against a schema this build does not know could corrupt data, so
+/// opening stops here. The migration runs in a transaction, so the file is
+/// left untouched.
+class DatabaseTooNew implements Exception {
+  /// Creates the error for a file at [found] opened by a build that knows
+  /// [supported].
+  const DatabaseTooNew({required this.found, required this.supported});
+
+  /// The `user_version` of the file.
+  final int found;
+
+  /// The newest schema version this build knows.
+  final int supported;
+
+  @override
+  String toString() =>
+      'DatabaseTooNew(found: $found, supported: $supported): the database '
+      'was created by a newer version of the app';
+}
+
 /// The Storize database (TECH_SPEC §3 and §17, schema v2).
 @DriftDatabase(
   tables: [
@@ -88,23 +111,29 @@ class StorizeDatabase extends _$StorizeDatabase {
     onCreate: (m) => m.createAll(),
     // Each step is generated (`dart run drift_dev schema steps`) and has a
     // test in test/db/migration_test.dart.
-    onUpgrade: stepByStep(
-      from1To2: (m, schema) async {
-        // v2 (T-040): post history and highlights on `target`.
-        final t = schema.target;
-        await m.addColumn(t, t.historyRange);
-        await m.addColumn(t, t.historySince);
-        await m.addColumn(t, t.historyState);
-        await m.addColumn(t, t.historyCursor);
-        await m.addColumn(t, t.historyFetched);
-        await m.addColumn(t, t.historyOldestSeenAt);
-        await m.addColumn(t, t.historyUpdatedAt);
-        await m.addColumn(t, t.highlightsEnabled);
-      },
-    ),
+    onUpgrade: (m, from, to) async {
+      // drift calls onUpgrade for a downgrade too (from > to).
+      if (from > to) throw DatabaseTooNew(found: from, supported: to);
+      await _upgrade(m, from, to);
+    },
     beforeOpen: (details) async {
       // SQLite ignores FK actions unless this is on, per connection.
       await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
+
+  late final OnUpgrade _upgrade = stepByStep(
+    from1To2: (m, schema) async {
+      // v2 (T-040): post history and highlights on `target`.
+      final t = schema.target;
+      await m.addColumn(t, t.historyRange);
+      await m.addColumn(t, t.historySince);
+      await m.addColumn(t, t.historyState);
+      await m.addColumn(t, t.historyCursor);
+      await m.addColumn(t, t.historyFetched);
+      await m.addColumn(t, t.historyOldestSeenAt);
+      await m.addColumn(t, t.historyUpdatedAt);
+      await m.addColumn(t, t.highlightsEnabled);
     },
   );
 
