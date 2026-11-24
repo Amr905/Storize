@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 47 / 50 tasks done (94%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a, T-037a) + v0.3 T-039…T-042 all done. Remaining (need the user): **T-036** (P-5 keystore), **T-037** device checklist + soak (incl. v0.3 checks D1–D4). (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN. Remaining (both need the user): **T-036** (P-5 keystore) and **T-037** device checklist + 24 h soak (P-4 phones).
+- **Progress: 48 / 50 tasks done (96%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a, T-037a) + v0.3 T-039…T-042 and polish T-043 all done. Remaining (need the user): **T-036** (P-5 keystore), **T-037** device checklist + soak (incl. v0.3 checks D1–D4). (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN. Remaining (both need the user): **T-036** (P-5 keystore) and **T-037** device checklist + 24 h soak (P-4 phones).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,7 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-043 | Backend Developer (sonnet) | `app/lib/notifications/**`, `app/lib/background/**`, `storize_domain/.../sync_highlights.dart`, `storize_data/lib/db/storize_database.dart`, their tests | 2026-11-24 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -190,3 +189,4 @@
 - 2026-11-24 02:30 — **T-041 done** (47/49, 96%): direct + page-mode post pages, highlights tray and items (seen stays blocked; scroll bounded 30 steps/60 s). QA PASS with F1 Medium (page cursor dropped same-second posts) → fixed with (time, pk) cursor; F2 prefix, F3 bound fixed. Unverified shapes → DEVICE_TESTS D1–D4. CI 45307490026 green; merged. **Checkpoint 9 due** (5 done since CP-8: T-029a/T-038 counted earlier → T-037a, T-039, T-040, T-041, T-042).
 - 2026-11-24 02:50 — **Checkpoint 9 GREEN** (Lead): format/analyze clean; melos run test SUCCESS (app 1053, domain 514, instagram 1314 ~3, model 79, platform 104, data); CI 45308625206 green (gitleaks clean), dev APKs built.
 - 2026-11-24 11:40 — User's `flutter_run.log` (01:45, login only) read: verify via web_form_data → GraphQL ok; no add attempt and no DriftRemoteException in it, so the stuck-add fix (T-039) is still unconfirmed on device. Started **T-043** (sonnet, Lead review): silent 'Checking N accounts…' notice with port `cancel` (T-029a C2), stop re-fetching empty highlights, DB downgrade guard (T-040 findings 1–2).
+- 2026-11-24 12:15 — **T-043 done** (48/50, 96%): silent 'Checking N accounts…' notice (port `cancel`, always removed in `finally`); `DatabaseTooNew` on downgrade, and the Lead opens the DB in `composeProduction` so it reaches `StartupErrorApp`. Item 2 (empty highlights re-fetched) **not done**: needs a domain port change (per-highlight synced marker); low cost, parked. Lead review; CI 45367889565 green; merged.
