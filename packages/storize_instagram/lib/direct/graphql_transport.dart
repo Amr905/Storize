@@ -4,15 +4,20 @@ import 'package:storize_instagram/direct/doc_id_resolver.dart';
 import 'package:storize_instagram/direct/ig_http.dart';
 import 'package:storize_instagram/direct/ig_transport.dart';
 import 'package:storize_instagram/mapper/mapper.dart';
+import 'package:storize_instagram/page/discovery_store.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// Direct mode over the GraphQL queries the web app uses (observed in the
 /// T-002 capture): `POST /api/graphql` with a runtime-discovered `doc_id`.
 ///
 /// Nothing here hard-codes a `doc_id`. A missing `doc_id` or missing page
-/// tokens give `SchemaChanged`, which sends the run to page mode. The relay
-/// provider flags the web app adds to `variables` are unknown and omitted:
-/// whether the server accepts that is for the live test to show.
+/// tokens give `SchemaChanged`, which sends the run to page mode.
+///
+/// **Variables (T-048).** When the resolver knows the shape of a query (a
+/// [QueryShapeProvider], filled by the in-page discovery), the variables are
+/// exactly the candidates whose name is in the discovered argument list, plus
+/// every discovered relay provider value (`__relay_internal__pv__...`). Without
+/// a shape the candidates are sent as they are.
 final class GraphqlTransport implements IgTransport {
   /// Creates the transport.
   const GraphqlTransport({
@@ -20,6 +25,7 @@ final class GraphqlTransport implements IgTransport {
     required this.tokens,
     this.mapper = const EnvelopeMapper(),
     this.postCount = 12,
+    this.highlightsFirst = 30,
   });
 
   /// Finds the current `doc_id`s.
@@ -33,6 +39,9 @@ final class GraphqlTransport implements IgTransport {
 
   /// `data.count` of the posts query (12 in the capture).
   final int postCount;
+
+  /// `first` of the highlights tray query.
+  final int highlightsFirst;
 
   @override
   String get name => 'graphql';
@@ -76,6 +85,7 @@ final class GraphqlTransport implements IgTransport {
   ) async {
     final request = await _request(GraphqlQuery.stories, {
       'reel_ids_arr': userIds,
+      'is_highlight': false,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
     return callAndParse(
@@ -155,6 +165,7 @@ final class GraphqlTransport implements IgTransport {
   ) async {
     final request = await _request(GraphqlQuery.highlights, {
       'user_id': userId,
+      'first': highlightsFirst,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
     return callAndParse(
@@ -172,6 +183,7 @@ final class GraphqlTransport implements IgTransport {
   ) async {
     final request = await _request(GraphqlQuery.stories, {
       'reel_ids_arr': [for (final id in highlightIds) 'highlight:$id'],
+      'is_highlight': true,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
     return callAndParse(
@@ -194,17 +206,29 @@ final class GraphqlTransport implements IgTransport {
         await docIds.docIdFor(GraphqlQuery.postsPaging) != null) {
       query = GraphqlQuery.postsPaging;
     }
-    final request = await _request(query, {
-      'username': username,
-      if (cursor != null) ...{'after': cursor, 'first': postCount},
-      'data': {
-        'count': postCount,
-        'include_reel_media_seen_timestamp': true,
-        'include_relationship_info': true,
-        'latest_reel_media': true,
-        'latest_besties_reel_media': true,
-      },
-    });
+    final data = {
+      'count': postCount,
+      'include_reel_media_seen_timestamp': true,
+      'include_relationship_info': true,
+      'latest_besties_reel_media': true,
+      'latest_reel_media': true,
+    };
+    final request = await _request(
+      query,
+      query == GraphqlQuery.postsPaging
+          // The `_connection` query pages by cursor: no `data`.
+          ? {
+              'after': cursor,
+              'first': postCount,
+              'username': username,
+              'include_multi_captions': true,
+            }
+          : {
+              'username': username,
+              'data': data,
+              if (cursor != null) ...{'after': cursor, 'first': postCount},
+            },
+    );
     if (request is Err<IgRequest>) return Err(request.failure);
     return callAndParse(
       call,
@@ -242,7 +266,7 @@ final class GraphqlTransport implements IgTransport {
 
   Future<Result<IgRequest>> _request(
     GraphqlQuery query,
-    Map<String, Object?> variables,
+    Map<String, Object?> candidates,
   ) async {
     final docId = await docIds.docIdFor(query);
     if (docId == null || docId.isEmpty) {
@@ -250,15 +274,57 @@ final class GraphqlTransport implements IgTransport {
     }
     final extra = await tokens.tokens();
     if (extra == null) return const Err(SchemaChanged('page_tokens'));
+    final resolver = docIds;
+    final shape = resolver is QueryShapeProvider
+        ? await resolver.shapeFor(query)
+        : null;
+    final variables = buildVariables(candidates, shape);
+    final dtsg = extra['fb_dtsg'];
+    final lsd = extra['lsd'];
     final request = IgRequest.postForm(
       path: '/api/graphql',
       form: {
+        // What the web app's own GraphQL POST carries; `av` (the logged-in
+        // user id) is added by the extractor, which knows the session.
+        '__user': '0',
+        '__a': '1',
+        '__comet_req': '7',
+        'fb_api_caller_class': 'RelayModern',
+        'server_timestamps': 'true',
+        if (dtsg != null && dtsg.isNotEmpty) 'jazoest': jazoestOf(dtsg),
         ...extra,
         'doc_id': docId,
         'variables': jsonEncode(variables),
         'fb_api_req_friendly_name': query.friendlyName,
       },
     );
-    return Ok(request.withHeaders({'X-FB-Friendly-Name': query.friendlyName}));
+    return Ok(
+      request.withHeaders({
+        'X-FB-Friendly-Name': query.friendlyName,
+        if (lsd != null && lsd.isNotEmpty) 'X-FB-LSD': lsd,
+      }),
+    );
   }
+
+  /// The variables of a request: the [candidates] named in the discovered
+  /// argument list plus all discovered provider values; the candidates
+  /// unchanged when [shape] is null or lists no arguments.
+  static Map<String, Object?> buildVariables(
+    Map<String, Object?> candidates,
+    QueryShape? shape,
+  ) {
+    if (shape == null || shape.args.isEmpty) {
+      return {...candidates}..removeWhere((_, v) => v == null);
+    }
+    return {
+      for (final e in candidates.entries)
+        if (e.value != null && shape.args.contains(e.key)) e.key: e.value,
+      ...shape.provided,
+    };
+  }
+
+  /// The `jazoest` form field: `2` and the sum of the code units of the
+  /// `fb_dtsg` token (what the web app computes).
+  static String jazoestOf(String dtsg) =>
+      '2${dtsg.codeUnits.fold<int>(0, (a, b) => a + b)}';
 }

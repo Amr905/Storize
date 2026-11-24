@@ -1,3 +1,5 @@
+import 'package:storize_instagram/page/discovery_store.dart';
+
 /// The GraphQL queries direct mode uses, by the web app's friendly name.
 enum GraphqlQuery {
   /// Story items of users (`reel_ids_arr`).
@@ -89,4 +91,12 @@ abstract interface class PageTokenProvider {
 abstract interface class DocIdForgetter implements DocIdResolver {
   /// Forgets the `doc_id` of [query] (memory and store).
   Future<void> forget(GraphqlQuery query);
+}
+
+/// A [DocIdResolver] that also knows the shape of the queries it found: the
+/// relay provider values and the argument names the page's own modules gave
+/// (T-048). Null when only a `doc_id` is known.
+abstract interface class QueryShapeProvider implements DocIdResolver {
+  /// The shape of [query] now, or null when unknown.
+  Future<QueryShape?> shapeFor(GraphqlQuery query);
 }

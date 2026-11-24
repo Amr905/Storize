@@ -1,5 +1,47 @@
 import 'dart:convert';
 
+/// The shape of one GraphQL query as the page's own modules describe it
+/// (T-048): the relay provided-variable values and the argument names. Both
+/// are code constants of the web app, not secret.
+final class QueryShape {
+  /// Creates a shape.
+  const QueryShape({this.provided = const {}, this.args = const []});
+
+  /// `__relay_internal__pv__X` to its current bool, number or short string.
+  final Map<String, Object> provided;
+
+  /// The argument names the query takes.
+  final List<String> args;
+
+  /// The JSON map kept in a snapshot.
+  Map<String, Object?> toJson() => {'p': provided, 'a': args};
+
+  /// Reads [toJson]; null when [raw] is not a shape.
+  static QueryShape? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final p = raw['p'];
+    final a = raw['a'];
+    if (p is! Map<String, Object?> || a is! List<Object?>) return null;
+    final provided = <String, Object>{};
+    for (final e in p.entries) {
+      final v = e.value;
+      if (v is bool || v is num || v is String) provided[e.key] = v!;
+    }
+    return QueryShape(
+      provided: provided,
+      args: [
+        for (final x in a)
+          if (x is String) x,
+      ],
+    );
+  }
+
+  @override
+  String toString() =>
+      'QueryShape(provided: ${provided.length}, '
+      'args: ${args.length})';
+}
+
 /// What page mode discovered for one login account: `doc_id`s by query and
 /// the page tokens, each with the time it was seen (T-045).
 ///
@@ -7,7 +49,12 @@ import 'dart:convert';
 /// only, and nothing here is ever logged.
 final class DiscoverySnapshot {
   /// Creates a snapshot. [docIds] is keyed by `GraphqlQuery.name`.
-  const DiscoverySnapshot({this.docIds = const {}, this.tokens, this.tokensAt});
+  const DiscoverySnapshot({
+    this.docIds = const {},
+    this.tokens,
+    this.tokensAt,
+    this.shapes = const {},
+  });
 
   /// Reads the JSON made by [toJson]; null when it is not a snapshot (a
   /// corrupt or foreign value is treated as "nothing discovered").
@@ -37,10 +84,19 @@ final class DiscoverySnapshot {
       final tokensAt = map['tokensAt'] is int
           ? _time(map['tokensAt']! as int)
           : null;
+      final shapes = <String, QueryShape>{};
+      final rawShapes = map['shapes'];
+      if (rawShapes is Map<String, Object?>) {
+        for (final e in rawShapes.entries) {
+          final shape = QueryShape.fromJson(e.value);
+          if (shape != null) shapes[e.key] = shape;
+        }
+      }
       return DiscoverySnapshot(
         docIds: docIds,
         tokens: tokens != null && tokensAt != null ? tokens : null,
         tokensAt: tokens != null ? tokensAt : null,
+        shapes: shapes,
       );
     } on FormatException {
       // The exception text quotes the input: dropped.
@@ -58,6 +114,9 @@ final class DiscoverySnapshot {
 
   /// `doc_id` and capture time by `GraphqlQuery.name`.
   final Map<String, ({String docId, DateTime at})> docIds;
+
+  /// The provider values and argument names by `GraphqlQuery.name`.
+  final Map<String, QueryShape> shapes;
 
   /// The page tokens, or null.
   final Map<String, String>? tokens;
@@ -84,6 +143,8 @@ final class DiscoverySnapshot {
       for (final e in docIds.entries)
         e.key: {'id': e.value.docId, 'at': e.value.at.millisecondsSinceEpoch},
     },
+    if (shapes.isNotEmpty)
+      'shapes': {for (final e in shapes.entries) e.key: e.value.toJson()},
     'tokens': ?tokens,
     'tokensAt': ?tokensAt?.millisecondsSinceEpoch,
   });

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/direct/doc_id_resolver.dart';
 import 'package:storize_instagram/page/discovery_store.dart';
+import 'package:storize_instagram/page/hook_protocol.dart';
 
 /// The `doc_id`s and page tokens that page mode sees on the real page (AC9).
 ///
@@ -19,7 +20,8 @@ import 'package:storize_instagram/page/discovery_store.dart';
 /// It never loads a page itself: it is filled as a side effect of page-mode
 /// runs. (A resolver that loaded pages would run inside the governed call of
 /// the transport that asked it.)
-final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
+final class PageDiscovery
+    implements DocIdForgetter, PageTokenProvider, QueryShapeProvider {
   /// Creates a store-less (memory only) discovery, or one persisted in
   /// [store] under [accountId].
   PageDiscovery({
@@ -53,6 +55,8 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   final Clock _clock;
   final Map<GraphqlQuery, (String, DateTime)> _docIds = {};
   final Set<GraphqlQuery> _exact = {};
+  final Map<GraphqlQuery, QueryShape> _shapes = {};
+  final Map<GraphqlQuery, QueryShape> _pendingShapes = {};
   Map<String, String>? _tokens;
   DateTime? _tokensAt;
   // What this instance recorded and has not saved yet. Only this is merged
@@ -101,6 +105,49 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     if (changed && store != null) _enqueue(_persist);
   }
 
+  /// Stores what the hook read from the page's own modules (T-048): for each
+  /// op with an exact query name, its doc_id (an exact name beats an alias),
+  /// provider values and argument names; `fb_dtsg` and `lsd` replace the
+  /// tokens when both are present. Unknown op names are ignored. Returns the
+  /// queries recorded.
+  List<GraphqlQuery> recordDiscovery(
+    List<DiscoveredOp> ops,
+    Map<String, String> tokens,
+  ) {
+    final now = _clock.now();
+    final recorded = <GraphqlQuery>[];
+    for (final op in ops) {
+      for (final q in GraphqlQuery.values) {
+        if (!q.isExactName(op.name)) continue;
+        _exact.add(q);
+        _docIds[q] = (op.docId, now);
+        _pendingIds[q] = (op.docId, now);
+        final shape = QueryShape(provided: op.provided, args: op.args);
+        _shapes[q] = shape;
+        _pendingShapes[q] = shape;
+        recorded.add(q);
+      }
+    }
+    final dtsg = tokens['fb_dtsg'];
+    final lsd = tokens['lsd'];
+    var changed = recorded.isNotEmpty;
+    if (dtsg != null && dtsg.isNotEmpty && lsd != null && lsd.isNotEmpty) {
+      _tokens = Map.unmodifiable({'fb_dtsg': dtsg, 'lsd': lsd});
+      _tokensAt = now;
+      _pendingTokens = _tokens;
+      _pendingTokensAt = now;
+      changed = true;
+    }
+    if (changed && store != null) _enqueue(_persist);
+    return recorded;
+  }
+
+  @override
+  Future<QueryShape?> shapeFor(GraphqlQuery query) async {
+    if (!_docIdFresh(query)) await _reload();
+    return _docIdFresh(query) ? _shapes[query] : null;
+  }
+
   /// Completes when the write-throughs started so far are done.
   Future<void> flush() => _writes;
 
@@ -108,6 +155,8 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   void clear() {
     _docIds.clear();
     _exact.clear();
+    _shapes.clear();
+    _pendingShapes.clear();
     _tokens = null;
     _tokensAt = null;
     _pendingIds.clear();
@@ -121,6 +170,8 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   Future<void> forget(GraphqlQuery query) async {
     _docIds.remove(query);
     _exact.remove(query);
+    _shapes.remove(query);
+    _pendingShapes.remove(query);
     _pendingIds.remove(query);
     if (store != null) _enqueue(() => _persist(drop: query));
     await flush();
@@ -180,7 +231,11 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
       final e = snap.docIds[q.name];
       if (e == null) continue;
       final mine = _docIds[q];
-      if (mine == null || e.at.isAfter(mine.$2)) _docIds[q] = (e.docId, e.at);
+      if (mine == null || e.at.isAfter(mine.$2)) {
+        _docIds[q] = (e.docId, e.at);
+        final shape = snap.shapes[q.name];
+        if (shape != null) _shapes[q] = shape;
+      }
     }
     final t = snap.tokens;
     final at = snap.tokensAt;
@@ -209,6 +264,9 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     _docIds
       ..clear()
       ..addAll(_pendingIds);
+    _shapes
+      ..clear()
+      ..addAll(_pendingShapes);
     _tokens = _pendingTokens;
     _tokensAt = _pendingTokensAt;
   }
@@ -232,6 +290,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     }
     if (drop == null) {
       _pendingIds.clear();
+      _pendingShapes.clear();
       _pendingTokens = null;
       _pendingTokensAt = null;
     }
@@ -256,8 +315,16 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
         ids[e.key.name] = (docId: e.value.$1, at: e.value.$2);
       }
     }
-    if (drop != null) ids.remove(drop.name);
+    final shapes = <String, QueryShape>{...?stored?.shapes};
+    for (final e in _pendingShapes.entries) {
+      shapes[e.key.name] = e.value;
+    }
+    if (drop != null) {
+      ids.remove(drop.name);
+      shapes.remove(drop.name);
+    }
     ids.removeWhere((_, v) => now.difference(v.at) > docIdTtl);
+    shapes.removeWhere((k, _) => !ids.containsKey(k));
     var tokens = stored?.tokens;
     var tokensAt = stored?.tokensAt;
     final mine = _pendingTokens;
@@ -272,7 +339,12 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
       tokens = null;
       tokensAt = null;
     }
-    return DiscoverySnapshot(docIds: ids, tokens: tokens, tokensAt: tokensAt);
+    return DiscoverySnapshot(
+      docIds: ids,
+      tokens: tokens,
+      tokensAt: tokensAt,
+      shapes: shapes,
+    );
   }
 
   /// The queries that have a fresh doc_id in memory (names only, for

@@ -478,7 +478,8 @@ final class DirectExtractor {
       final headers = session.headers();
       try {
         result = await body(
-          (request) => _governed(request, headers, name, trace),
+          (request) =>
+              _governed(_withViewer(request, session), headers, name, trace),
         );
       } on SchemaException catch (e) {
         _log?.log(LogLevel.warn, 'direct', 'op=$name schema_changed');
@@ -498,6 +499,21 @@ final class DirectExtractor {
     return result;
   }
 
+  /// Adds `av` (the logged-in user id, from the session cookies) to a
+  /// GraphQL form that lacks it, as the web app's own POST has it.
+  IgRequest _withViewer(IgRequest request, IgSession session) {
+    final form = request.form;
+    if (form == null || form.containsKey('av') || session.userId.isEmpty) {
+      return request;
+    }
+    return IgRequest(
+      method: request.method,
+      uri: request.uri,
+      headers: request.headers,
+      form: {...form, 'av': session.userId},
+    );
+  }
+
   /// One governed request. Network errors and failure-map rows come back as
   /// `Err`; a `RateLimited` also reaches the governor through the closure's
   /// result, so the account is paused.
@@ -508,6 +524,7 @@ final class DirectExtractor {
     _ReplyTrace trace,
   ) async {
     final authed = request.withHeaders(headers);
+    trace.noteRequest(request);
     try {
       return await _governor.run<Result<Map<String, Object?>>>(
         accountId: accountId,
@@ -567,7 +584,7 @@ final class DirectExtractor {
       SchemaChanged(:final where) => ' where=$where${trace.render()}',
       UnknownFailure(:final code, :final message) =>
         ' code=$code message=$message${trace.render()}',
-      _ => '',
+      _ => trace.render(),
     };
     _log?.log(
       LogLevel.warn,
@@ -585,8 +602,17 @@ final class _ReplyTrace {
   static const int maxKeys = 8;
   static final RegExp _plainName = RegExp(r'^[a-z_]{1,32}$');
 
+  static final RegExp _queryName = RegExp(r'^[A-Za-z0-9_]{1,80}$');
+
   int? _status;
   List<String> _keys = const [];
+  String? _query;
+
+  /// The GraphQL friendly name of the latest request (a code identifier).
+  void noteRequest(IgRequest request) {
+    final name = request.headers['X-FB-Friendly-Name'];
+    _query = name != null && _queryName.hasMatch(name) ? name : null;
+  }
 
   void note(IgReply reply) {
     _status = reply.status;
@@ -602,6 +628,7 @@ final class _ReplyTrace {
   String render() {
     final status = _status;
     if (status == null) return '';
-    return ' status=$status keys=[${_keys.join(',')}]';
+    final query = _query == null ? '' : ' query=$_query';
+    return '$query status=$status keys=[${_keys.join(',')}]';
   }
 }

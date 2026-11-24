@@ -13,6 +13,7 @@ import 'package:storize_instagram/page/hook_protocol.dart';
 import 'package:storize_instagram/page/page_discovery.dart';
 import 'package:storize_instagram/page/page_driver.dart';
 import 'package:storize_instagram/page/page_plan.dart';
+import 'package:storize_instagram/page/user_initiated.dart';
 import 'package:storize_instagram/page/webview_lease.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -37,7 +38,8 @@ typedef PageTimerFactory = Timer Function(Duration d, void Function() fire);
 /// - **Clean-up:** cookies, web storage and cache are cleared and the WebView
 ///   disposed in a `finally`, success or not.
 /// - **Background:** when [runsInBackground] is true, a load happens only if
-///   `pageModeInBackground` says so (settings, wired by T-015).
+///   `pageModeInBackground` says so (settings, wired by T-015), or the run is
+///   user-initiated (`runUserInitiated`, T-048).
 /// - **Discovery:** the `doc_id`s and tokens the page used are kept in
 ///   [discovery] (memory only) for the direct GraphQL transport.
 /// - **Logs:** operation names, outcome, failure type and counters only. No
@@ -486,7 +488,9 @@ final class PageExtractor {
 
   /// One governed page load (cost `pageLoad`). Gate, session, governor.
   Future<Result<T>> _load<T>(String op, PagePlan<T> plan) async {
-    if (runsInBackground) {
+    // A user-initiated run (manual "Check now") may load pages in the
+    // background; a scheduled one needs the setting (T-048).
+    if (runsInBackground && !isUserInitiatedRun) {
       var allowed = false;
       try {
         allowed = await _pageModeInBackground();
@@ -564,6 +568,7 @@ final class PageExtractor {
     var withDocId = 0;
     var withTokens = 0;
     var blocked = 0;
+    var discoveries = 0;
     try {
       // The app-wide WebView lease (QA-F7): never wipe a jar another part of
       // the app is using.
@@ -640,6 +645,25 @@ final class PageExtractor {
                 }
               case HookBlocked():
                 blocked++;
+              case HookDiscovery():
+                final recorded = discovery.recordDiscovery(
+                  msg.ops,
+                  msg.tokens,
+                );
+                discoveries++;
+                final names = logSafeNames(recorded.map((q) => q.friendlyName));
+                final provided = msg.ops.fold<int>(
+                  0,
+                  (n, o) => n + o.provided.length,
+                );
+                _log?.log(
+                  LogLevel.info,
+                  'page',
+                  'op=$op discovery ops=${names.join(',')} '
+                      'provided=$provided '
+                      'tokens=${msg.tokens.isEmpty ? 'no' : 'yes'}'
+                      '${msg.error == null ? '' : ' error=${msg.error}'}',
+                );
               case HookCapture():
                 accepted++;
                 seenNames.add(msg.friendlyName);
@@ -769,7 +793,8 @@ final class PageExtractor {
         LogLevel.info,
         'page',
         'op=$op names=${logSafeNames(seenNames).join(',')} '
-            'has_doc_id=$withDocId has_tokens=$withTokens',
+            'has_doc_id=$withDocId has_tokens=$withTokens '
+            'discoveries=$discoveries',
       );
     }
   }
