@@ -289,13 +289,14 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(color: onScrim),
                           ),
-                          if (item.content.extras[HighlightExtras.title]
-                              case final String highlightTitle)
-                            Text(
-                              l10n.storyHighlightTitle(highlightTitle),
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: onScrim),
-                            ),
+                          if (item.content.kind == ContentKind.highlight)
+                            if (item.content.extras[HighlightExtras.title]
+                                case final String highlightTitle)
+                              Text(
+                                l10n.storyHighlightTitle(highlightTitle),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: onScrim),
+                              ),
                           Text(
                             l10n.storyPostedLine(
                               MaterialLocalizations.of(context).formatTimeOfDay(
