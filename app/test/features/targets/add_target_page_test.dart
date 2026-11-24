@@ -250,36 +250,46 @@ void main() {
     expect(find.widgetWithText(TextButton, l10n.tgtOpen), findsOneWidget);
   });
 
-  testWidgets('AC4: a network failure shows a snackbar with Retry', (t) async {
-    final rig = TargetsRig();
-    await rig.addAccount();
-    rig.platform.resolveUserResults.addFailure(const NetworkFailure());
-    await openForm(t, rig);
+  for (final (label, failure) in <(String, Failure)>[
+    ('a network failure', const NetworkFailure()),
+    ('a rate limit', const RateLimited(Duration(minutes: 7))),
+  ]) {
+    testWidgets('FR-73: $label saves the account as waiting and pops', (
+      t,
+    ) async {
+      final rig = TargetsRig();
+      await rig.addAccount();
+      rig.platform.resolveUserResults.addFailure(failure);
+      await openForm(t, rig);
 
-    await t.enterText(usernameField(), 'nour_k');
-    await pickOwn(t);
-    await submit(t);
-    expect(find.text(l10n.errorNetworkTitle), findsOneWidget);
-    expect(find.widgetWithText(SnackBarAction, l10n.retry), findsOneWidget);
-  });
+      await t.enterText(usernameField(), 'nour_k');
+      await pickOwn(t);
+      await submit(t);
 
-  testWidgets('AC4: a rate limit shows the minutes inline, form editable', (
+      final stored = (await t.runAsync(() => rig.targets.watchAll().first))!;
+      expect(stored.single.status, TargetStatus.pendingLookup);
+      expect(find.text(l10n.tgtAddedPending('nour_k')), findsOneWidget);
+      expect(find.text(l10n.tgtUsernameInvalid), findsNothing);
+      expect(rig.scheduler.checkNowCalls.single.scope, CheckScope.posts);
+      expect(rig.scheduler.checkNowCalls.single.targetId, stored.single.id);
+    });
+  }
+
+  testWidgets('FR-73: not found still fails inline and stores nothing', (
     t,
   ) async {
     final rig = TargetsRig();
     await rig.addAccount();
-    rig.platform.resolveUserResults.addFailure(
-      const RateLimited(Duration(minutes: 7, seconds: 10)),
-    );
+    rig.platform.resolveUserResults.addFailure(const TargetNotFound());
     await openForm(t, rig);
 
     await t.enterText(usernameField(), 'nour_k');
     await pickOwn(t);
     await submit(t);
-    expect(find.text(l10n.tgtErrRateLimited(8)), findsOneWidget);
-    // Not verifying any more: the field accepts input again.
-    await t.enterText(usernameField(), 'other_user');
-    expect(find.text('other_user'), findsOneWidget);
+
+    final stored = (await t.runAsync(() => rig.targets.watchAll().first))!;
+    expect(stored, isEmpty);
+    expect(find.text(l10n.tgtAddedPending('nour_k')), findsNothing);
   });
 
   testWidgets('AC4: while verifying the button spins and the fields lock', (

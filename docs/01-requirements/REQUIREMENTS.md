@@ -134,6 +134,7 @@ Priority: **M** = Must, **S** = Should, **C** = Could.
 | FR-67 | Each tracked account has a **Reels** toggle next to Stories and Posts (default **on**). When it's off, reels are skipped even though they appear on the profile grid (D-15) | M |
 | FR-71 | Each tracked account has a **Highlights** toggle (default off). When turned on, every current highlight is downloaded once (in the background, like FR-69), then each check of that account's posts also picks up items newly added to its highlights (D-19) | S |
 | FR-72 | Highlight items are saved in the account's gallery folder under `Highlights/<highlight title>/`, appear in the Library under their own filter, and keep their highlight title and order | S |
+| FR-73 | Adding an account **always succeeds right away**, even when Instagram is paused or rate-limited or the network is down. The account is saved as "Waiting to look up" with the options chosen (history range, highlights, tracking, category, note) and is looked up as soon as Instagram allows; then it becomes active and starts its history. Real problems (not found, private and not followed, login invalid) still fail on the spot (user, 2026-11-24) | M |
 | FR-66 | New-post notifications follow FR-40 ("2 new posts from @x") and can be turned off separately (FR-42) | M |
 
 ### 6.4 Library

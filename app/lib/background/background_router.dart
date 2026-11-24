@@ -21,6 +21,7 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   history: c.backfillHistory.runDue,
   historyProbe: c.backfillHistory.hasRunning,
   highlights: c.syncHighlights.runDue,
+  resolvePending: c.resolvePendingTargets.run,
   log: c.log,
   notifier: c.parts.notifications,
   activeTargets: (scope, targetId) async {

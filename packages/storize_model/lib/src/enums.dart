@@ -174,7 +174,11 @@ enum TargetStatus implements DbEnum {
   unavailable('UNAVAILABLE'),
 
   /// The last check failed for another reason.
-  error('ERROR');
+  error('ERROR'),
+
+  /// Added while Instagram was limited or unreachable: the profile lookup
+  /// is still to do (FR-73). Checks, history and highlights skip it.
+  pendingLookup('PENDING_LOOKUP');
 
   const TargetStatus(this.dbValue);
 

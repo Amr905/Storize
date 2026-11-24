@@ -191,8 +191,16 @@ final class SchedulerCheckNowAction implements CheckNowAction {
 /// default (`false`), so the lock gate always applies.
 List<Override> appOverrides(AppComposition c) => [
   dbRefreshProvider.overrideWithValue(c.parts.db.refreshFromDisk),
-  if (c.discoveryRefresher case final refresher?)
-    discoveryRefreshProvider.overrideWithValue(refresher.refresh),
+  // The foreground hook runs at app open and on every resume: it also looks
+  // up the targets added while Instagram was limited (FR-73). Best effort.
+  discoveryRefreshProvider.overrideWithValue(() async {
+    try {
+      await c.resolvePendingTargets.run();
+    } on Object {
+      // The next resume or check task tries again.
+    }
+    return c.discoveryRefresher?.refresh();
+  }),
   targetRepoProvider.overrideWithValue(c.targets),
   contentRepoProvider.overrideWithValue(c.content),
   accountRepoProvider.overrideWithValue(c.accounts),

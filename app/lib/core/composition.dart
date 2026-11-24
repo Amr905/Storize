@@ -200,6 +200,7 @@ final class AppComposition {
     required this.runCheck,
     required this.backfillHistory,
     required this.syncHighlights,
+    required this.resolvePendingTargets,
     required this.downloadPending,
     required this.applyRetention,
     required this.detectGaps,
@@ -324,6 +325,14 @@ final class AppComposition {
       gallery: parts.gallery,
       cache: parts.cache,
     );
+    final backfillHistory = BackfillHistory(
+      platform: platform,
+      targets: targets,
+      content: content,
+      accounts: accounts,
+      settings: parts.settings,
+      clock: clock,
+    );
     return AppComposition._(
       background: background,
       holder: holderId,
@@ -351,12 +360,12 @@ final class AppComposition {
         settings: parts.settings,
         clock: clock,
       ),
-      backfillHistory: BackfillHistory(
+      backfillHistory: backfillHistory,
+      resolvePendingTargets: ResolvePendingTargets(
         platform: platform,
         targets: targets,
-        content: content,
         accounts: accounts,
-        settings: parts.settings,
+        history: backfillHistory,
         clock: clock,
       ),
       syncHighlights: SyncHighlights(
@@ -429,6 +438,9 @@ final class AppComposition {
 
   /// Saves the highlights of targets that have them on.
   final SyncHighlights syncHighlights;
+
+  /// Looks up the targets added while Instagram was limited (FR-73).
+  final ResolvePendingTargets resolvePendingTargets;
 
   /// Downloads pending media.
   final DownloadPending downloadPending;

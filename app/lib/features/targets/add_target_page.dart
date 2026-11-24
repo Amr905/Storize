@@ -54,6 +54,15 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
         } else {
           context.go(Routes.targetsPath);
         }
+      case AddTargetPending(:final target):
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.tgtAddedPending(target.username))),
+        );
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(Routes.targetsPath);
+        }
       case AddTargetInvalidUsername():
       case AddTargetMissingCategory():
       case AddTargetNoTrackFlag():
