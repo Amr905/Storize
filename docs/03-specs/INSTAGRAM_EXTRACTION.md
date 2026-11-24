@@ -208,3 +208,19 @@ This is an **open question for TECH_SPEC §4.1, ADR-0003 and T-014** (see Decisi
 
 ## Fixtures
 Sanitized fixtures: `packages/storize_instagram/test/fixtures/real/{story,profile,post_photo,post_carousel,reel}/`. Each folder holds only the bodies the extractors need, `report.md` and `summary.json` (`docId` removed). The synthetic `synthetic.har` there is fake data used only by the sanitizer tests. See `real/README.md` for how they were produced.
+
+## v0.3 (unverified): post pages and highlights (T-041)
+
+Everything in this section is an **assumption** written from the T-040/T-041 design. None of it was captured. Fixtures are synthetic (`test/fixtures/synthetic/timeline_page*.json`, `highlights_tray.json`, `highlight_reel.json`). Replace them with sanitized real captures after the device checks in [DEVICE_TESTS](DEVICE_TESTS.md).
+
+| Item | Assumption | Fails closed how |
+|------|-----------|------------------|
+| Post paging variables | `PolarisProfilePostsQuery` accepts top-level `after` (the previous `page_info.end_cursor`) and `first` next to `data.count`. The capture saw the first page only. | A rejected request is a normal failure; a response without `page_info.has_next_page` is `SchemaChanged` (history is never cut short silently). |
+| Paging response | Same connection root and node shape as the first page; `page_info.end_cursor` is a string, `has_next_page` a bool. | `SchemaChanged` to page mode. |
+| Page-mode paging | Scrolling the profile makes the web app fetch more of the connection. The response may carry another friendly name (for example a `..._connection` suffix), so page mode matches the name prefix **or** the root `data.xdt_api__v1__feed__user_timeline_graphql_connection`. | After `maxScrollSteps` (30) or 60 s: what was collected, or `SchemaChanged('page_scroll_stalled')` if nothing older than the cursor was reached. |
+| Cursor | Own text format `v1\|<taken_at>\|<ig end_cursor>`. Direct uses the Instagram part; page mode uses `taken_at` (older posts, so two posts with the same second can be missed). A page-mode cursor makes direct mode answer `SchemaChanged`. | n/a |
+| Highlights tray query | Friendly name `PolarisProfileStoryHighlightsTrayContentQuery` (the T-002 capture saw a tray query but did not record its name); page mode also accepts any name holding `Highlights` and `Tray`. Variable `user_id`. | Missing `doc_id` is `SchemaChanged`, then page mode. |
+| Tray response | `data.highlights.edges[].node` with `id` (`highlight:<id>`), `title`, `cover_media.cropped_image_version.url`, `latest_reel_media` (unix s), `media_count`. | Nodes without `id` are skipped; all broken is `SchemaChanged`. |
+| Highlight items | The stories reel query with `reel_ids_arr` = `["highlight:<id>"]` answers reels with `id` `highlight:<id>`, `reel_type` `highlight_reel`, optional `title`, story-shaped `items[]` without a required `expiring_at`. | `SchemaChanged`. |
+| Highlight page | `/stories/highlights/<id>/` fires the reel query for the highlight and (probably) `PolarisStoriesV3SeenMutation`. The mutation stays blocked by name in the hook; a reply to it trips the `SeenGuard`. | `seen_block_leak`, guard tripped. |
+| REST | No REST paging or highlight call is guessed; `RestTransport` answers `SchemaChanged` (page mode). | n/a |

@@ -526,6 +526,9 @@ final class _ThrowingSession implements PageSession {
   Future<Object?> collectDomMedia() async => null;
 
   @override
+  Future<void> scrollDown() async {}
+
+  @override
   Future<void> clearData() async {}
 
   @override

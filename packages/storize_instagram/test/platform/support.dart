@@ -18,7 +18,7 @@ RemoteUser aUser([String name = secretName]) => RemoteUser(
 );
 
 /// A scripted [DirectOps] and [PageOps] in one: records every call.
-final class FakeMode implements DirectOps, PageOps {
+final class FakeMode implements DirectOps, PageOps, HistoryOps {
   FakeMode(this.label, this.calls);
 
   final String label;
@@ -30,6 +30,11 @@ final class FakeMode implements DirectOps, PageOps {
       (_) => const Ok({});
   Result<List<RemoteContent>> Function() posts = () => const Ok([]);
   Result<DateTime?> Function() latest = () => const Ok(null);
+  Result<PostPage> Function(String? cursor) postPage = (_) =>
+      Ok(PostPage(items: const []));
+  Result<List<RemoteHighlight>> Function() highlights = () => const Ok([]);
+  Result<Map<String, List<RemoteContent>>> Function(List<String> ids)
+  highlightItems = (_) => const Ok({});
   Exception? throwWith;
 
   /// Sessions this fake page mode "opened"; null = unknown (reason-based).
@@ -68,6 +73,20 @@ final class FakeMode implements DirectOps, PageOps {
   @override
   Future<Result<DateTime?>> latestPostTime(String userId) =>
       _answer('latestPostTime', latest);
+
+  @override
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor}) =>
+      _answer('fetchPostPage', () => postPage(cursor));
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
+      _answer('fetchHighlights', highlights);
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  }) => _answer('fetchHighlightItems', () => highlightItems(highlightIds));
 }
 
 /// A [CdnHttp] with a scripted reply that records every request.

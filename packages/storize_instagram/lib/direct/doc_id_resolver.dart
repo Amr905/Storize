@@ -7,12 +7,28 @@ enum GraphqlQuery {
   profile('PolarisProfilePageContentQuery'),
 
   /// The posts of a user by username.
-  posts('PolarisProfilePostsQuery');
+  posts('PolarisProfilePostsQuery'),
+
+  /// The highlights tray of a profile. **The name is an assumption** (the
+  /// T-002 capture saw the query but did not record its name): see
+  /// INSTAGRAM_EXTRACTION.md v0.3.
+  highlights('PolarisProfileStoryHighlightsTrayContentQuery');
 
   const GraphqlQuery(this.friendlyName);
 
   /// The `fb_api_req_friendly_name` value.
   final String friendlyName;
+
+  /// Whether [name] is this query's friendly name. The highlights tray also
+  /// accepts any name that holds both `Highlights` and `Tray`, because its
+  /// real name is unverified.
+  bool matchesName(String? name) {
+    if (name == null) return false;
+    if (name == friendlyName) return true;
+    return this == highlights &&
+        name.contains('Highlights') &&
+        name.contains('Tray');
+  }
 }
 
 /// Finds the current `doc_id` of a query.

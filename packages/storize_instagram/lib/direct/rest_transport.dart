@@ -38,21 +38,13 @@ final class RestTransport implements IgTransport {
 
   @override
   Future<Result<UserProfile>> userById(String userId, IgCall call) =>
-      callAndParse(
-        call,
-        RestRequests.userInfo(userId),
-        mapper.restUserInfo,
-      );
+      callAndParse(call, RestRequests.userInfo(userId), mapper.restUserInfo);
 
   @override
   Future<Result<Map<String, StoryReel>>> storyReels(
     List<String> userIds,
     IgCall call,
-  ) => callAndParse(
-    call,
-    RestRequests.reelsMedia(userIds),
-    mapper.restReels,
-  );
+  ) => callAndParse(call, RestRequests.reelsMedia(userIds), mapper.restReels);
 
   @override
   Future<Result<Timeline>> timeline(
@@ -65,10 +57,29 @@ final class RestTransport implements IgTransport {
     mapper.restFeed,
   );
 
+  // The REST candidates for paging and highlights were never observed, so
+  // they are not guessed: the run goes to page mode.
   @override
-  Future<Result<Viewer>> viewer(String ownUserId, IgCall call) => callAndParse(
-    call,
-    RestRequests.currentUser(),
-    mapper.restCurrentUser,
-  );
+  Future<Result<Timeline>> timelinePage(
+    String userId,
+    IgCall call, {
+    String? cursor,
+    String? usernameHint,
+  }) async => const Err(SchemaChanged('rest_unsupported:timelinePage'));
+
+  @override
+  Future<Result<List<RemoteHighlight>>> highlights(
+    String userId,
+    IgCall call,
+  ) async => const Err(SchemaChanged('rest_unsupported:highlights'));
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
+    List<String> highlightIds,
+    IgCall call,
+  ) async => const Err(SchemaChanged('rest_unsupported:highlightItems'));
+
+  @override
+  Future<Result<Viewer>> viewer(String ownUserId, IgCall call) =>
+      callAndParse(call, RestRequests.currentUser(), mapper.restCurrentUser);
 }

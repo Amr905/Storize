@@ -40,6 +40,27 @@ abstract interface class IgTransport {
     String? usernameHint,
   });
 
+  /// One page of posts of [userId]. [cursor] is Instagram's `end_cursor` of
+  /// the previous page (null: the first page). The [Timeline] carries
+  /// `endCursor` and `hasNextPage`. A transport that cannot page answers
+  /// `SchemaChanged`.
+  Future<Result<Timeline>> timelinePage(
+    String userId,
+    IgCall call, {
+    String? cursor,
+    String? usernameHint,
+  });
+
+  /// The highlights tray of [userId], in tray order.
+  Future<Result<List<RemoteHighlight>>> highlights(String userId, IgCall call);
+
+  /// The items of the highlights [highlightIds] (plain ids, at most 20 per
+  /// call), keyed by highlight id.
+  Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
+    List<String> highlightIds,
+    IgCall call,
+  );
+
   /// Who the session belongs to. [ownUserId] is the stored `ds_user_id`.
   Future<Result<Viewer>> viewer(String ownUserId, IgCall call);
 }

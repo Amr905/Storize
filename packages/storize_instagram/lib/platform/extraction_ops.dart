@@ -32,6 +32,24 @@ abstract interface class ExtractionOps {
   Future<Result<DateTime?>> latestPostTime(String userId);
 }
 
+/// The history operations (T-041), kept apart from [ExtractionOps] so
+/// existing implementers (the dev tools stub) keep compiling. The platform
+/// answers `UnknownFailure('not_implemented')` for a mode that lacks them.
+abstract interface class HistoryOps {
+  /// One page of posts of [userId] (see `PostCursor` for the cursor).
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor});
+
+  /// The highlights tray of [userId].
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId);
+
+  /// The items of [highlightIds] by highlight id. [orderStart] is added to
+  /// each `highlightOrder`.
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  });
+}
+
 /// Direct mode: adds the session check that only direct mode can do.
 abstract interface class DirectOps implements ExtractionOps {
   /// Checks the stored session and returns the logged-in user.
@@ -47,7 +65,7 @@ abstract interface class PageOps implements ExtractionOps {
 }
 
 /// [DirectOps] over a [DirectExtractor].
-final class DirectExtractorOps implements DirectOps {
+final class DirectExtractorOps implements DirectOps, HistoryOps {
   /// Wraps [extractor].
   const DirectExtractorOps(this.extractor);
 
@@ -79,10 +97,24 @@ final class DirectExtractorOps implements DirectOps {
   @override
   Future<Result<DateTime?>> latestPostTime(String userId) =>
       extractor.latestPostTime(userId);
+
+  @override
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor}) =>
+      extractor.fetchPostPage(userId, cursor: cursor);
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
+      extractor.fetchHighlights(userId);
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  }) => extractor.fetchHighlightItems(highlightIds, orderStart: orderStart);
 }
 
 /// [PageOps] over a [PageExtractor].
-final class PageExtractorOps implements PageOps {
+final class PageExtractorOps implements PageOps, HistoryOps {
   /// Wraps [extractor]. Give the [counter] that the page driver of
   /// [extractor] reports to (see `CountingPageDriver`).
   const PageExtractorOps(this.extractor, {this.counter});
@@ -118,4 +150,18 @@ final class PageExtractorOps implements PageOps {
   @override
   Future<Result<DateTime?>> latestPostTime(String userId) =>
       extractor.latestPostTime(userId);
+
+  @override
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor}) =>
+      extractor.fetchPostPage(userId, cursor: cursor);
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
+      extractor.fetchHighlights(userId);
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  }) => extractor.fetchHighlightItems(highlightIds, orderStart: orderStart);
 }

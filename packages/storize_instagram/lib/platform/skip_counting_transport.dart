@@ -37,6 +37,37 @@ final class SkipCountingTransport implements IgTransport {
   }
 
   @override
+  Future<Result<Timeline>> timelinePage(
+    String userId,
+    IgCall call, {
+    String? cursor,
+    String? usernameHint,
+  }) async {
+    final result = await inner.timelinePage(
+      userId,
+      call,
+      cursor: cursor,
+      usernameHint: usernameHint,
+    );
+    if (result is Ok<Timeline>) {
+      signals.addSkippedMalformed(result.value.skippedMalformed);
+    }
+    return result;
+  }
+
+  @override
+  Future<Result<List<RemoteHighlight>>> highlights(
+    String userId,
+    IgCall call,
+  ) => inner.highlights(userId, call);
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
+    List<String> highlightIds,
+    IgCall call,
+  ) => inner.highlightItems(highlightIds, call);
+
+  @override
   Future<Result<UserProfile>> userById(String userId, IgCall call) =>
       inner.userById(userId, call);
 

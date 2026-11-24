@@ -371,6 +371,9 @@ final class _HoldingSession implements PageSession {
   Future<Object?> collectDomMedia() => _inner.collectDomMedia();
 
   @override
+  Future<void> scrollDown() => _inner.scrollDown();
+
+  @override
   Future<void> clearData() => _inner.clearData();
 
   @override
