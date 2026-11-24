@@ -156,6 +156,8 @@
   var MAX_DISCOVERY_POSTS = 6;
   var discoveryPosts = 0;
   var discoveryDone = false;
+  var requireErrors = 0;
+  var errorPosted = false;
 
   function reqModule(name) {
     try {
@@ -163,6 +165,7 @@
       if (typeof r !== 'function') return undefined;
       return r(name);
     } catch (e) {
+      requireErrors++; // counted only; the error text is never read or sent
       return undefined;
     }
   }
@@ -235,7 +238,13 @@
       var lsd = tokenOf('LSD');
       if (dtsg) tokens.fb_dtsg = dtsg;
       if (lsd) tokens.lsd = lsd;
-      if (ops.length === 0 && !dtsg && !lsd) return false;
+      if (ops.length === 0 && !dtsg && !lsd) {
+        if (requireErrors > 0 && !errorPosted) {
+          errorPosted = true;
+          postDiscovery([], {}, 'require_failed');
+        }
+        return false;
+      }
       postDiscovery(ops, tokens, null);
       discoveryDone = ops.length > 0;
       return discoveryDone;
