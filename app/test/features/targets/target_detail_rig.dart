@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_providers.dart';
+import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/features/targets/target_detail_page.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -35,7 +36,29 @@ class DetailRig {
   final FakeAccountRepo accounts = FakeAccountRepo();
   final FakeStorageInfo storage = FakeStorageInfo();
   final FakeCheckNow checkNow = FakeCheckNow();
+  final FakeContentPlatform platform = FakeContentPlatform();
+  final FakeScheduler scheduler = FakeScheduler();
   int _seq = 0;
+
+  /// The history and highlights use cases over the same fakes (T-042).
+  late final BackfillHistory backfill = BackfillHistory(
+    platform: platform,
+    targets: targets,
+    content: content,
+    accounts: accounts,
+    settings: FakeSettingsRepo(),
+    clock: clock,
+  );
+
+  /// See [backfill].
+  late final SyncHighlights highlights = SyncHighlights(
+    platform: platform,
+    targets: targets,
+    content: content,
+    accounts: accounts,
+    settings: FakeSettingsRepo(),
+    clock: clock,
+  );
 
   /// Adds a target. Defaults: Own/client, every track on, active.
   Future<Target> addTarget(
@@ -135,6 +158,10 @@ class DetailRig {
     storageInfoProvider.overrideWithValue(storage),
     checkNowActionProvider.overrideWithValue(checkNow),
     libraryThumbBuilderProvider.overrideWithValue(fakeThumb),
+    schedulerProvider.overrideWithValue(scheduler),
+    contentPlatformProvider.overrideWithValue(platform),
+    backfillHistoryProvider.overrideWithValue(backfill),
+    syncHighlightsProvider.overrideWithValue(highlights),
   ];
 }
 

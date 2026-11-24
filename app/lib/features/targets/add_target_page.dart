@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/targets/history_range_picker.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -321,6 +322,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 range: form.historyRange,
                 since: form.historySince,
                 enabled: !verifying,
+                today: ref.watch(clockProvider).now(),
                 onChanged: (range, since) =>
                     notifier.setHistory(range, since: since),
               ),

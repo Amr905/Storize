@@ -58,6 +58,26 @@ class TargetsRig {
   final FakeScheduler scheduler = FakeScheduler();
   final FakeCheckNow checkNow = FakeCheckNow();
 
+  /// The history and highlights use cases over the same fakes (T-042).
+  late final BackfillHistory backfill = BackfillHistory(
+    platform: platform,
+    targets: targets,
+    content: FakeContentRepo(targets: targets),
+    accounts: accounts,
+    settings: FakeSettingsRepo(),
+    clock: clock,
+  );
+
+  /// See [backfill].
+  late final SyncHighlights highlights = SyncHighlights(
+    platform: platform,
+    targets: targets,
+    content: FakeContentRepo(targets: targets),
+    accounts: accounts,
+    settings: FakeSettingsRepo(),
+    clock: clock,
+  );
+
   /// Adds a target with a remote user ID derived from [username].
   Future<Target> addTarget(
     String username, {
@@ -106,6 +126,8 @@ class TargetsRig {
     contentPlatformProvider.overrideWithValue(platform),
     schedulerProvider.overrideWithValue(scheduler),
     checkNowActionProvider.overrideWithValue(checkNow),
+    backfillHistoryProvider.overrideWithValue(backfill),
+    syncHighlightsProvider.overrideWithValue(highlights),
   ];
 }
 
