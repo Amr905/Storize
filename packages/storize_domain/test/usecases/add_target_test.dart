@@ -249,25 +249,6 @@ void main() {
       );
     });
 
-    test('rate limited keeps retryAfter', () async {
-      h.platform.resolveUserResults.addFailure(
-        const RateLimited(Duration(minutes: 9)),
-      );
-      final r = await h.add('x', category: TargetCategory.public);
-      expect(
-        (r as AddTargetRateLimited).retryAfter,
-        const Duration(minutes: 9),
-      );
-    });
-
-    test('network', () async {
-      h.platform.resolveUserResults.addFailure(const NetworkFailure());
-      expect(
-        await h.add('x', category: TargetCategory.public),
-        isA<AddTargetNetwork>(),
-      );
-    });
-
     test('schema changed', () async {
       h.platform.resolveUserResults.addFailure(const SchemaChanged('user.pk'));
       final r = await h.add('x', category: TargetCategory.public);
@@ -285,7 +266,7 @@ void main() {
     });
 
     test('failures store nothing and schedule nothing', () async {
-      h.platform.resolveUserResults.addFailure(const NetworkFailure());
+      h.platform.resolveUserResults.addFailure(const SchemaChanged('user.pk'));
       await h.add('x', category: TargetCategory.public);
       expect(await h.targets.watchAll().first, isEmpty);
       expect((h.scheduler as FakeScheduler).checkNowCalls, isEmpty);

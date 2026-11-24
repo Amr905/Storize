@@ -161,6 +161,10 @@ enum TargetCategory implements DbEnum {
 
 /// Health of a tracked target.
 enum TargetStatus implements DbEnum {
+  /// Added while Instagram was limited or unreachable: the profile lookup
+  /// is still to do (FR-73). Checks, history and highlights skip it.
+  pendingLookup('PENDING_LOOKUP'),
+
   /// Checked normally.
   active('ACTIVE'),
 

@@ -40,6 +40,7 @@ export 'src/usecases/detect_gaps.dart';
 export 'src/usecases/download_pending.dart';
 export 'src/usecases/remove_media_file.dart';
 export 'src/usecases/remove_target.dart';
+export 'src/usecases/resolve_pending_targets.dart';
 export 'src/usecases/run_check.dart';
 export 'src/usecases/sync_highlights.dart';
 export 'src/usecases/verify_session.dart';
