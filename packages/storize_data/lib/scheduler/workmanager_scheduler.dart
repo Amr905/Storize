@@ -6,7 +6,6 @@ import 'package:workmanager/workmanager.dart';
 
 /// What the background dispatcher needs to hand work over to a new task:
 /// the download roll-over of the 10-minute rule (TECH_SPEC section 1.3).
-// ignore: one_member_abstracts, a port that tests replace.
 abstract interface class DownloadEnqueuer {
   /// Enqueues a one-off `download` task. A second call while one is queued or
   /// running appends, so a roll-over from inside a download task is not lost.

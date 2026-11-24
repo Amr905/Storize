@@ -33,9 +33,7 @@ void main() {
   });
 
   test('history fields and highlight kind round-trip on v2', () async {
-    final db = StorizeDatabase.forTesting(
-      (await verifier.startAt(2)),
-    );
+    final db = StorizeDatabase.forTesting(await verifier.startAt(2));
     addTearDown(db.close);
     final repo = DriftTargetRepo(db);
     final at = DateTime.utc(2026, 11, 24, 9);
@@ -49,7 +47,7 @@ void main() {
         postsWatermarkAt: at,
         addedAt: at,
         historyRange: HistoryRange.since,
-        historySince: DateTime.utc(2026, 1, 1),
+        historySince: DateTime.utc(2026),
         highlightsEnabled: true,
         historyProgress: HistoryProgress(
           state: HistoryState.running,

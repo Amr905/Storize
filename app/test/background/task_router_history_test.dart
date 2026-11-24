@@ -56,7 +56,7 @@ final class _Rig {
   HighlightsResult highlights = const HighlightsResult(
     HighlightsOutcome.synced,
   );
-  Object? highlightsThrow;
+  Exception? highlightsThrow;
 
   late final TaskRouter router = TaskRouter(
     runCheck: ({required scope, required trigger, targetId, deadline}) async {
@@ -205,7 +205,7 @@ void main() {
     });
 
     test('a highlights failure does not lose the downloads', () async {
-      final r = _Rig()..highlightsThrow = StateError('boom');
+      final r = _Rig()..highlightsThrow = Exception('boom');
       expect(await r.router.route(TaskNames.checkPosts), isTrue);
       expect(r.order, ['check-posts', 'highlights', 'download']);
     });
