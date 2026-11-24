@@ -83,8 +83,8 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
   @override
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
-    String? cursor,
     required ExtractionPolicy policy,
+    String? cursor,
   }) async =>
       (await _current()).fetchPostPage(userId, cursor: cursor, policy: policy);
 

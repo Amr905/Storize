@@ -303,8 +303,8 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   @override
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
-    String? cursor,
     required ExtractionPolicy policy,
+    String? cursor,
   }) async => const Err(UnknownFailure(null, 'not_implemented'));
 
   @override

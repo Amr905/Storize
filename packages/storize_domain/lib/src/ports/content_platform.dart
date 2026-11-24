@@ -47,8 +47,8 @@ abstract interface class ContentPlatform {
   /// first page.
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
-    String? cursor,
     required ExtractionPolicy policy,
+    String? cursor,
   });
 
   /// Fetches the highlights tray of [userId] (FR-71).

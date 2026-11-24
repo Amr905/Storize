@@ -171,8 +171,8 @@ final class FakeContentPlatform implements ContentPlatform {
   @override
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
-    String? cursor,
     required ExtractionPolicy policy,
+    String? cursor,
   }) async {
     _calls.add(PlatformCall('fetchPostPage', [userId, cursor, policy]));
     return fetchPostPageResults.take('fetchPostPage');
