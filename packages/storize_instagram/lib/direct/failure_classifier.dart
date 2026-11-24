@@ -22,18 +22,19 @@ Duration? clampedRetryAfter(
   return Duration(seconds: seconds);
 }
 
-/// The `for (;;);` error code that means "not logged in". Any other code of
-/// such a body (a stale or missing `fb_dtsg`, for example 1357004) means the
-/// page tokens are no good. Deliberately narrow: a wrong `SessionInvalid`
-/// would make the user log in again for nothing.
+/// The `for (;;);` error code that may mean "not logged in". It is NOT trusted
+/// on its own (unconfirmed on device, Lead 2026-11-24): like every other code
+/// of such a body it is `SchemaChanged('page_tokens')`, so the tokens are
+/// dropped and found again. A real logout still shows through the other rules
+/// (401, login redirects, `login_required`) and through session checks, so a
+/// wrong guess never makes the user log in again for nothing.
 const int fbLoginErrorCode = 1357001;
 
 /// Turns a reply into the `Failure` of the TECH_SPEC 4.1 failure map, or null
 /// when the reply is a usable JSON object.
 ///
 /// Rules, in this order (the first that matches wins):
-/// 0. (T-049) A `for (;;);` error body: code 1357001 is
-///    `SessionInvalid(loginRequired)`, any other code is
+/// 0. (T-049) A `for (;;);` error body, whatever its code:
 ///    `SchemaChanged('page_tokens')`. A GraphQL `errors[]` message with
 ///    `missing_required_variable` and no `data` is
 ///    `SchemaChanged('providers')`.
@@ -72,9 +73,7 @@ final class FailureClassifier {
         : null;
     final fbError = reply.fbError;
     if (fbError != null) {
-      return fbError == fbLoginErrorCode
-          ? const SessionInvalid(SessionReason.loginRequired)
-          : const SchemaChanged('page_tokens');
+      return const SchemaChanged('page_tokens');
     }
     if (reply.isSuccess && body != null && _missingProviders(body)) {
       return const SchemaChanged('providers');

@@ -352,11 +352,8 @@ void main() {
   group('failure classification', () {
     const c = FailureClassifier();
 
-    test('for (;;); with the login code is SessionInvalid', () {
-      expect(
-        c.classify(_shield(1357001)),
-        const SessionInvalid(SessionReason.loginRequired),
-      );
+    test('for (;;); with the login code is stale tokens, never a logout', () {
+      expect(c.classify(_shield(1357001)), const SchemaChanged('page_tokens'));
     });
 
     test('for (;;); with any other code is stale tokens', () {
@@ -519,7 +516,7 @@ void main() {
       final r = await rig.run(
         rig.extractor.fetchStories(['user_1']),
       );
-      expect(r.failureOrNull, isA<SessionInvalid>());
+      expect(r.failureOrNull, isNot(isA<SessionInvalid>()));
     });
   });
 

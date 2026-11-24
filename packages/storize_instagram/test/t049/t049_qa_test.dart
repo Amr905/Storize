@@ -90,21 +90,23 @@ void main() {
     }
   });
 
-  test('1357001 repeats after a fresh discovery: still SessionInvalid, '
-      'one request per call (documents current behaviour)', () async {
-    final d = _disc(tokens: {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd});
-    final rig = Rig(
-      transport: GraphqlTransport(docIds: d, tokens: d),
-      responder: (_) => const IgReply(
-        status: 200,
-        json: <String, Object?>{'error': 1357001},
-        shielded: true,
-      ),
-    );
-    final r = await rig.run(rig.extractor.fetchStories(['user_1']));
-    expect(r.failureOrNull, isA<SessionInvalid>());
-    expect(rig.http.requests.length, 1);
-    // Tokens are NOT dropped on the login code: no fresh discovery is forced.
-    expect(await d.tokens(), isNotNull);
-  });
+  test(
+    '1357001 is never a logout: stale tokens, dropped, one request',
+    () async {
+      final d = _disc(tokens: {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd});
+      final rig = Rig(
+        transport: GraphqlTransport(docIds: d, tokens: d),
+        responder: (_) => const IgReply(
+          status: 200,
+          json: <String, Object?>{'error': 1357001},
+          shielded: true,
+        ),
+      );
+      final r = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(r.failureOrNull, isNot(isA<SessionInvalid>()));
+      expect(rig.http.requests.length, 1);
+      // Tokens are dropped, so a fresh discovery finds new ones.
+      expect(await d.tokens(), isNull);
+    },
+  );
 }
