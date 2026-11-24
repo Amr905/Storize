@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:storize_domain/src/entities/target.dart';
 import 'package:storize_domain/src/exceptions.dart';
 import 'package:storize_domain/src/ports/clock.dart';
 import 'package:storize_domain/src/ports/content_platform.dart';
@@ -211,12 +210,12 @@ final class ResolvePendingTargets {
     }
     if (hidden) return _Applied.notVisible;
 
-    if (t.historyRange != HistoryRange.none) {
-      try {
-        await _history.start(t.id, t.historyRange, since: t.historySince);
-      } on ArgumentError {
-        // A bad "since" date: the account is added without history.
-      }
+    final since = t.historySince;
+    final badSince =
+        t.historyRange == HistoryRange.since &&
+        (since == null || since.isAfter(_clock.now()));
+    if (t.historyRange != HistoryRange.none && !badSince) {
+      await _history.start(t.id, t.historyRange, since: since);
     }
     return _Applied.active;
   }

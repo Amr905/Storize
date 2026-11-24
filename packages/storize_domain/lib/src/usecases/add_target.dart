@@ -56,7 +56,7 @@ final class AddTargetAdded extends AddTargetResult {
 
 /// The target was saved as "waiting to look up" because Instagram asked us
 /// to slow down or the network failed (FR-73). It is looked up later by
-/// [ResolvePendingTargets].
+/// `ResolvePendingTargets`.
 final class AddTargetPending extends AddTargetResult {
   /// Creates the result.
   const AddTargetPending({
@@ -188,10 +188,10 @@ final class AddTargetUnknown extends AddTargetResult {
 ///
 /// Steps: validate the input locally (no network), reject a known username,
 /// resolve the user (a rate limit or network failure saves a pending target
-/// instead, FR-73), check visibility and duplicates (by user ID), store with `posts_watermark_at` at
-/// the start of today (device local time), then enqueue a first check. A
-/// scheduler error never undoes the add. Posts from before today are not
-/// downloaded (FR-63).
+/// instead, FR-73), check visibility and duplicates (by user ID), store with
+/// `posts_watermark_at` at the start of today (device local time), then
+/// enqueue a first check. A scheduler error never undoes the add. Posts from
+/// before today are not downloaded (FR-63).
 final class AddTarget {
   /// Creates the use case.
   AddTarget({

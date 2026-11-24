@@ -1294,6 +1294,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tgtAddedPending(String username) {
+    return 'Added. Instagram asked us to slow down, so we\'ll look up @$username in a few minutes.';
+  }
+
+  @override
+  String get tgtStatusPending => 'Waiting to look up';
+
+  @override
+  String get tdtStatusPending => 'Waiting to look up';
+
+  @override
   String get postTypePhoto => 'Photo';
 
   @override

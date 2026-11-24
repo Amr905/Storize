@@ -85,6 +85,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
         .length;
     final loaded = contentAsync.hasValue;
     final paused = target.status == TargetStatus.paused;
+    final pending = target.status == TargetStatus.pendingLookup;
 
     return Scaffold(
       appBar: AppBar(
@@ -128,7 +129,11 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
           vertical: StorizeSpacing.s8,
         ),
         children: [
-          _Header(target: target, status: status),
+          _Header(
+            target: target,
+            status: status,
+            statusLabel: pending ? l10n.tdtStatusPending : null,
+          ),
           const SizedBox(height: StorizeSpacing.s16),
           if (_explanation(context, target) case final text?)
             _StatusCard(status: status, text: text),
@@ -255,7 +260,9 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
                     foregroundColor: Theme.of(context).colorScheme.onSurface,
                     textStyle: Theme.of(context).textTheme.titleMedium,
                   ),
-                  onPressed: () => unawaited(_setPaused(target, !paused)),
+                  onPressed: pending
+                      ? null
+                      : () => unawaited(_setPaused(target, !paused)),
                 ),
               ),
             ],
@@ -490,6 +497,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
     }
     return switch (t.status) {
       TargetStatus.active => StorizeStatus.active,
+      TargetStatus.pendingLookup => StorizeStatus.checking,
       TargetStatus.paused => StorizeStatus.paused,
       TargetStatus.notVisible => StorizeStatus.notVisible,
       TargetStatus.unavailable => StorizeStatus.unavailable,
@@ -507,6 +515,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
       ),
       TargetStatus.unavailable => l10n.tdtStatusUnavailable,
       TargetStatus.error => _errorText(context, target),
+      TargetStatus.pendingLookup => l10n.tdtStatusPending,
       TargetStatus.active || TargetStatus.paused => null,
     };
   }
@@ -568,10 +577,15 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.target, required this.status});
+  const _Header({
+    required this.target,
+    required this.status,
+    this.statusLabel,
+  });
 
   final Target target;
   final StorizeStatus status;
+  final String? statusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -600,7 +614,7 @@ class _Header extends StatelessWidget {
               const SizedBox(height: StorizeSpacing.s4),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: DotStatusBadge(status: status),
+                child: DotStatusBadge(status: status, label: statusLabel),
               ),
             ],
           ),
