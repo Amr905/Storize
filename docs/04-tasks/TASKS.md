@@ -499,3 +499,41 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
 ## Open points for the Lead / user
 - **P-1 decides how agents verify code.** Without local Flutter, every check runs in GitHub Actions. That's slower but works.
 - **T-002 needs you in the loop** (test account login, a short capture session on your PC or phone). The agent prepares the exact steps.
+
+---
+
+## v0.3 tasks (2026-11-24)
+
+### T-039 — Add never hangs; today's content on add
+- **Tier:** M · **Deps:** — · TECH_SPEC §17.3–17.4
+- **AC:**
+  1. `RequestGovernor.run` takes `maxWait`. Over it, the call returns `RateLimited(retryAfter)` without waiting.
+  2. The S-08 add, S-02 verify and Check now resolve use 8 s. S-08 shows "Instagram limit reached — try again in N min" and never spins for more than about 10 s.
+  3. AddTarget sets the post watermark to the start of today and doesn't call `latestPostTime`.
+  4. Tests for the over-wait return, the UI message and the today watermark.
+
+### T-040 — History & highlights: model, domain, data, background
+- **Tier:** L · **Deps:** T-039 · TECH_SPEC §17.1–17.3
+- **AC:**
+  1. Model types, the ports (with fakes) and a drift migration with tests.
+  2. `BackfillHistory.step` and `SyncHighlights.run` as specified, with resume after a rate limit or restart, no duplicates, respecting the toggles.
+  3. A background `history` task after checks, and highlight sync on the post interval.
+  4. Gallery path for highlights.
+  5. `InstagramPlatform` gets stubs that return `UnknownFailure('not_implemented')` until T-041.
+
+### T-041 — Instagram: post pages & highlights
+- **Tier:** L · **Deps:** T-040 · ADR-0003
+- **AC:**
+  1. `fetchPostPage` uses direct GraphQL with the discovered timeline query and `after` cursor, with page mode (profile load plus scroll, hook-captured connection responses) as the fallback.
+  2. `fetchHighlights` comes from the profile's highlights tray response.
+  3. `fetchHighlightItems` comes from the reels media query with `highlight:<id>` reel ids, or the highlight page in page mode with the seen mutation blocked.
+  4. Everything goes through the governor and lease.
+  5. Sanitized synthetic fixtures; real captures to follow on device (DEVICE_TESTS).
+
+### T-042 — UI: history picker, progress, highlights
+- **Tier:** M · **Deps:** T-040 · UX additions in §17
+- **AC:**
+  1. S-08 gets a "Post history" picker (None / Today / 7 days / 30 days / Since date / All) and a Highlights toggle.
+  2. S-09 shows history progress with Pause/Resume/Cancel, plus the range and Highlights toggle editors.
+  3. The Library gets a Highlights filter, and S-06 shows the highlight title.
+  4. Goldens are made under TZ=UTC.

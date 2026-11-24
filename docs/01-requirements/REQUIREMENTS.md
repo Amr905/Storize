@@ -1,6 +1,6 @@
 # Storize — Requirements
 
-> Status: **v0.3 — Draft (awaiting approval)** · Owner: Lead · Date: 2026-11-24 · v0.2 approved 2026-11-19
+> Status: **v0.3 — Approved** · Owner: Lead · Date: 2026-11-24 · Approved by: user, 2026-11-24 (v0.2 approved 2026-11-19)
 >
 > **Change log v0.3 (2026-11-24, user feedback after the first phone test):**
 > 1. **Today's posts and stories** are downloaded when an account is added (D-17): FR-63 changed.

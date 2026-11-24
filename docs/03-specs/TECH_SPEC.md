@@ -602,3 +602,40 @@ The UI uses `AsyncValue`-backed `UiState` = loading / content / empty(reason) / 
 | AQ-5 | Free ~17 GB on the PC for local builds, or use GitHub Actions only? — not answered | Both supported; see TASKS prerequisites |
 | AQ-6 | Page mode in background — not answered; **default kept: foreground only** | Off by default |
 | AQ-7 | If the spike finds DASH-only videos (separate audio/video), may we add muxing (e.g. FFmpeg, +~20 MB APK)? | Not in scope; flagged |
+
+## 17. v0.3 additions (2026-11-24): today on add, post history, highlights
+
+Requirements: FR-63 (changed), FR-68…FR-72, D-17…D-19.
+
+### 17.1 Model (`storize_model`)
+- `ContentKind.highlight('HIGHLIGHT')`. A highlight item is stored like a story item, plus `highlightId`, `highlightTitle` and `highlightOrder` in `extras`.
+- `HistoryRange { none, today, days7, days30, since, all }`, plus `historySince: DateTime?` when the range is `since`.
+- `HistoryState { idle, running, paused, done, failed }` and `HistoryProgress(state, cursor?, fetched, oldestSeenAt?, updatedAt)`.
+- `PostPage(items: List<RemoteContent>, nextCursor: String?)`.
+- `RemoteHighlight(id, title, coverUrl?, itemCount?, latestItemAt?)`.
+
+### 17.2 Ports (`storize_domain`, Lead-approved)
+`ContentPlatform` gains:
+```dart
+Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor, required ExtractionPolicy policy});
+Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId, {required ExtractionPolicy policy});
+Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(List<String> highlightIds, {required ExtractionPolicy policy});
+```
+- `TargetRepo` and `Target` gain `historyRange`, `historySince`, `historyProgress` and `highlightsEnabled`, with drift schema v+1 and a migration.
+- `ContentRepo` dedupes highlight items by `(target, remoteId, kind)`, like every other kind.
+
+### 17.3 Use cases
+- **AddTarget (FR-63):** the post watermark is the **start of today** (device local), and `latestPostTime` is no longer called on add. Today's posts and live stories arrive with the first check.
+- **BackfillHistory.step(targetId):**
+  - Fetches **one** page (`fetchPostPage` with the stored cursor).
+  - Queues new posts for download, respecting the Posts/Reels toggles and the range start, and saves the progress.
+  - Stops with `done` when `nextCursor` is null or the page's oldest item is older than the range start.
+  - A rate limit or a session failure leaves the state `running`, so the next run resumes.
+- **SyncHighlights.run(targetId):** fetches highlights, then the items of highlights that are new or changed (by `latestItemAt`), and queues new items.
+- **Ordering:** both run in background tasks **after** regular checks (lower priority), through the governor. The `history` task re-enqueues itself while any target is `running`, at most one page per target per run.
+
+### 17.4 Governor: interactive calls never hang
+`RequestGovernor.run(..., maxWait: Duration?)`: when the tokens or backoff would make the call wait longer than `maxWait`, it returns at once with `RateLimited(retryAfter: <the wait>)`. Interactive paths (S-08 add, S-02 verify, Check now resolve) use `maxWait: 8 s`; background jobs keep waiting.
+
+### 17.5 Gallery paths
+`Pictures/Storize/<username>/Highlights/<sanitized title>/`.
