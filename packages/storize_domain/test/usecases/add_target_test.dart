@@ -34,6 +34,9 @@ class ThrowingScheduler implements Scheduler {
 
   @override
   Future<void> cancelAll() async {}
+
+  @override
+  Future<void> kickHistory() async {}
 }
 
 void main() {

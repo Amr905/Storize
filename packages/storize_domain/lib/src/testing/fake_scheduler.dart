@@ -6,6 +6,7 @@ final class FakeScheduler implements Scheduler {
   final List<({int storyMin, int postMin, bool wifiOnly})> _applyCalls = [];
   final List<({CheckScope scope, int? targetId})> _checkNowCalls = [];
   int _cancelAllCalls = 0;
+  int _kickHistoryCalls = 0;
 
   /// Every `apply` call, in order.
   List<({int storyMin, int postMin, bool wifiOnly})> get applyCalls =>
@@ -14,6 +15,9 @@ final class FakeScheduler implements Scheduler {
   /// Every `checkNow` call, in order.
   List<({CheckScope scope, int? targetId})> get checkNowCalls =>
       List.unmodifiable(_checkNowCalls);
+
+  /// How many times `kickHistory` was called.
+  int get kickHistoryCalls => _kickHistoryCalls;
 
   /// How many times `cancelAll` was called.
   int get cancelAllCalls => _cancelAllCalls;
@@ -33,6 +37,11 @@ final class FakeScheduler implements Scheduler {
     int? targetId,
   }) async {
     _checkNowCalls.add((scope: scope, targetId: targetId));
+  }
+
+  @override
+  Future<void> kickHistory() async {
+    _kickHistoryCalls++;
   }
 
   @override

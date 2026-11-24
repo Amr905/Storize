@@ -115,6 +115,33 @@ void main() {
       expect(summary.id, NotificationIds.storiesSummary);
     });
 
+    test(
+      'highlights get their own group and ids on the stories channel',
+      () async {
+        final r = _Rig()..lookups.usernames.addAll({1: 'nour_k'});
+        await r.service.newItemsSaved(
+          _saved([
+            _counts(1, ContentKind.story),
+            _counts(1, ContentKind.highlight, contents: 4),
+          ]),
+        );
+        final lines = r.shown.where((n) => !n.isGroupSummary).toList();
+        expect(lines, hasLength(2));
+        expect(lines[0].id, isNot(lines[1].id));
+        expect(lines[1].groupKey, 'highlights');
+        expect(lines[1].channelId, lines[0].channelId);
+        final summaries = r.shown.where((n) => n.isGroupSummary).toList();
+        expect(summaries.map((n) => n.id).toSet(), {
+          NotificationIds.storiesSummary,
+          NotificationIds.highlightsSummary,
+        });
+        expect(
+          NotificationIds.forTarget(1, ContentKind.highlight),
+          isNot(NotificationIds.forTarget(1, ContentKind.post)),
+        );
+      },
+    );
+
     test('a single post target uses the singular texts', () async {
       final r = _Rig()..lookups.usernames[7] = 'brandx';
       await r.service.newItemsSaved(_saved([_counts(7, ContentKind.post)]));

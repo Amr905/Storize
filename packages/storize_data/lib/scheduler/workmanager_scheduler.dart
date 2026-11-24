@@ -155,5 +155,11 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
   );
 
   @override
+  Future<void> kickHistory() => enqueueHistory(
+    wifiOnly: false,
+    delay: Duration.zero,
+  );
+
+  @override
   Future<void> cancelAll() => _client.cancelAll();
 }

@@ -276,6 +276,18 @@ void main() {
       expect(call.constraints!.networkType, NetworkType.unmetered);
     });
 
+    test(
+      'kickHistory enqueues the kick now and keeps an existing one',
+      () async {
+        await scheduler.kickHistory();
+        final call = client.calls.single;
+        expect(call.unique, TaskNames.historyKick);
+        expect(call.task, TaskNames.history);
+        expect(call.extra['policy'], ExistingWorkPolicy.keep);
+        expect(call.extra['delay'], Duration.zero);
+      },
+    );
+
     test('the dispatcher knows the history task name', () {
       expect(TaskNames.all, contains(TaskNames.history));
       expect(TaskNames.history, 'history');
