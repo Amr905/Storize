@@ -46,6 +46,23 @@ void main() {
       expect(find.text(l10n.tdtStatusNotVisible('@loginacc')), findsOneWidget);
     });
 
+    testWidgets('FR-73: a pending target shows the waiting chip and card', (
+      tester,
+    ) async {
+      final rig = DetailRig();
+      await rig.addAccount();
+      final target = await rig.addTarget(
+        'later_k',
+        status: TargetStatus.pendingLookup,
+      );
+      await pumpDetail(tester, rig: rig, targetId: target.id);
+      final l10n = await _l10n(tester);
+
+      // The chip in the header and the status card.
+      expect(find.text(l10n.tdtStatusPending), findsNWidgets(2));
+      expect(find.text(l10n.statusActive), findsNothing);
+    });
+
     testWidgets('no status card for an active account', (tester) async {
       final rig = DetailRig();
       await rig.addAccount();

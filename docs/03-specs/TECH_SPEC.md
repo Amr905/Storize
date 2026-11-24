@@ -634,6 +634,12 @@ Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(List<String
 - **SyncHighlights.run(targetId):** fetches highlights, then the items of highlights that are new or changed (by `latestItemAt`), and queues new items.
 - **Ordering:** both run in background tasks **after** regular checks (lower priority), through the governor. The `history` task re-enqueues itself while any target is `running`, at most one page per target per run.
 
+### 17.3a Queued add (FR-73, T-046)
+- `TargetStatus.pendingLookup` (`PENDING_LOOKUP`). A pending target keeps the chosen options (including `historyRange`, `historySince`, `highlightsEnabled`) and the start-of-today watermark. Its `remoteUserId` is the placeholder `pending:<username>`, because the column is UNIQUE (no schema change); the real ID replaces it on success (`Target.copyWith(remoteUserId:)`).
+- **AddTarget:** a `RateLimited` (governor pause and `maxWait` included) or `NetworkFailure` from `resolveUser` saves the target as pending and returns `AddTargetPending`, then calls `checkNow(scope: posts, targetId)`. Duplicates are also matched by username (case-insensitive) before any call. Not found, not visible and session failures still fail inline.
+- **ResolvePendingTargets.run({deadline}):** oldest first, one `resolveUser` at a time. Success fills the ID and profile, sets `active` (or `notVisible` for private-not-followed or blocked) and starts `BackfillHistory` when a range is set. Rate limit, network or session failure stops the run and leaves the rest pending. `TargetNotFound` gives `unavailable`; `TargetNotVisible` gives `notVisible`. If the resolved ID is already another target, the pending row is deleted and the existing one is kept (a pending row never has content). Rows are re-read before each write.
+- **Where it runs:** at the start of every `check-stories` and `check-posts` task (`TaskRouter`), and at app open and every resume (through the discovery-refresh hook). Checks, history and highlights ignore pending targets (they are not `active`). A pending target cannot be paused.
+
 ### 17.4 Governor: interactive calls never hang
 `RequestGovernor.run(..., maxWait: Duration?)`: when the tokens or backoff would make the call wait longer than `maxWait`, it returns at once with `RateLimited(retryAfter: <the wait>)`. Interactive paths (S-08 add, S-02 verify, Check now resolve) use `maxWait: 8 s`; background jobs keep waiting.
 
