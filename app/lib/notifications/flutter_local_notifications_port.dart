@@ -93,6 +93,16 @@ final class FlutterLocalNotificationsPort implements NotificationPort {
   }
 
   @override
+  Future<void> cancel(int id) async {
+    try {
+      await _init();
+      await _plugin.cancel(id: id);
+    } on Object {
+      // Never throw from a notification (T-022 AC6).
+    }
+  }
+
+  @override
   Future<String?> launchPayload() async {
     try {
       final details = await _plugin.getNotificationAppLaunchDetails();

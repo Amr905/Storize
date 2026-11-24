@@ -220,6 +220,25 @@ void main() {
     });
   });
 
+  group('checking notice (T-043)', () {
+    test('shows silently on the background channel, then cancels', () async {
+      final r = _Rig();
+      await r.service.checkingStarted(3);
+      final n = r.shown.single;
+      expect(n.channelId, 'background');
+      expect(n.silent, isTrue);
+      expect(n.id, NotificationIds.checking);
+      await r.service.checkingDone();
+      expect(r.port.cancelled, [NotificationIds.checking]);
+    });
+
+    test('a failing cancel never throws and is logged by type', () async {
+      final r = _Rig()..port.failCancel = true;
+      await expectLater(r.service.hideChecking(), completes);
+      expect(r.log.at(LogLevel.warn), isNotEmpty);
+    });
+  });
+
   group('toggles (AC5, FR-42)', () {
     test('notifyStories off silences stories, not posts', () async {
       final r = _Rig(settings: const AppSettings(notifyStories: false))
@@ -367,6 +386,9 @@ final class _ThrowingChannelPort implements NotificationPort {
 
   @override
   Future<void> show(NotificationRequest request) async {}
+
+  @override
+  Future<void> cancel(int id) async {}
 
   @override
   Future<String?> launchPayload() async => null;

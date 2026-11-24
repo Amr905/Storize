@@ -83,6 +83,9 @@ abstract interface class NotificationPort {
   /// Posts or replaces a notification.
   Future<void> show(NotificationRequest request);
 
+  /// Removes the notification with [id], if it is showing. Never throws.
+  Future<void> cancel(int id);
+
   /// The payload of the notification that launched the app, or null.
   Future<String?> launchPayload();
 

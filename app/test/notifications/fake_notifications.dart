@@ -11,6 +11,9 @@ final class FakeNotificationPort implements NotificationPort {
   /// Makes [show] throw (the no-throw path).
   bool failShow = false;
 
+  /// Makes [cancel] throw (the no-throw path).
+  bool failCancel = false;
+
   /// The payload that launched the app, if any.
   String? launch;
 
@@ -19,6 +22,9 @@ final class FakeNotificationPort implements NotificationPort {
 
   /// Posted notifications, in order.
   final List<NotificationRequest> shown = [];
+
+  /// Ids passed to [cancel], in order.
+  final List<int> cancelled = [];
 
   final StreamController<String> _taps = StreamController<String>.broadcast();
 
@@ -36,6 +42,12 @@ final class FakeNotificationPort implements NotificationPort {
   Future<void> show(NotificationRequest request) async {
     if (failShow) throw StateError('plugin down');
     shown.add(request);
+  }
+
+  @override
+  Future<void> cancel(int id) async {
+    if (failCancel) throw StateError('plugin down');
+    cancelled.add(id);
   }
 
   @override

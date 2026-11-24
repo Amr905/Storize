@@ -1,6 +1,7 @@
 import 'package:storize_app/background/task_router.dart';
 import 'package:storize_app/core/composition.dart';
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_model/storize_model.dart';
 
 /// Builds the [TaskRouter] of [c]: each task name goes to its use case.
 ///
@@ -22,6 +23,19 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   highlights: c.syncHighlights.runDue,
   log: c.log,
   notifier: c.parts.notifications,
+  activeTargets: (scope, targetId) async {
+    final stories = scope == CheckScope.stories;
+    final all = await c.targets.listActive(scope);
+    return all
+        .where(
+          (t) =>
+              t.status == TargetStatus.active &&
+              t.platform == c.platform.id &&
+              (targetId == null || t.id == targetId) &&
+              (stories ? t.trackStories : (t.trackPosts || t.trackReels)),
+        )
+        .length;
+  },
 );
 
 /// Runs the GitHub release check and stores the time (`lastUpdateCheckAt`).
