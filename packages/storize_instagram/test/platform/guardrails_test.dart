@@ -13,9 +13,7 @@ List<File> _dart(String dir) =>
 
 /// Source without comments, so a doc sentence cannot trip a check.
 String _code(String path) =>
-    File(
-          path,
-        )
+    File(path)
         .readAsStringSync()
         .split('\n')
         .where((l) => !l.trim().startsWith('//'))

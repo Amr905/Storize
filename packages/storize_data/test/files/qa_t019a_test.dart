@@ -90,10 +90,7 @@ void main() {
       expect(await cache.cleanupOrphanThumbnails(<int>{}), 0);
       expect(target.existsSync(), isTrue);
       expect(
-        FileSystemEntity.typeSync(
-          '${thumbs.path}/5.webp',
-          followLinks: false,
-        ),
+        FileSystemEntity.typeSync('${thumbs.path}/5.webp', followLinks: false),
         FileSystemEntityType.link,
       );
     });

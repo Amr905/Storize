@@ -16,9 +16,8 @@ void main() {
     setUp(() async {
       SharedPreferencesAsyncPlatform.instance =
           InMemorySharedPreferencesAsync.empty();
-      real = await SharedPrefsSettingsRepo(
-        prefs: SharedPreferencesAsync(),
-      ).get();
+      real = await SharedPrefsSettingsRepo(prefs: SharedPreferencesAsync())
+          .get();
       fake = await FakeSettingsRepo().get();
     });
 
@@ -117,11 +116,7 @@ void main() {
       roundTrip(MediaType.values, (e) => e.dbValue, MediaType.fromDb);
     });
     test('TargetCategory', () {
-      roundTrip(
-        TargetCategory.values,
-        (e) => e.dbValue,
-        TargetCategory.fromDb,
-      );
+      roundTrip(TargetCategory.values, (e) => e.dbValue, TargetCategory.fromDb);
     });
     test('TargetStatus', () {
       roundTrip(TargetStatus.values, (e) => e.dbValue, TargetStatus.fromDb);
@@ -149,11 +144,7 @@ void main() {
       roundTrip(CheckResult.values, (e) => e.dbValue, CheckResult.fromDb);
     });
     test('ExtractionMode', () {
-      roundTrip(
-        ExtractionMode.values,
-        (e) => e.dbValue,
-        ExtractionMode.fromDb,
-      );
+      roundTrip(ExtractionMode.values, (e) => e.dbValue, ExtractionMode.fromDb);
     });
     test('ActivityType', () {
       roundTrip(ActivityType.values, (e) => e.dbValue, ActivityType.fromDb);

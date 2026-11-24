@@ -1961,6 +1961,12 @@ abstract class AppLocalizations {
   /// **'Public account'**
   String get tgtCatPublicHint;
 
+  /// S-08 inline error when the request budget is used up; the form stays editable.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram limit reached — try again in about {minutes} min'**
+  String tgtErrRateLimited(int minutes);
+
   /// S-07 extended floating button label.
   ///
   /// In en, this message translates to:

@@ -65,9 +65,7 @@ final class _Harness {
     Future<T> Function() call, {
     int accountId = 1,
     RequestCost cost = RequestCost.api,
-  }) => time.drive(
-    governor.run(accountId: accountId, cost: cost, call: call),
-  );
+  }) => time.drive(governor.run(accountId: accountId, cost: cost, call: call));
 }
 
 Future<Object?> _errorOf(Future<Object?> future) async {
@@ -533,10 +531,8 @@ void main() {
   group('AC4 rate limit: pause, multiplier x2 for 2 h, x4 on a repeat', () {
     final start = DateTime.utc(2026);
 
-    Future<void> limit(RequestGovernor g, Duration? retryAfter) => h.run(
-      g,
-      () async => Err<int>(RateLimited(retryAfter)),
-    );
+    Future<void> limit(RequestGovernor g, Duration? retryAfter) =>
+        h.run(g, () async => Err<int>(RateLimited(retryAfter)));
 
     test(
       'an Err(RateLimited) pauses for retryAfter and doubles intervals',

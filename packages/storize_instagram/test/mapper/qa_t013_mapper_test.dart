@@ -76,15 +76,11 @@ void main() {
             expect(slide.width, best['width']);
           }
         }
-        expect(
-          post.postType,
-          switch (type) {
-            1 => PostType.photo,
-            8 => PostType.carousel,
-            _ =>
-              node['product_type'] == 'clips' ? PostType.reel : PostType.video,
-          },
-        );
+        expect(post.postType, switch (type) {
+          1 => PostType.photo,
+          8 => PostType.carousel,
+          _ => node['product_type'] == 'clips' ? PostType.reel : PostType.video,
+        });
         expect(
           post.caption,
           node['caption'] == null ? isNull : node['caption']['text'],
@@ -94,9 +90,7 @@ void main() {
     });
 
     test('the real set contains each kind the AC lists', () {
-      final kinds = {
-        for (final e in entries) _media.post(e.node).postType,
-      };
+      final kinds = {for (final e in entries) _media.post(e.node).postType};
       expect(kinds, containsAll([PostType.photo, PostType.carousel]));
       expect(kinds.contains(PostType.reel), isTrue);
     });
@@ -140,10 +134,7 @@ void main() {
       'product_type clips on a photo or a carousel does not make a reel',
       () {
         final photo = _node({'product_type': 'clips'});
-        expect(
-          _media.post(Node.root(photo, 'r')).postType,
-          PostType.photo,
-        );
+        expect(_media.post(Node.root(photo, 'r')).postType, PostType.photo);
       },
     );
   });
@@ -283,9 +274,7 @@ void main() {
   group('type errors give a path and never a value', () {
     test('string where a number is expected', () {
       try {
-        _env.entry(
-          Node.root(_node({'taken_at': 'ZZVALUE_secret'}), 'n'),
-        );
+        _env.entry(Node.root(_node({'taken_at': 'ZZVALUE_secret'}), 'n'));
         fail('should throw');
       } on SchemaException catch (e) {
         expect(e.where, 'n.taken_at');

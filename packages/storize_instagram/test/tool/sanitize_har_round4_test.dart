@@ -101,11 +101,7 @@ void main() {
 
     test('unknown safe-word keys are replaced even next to known keys', () {
       final j = _body(
-        _run({
-          'pk': '1234567890',
-          'brand_new_field': 1,
-          'zzfake_nour': 2,
-        }),
+        _run({'pk': '1234567890', 'brand_new_field': 1, 'zzfake_nour': 2}),
       );
       expect(j.keys.toSet(), hasLength(3));
       expect(j.containsKey('pk'), isTrue);
@@ -822,9 +818,8 @@ void main() {
       });
 
       test('--keep-key (repeatable) and --keep-keys file', () async {
-        File('${tmp.path}/k.txt').writeAsStringSync(
-          '# comment\n\n  brand_new_field  \n',
-        );
+        File('${tmp.path}/k.txt')
+            .writeAsStringSync('# comment\n\n  brand_new_field  \n');
         final (code, _, _) = await cli([
           '--keep-key',
           'unused_name',

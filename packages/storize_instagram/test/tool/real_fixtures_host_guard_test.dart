@@ -9,43 +9,40 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'fixtures contain no CDN edge labels (only generic host labels)',
-    () {
-      final hostRe = RegExp('<url host=([^ >]+)');
-      const generic = {
-        'www',
-        'i',
-        'l',
-        'static',
-        'scontent',
-        'video',
-        'instagram',
-      };
-      final bad = <String>{};
-      for (final f in Directory(
-        'test/fixtures/real',
-      ).listSync(recursive: true).whereType<File>()) {
-        for (final m in hostRe.allMatches(f.readAsStringSync())) {
-          final labels = m.group(1)!.split('.');
-          // Only the label list shape is reported, never the value.
-          for (final l in labels) {
-            if (RegExp(r'^[a-z]{2,4}\d{1,3}-\d+$').hasMatch(l) ||
-                (labels.length > 2 &&
-                    !generic.contains(l) &&
-                    !{
-                      'fna',
-                      'fbcdn',
-                      'cdninstagram',
-                      'net',
-                      'com',
-                    }.contains(l))) {
-              bad.add('${f.path}: edge-label-shaped host label');
-            }
+  test('fixtures contain no CDN edge labels (only generic host labels)', () {
+    final hostRe = RegExp('<url host=([^ >]+)');
+    const generic = {
+      'www',
+      'i',
+      'l',
+      'static',
+      'scontent',
+      'video',
+      'instagram',
+    };
+    final bad = <String>{};
+    for (final f in Directory(
+      'test/fixtures/real',
+    ).listSync(recursive: true).whereType<File>()) {
+      for (final m in hostRe.allMatches(f.readAsStringSync())) {
+        final labels = m.group(1)!.split('.');
+        // Only the label list shape is reported, never the value.
+        for (final l in labels) {
+          if (RegExp(r'^[a-z]{2,4}\d{1,3}-\d+$').hasMatch(l) ||
+              (labels.length > 2 &&
+                  !generic.contains(l) &&
+                  !{
+                    'fna',
+                    'fbcdn',
+                    'cdninstagram',
+                    'net',
+                    'com',
+                  }.contains(l))) {
+            bad.add('${f.path}: edge-label-shaped host label');
           }
         }
       }
-      expect(bad, isEmpty);
-    },
-  );
+    }
+    expect(bad, isEmpty);
+  });
 }

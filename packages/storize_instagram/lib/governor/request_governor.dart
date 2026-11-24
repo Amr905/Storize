@@ -21,6 +21,10 @@ typedef GovernorLog = void Function(String message);
 /// zone. Used to refuse a nested `run` for the same account.
 final Object _runningKey = Object();
 
+/// Zone key: the default `maxWait` of every `run` started in this zone (see
+/// [RequestGovernor.withMaxWait]).
+final Object _maxWaitKey = Object();
+
 /// Attempts to record a rate limit before giving up (N2).
 const int _limitRecordAttempts = 3;
 
@@ -88,6 +92,13 @@ class RequestGovernor {
   /// when another isolate holds the lease for `acquireTimeout`. In both cases
   /// [call] was not made and no token was used.
   ///
+  /// [maxWait] bounds the wait (TECH_SPEC 17.3). When the tokens, the jitter
+  /// gap or an active pause would need longer than [maxWait] (counted from
+  /// this call's turn), the call is refused at once with [GovernorPaused]
+  /// (`toFailure()` is a `RateLimited` with the computed `retryAfter`) and
+  /// **no token is used**. Null falls back to the zone default of
+  /// [withMaxWait], and then to waiting as long as it takes.
+  ///
   /// **Do not nest.** Calling `run` for the same account from inside [call]
   /// would wait behind itself forever, so it throws a [StateError]. Run a
   /// page-mode fallback after the direct `run` has returned.
@@ -95,7 +106,9 @@ class RequestGovernor {
     required int accountId,
     required RequestCost cost,
     required Future<T> Function() call,
+    Duration? maxWait,
   }) {
+    maxWait ??= Zone.current[_maxWaitKey] as Duration?;
     final weight = _config.weightOf(cost);
     if (weight > _config.burst) {
       throw ArgumentError.value(
@@ -114,7 +127,7 @@ class RequestGovernor {
     }
     return _exclusive(accountId, (state) async {
       final queuedAt = _clock.now();
-      await _prepare(accountId, state, weight);
+      await _prepare(accountId, state, weight, maxWait);
       final waited = _clock.now().difference(queuedAt);
       T result;
       try {
@@ -146,6 +159,14 @@ class RequestGovernor {
       return result;
     });
   }
+
+  /// Runs [body] so that every `run` started inside it (and not given its own
+  /// `maxWait`) uses [maxWait]. For interactive paths: the user must not
+  /// stare at a spinner while the budget refills (TECH_SPEC 17.3).
+  static Future<T> withMaxWait<T>(
+    Duration maxWait,
+    Future<T> Function() body,
+  ) => runZoned(body, zoneValues: {_maxWaitKey: maxWait});
 
   /// Records a rate limit that the caller saw outside [run].
   ///
@@ -238,7 +259,13 @@ class RequestGovernor {
 
   /// Waits until a call of [weight] tokens may start, then takes the tokens.
   /// Holds the lease on return.
-  Future<void> _prepare(int accountId, _AccountState state, int weight) async {
+  Future<void> _prepare(
+    int accountId,
+    _AccountState state,
+    int weight,
+    Duration? maxWait,
+  ) async {
+    final startedAt = _clock.now();
     final gap = _drawGap();
     DateTime? readyAt; // When the jitter gap is satisfied.
     while (true) {
@@ -300,6 +327,18 @@ class RequestGovernor {
         jitter.isNegative ? Duration.zero : jitter,
         _tokenWait(bucket, weight),
       );
+      if (maxWait != null && wait > Duration.zero) {
+        final left = maxWait - now.difference(startedAt);
+        if (wait > left) {
+          // Refuse before taking a token (nothing was written).
+          _logLine(accountId, null, Duration.zero, 'would_wait');
+          throw GovernorPaused(
+            accountId: accountId,
+            until: now.add(wait),
+            retryAfter: wait,
+          );
+        }
+      }
       if (wait > Duration.zero) {
         // Do not hold the lease while sleeping: another isolate may call.
         await _releaseLease(accountId, state);

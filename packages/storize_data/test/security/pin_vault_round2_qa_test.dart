@@ -80,11 +80,7 @@ void main() {
     clock = FakeClock();
   });
 
-  final keys = [
-    PinVault.hashKey,
-    PinVault.lengthKey,
-    PinVault.methodKey,
-  ];
+  final keys = [PinVault.hashKey, PinVault.lengthKey, PinVault.methodKey];
 
   group('read error at each key', () {
     for (final k in keys) {

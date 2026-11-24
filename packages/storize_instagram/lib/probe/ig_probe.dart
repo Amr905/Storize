@@ -321,9 +321,7 @@ final class IgProbe {
 
   List<String> _keysOf(Object? json) {
     if (json is! Map<String, Object?>) return const [];
-    final keys = [
-      for (final k in json.keys) _safeKey(k),
-    ]..sort();
+    final keys = [for (final k in json.keys) _safeKey(k)]..sort();
     return keys.take(_maxKeys).toList();
   }
 }

@@ -41,11 +41,7 @@ Map<String, Object?> _release({
   Object? tag = 'v0.2.0',
   Object? html = 'https://github.com/Amr905/Storize/releases/tag/v0.2.0',
   Object? body = '',
-}) => {
-  'tag_name': tag,
-  'html_url': html,
-  'body': body,
-};
+}) => {'tag_name': tag, 'html_url': html, 'body': body};
 
 UpdateChecker _checkerWith(_FakeAdapter adapter, {Duration? timeout}) {
   final dio = Dio()..httpClientAdapter = adapter;
@@ -242,9 +238,7 @@ void main() {
     );
 
     test('malformed min-supported is ignored -> UpdateAvailable', () async {
-      final adapter = _serving(
-        _release(body: 'min-supported: two'),
-      );
+      final adapter = _serving(_release(body: 'min-supported: two'));
       final state = await _checkerWith(adapter)
           .checkForUpdate(currentVersion: '0.1.0');
       expect(state, isA<UpdateAvailable>());
@@ -306,11 +300,7 @@ void main() {
     });
 
     test('sha line with 63 hex characters keeps state with null sha', () async {
-      final adapter = _serving(
-        _release(
-          body: 'sha256: ${'ab' * 31}a',
-        ),
-      );
+      final adapter = _serving(_release(body: 'sha256: ${'ab' * 31}a'));
       final state = await _checkerWith(adapter)
           .checkForUpdate(currentVersion: '0.1.0');
       expect(state, isA<UpdateAvailable>());
@@ -320,11 +310,7 @@ void main() {
     test(
       'sha line with non-hex characters keeps state with null sha',
       () async {
-        final adapter = _serving(
-          _release(
-            body: 'sha256: ${'zz' * 32}',
-          ),
-        );
+        final adapter = _serving(_release(body: 'sha256: ${'zz' * 32}'));
         final state = await _checkerWith(adapter)
             .checkForUpdate(currentVersion: '0.1.0');
         expect((state as UpdateAvailable).sha256, isNull);
@@ -332,11 +318,7 @@ void main() {
     );
 
     test('a valid sha followed by trailing text is still accepted', () async {
-      final adapter = _serving(
-        _release(
-          body: 'sha256: $_sha  (storize.apk)',
-        ),
-      );
+      final adapter = _serving(_release(body: 'sha256: $_sha  (storize.apk)'));
       final state = await _checkerWith(adapter)
           .checkForUpdate(currentVersion: '0.1.0');
       expect((state as UpdateAvailable).sha256, _sha);
@@ -361,9 +343,7 @@ void main() {
     });
 
     test('timeout (never responds) -> none', () async {
-      final adapter = _FakeAdapter(
-        (_) => Completer<ResponseBody>().future,
-      );
+      final adapter = _FakeAdapter((_) => Completer<ResponseBody>().future);
       expect(
         await run(adapter, timeout: const Duration(milliseconds: 20)),
         UpdateState.none,

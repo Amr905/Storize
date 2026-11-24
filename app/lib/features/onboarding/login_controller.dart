@@ -346,17 +346,14 @@ class LoginController extends Notifier<LoginState>
     if (user == null) {
       await _wipeStaging();
       final failure = verified.failureOrNull;
-      _fail(
-        switch (failure) {
-          NetworkFailure() => LoginError.network,
-          AccountRestricted() ||
-          SessionInvalid(
-            reason: SessionReason.challenge,
-          ) => LoginError.checkpoint,
-          _ => LoginError.unusable,
-        },
-        failure == null ? null : _describe('verify', failure),
-      );
+      _fail(switch (failure) {
+        NetworkFailure() => LoginError.network,
+        AccountRestricted() ||
+        SessionInvalid(
+          reason: SessionReason.challenge,
+        ) => LoginError.checkpoint,
+        _ => LoginError.unusable,
+      }, failure == null ? null : _describe('verify', failure));
       return;
     }
     final accounts = _accounts;

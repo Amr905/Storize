@@ -34,9 +34,11 @@ String _bodyText(SanitizeOutcome o) =>
 String _all(SanitizeOutcome o) => o.files.values.join('\n');
 
 /// Every number token in [s] that has an exponent or 3 or more decimals.
-List<String> _precise(String s) => RegExp(
-  r'-?\d+\.\d{3,}|-?\d+(?:\.\d+)?[eE][-+]?\d+',
-).allMatches(s).map((m) => m.group(0)!).toList();
+List<String> _precise(String s) =>
+    RegExp(r'-?\d+\.\d{3,}|-?\d+(?:\.\d+)?[eE][-+]?\d+')
+        .allMatches(s)
+        .map((m) => m.group(0)!)
+        .toList();
 
 void main() {
   group('location under other keys and shapes (B2)', () {

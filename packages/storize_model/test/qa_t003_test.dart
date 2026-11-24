@@ -188,23 +188,20 @@ void main() {
   });
 
   group('QA: known finding F-1', () {
-    test(
-      'nested extras maps can be read as Map<String, Object?>',
-      () {
-        final c = RemoteContent(
-          remoteId: '1',
-          kind: ContentKind.story,
-          postedAt: DateTime.utc(2026),
-          slides: const [],
-          extras: {
-            'location': <String, Object?>{'name': 'Cairo'},
-          },
-        );
-        // Currently throws a TypeError: the nested map is re-typed as
-        // Map<Object?, Object?> by deepUnmodifiable.
-        expect(c.extras['location']! as Map<String, Object?>, isNotNull);
-      },
-    );
+    test('nested extras maps can be read as Map<String, Object?>', () {
+      final c = RemoteContent(
+        remoteId: '1',
+        kind: ContentKind.story,
+        postedAt: DateTime.utc(2026),
+        slides: const [],
+        extras: {
+          'location': <String, Object?>{'name': 'Cairo'},
+        },
+      );
+      // Currently throws a TypeError: the nested map is re-typed as
+      // Map<Object?, Object?> by deepUnmodifiable.
+      expect(c.extras['location']! as Map<String, Object?>, isNotNull);
+    });
   });
 
   group('QA: exhaustiveness without default', () {

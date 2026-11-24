@@ -48,14 +48,12 @@ void main() {
         expect(await ids(ContentFilter(from: at(10).toLocal())), [a, b]);
         expect(await ids(ContentFilter(from: at(20).toLocal())), [b]);
         expect(await ids(ContentFilter(to: at(20).toLocal())), [a]);
-        expect(
-          await ids(ContentFilter(from: at(10).toLocal(), to: at(20))),
-          [a],
-        );
-        expect(
-          await ids(ContentFilter(from: at(10), to: at(20).toLocal())),
-          [a],
-        );
+        expect(await ids(ContentFilter(from: at(10).toLocal(), to: at(20))), [
+          a,
+        ]);
+        expect(await ids(ContentFilter(from: at(10), to: at(20).toLocal())), [
+          a,
+        ]);
         expect(
           await ids(
             ContentFilter(from: at(20).toLocal(), to: at(20).toLocal()),
@@ -165,11 +163,7 @@ void main() {
             throwsStateError,
           );
           await expectLater(
-            h.checkRuns.finish(
-              444,
-              finishedAt: t0,
-              result: CheckResult.ok,
-            ),
+            h.checkRuns.finish(444, finishedAt: t0, result: CheckResult.ok),
             throwsStateError,
           );
         },
@@ -359,9 +353,7 @@ void main() {
           await h.content.updateMediaFile(media.copyWith(attempts: i));
         }
         final loopMs = sw.elapsedMilliseconds;
-        final last = await w.until(
-          (l) => l.single.media.single.attempts == 50,
-        );
+        final last = await w.until((l) => l.single.media.single.attempts == 50);
         final settleMs = sw.elapsedMilliseconds;
         await Future<void>.delayed(const Duration(milliseconds: 250));
         final emissions = w.values.length - 1;

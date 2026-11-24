@@ -56,14 +56,11 @@ void main() {
   );
 
   // QA-7: the reported url carries no query string unless includeBody.
-  test(
-    'QA-7 reported url should not carry the query string',
-    () async {
-      final sent = await _run(false);
-      final msg = (sent.single as Map)['msg'] as Map;
-      expect('${msg['url']}', isNot(contains('?')));
-    },
-  );
+  test('QA-7 reported url should not carry the query string', () async {
+    final sent = await _run(false);
+    final msg = (sent.single as Map)['msg'] as Map;
+    expect('${msg['url']}', isNot(contains('?')));
+  });
 
   test(
     'includeBody=true (T-014) keeps the full URL, for the mapper',

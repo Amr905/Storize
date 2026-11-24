@@ -75,20 +75,18 @@ final class DirectExtractor {
 
   /// Looks up [username] (IG-1 purpose). Visibility is left to the caller:
   /// the result carries `isPrivate`, `followedByViewer` and `blockedByViewer`.
-  Future<Result<RemoteUser>> resolveUser(String username) => _op(
-    'resolveUser',
-    (call) async {
-      final clean = username.trim().replaceFirst(RegExp('^@'), '');
-      if (clean.isEmpty) return const Err(TargetNotFound());
-      final r = await transport.userByUsername(clean, call);
-      if (r is Ok<UserProfile> &&
-          r.value.user.username.toLowerCase() != clean.toLowerCase()) {
-        // The profile of the id we found is not the user we asked for.
-        return const Err(UnknownFailure(null, 'username_mismatch'));
-      }
-      return _rememberResult(r);
-    },
-  );
+  Future<Result<RemoteUser>> resolveUser(String username) =>
+      _op('resolveUser', (call) async {
+        final clean = username.trim().replaceFirst(RegExp('^@'), '');
+        if (clean.isEmpty) return const Err(TargetNotFound());
+        final r = await transport.userByUsername(clean, call);
+        if (r is Ok<UserProfile> &&
+            r.value.user.username.toLowerCase() != clean.toLowerCase()) {
+          // The profile of the id we found is not the user we asked for.
+          return const Err(UnknownFailure(null, 'username_mismatch'));
+        }
+        return _rememberResult(r);
+      });
 
   /// Reloads a user by id to detect a rename (IG-3 purpose). If the id lookup
   /// finds nothing (or fails in an unknown way), [lastUsername] is tried; the
@@ -282,35 +280,31 @@ final class DirectExtractor {
   /// counts by its time like any other, so a freshly pinned new post is not
   /// downloaded later as "new". Costs 1 call when the username is cached,
   /// else 2.
-  Future<Result<DateTime?>> latestPostTime(String userId) => _op(
-    'latestPostTime',
-    (call) async {
-      final r = await transport.timeline(
-        userId,
-        call,
-        usernameHint: await _usernameOf(userId),
-      );
-      if (r is Ok<Timeline>) {
-        await _cacheUsername(userId, r.value.usernameUsed);
-        _logSkipped('latestPostTime', r.value.skippedMalformed);
-      }
-      return r.map((t) {
-        DateTime? latest;
-        for (final e in t.entries) {
-          if (!e.belongsTo(userId)) continue;
-          if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+  Future<Result<DateTime?>> latestPostTime(String userId) =>
+      _op('latestPostTime', (call) async {
+        final r = await transport.timeline(
+          userId,
+          call,
+          usernameHint: await _usernameOf(userId),
+        );
+        if (r is Ok<Timeline>) {
+          await _cacheUsername(userId, r.value.usernameUsed);
+          _logSkipped('latestPostTime', r.value.skippedMalformed);
         }
-        return latest;
+        return r.map((t) {
+          DateTime? latest;
+          for (final e in t.entries) {
+            if (!e.belongsTo(userId)) continue;
+            if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+          }
+          return latest;
+        });
       });
-    },
-  );
 
   // --------------------------------------------------------------- plumbing
 
   /// Remembers the username of a successful profile and returns the user.
-  Future<Result<RemoteUser>> _rememberResult(
-    Result<UserProfile> result,
-  ) async {
+  Future<Result<RemoteUser>> _rememberResult(Result<UserProfile> result) async {
     if (result is Ok<UserProfile>) {
       final user = result.value.user;
       await _cacheUsername(user.remoteUserId, user.username);
@@ -338,11 +332,7 @@ final class DirectExtractor {
 
   void _logSkipped(String op, int skipped) {
     if (skipped > 0) {
-      _log?.log(
-        LogLevel.warn,
-        'direct',
-        'op=$op skipped_malformed=$skipped',
-      );
+      _log?.log(LogLevel.warn, 'direct', 'op=$op skipped_malformed=$skipped');
     }
   }
 

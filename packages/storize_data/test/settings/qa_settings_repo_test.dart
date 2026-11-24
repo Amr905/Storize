@@ -93,9 +93,7 @@ void main() {
     test('valid change to A + invalid change to B writes nothing', () async {
       final repo = newRepo();
       await expectLater(
-        repo.update(
-          (c) => c.copyWith(wifiOnly: true, storyIntervalMin: 14),
-        ),
+        repo.update((c) => c.copyWith(wifiOnly: true, storyIntervalMin: 14)),
         throwsA(isA<SettingsValidationException>()),
       );
       expect(await prefs.getKeys(), isEmpty);

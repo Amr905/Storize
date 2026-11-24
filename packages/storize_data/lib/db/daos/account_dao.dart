@@ -36,9 +36,8 @@ class AccountDao extends DatabaseAccessor<StorizeDatabase>
             target: [loginAccounts.remoteUserId],
           ),
         );
-        return (select(loginAccounts)..where(
-              (a) => a.remoteUserId.equals(account.remoteUserId.value),
-            ))
+        return (select(loginAccounts)
+              ..where((a) => a.remoteUserId.equals(account.remoteUserId.value)))
             .getSingle();
       });
 

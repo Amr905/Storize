@@ -104,9 +104,7 @@ void main() {
       );
       final r = await rig.run(rig.extractor.resolveUser('@$fakeUser'));
       expect((r as Ok<RemoteUser>).value.remoteUserId, 'user_1');
-      final same = await rig.run(
-        rig.extractor.refreshUser('user_1', fakeUser),
-      );
+      final same = await rig.run(rig.extractor.refreshUser('user_1', fakeUser));
       expect(same, isA<Ok<RemoteUser>>());
       final other = await rig.run(
         rig.extractor.refreshUser('user_9', fakeUser),
@@ -858,9 +856,8 @@ void main() {
 
   group('last resort DOM reading (marked, read-only)', () {
     test('returns only CDN https URLs and logs no URL', () async {
-      final rig = Rig(
-        onLoad: emitting([const LoadStopEvent()]),
-      )..driver.domResult = loadPage('dom_result.json');
+      final rig = Rig(onLoad: emitting([const LoadStopEvent()]))
+        ..driver.domResult = loadPage('dom_result.json');
       final f = rig.extractor.lastResortDomMedia(fakeUser, stories: true);
       await rig.time.pump();
       // The settle timer is the second timer (the first is the timeout).

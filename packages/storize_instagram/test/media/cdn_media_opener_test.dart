@@ -419,16 +419,13 @@ void main() {
       // The stream ends by itself, which closes the subscription.
       // ignore: cancel_subscriptions
       late StreamSubscription<List<int>> sub;
-      sub = opener(http).open(_okUrl).listen(
-        (c) {
-          got.addAll(c);
-          if (got.length == 5) {
-            sub.pause();
-            Future<void>.delayed(const Duration(milliseconds: 10), sub.resume);
-          }
-        },
-        onDone: done.complete,
-      );
+      sub = opener(http).open(_okUrl).listen((c) {
+        got.addAll(c);
+        if (got.length == 5) {
+          sub.pause();
+          Future<void>.delayed(const Duration(milliseconds: 10), sub.resume);
+        }
+      }, onDone: done.complete);
       await done.future;
       expect(got, List.generate(20, (i) => i));
     });

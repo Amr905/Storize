@@ -57,9 +57,8 @@ final class FakeHarness implements RepoHarness {
 
 /// The drift repositories over an in-memory database.
 final class DriftHarness implements RepoHarness {
-  DriftHarness({
-    Duration libraryDebounce = const Duration(milliseconds: 10),
-  }) : db = StorizeDatabase.forTesting(NativeDatabase.memory()) {
+  DriftHarness({Duration libraryDebounce = const Duration(milliseconds: 10)})
+    : db = StorizeDatabase.forTesting(NativeDatabase.memory()) {
     targets = DriftTargetRepo(db);
     content = DriftContentRepo(db, libraryDebounce: libraryDebounce);
     accounts = DriftAccountRepo(db);

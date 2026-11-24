@@ -109,11 +109,7 @@ final class _GatedRepo implements GovernorLeaseRepo {
     required int accountId,
     required String holder,
     required GovernorBucket bucket,
-  }) => inner.writeBucket(
-    accountId: accountId,
-    holder: holder,
-    bucket: bucket,
-  );
+  }) => inner.writeBucket(accountId: accountId, holder: holder, bucket: bucket);
 }
 
 void main() {
@@ -410,10 +406,7 @@ void main() {
 
     test('a hold that is never released lapses after maxHold', () async {
       final ticker = _Ticker();
-      final l = lease(
-        'a',
-        ticker: ticker,
-      );
+      final l = lease('a', ticker: ticker);
       await l.tryAcquire('x');
       l.beginHold();
       await l.release('x');
@@ -435,11 +428,7 @@ void main() {
     ps.FakePageDriver driver0({
       bool openThrows = false,
       Completer<void>? gate,
-    }) => ps.FakePageDriver(
-      (_, _) {},
-      openThrows: openThrows,
-      openGate: gate,
-    );
+    }) => ps.FakePageDriver((_, _) {}, openThrows: openThrows, openGate: gate);
 
     const config = PageSessionConfig(
       cookies: {},

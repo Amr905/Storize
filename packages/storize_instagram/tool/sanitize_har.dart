@@ -370,9 +370,7 @@ final RegExp _signedParam = RegExp(
 );
 final RegExp _email = RegExp(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}');
 final RegExp _phoneIntl = RegExp(r'\+\d[\d\s().-]{8,}\d');
-final RegExp _phoneGroups = RegExp(
-  r'\(?\d{2,4}\)?[\s.-]\d{3,4}[\s.-]\d{3,4}',
-);
+final RegExp _phoneGroups = RegExp(r'\(?\d{2,4}\)?[\s.-]\d{3,4}[\s.-]\d{3,4}');
 final RegExp _quotedLongDigits = RegExp(r'"\d{10,}"');
 final RegExp _allowedConstants = RegExp(
   r'"(?:doc_id|docId|query_hash|x-ig-app-id)"\s*:\s*"[A-Za-z0-9]{1,40}"',
@@ -978,10 +976,7 @@ String _queryValue(_Ctx c, String key, String value) {
   return '<v>';
 }
 
-Map<String, Object?> _describeQuery(
-  _Ctx c,
-  List<MapEntry<String, String>> kv,
-) {
+Map<String, Object?> _describeQuery(_Ctx c, List<MapEntry<String, String>> kv) {
   final out = <String, Object?>{};
   for (final e in kv) {
     final name = _safeName(e.key);
@@ -1364,9 +1359,9 @@ SanitizeOutcome sanitizeHar(String harText, {Set<String> keepKeys = const {}}) {
     final mime = '${content['mimeType']}'.toLowerCase();
     final looksJson =
         mime.contains('json') ||
-        (_bodyText(
-          content,
-        ).trimLeft().startsWith(RegExp(r'[{\[]|for \(;;\);')));
+        (_bodyText(content)
+            .trimLeft()
+            .startsWith(RegExp(r'[{\[]|for \(;;\);')));
     if (!looksJson) {
       if (mime.contains('html')) {
         final text = _bodyText(content);

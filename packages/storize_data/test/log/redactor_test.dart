@@ -130,9 +130,7 @@ void main() {
 
     test('JSON-escaped CDN URL', () {
       const url = 'https:$_bs/$_bs/scontent.cdninstagram.com$_bs/v$_bs/1.jpg';
-      final out = Redactor.redact(
-        '{"url":"$url?oh=$_s1${_bs}u0026oe=$_s2"}',
-      );
+      final out = Redactor.redact('{"url":"$url?oh=$_s1${_bs}u0026oe=$_s2"}');
       _gone(out);
       expect(out, contains('1.jpg?${Redactor.mask}'));
     });

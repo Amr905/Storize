@@ -119,18 +119,14 @@ void main() {
     },
   );
 
-  test(
-    'QA-F6: Retry-After as an HTTP-date should become a duration',
-    () async {
-      final reply = await DartIoHttp().send(_get('$base/retry-date'));
-      expect(reply.retryAfter, isNotNull);
-    },
-  );
+  test('QA-F6: Retry-After as an HTTP-date should become a duration', () async {
+    final reply = await DartIoHttp().send(_get('$base/retry-date'));
+    expect(reply.retryAfter, isNotNull);
+  });
 
   test('a body over the cap: status kept, json null, memory bounded', () async {
-    final reply = await DartIoHttp(maxBodyBytes: 1024 * 1024).send(
-      _get('$base/big-json'),
-    );
+    final reply = await DartIoHttp(maxBodyBytes: 1024 * 1024)
+        .send(_get('$base/big-json'));
     expect(reply.status, 200);
     expect(reply.json, isNull);
     const classifier = FailureClassifier();
@@ -138,9 +134,8 @@ void main() {
   });
 
   test('a body under the cap is decoded (200 KB)', () async {
-    final reply = await DartIoHttp(maxBodyBytes: 1024 * 1024).send(
-      _get('$base/ok-json'),
-    );
+    final reply = await DartIoHttp(maxBodyBytes: 1024 * 1024)
+        .send(_get('$base/ok-json'));
     expect((reply.json! as Map)['a'], hasLength(200000));
   });
 
@@ -171,47 +166,44 @@ void main() {
     },
   );
 
-  test(
-    'QA-F7: after a timeout or the body cap the connection is closed (no '
-    'socket leak)',
-    () async {
-      // A raw socket server sees the client leave (an HttpServer does not
-      // notice a half-read response until it writes much more).
-      final gone = <String>[];
-      final raw = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-      raw.listen((s) {
-        s.listen((_) {}, onDone: () => gone.add('closed'), onError: (_) {});
-        // ignore: cascade_invocations, listen returns a subscription.
-        s.add(
-          utf8.encode(
-            'HTTP/1.1 200 OK\r\ncontent-type: application/json\r\n'
-            'transfer-encoding: chunked\r\n\r\n',
-          ),
-        );
-        final timer = Timer.periodic(const Duration(milliseconds: 50), (t) {
-          try {
-            s.add(utf8.encode('64\r\n${'z' * 100}\r\n'));
-          } on Object {
-            t.cancel();
-          }
-        });
-        unawaited(s.done.whenComplete(timer.cancel).catchError((_) {}));
-      });
-      final url = 'http://127.0.0.1:${raw.port}/drip';
-      await expectLater(
-        DartIoHttp(timeout: const Duration(milliseconds: 300)).send(_get(url)),
-        throwsA(isA<TransportException>()),
+  test('QA-F7: after a timeout or the body cap the connection is closed (no '
+      'socket leak)', () async {
+    // A raw socket server sees the client leave (an HttpServer does not
+    // notice a half-read response until it writes much more).
+    final gone = <String>[];
+    final raw = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    raw.listen((s) {
+      s.listen((_) {}, onDone: () => gone.add('closed'), onError: (_) {});
+      // ignore: cascade_invocations, listen returns a subscription.
+      s.add(
+        utf8.encode(
+          'HTTP/1.1 200 OK\r\ncontent-type: application/json\r\n'
+          'transfer-encoding: chunked\r\n\r\n',
+        ),
       );
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      expect(gone, ['closed'], reason: 'closed after the timeout');
-      final reply = await DartIoHttp(maxBodyBytes: 500).send(_get(url));
-      expect(reply.status, 200);
-      expect(reply.json, isNull);
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      expect(gone, ['closed', 'closed'], reason: 'closed at the cap');
-      await raw.close();
-    },
-  );
+      final timer = Timer.periodic(const Duration(milliseconds: 50), (t) {
+        try {
+          s.add(utf8.encode('64\r\n${'z' * 100}\r\n'));
+        } on Object {
+          t.cancel();
+        }
+      });
+      unawaited(s.done.whenComplete(timer.cancel).catchError((_) {}));
+    });
+    final url = 'http://127.0.0.1:${raw.port}/drip';
+    await expectLater(
+      DartIoHttp(timeout: const Duration(milliseconds: 300)).send(_get(url)),
+      throwsA(isA<TransportException>()),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(gone, ['closed'], reason: 'closed after the timeout');
+    final reply = await DartIoHttp(maxBodyBytes: 500).send(_get(url));
+    expect(reply.status, 200);
+    expect(reply.json, isNull);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(gone, ['closed', 'closed'], reason: 'closed at the cap');
+    await raw.close();
+  });
 
   test('a closed port and a non-TLS server over https are TransportException '
       'without the URL or query in the text', () async {
@@ -256,23 +248,20 @@ void main() {
     await raw.close();
   });
 
-  test(
-    'QA-F1b: a header value the platform refuses (newline in a cookie) must '
-    'not surface as a raw exception carrying the value',
-    () async {
-      Object? error;
-      try {
-        await DartIoHttp().send(
-          _get('$base/ok-json', headers: {'Cookie': 'sessionid=ZZFAKE\nx=1'}),
-        );
-      } on Object catch (e) {
-        error = e;
-      }
-      expect(error, isNotNull);
-      expect(error, isA<TransportException>());
-      expect(error.toString(), isNot(contains('ZZFAKE')));
-    },
-  );
+  test('QA-F1b: a header value the platform refuses (newline in a cookie) must '
+      'not surface as a raw exception carrying the value', () async {
+    Object? error;
+    try {
+      await DartIoHttp().send(
+        _get('$base/ok-json', headers: {'Cookie': 'sessionid=ZZFAKE\nx=1'}),
+      );
+    } on Object catch (e) {
+      error = e;
+    }
+    expect(error, isNotNull);
+    expect(error, isA<TransportException>());
+    expect(error.toString(), isNot(contains('ZZFAKE')));
+  });
 
   test(
     'what actually escapes for a bad header value (evidence for QA-F1)',

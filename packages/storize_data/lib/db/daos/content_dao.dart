@@ -113,9 +113,7 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
     ];
   }
 
-  Future<List<ContentWithMediaRows>> _attachMedia(
-    List<ContentRow> rows,
-  ) async {
+  Future<List<ContentWithMediaRows>> _attachMedia(List<ContentRow> rows) async {
     if (rows.isEmpty) return const [];
     final media =
         await (select(mediaFiles)
@@ -274,20 +272,18 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
   });
 
   /// Writes every column of [file] (full replace by id). Returns rows changed.
-  Future<int> updateMediaFile(MediaFileRow file) =>
-      (update(mediaFiles)..where((m) => m.id.equals(file.id))).write(
-        file.toCompanion(false),
-      );
+  Future<int> updateMediaFile(MediaFileRow file) => (update(
+    mediaFiles,
+  )..where((m) => m.id.equals(file.id))).write(file.toCompanion(false));
 
   /// Writes only the present fields of [changes]. Returns rows changed.
   Future<int> updateMediaFilePartial(int id, MediaFilesCompanion changes) =>
       (update(mediaFiles)..where((m) => m.id.equals(id))).write(changes);
 
   /// Writes every column of [content] (full replace by id).
-  Future<int> updateContent(ContentRow content) =>
-      (update(contents)..where((c) => c.id.equals(content.id))).write(
-        content.toCompanion(false),
-      );
+  Future<int> updateContent(ContentRow content) => (update(
+    contents,
+  )..where((c) => c.id.equals(content.id))).write(content.toCompanion(false));
 
   /// Writes only the present fields of [changes]. Returns rows changed.
   Future<int> updateContentPartial(int id, ContentsCompanion changes) =>
@@ -296,14 +292,11 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
   /// Moves every DOWNLOADING media file back to PENDING (a download was cut
   /// short by a crash or kill). Returns how many were reset.
   Future<int> resetInterruptedDownloads() =>
-      (update(mediaFiles)..where(
-            (m) => m.status.equalsValue(MediaFileStatus.downloading),
-          ))
-          .write(
-            const MediaFilesCompanion(
-              status: Value(MediaFileStatus.pending),
-            ),
-          );
+      (update(
+        mediaFiles,
+      )..where((m) => m.status.equalsValue(MediaFileStatus.downloading))).write(
+        const MediaFilesCompanion(status: Value(MediaFileStatus.pending)),
+      );
 
   /// Marks the given content as viewed.
   Future<void> markViewed(Iterable<int> contentIds) async {

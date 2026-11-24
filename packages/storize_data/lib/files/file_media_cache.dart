@@ -22,10 +22,7 @@ import 'package:storize_domain/storize_domain.dart';
 /// Two appends to the same ID at the same time are not supported.
 final class FileMediaCache implements MediaCache {
   /// Creates a cache. Tests pass temp directories.
-  FileMediaCache({
-    required this._cacheDir,
-    required this._filesDir,
-  });
+  FileMediaCache({required this._cacheDir, required this._filesDir});
 
   /// The production cache: the app cache and app support directories.
   FileMediaCache.pathProvider()

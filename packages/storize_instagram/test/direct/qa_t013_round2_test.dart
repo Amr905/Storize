@@ -232,10 +232,7 @@ void main() {
   group('username check', () {
     test('case, @ and surrounding spaces are normalised', () async {
       final rig = Rig(
-        responder: _byId(
-          [_photo('1', 10)],
-          names: {'ZZ_owner': 'ab_cd.ef'},
-        ),
+        responder: _byId([_photo('1', 10)], names: {'ZZ_owner': 'ab_cd.ef'}),
       );
       final r = await rig.run(rig.extractor.resolveUser('  @AB_Cd.EF '));
       expect(r.valueOrNull?.username, 'ab_cd.ef');
@@ -246,10 +243,7 @@ void main() {
       for (final asked in ['ab_cd .ef', 'ab_cd.ef.', 'аb_cd.ef']) {
         // last one starts with a Cyrillic a
         final rig = Rig(
-          responder: _byId(
-            [_photo('1', 10)],
-            names: {'ZZ_owner': 'ab_cd.ef'},
-          ),
+          responder: _byId([_photo('1', 10)], names: {'ZZ_owner': 'ab_cd.ef'}),
         );
         final r = await rig.run(rig.extractor.resolveUser(asked));
         expect(
@@ -312,10 +306,7 @@ void main() {
 
     test('a tie is username_unresolvable and sends no profile call', () async {
       final rig = Rig(
-        responder: _byId([
-          _photo('a', 1, author: 'ZZ_b'),
-          _photo('b', 2),
-        ]),
+        responder: _byId([_photo('a', 1, author: 'ZZ_b'), _photo('b', 2)]),
       );
       final r = await rig.run(rig.extractor.resolveUser('me'));
       expect(
@@ -330,9 +321,7 @@ void main() {
     test('NOTE: a malformed NEWEST post is skipped: it is not downloaded, '
         'not reported to the caller, only counted in the log', () async {
       final bad = _photo('new', 500)..remove('taken_at');
-      final rig = Rig(
-        responder: _byId([_photo('old', 100), bad]),
-      );
+      final rig = Rig(responder: _byId([_photo('old', 100), bad]));
       final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(50)));
       expect(r.valueOrNull!.map((p) => p.remoteId), ['old']);
       expect(rig.allLogs, contains('skipped_malformed=1'));

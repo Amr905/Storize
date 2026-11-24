@@ -20,15 +20,13 @@ ProbeReport _report({required bool proven}) => ProbeReport(
   ],
 );
 
-IgTransport _select({
-  TransportPreference? preference,
-  ProbeReport? probe,
-}) => selectTransport(
-  docIds: FakeDocIds(),
-  tokens: FakeTokens(),
-  preference: preference ?? TransportPreference.graphql,
-  probe: probe,
-);
+IgTransport _select({TransportPreference? preference, ProbeReport? probe}) =>
+    selectTransport(
+      docIds: FakeDocIds(),
+      tokens: FakeTokens(),
+      preference: preference ?? TransportPreference.graphql,
+      probe: probe,
+    );
 
 void main() {
   test('the fixture reports mean what the names say', () {

@@ -21,26 +21,23 @@ RemoteContent story(String id, {DateTime? at}) => RemoteContent(
   ],
 );
 
-RemoteContent post(
-  String id,
-  int minutes, {
-  PostType type = PostType.photo,
-}) => RemoteContent(
-  remoteId: id,
-  kind: ContentKind.post,
-  shortcode: 'sc$id',
-  postType: type,
-  postedAt: s.t0.add(Duration(minutes: minutes)),
-  slides: const [
-    RemoteMedia(
-      index: 0,
-      type: MediaType.photo,
-      url: 'https://example.invalid/p',
-      width: 10,
-      height: 10,
-    ),
-  ],
-);
+RemoteContent post(String id, int minutes, {PostType type = PostType.photo}) =>
+    RemoteContent(
+      remoteId: id,
+      kind: ContentKind.post,
+      shortcode: 'sc$id',
+      postType: type,
+      postedAt: s.t0.add(Duration(minutes: minutes)),
+      slides: const [
+        RemoteMedia(
+          index: 0,
+          type: MediaType.photo,
+          url: 'https://example.invalid/p',
+          width: 10,
+          height: 10,
+        ),
+      ],
+    );
 
 RemoteUser ruser(
   String id,
@@ -173,17 +170,13 @@ void main() {
       await h.add('4', posts: false, reels: false);
       h.platform.fetchNewPostsResults.fallback = const Ok([]);
       await h.go(CheckScope.posts);
-      expect(
-        [for (final c in h.platform.callsTo('fetchNewPosts')) c.args.first],
-        unorderedEquals(['1', '2']),
-      );
+      expect([
+        for (final c in h.platform.callsTo('fetchNewPosts')) c.args.first,
+      ], unorderedEquals(['1', '2']));
     });
 
     test('scope all is rejected', () {
-      expect(
-        () => h.go(CheckScope.all),
-        throwsA(isA<ArgumentError>()),
-      );
+      expect(() => h.go(CheckScope.all), throwsA(isA<ArgumentError>()));
     });
 
     test('targetId limits a manual check to one target', () async {
@@ -238,10 +231,7 @@ void main() {
       await h.add('1');
       h.platform.fetchNewPostsResults.addFailure(const AccountRestricted());
       await h.go(CheckScope.posts);
-      expect(
-        (await h.accounts.getActive())!.status,
-        AccountStatus.restricted,
-      );
+      expect((await h.accounts.getActive())!.status, AccountStatus.restricted);
     });
   });
 
@@ -261,10 +251,9 @@ void main() {
 
     test('diffs by remote_id and stores PENDING media', () async {
       final t = await h.add('1');
-      await h.content.insertIfNew(
-        s.content(targetId: t.id, remoteId: 'old'),
-        [s.media()],
-      );
+      await h.content.insertIfNew(s.content(targetId: t.id, remoteId: 'old'), [
+        s.media(),
+      ]);
       h.platform.fetchStoriesResults.addOk({
         '1': [story('old'), story('new')],
       });
@@ -327,24 +316,15 @@ void main() {
         (await h.targets.getById(t.id))!.postsWatermarkAt,
         s.t0.add(const Duration(minutes: 99)),
       );
-      expect(
-        h.platform.callsTo('fetchNewPosts').single.args[1],
-        s.t0,
-      );
+      expect(h.platform.callsTo('fetchNewPosts').single.args[1], s.t0);
     });
 
     test('FR-67 reels follow trackReels, others follow trackPosts', () async {
       final a = await h.add('1', reels: false);
       final b = await h.add('2', posts: false);
       h.platform.fetchNewPostsResults
-        ..addOk([
-          post('p1', 1),
-          post('r1', 2, type: PostType.reel),
-        ])
-        ..addOk([
-          post('p2', 1),
-          post('r2', 2, type: PostType.reel),
-        ]);
+        ..addOk([post('p1', 1), post('r1', 2, type: PostType.reel)])
+        ..addOk([post('p2', 1), post('r2', 2, type: PostType.reel)]);
       await h.go(CheckScope.posts);
       Future<Set<String>> ids(Target t) async => {
         for (final c in await h.content.listByTarget(t.id)) c.content.remoteId,
@@ -398,10 +378,7 @@ void main() {
         ruser('1', 'u1', priv: true, followed: false),
       );
       await h.go(CheckScope.posts);
-      expect(
-        (await h.targets.getById(t.id))!.status,
-        TargetStatus.notVisible,
-      );
+      expect((await h.targets.getById(t.id))!.status, TargetStatus.notVisible);
     });
 
     test('EC-4 blocked -> NOT_VISIBLE', () async {
@@ -435,10 +412,7 @@ void main() {
       final t = await h.add('1');
       h.platform.fetchNewPostsResults.addFailure(const TargetNotFound());
       await h.go(CheckScope.posts);
-      expect(
-        (await h.targets.getById(t.id))!.status,
-        TargetStatus.unavailable,
-      );
+      expect((await h.targets.getById(t.id))!.status, TargetStatus.unavailable);
     });
 
     test('stories batch with TargetNotVisible is retried one by one', () async {
@@ -454,10 +428,7 @@ void main() {
       final r = await h.go(CheckScope.stories);
       expect(r.newContentIds, hasLength(1));
       expect((await h.targets.getById(a.id))!.status, TargetStatus.active);
-      expect(
-        (await h.targets.getById(b.id))!.status,
-        TargetStatus.notVisible,
-      );
+      expect((await h.targets.getById(b.id))!.status, TargetStatus.notVisible);
     });
 
     test('busy governor (NetworkFailure) changes no status', () async {
@@ -514,10 +485,7 @@ void main() {
       h.platform.fetchStoriesResults.addOk({
         '1': [story('a')],
       });
-      final r = await h.go(
-        CheckScope.stories,
-        trigger: CheckTrigger.manualAll,
-      );
+      final r = await h.go(CheckScope.stories, trigger: CheckTrigger.manualAll);
       final row = h.checkRuns.runs.single;
       expect(row.scope, CheckScope.stories);
       expect(row.trigger, CheckTrigger.manualAll);

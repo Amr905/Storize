@@ -250,10 +250,7 @@ void main() {
         }),
       );
       await a.run(a.extractor.fetchStories(['user_1']));
-      final b = Rig(
-        seenGuard: guard,
-        onLoad: emitting(const []),
-      );
+      final b = Rig(seenGuard: guard, onLoad: emitting(const []));
       final r = await b.run(b.extractor.fetchStories(['user_1']));
       expect(r.failureOrNull, const UnknownFailure(null, 'seen_guard_tripped'));
       expect(b.driver.log, isEmpty);
@@ -709,10 +706,7 @@ void main() {
           checked++;
           final r3 = Rig(
             onLoad: emitting([
-              hookResponse(
-                raw,
-                path: '/api/v1/media/1234567/info/',
-              ),
+              hookResponse(raw, path: '/api/v1/media/1234567/info/'),
             ]),
           );
           final item = (await r3.run(
@@ -737,9 +731,7 @@ void main() {
           '/x/api/v1/media/1/info/',
           '/api/v1/media//info/',
         ]) {
-          final rig = Rig(
-            onLoad: emitting([hookResponse(raw, path: p)]),
-          );
+          final rig = Rig(onLoad: emitting([hookResponse(raw, path: p)]));
           final f = rig.extractor.fetchPost('ZZcode123');
           await rig.time.pump();
           rig.timers.single.fire();
@@ -793,13 +785,7 @@ void main() {
       expect('$m', isNot(contains(fakeDtsg)));
       expect('$m', isNot(contains(fakeDocId)));
       expect(
-        '${const PageSessionConfig(
-          cookies: {'sessionid': 'ZZ'},
-          userAgent: 'UA',
-          hookSource: 's',
-          handlerName: 'h',
-          allowedOrigins: allowedPageOrigins,
-        )}',
+        '${const PageSessionConfig(cookies: {'sessionid': 'ZZ'}, userAgent: 'UA', hookSource: 's', handlerName: 'h', allowedOrigins: allowedPageOrigins)}',
         isNot(contains('ZZ')),
       );
     });

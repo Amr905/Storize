@@ -170,9 +170,7 @@ void main() {
 
     test('date range is [from, to)', () async {
       expect(
-        await ids(
-          ContentFilter(from: minutesAfter(20), to: minutesAfter(40)),
-        ),
+        await ids(ContentFilter(from: minutesAfter(20), to: minutesAfter(40))),
         [story2, post1],
       );
     });
@@ -190,10 +188,9 @@ void main() {
         story1,
         const ContentsCompanion(status: Value(ContentStatus.done)),
       );
-      expect(
-        await ids(ContentFilter(statuses: const {ContentStatus.done})),
-        [story1],
-      );
+      expect(await ids(ContentFilter(statuses: const {ContentStatus.done})), [
+        story1,
+      ]);
     });
 
     test('combined filters agree with ContentFilter.matches', () async {
@@ -405,9 +402,7 @@ void main() {
           db,
           targetId: targetA,
           remoteId: '2',
-          media: [
-            mediaCompanion(sizeBytes: 999),
-          ],
+          media: [mediaCompanion(sizeBytes: 999)],
         );
         await addContent(
           db,

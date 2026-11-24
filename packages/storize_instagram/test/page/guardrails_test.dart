@@ -79,10 +79,7 @@ void main() {
       }
     }
     final adapter = _read('lib/page/webview.dart');
-    expect(
-      RegExp('evaluateJavascript').allMatches(adapter),
-      hasLength(1),
-    );
+    expect(RegExp('evaluateJavascript').allMatches(adapter), hasLength(1));
     expect(adapter, contains('source: domCollectScript'));
   });
 

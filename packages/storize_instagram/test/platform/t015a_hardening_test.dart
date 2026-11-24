@@ -370,9 +370,8 @@ void main() {
       );
       // The real extractor refuses once the guard is tripped; the fake page
       // does the same.
-      rig.page.stories = (_) => const Err(
-        UnknownFailure(null, 'seen_guard_tripped'),
-      );
+      rig.page.stories = (_) =>
+          const Err(UnknownFailure(null, 'seen_guard_tripped'));
       final r = await rig.stories(['u1']).timeout(const Duration(seconds: 2));
       expect(r.failureOrNull, _schema);
       expect(rig.platform.takeSignals().pageModeUses, 0);

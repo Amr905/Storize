@@ -23,10 +23,7 @@ void main() {
       expect(const TargetNotVisible(), const TargetNotVisible());
 
       expect(const NetworkFailure(), isNot(const TargetNotFound()));
-      expect(
-        const NetworkFailure().hashCode,
-        const NetworkFailure().hashCode,
-      );
+      expect(const NetworkFailure().hashCode, const NetworkFailure().hashCode);
     });
 
     test('RateLimited compares retryAfter', () {

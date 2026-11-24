@@ -220,13 +220,9 @@ void main() {
     noLeak('query name that is an email or url', {
       'status': 'ok',
     }, url: '$_u?zzfake%40x.com=1');
-    noLeak(
-      'query value username (ok) and bare flag name (QA-19)',
-      {
-        'status': 'ok',
-      },
-      url: '${_u}web_profile_info/?username=zzfake_nour&zzfake',
-    );
+    noLeak('query value username (ok) and bare flag name (QA-19)', {
+      'status': 'ok',
+    }, url: '${_u}web_profile_info/?username=zzfake_nour&zzfake');
     noLeak('path segments', {
       'status': 'ok',
     }, url: 'https://www.instagram.com/api/v1/zzfake_nour/info/');

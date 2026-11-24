@@ -21,9 +21,7 @@ class FakeRow {
 class FakeNativeMedia {
   FakeNativeMedia() {
     _messenger.setMockMethodCallHandler(channel, _handle);
-    addTearDown(
-      () => _messenger.setMockMethodCallHandler(channel, null),
-    );
+    addTearDown(() => _messenger.setMockMethodCallHandler(channel, null));
   }
 
   static final TestDefaultBinaryMessenger _messenger =

@@ -49,9 +49,7 @@ void main() {
     final reels = _mapper.graphqlStories(
       nodeOf(loadSynthetic('story_reel.json')),
     );
-    final byId = {
-      for (final c in reels['ZZFAKE_user_a']!.items) c.remoteId: c,
-    };
+    final byId = {for (final c in reels['ZZFAKE_user_a']!.items) c.remoteId: c};
 
     test('AC2 live items are dropped (FR-28); the rest stay', () {
       expect(byId.keys, isNot(contains('ZZFAKE_story_live')));

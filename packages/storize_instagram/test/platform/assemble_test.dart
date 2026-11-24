@@ -73,10 +73,7 @@ class _Rig {
     http = d.FakeIgHttp(
       responder ?? (_) => throw StateError('no responder for this test'),
     );
-    driver = p.FakePageDriver(
-      onLoad ?? (_, _) {},
-      openGate: openGate,
-    );
+    driver = p.FakePageDriver(onLoad ?? (_, _) {}, openGate: openGate);
     discovery = PageDiscovery(clock: time.clock);
     if (seedDiscovery) {
       for (final q in GraphqlQuery.values) {
@@ -212,6 +209,52 @@ void main() {
     });
   });
 
+  group('T-039 interactive maxWait', () {
+    Future<void> drain(_Rig rig) async {
+      for (var i = 0; i < 6; i++) {
+        await rig.run(
+          rig.governor.run(
+            accountId: 1,
+            cost: RequestCost.api,
+            call: () async => i,
+          ),
+        );
+      }
+    }
+
+    test('an interactive resolveUser over the budget returns RateLimited '
+        'at once, sends nothing and spends nothing', () async {
+      final rig = _Rig(responder: _directPosts(), seedDiscovery: true);
+      await drain(rig);
+      final before = rig.http.requests.length;
+      final r = await rig.run(
+        RequestGovernor.withMaxWait(
+          const Duration(seconds: 8),
+          () => rig.platform.resolveUser(p.fakeUser),
+        ),
+      );
+      expect(r.failureOrNull, isA<RateLimited>());
+      expect((r.failureOrNull! as RateLimited).retryAfter, isNotNull);
+      expect(rig.http.requests.length, before);
+      expect(await rig.governor.remainingTokens(1), 0);
+      expect(await rig.governor.isPaused(1), isFalse);
+    });
+
+    test('without the wrapper the same call waits for a token', () async {
+      final rig = _Rig(responder: _directPosts(), seedDiscovery: true);
+      await drain(rig);
+      final before = rig.http.requests.length;
+      Result<RemoteUser>? answer;
+      unawaited(rig.platform.resolveUser(p.fakeUser).then((r) => answer = r));
+      await rig.time.elapse(const Duration(seconds: 59));
+      expect(answer, isNull, reason: 'waiting, never RateLimited');
+      expect(rig.http.requests.length, before, reason: 'nothing sent yet');
+      await rig.time.elapse(const Duration(seconds: 1));
+      await Future<void>.delayed(Duration.zero);
+      expect(rig.http.requests.length, before + 1, reason: 'sent at refill');
+    });
+  });
+
   group('AC2 directThenPage: page mode after SchemaChanged only', () {
     test('missing doc_id: SchemaChanged in direct, then page mode answers, '
         'costing one pageLoad (3 tokens)', () async {
@@ -292,10 +335,10 @@ void main() {
     test('a rate limit pauses the governor, and the next call stays '
         'RateLimited without page mode', () async {
       final rig = _Rig(
-        responder: (_) => d.jsonReply(
-          {'message': 'Please wait a few minutes', 'status': 'fail'},
-          status: 429,
-        ),
+        responder: (_) => d.jsonReply({
+          'message': 'Please wait a few minutes',
+          'status': 'fail',
+        }, status: 429),
         seedDiscovery: true,
         onLoad: p.emitting(_pagePosts()),
       );
@@ -495,10 +538,7 @@ void main() {
       expect(rig2.openTimers, hasLength(1));
       rig2.openTimers.single.fire(); // the 10 s open timeout
       final r = await rig2.run(running);
-      expect(
-        r.failureOrNull,
-        const UnknownFailure(null, 'page_open_timeout'),
-      );
+      expect(r.failureOrNull, const UnknownFailure(null, 'page_open_timeout'));
       expect(await leaseHeld(rig2), isTrue, reason: 'hold: open still pending');
       expect(
         await leaseFor(rig2, 'login-isolate').tryAcquire('login'),

@@ -92,56 +92,49 @@ void main() {
     'probe should stop instead of sending the remaining calls',
     () async {
       final rig = _Rig(
-        (_) => jsonReply(
-          {'message': 'checkpoint_required', 'status': 'fail'},
-          status: 400,
-        ),
-      );
-      await rig.run(rig.probe.run(username: 'u', userId: '1'));
-      expect(rig.http.requests, hasLength(1));
-    },
-  );
-
-  test(
-    'QA-F9: a 401, a login redirect or a 200 login_required body also stops '
-    'the probe; the rest is skipped',
-    () async {
-      for (final reply in [
-        const IgReply(status: 401),
-        const IgReply(status: 302, redirectPath: '/accounts/login/'),
-        const IgReply(status: 302, redirectPath: '/challenge/'),
-        jsonReply({'message': 'login_required', 'status': 'fail'}),
-        jsonReply({
-          'message': 'feedback_required',
+        (_) => jsonReply({
+          'message': 'checkpoint_required',
           'status': 'fail',
         }, status: 400),
-      ]) {
-        final rig = _Rig((_) => reply);
-        final report = await rig.run(rig.probe.run(username: 'u', userId: '1'));
-        expect(rig.http.requests, hasLength(1), reason: '$reply');
-        expect(
-          report.entries.skip(1).map((e) => e.outcome),
-          everyElement('skipped'),
-        );
-        expect(report.entries.first.status, reply.status);
-        expect(report.entries.first.proven, isFalse);
-      }
-    },
-  );
-
-  test(
-    'a 200 "please wait" body (not 429) is fed to the governor and stops '
-    'the probe',
-    () async {
-      final rig = _Rig(
-        (_) =>
-            jsonReply({'status': 'fail', 'message': 'Please wait a few min'}),
       );
       await rig.run(rig.probe.run(username: 'u', userId: '1'));
       expect(rig.http.requests, hasLength(1));
-      expect(await rig.governor.isPaused(1), isTrue);
     },
   );
+
+  test('QA-F9: a 401, a login redirect or a 200 login_required body also stops '
+      'the probe; the rest is skipped', () async {
+    for (final reply in [
+      const IgReply(status: 401),
+      const IgReply(status: 302, redirectPath: '/accounts/login/'),
+      const IgReply(status: 302, redirectPath: '/challenge/'),
+      jsonReply({'message': 'login_required', 'status': 'fail'}),
+      jsonReply({
+        'message': 'feedback_required',
+        'status': 'fail',
+      }, status: 400),
+    ]) {
+      final rig = _Rig((_) => reply);
+      final report = await rig.run(rig.probe.run(username: 'u', userId: '1'));
+      expect(rig.http.requests, hasLength(1), reason: '$reply');
+      expect(
+        report.entries.skip(1).map((e) => e.outcome),
+        everyElement('skipped'),
+      );
+      expect(report.entries.first.status, reply.status);
+      expect(report.entries.first.proven, isFalse);
+    }
+  });
+
+  test('a 200 "please wait" body (not 429) is fed to the governor and stops '
+      'the probe', () async {
+    final rig = _Rig(
+      (_) => jsonReply({'status': 'fail', 'message': 'Please wait a few min'}),
+    );
+    await rig.run(rig.probe.run(username: 'u', userId: '1'));
+    expect(rig.http.requests, hasLength(1));
+    expect(await rig.governor.isPaused(1), isTrue);
+  });
 
   group('CDN check', () {
     test(

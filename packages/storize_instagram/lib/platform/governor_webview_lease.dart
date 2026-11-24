@@ -159,20 +159,17 @@ final class GovernorWebViewLease implements WebViewLease {
       // The answer may still arrive. If it is a lease and nobody here holds
       // the row by then, give it back (R2-F3).
       unawaited(
-        attempt.then<void>(
-          (late) async {
-            // Only the newest attempt may give the row back: an older late
-            // answer must not release what a newer attempt just won (F5).
-            if (late != null &&
-                generation == _generation &&
-                !_acquiring &&
-                _owners.isEmpty &&
-                _liveHolds == 0) {
-              await _releaseRow();
-            }
-          },
-          onError: (Object _) {},
-        ),
+        attempt.then<void>((late) async {
+          // Only the newest attempt may give the row back: an older late
+          // answer must not release what a newer attempt just won (F5).
+          if (late != null &&
+              generation == _generation &&
+              !_acquiring &&
+              _owners.isEmpty &&
+              _liveHolds == 0) {
+            await _releaseRow();
+          }
+        }, onError: (Object _) {}),
       );
       _log?.log(LogLevel.warn, 'webview_lease', 'acquire_timeout');
       _lastFailure = 'acquire_timeout';

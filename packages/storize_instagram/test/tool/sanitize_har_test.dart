@@ -59,11 +59,7 @@ Map<String, Object?> _entry(
   Object? body, {
   String mime = 'application/json',
 }) => {
-  'request': {
-    'method': 'GET',
-    'url': url,
-    'headers': <Object?>[],
-  },
+  'request': {'method': 'GET', 'url': url, 'headers': <Object?>[]},
   'response': {
     'status': 200,
     'content': {
@@ -89,16 +85,10 @@ void main() {
 
   test('fixture sanitizes cleanly and writes the expected files', () {
     expect(outcome.ok, isTrue, reason: outcome.leaks.join('; '));
-    expect(
-      outcome.files.keys,
-      containsAll(['summary.json', 'report.md']),
-    );
+    expect(outcome.files.keys, containsAll(['summary.json', 'report.md']));
     // 5 instagram.com JSON requests; example.com, the HTML page and the
     // CDN image are not bodies.
-    expect(
-      outcome.files.keys.where((k) => k.startsWith('bodies/')).length,
-      5,
-    );
+    expect(outcome.files.keys.where((k) => k.startsWith('bodies/')).length, 5);
   });
 
   test('output contains no secrets, names, captions, IDs or signed URLs', () {
@@ -124,14 +114,8 @@ void main() {
         matches(RegExp(r'^<url host=[a-z0-9.-]+ path_shape=\d+seg(\.\w+)?>$')),
       );
     }
-    expect(
-      text,
-      contains('<url host=cdninstagram.com path_shape=3seg.jpg>'),
-    );
-    expect(
-      text,
-      contains('<url host=cdninstagram.com path_shape=6seg.mp4>'),
-    );
+    expect(text, contains('<url host=cdninstagram.com path_shape=3seg.jpg>'));
+    expect(text, contains('<url host=cdninstagram.com path_shape=6seg.mp4>'));
   });
 
   test('JSON structure, types, dimensions and media fields are preserved', () {
@@ -146,10 +130,12 @@ void main() {
     final items = sanitized['items'] as List<dynamic>;
     expect(items, hasLength(4));
     expect(items.map((i) => (i as Map)['media_type']), [1, 2, 8, 2]);
-    expect(
-      items.map((i) => (i as Map)['product_type']),
-      ['feed', 'feed', 'feed', 'clips'],
-    );
+    expect(items.map((i) => (i as Map)['product_type']), [
+      'feed',
+      'feed',
+      'feed',
+      'clips',
+    ]);
     expect(items.first['taken_at'], 1700002000);
     final cand =
         (items.first['image_versions2'] as Map)['candidates'] as List<dynamic>;
@@ -395,10 +381,7 @@ void main() {
       expect(code, 0);
       expect(File('${tmp.path}/out/report.md').existsSync(), isTrue);
       expect(File('${tmp.path}/out/summary.json').existsSync(), isTrue);
-      expect(
-        Directory('${tmp.path}/out/bodies').listSync(),
-        hasLength(5),
-      );
+      expect(Directory('${tmp.path}/out/bodies').listSync(), hasLength(5));
     });
 
     test('bad usage and bad input exit 2', () async {

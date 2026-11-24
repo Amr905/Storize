@@ -54,9 +54,7 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
     final net = _network(unmetered: wifiOnly);
     // The post task starts half a story period later so the two do not
     // coincide, capped so a long story interval does not delay it for hours.
-    final offset = Duration(
-      minutes: (story ~/ 2).clamp(5, maxPostOffsetMin),
-    );
+    final offset = Duration(minutes: (story ~/ 2).clamp(5, maxPostOffsetMin));
     await _client.registerPeriodic(
       TaskNames.checkStories,
       TaskNames.checkStories,

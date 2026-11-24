@@ -102,11 +102,7 @@ void runAccountRepoContract(RepoHarness Function() create) {
     expect(read.statusReason, 'expired');
     expect(read.lastSuccessAt, at(1));
 
-    await repo.setStatus(
-      stored.id,
-      AccountStatus.active,
-      lastSuccessAt: at(7),
-    );
+    await repo.setStatus(stored.id, AccountStatus.active, lastSuccessAt: at(7));
     read = (await repo.getActive())!;
     expect(read.status, AccountStatus.active);
     expect(read.statusReason, isNull);
@@ -227,9 +223,7 @@ void runActivityRepoContract(RepoHarness Function() create) {
   });
 
   test('type filter; an empty set means every type', () async {
-    final a = await repo.add(
-      anEvent(at: now(), type: ActivityType.gap),
-    );
+    final a = await repo.add(anEvent(at: now(), type: ActivityType.gap));
     await repo.add(anEvent(at: now(), type: ActivityType.rateLimited));
     final c = await repo.add(
       anEvent(at: now(), type: ActivityType.targetStatus),

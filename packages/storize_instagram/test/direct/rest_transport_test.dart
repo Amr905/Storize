@@ -104,62 +104,56 @@ void main() {
     ),
     ('no page tokens', FakeDocIds(), FakeTokens(available: false)),
   ]) {
-    test(
-      'first login ($label): GraphQL cannot verify yet, so verifySession '
-      'uses IG-4 once (bootstrap)',
-      () async {
-        final rig = Rig(
-          transport: GraphqlTransport(docIds: docIds, tokens: tokens),
-          sessionUserId: 'ZZFAKE_viewer',
-          responder: _byPath,
-        );
-        final r = await rig.run(rig.extractor.verifySession());
-        expect(r.isOk, isTrue, reason: '$r');
-        expect(
-          rig.http.requests.single.uri.path,
-          '/api/v1/accounts/current_user/',
-        );
-        // Other operations stay on GraphQL: no REST fallback for content.
-        final stories = await rig.run(rig.extractor.fetchStories(['user_1']));
-        expect(stories.failureOrNull, isA<SchemaChanged>());
-        expect(rig.http.requests, hasLength(1));
-      },
-    );
-  }
-
-  test(
-    'first login: current_user refused (400 useragent mismatch) falls back '
-    'to web_form_data; the failure hint is secret-free',
-    () async {
+    test('first login ($label): GraphQL cannot verify yet, so verifySession '
+        'uses IG-4 once (bootstrap)', () async {
       final rig = Rig(
-        transport: GraphqlTransport(
-          docIds: FakeDocIds(missing: GraphqlQuery.values.toSet()),
-          tokens: FakeTokens(),
-        ),
+        transport: GraphqlTransport(docIds: docIds, tokens: tokens),
         sessionUserId: 'ZZFAKE_viewer',
-        responder: (r) => switch (r.uri.path) {
-          '/api/v1/accounts/current_user/' => jsonReply({
-            'message': 'useragent mismatch',
-            'status': 'fail',
-          }, status: 400),
-          '/api/v1/accounts/edit/web_form_data/' => jsonReply({
-            'form_data': {'username': 'zzfake_me', 'first_name': 'ZZ Fake'},
-            'status': 'ok',
-          }),
-          _ => const IgReply(status: 404),
-        },
+        responder: _byPath,
       );
       final r = await rig.run(rig.extractor.verifySession());
-      final user = r.valueOrNull!;
-      expect(user.remoteUserId, 'ZZFAKE_viewer');
-      expect(user.username, 'zzfake_me');
-      expect(user.displayName, 'ZZ Fake');
-      expect(rig.http.requests.map((q) => q.uri.path), [
+      expect(r.isOk, isTrue, reason: '$r');
+      expect(
+        rig.http.requests.single.uri.path,
         '/api/v1/accounts/current_user/',
-        '/api/v1/accounts/edit/web_form_data/',
-      ]);
-    },
-  );
+      );
+      // Other operations stay on GraphQL: no REST fallback for content.
+      final stories = await rig.run(rig.extractor.fetchStories(['user_1']));
+      expect(stories.failureOrNull, isA<SchemaChanged>());
+      expect(rig.http.requests, hasLength(1));
+    });
+  }
+
+  test('first login: current_user refused (400 useragent mismatch) falls back '
+      'to web_form_data; the failure hint is secret-free', () async {
+    final rig = Rig(
+      transport: GraphqlTransport(
+        docIds: FakeDocIds(missing: GraphqlQuery.values.toSet()),
+        tokens: FakeTokens(),
+      ),
+      sessionUserId: 'ZZFAKE_viewer',
+      responder: (r) => switch (r.uri.path) {
+        '/api/v1/accounts/current_user/' => jsonReply({
+          'message': 'useragent mismatch',
+          'status': 'fail',
+        }, status: 400),
+        '/api/v1/accounts/edit/web_form_data/' => jsonReply({
+          'form_data': {'username': 'zzfake_me', 'first_name': 'ZZ Fake'},
+          'status': 'ok',
+        }),
+        _ => const IgReply(status: 404),
+      },
+    );
+    final r = await rig.run(rig.extractor.verifySession());
+    final user = r.valueOrNull!;
+    expect(user.remoteUserId, 'ZZFAKE_viewer');
+    expect(user.username, 'zzfake_me');
+    expect(user.displayName, 'ZZ Fake');
+    expect(rig.http.requests.map((q) => q.uri.path), [
+      '/api/v1/accounts/current_user/',
+      '/api/v1/accounts/edit/web_form_data/',
+    ]);
+  });
 
   test('both refused: the failure names the cause without ids', () async {
     final rig = Rig(

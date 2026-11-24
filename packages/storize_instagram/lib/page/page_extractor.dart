@@ -144,25 +144,21 @@ final class PageExtractor {
   // ----------------------------------------------------------------- users
 
   /// Looks up [username] on its profile page.
-  Future<Result<RemoteUser>> resolveUser(String username) => _op(
-    'resolveUser',
-    () async {
-      final clean = username.trim().replaceFirst(RegExp('^@'), '');
-      if (!pageUsernameShape.hasMatch(clean)) {
-        return const Err(TargetNotFound());
-      }
-      final r = await _load('resolveUser', PagePlans.profile(clean));
-      return switch (r) {
-        Err(:final failure) => Err(failure),
-        Ok(:final value)
-            when value.user.username.toLowerCase() != clean.toLowerCase() =>
-          const Err(
-            UnknownFailure(null, 'username_mismatch'),
-          ),
-        Ok(:final value) => await _remember(value),
-      };
-    },
-  );
+  Future<Result<RemoteUser>> resolveUser(String username) =>
+      _op('resolveUser', () async {
+        final clean = username.trim().replaceFirst(RegExp('^@'), '');
+        if (!pageUsernameShape.hasMatch(clean)) {
+          return const Err(TargetNotFound());
+        }
+        final r = await _load('resolveUser', PagePlans.profile(clean));
+        return switch (r) {
+          Err(:final failure) => Err(failure),
+          Ok(:final value)
+              when value.user.username.toLowerCase() != clean.toLowerCase() =>
+            const Err(UnknownFailure(null, 'username_mismatch')),
+          Ok(:final value) => await _remember(value),
+        };
+      });
 
   /// Reloads a user by loading the profile page of [lastUsername]. The answer
   /// counts only if it has the id [remoteUserId].
@@ -182,13 +178,11 @@ final class PageExtractor {
   });
 
   /// The time of the newest story item of [userId] (profile page).
-  Future<Result<DateTime?>> latestStoryTime(String userId) => _op(
-    'latestStoryTime',
-    () async {
-      final profile = await _profileOf(userId, 'latestStoryTime');
-      return profile.map((p) => p.latestReelMedia);
-    },
-  );
+  Future<Result<DateTime?>> latestStoryTime(String userId) =>
+      _op('latestStoryTime', () async {
+        final profile = await _profileOf(userId, 'latestStoryTime');
+        return profile.map((p) => p.latestReelMedia);
+      });
 
   // --------------------------------------------------------------- stories
 
@@ -257,31 +251,27 @@ final class PageExtractor {
   });
 
   /// The publish time of the newest post of [userId], or null.
-  Future<Result<DateTime?>> latestPostTime(String userId) => _op(
-    'latestPostTime',
-    () async {
-      final t = await _timelineOf(userId, 'latestPostTime');
-      return t.map((timeline) {
-        DateTime? latest;
-        for (final e in timeline.entries) {
-          if (!e.belongsTo(userId)) continue;
-          if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
-        }
-        return latest;
+  Future<Result<DateTime?>> latestPostTime(String userId) =>
+      _op('latestPostTime', () async {
+        final t = await _timelineOf(userId, 'latestPostTime');
+        return t.map((timeline) {
+          DateTime? latest;
+          for (final e in timeline.entries) {
+            if (!e.belongsTo(userId)) continue;
+            if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+          }
+          return latest;
+        });
       });
-    },
-  );
 
   /// One post, carousel or reel by [shortcode], from the page's own
   /// `media/<pk>/info/` request. Used to refresh an expired media URL.
-  Future<Result<RemoteContent>> fetchPost(String shortcode) => _op(
-    'fetchPost',
-    () async {
-      final plan = PagePlans.post(shortcode);
-      if (plan == null) return const Err(TargetNotFound());
-      return _load('fetchPost', plan);
-    },
-  );
+  Future<Result<RemoteContent>> fetchPost(String shortcode) =>
+      _op('fetchPost', () async {
+        final plan = PagePlans.post(shortcode);
+        if (plan == null) return const Err(TargetNotFound());
+        return _load('fetchPost', plan);
+      });
 
   // ------------------------------------------------------------ last resort
 
@@ -432,11 +422,7 @@ final class PageExtractor {
   /// Drives one WebView until the plan is answered, fails or times out.
   /// Nothing governed happens in here, and it always completes: the lease,
   /// the open, the wait and every clean-up step are bounded.
-  Future<Result<T>> _drive<T>(
-    String op,
-    PagePlan<T> plan,
-    IgSession ig,
-  ) async {
+  Future<Result<T>> _drive<T>(String op, PagePlan<T> plan, IgSession ig) async {
     PageSession? page;
     StreamSubscription<PageEvent>? sub;
     Timer? timer;
@@ -658,11 +644,7 @@ final class PageExtractor {
     try {
       await action().timeout(cleanupTimeout);
     } on TimeoutException {
-      _log?.log(
-        LogLevel.warn,
-        'page',
-        'op=$op cleanup_timeout step=$step',
-      );
+      _log?.log(LogLevel.warn, 'page', 'op=$op cleanup_timeout step=$step');
     } on Object catch (error) {
       _log?.log(
         LogLevel.warn,

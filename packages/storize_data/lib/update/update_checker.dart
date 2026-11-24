@@ -32,12 +32,7 @@ final RegExp _sha256Re = RegExp(r'^[0-9a-fA-F]{64}$');
 ///   compare numerically and sort before alphanumeric ones; a shorter list
 ///   sorts first when it is a prefix of the longer one.
 final class SemanticVersion implements Comparable<SemanticVersion> {
-  const SemanticVersion._(
-    this.major,
-    this.minor,
-    this.patch,
-    this.prerelease,
-  );
+  const SemanticVersion._(this.major, this.minor, this.patch, this.prerelease);
 
   /// Major version number.
   final int major;
@@ -188,11 +183,7 @@ final class UpdateAvailable extends UpdateState {
 /// user must update before continuing.
 final class UpdateRequired extends UpdateState {
   /// Creates a mandatory-update state.
-  const UpdateRequired({
-    required this.version,
-    required this.url,
-    this.sha256,
-  });
+  const UpdateRequired({required this.version, required this.url, this.sha256});
 
   /// Remote version with the leading `v` removed, e.g. `1.2.3`.
   final String version;
@@ -219,11 +210,9 @@ class UpdateChecker {
   ///
   /// Pass [dio] to inject a client (tests use a mock adapter). When it is
   /// omitted, an internal client is created and closed by [close].
-  UpdateChecker({
-    Dio? dio,
-    this.timeout = const Duration(seconds: 10),
-  }) : _dio = dio ?? Dio(),
-       _ownsDio = dio == null;
+  UpdateChecker({Dio? dio, this.timeout = const Duration(seconds: 10)})
+    : _dio = dio ?? Dio(),
+      _ownsDio = dio == null;
 
   /// Upper bound for the whole check, applied to connect, send and receive.
   final Duration timeout;

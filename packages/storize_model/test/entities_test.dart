@@ -177,10 +177,7 @@ void main() {
     test('each scalar field affects equality', () {
       expect(content(remoteId: '9'), isNot(content()));
       expect(content(caption: 'other'), isNot(content()));
-      expect(
-        content(postedAt: DateTime.utc(2026)),
-        isNot(content()),
-      );
+      expect(content(postedAt: DateTime.utc(2026)), isNot(content()));
     });
 
     test('lists and maps are unmodifiable, including nested values', () {
@@ -215,10 +212,7 @@ void main() {
       final first = links[0]! as Map<String, Object?>;
       expect(first['url'], 'https://example.test/a');
       expect(first['n'], 1);
-      expect(
-        (c.extras['location']! as Map<String, Object?>)['name'],
-        'Cairo',
-      );
+      expect((c.extras['location']! as Map<String, Object?>)['name'], 'Cairo');
       expect(() => first['x'] = 1, throwsUnsupportedError);
     });
 

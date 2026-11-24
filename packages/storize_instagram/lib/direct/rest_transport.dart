@@ -38,21 +38,13 @@ final class RestTransport implements IgTransport {
 
   @override
   Future<Result<UserProfile>> userById(String userId, IgCall call) =>
-      callAndParse(
-        call,
-        RestRequests.userInfo(userId),
-        mapper.restUserInfo,
-      );
+      callAndParse(call, RestRequests.userInfo(userId), mapper.restUserInfo);
 
   @override
   Future<Result<Map<String, StoryReel>>> storyReels(
     List<String> userIds,
     IgCall call,
-  ) => callAndParse(
-    call,
-    RestRequests.reelsMedia(userIds),
-    mapper.restReels,
-  );
+  ) => callAndParse(call, RestRequests.reelsMedia(userIds), mapper.restReels);
 
   @override
   Future<Result<Timeline>> timeline(
@@ -66,9 +58,6 @@ final class RestTransport implements IgTransport {
   );
 
   @override
-  Future<Result<Viewer>> viewer(String ownUserId, IgCall call) => callAndParse(
-    call,
-    RestRequests.currentUser(),
-    mapper.restCurrentUser,
-  );
+  Future<Result<Viewer>> viewer(String ownUserId, IgCall call) =>
+      callAndParse(call, RestRequests.currentUser(), mapper.restCurrentUser);
 }
