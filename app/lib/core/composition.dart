@@ -21,6 +21,9 @@ import 'package:storize_instagram/media/media.dart';
 import 'package:storize_instagram/page/page.dart';
 import 'package:storize_instagram/platform/platform.dart';
 
+/// How long an interactive foreground op may wait for the request budget.
+const Duration interactiveMaxWait = Duration(seconds: 8);
+
 /// The parts of the app that touch the platform (database file, Keystore,
 /// MediaStore, network, WebView). `AppComposition.assemble` wires everything
 /// else from them, so the wiring is tested with fakes and an in-memory
@@ -265,13 +268,21 @@ final class AppComposition {
       );
     }
 
-    final platform = ActiveAccountPlatform(accounts: accounts, factory: build);
+    // Foreground ops the user waits for must not spin while the budget
+    // refills (TECH_SPEC 17.3). Background jobs keep waiting.
+    final interactiveWait = background ? null : interactiveMaxWait;
+    final platform = ActiveAccountPlatform(
+      accounts: accounts,
+      factory: build,
+      interactiveMaxWait: interactiveWait,
+    );
     // S-02 verifies a new session under the staging id before it belongs to
     // any account (never the active account's session).
     final loginPlatform = ActiveAccountPlatform.fixed(
       accounts: accounts,
       factory: build,
       accountId: LoginAccount.unsavedId,
+      interactiveMaxWait: interactiveWait,
     );
     final loginLease = GovernorLoginLease(webViewLease);
 

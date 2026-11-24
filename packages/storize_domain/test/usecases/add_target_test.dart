@@ -347,31 +347,28 @@ void main() {
     });
   });
 
-  group('AC4 watermark', () {
-    test('uses latestPostTime', () async {
-      h.platform.resolveUserResults.addOk(user());
-      h.platform.latestPostTimeResults.addOk(DateTime.utc(2025, 5, 5, 5));
-      final r =
-          await h.add('x', category: TargetCategory.public) as AddTargetAdded;
-      expect(r.target.postsWatermarkAt, DateTime.utc(2025, 5, 5, 5));
-      expect(r.target.addedAt, h.clock.now());
-      expect(h.platform.callsTo('latestPostTime').single.args, ['100']);
-    });
+  group('AC4 watermark (FR-63, D-17)', () {
+    test(
+      'is the start of today in local time, no latestPostTime call',
+      () async {
+        h.platform.resolveUserResults.addOk(user());
+        final r =
+            await h.add('x', category: TargetCategory.public) as AddTargetAdded;
+        final local = h.clock.now().toLocal();
+        expect(
+          r.target.postsWatermarkAt,
+          DateTime(local.year, local.month, local.day).toUtc(),
+        );
+        expect(r.target.addedAt, h.clock.now());
+        expect(h.platform.callsTo('latestPostTime'), isEmpty);
+      },
+    );
 
-    test('no posts uses now', () async {
+    test('first check is still scheduled', () async {
       h.platform.resolveUserResults.addOk(user());
-      h.platform.latestPostTimeResults.addOk(null);
       final r =
           await h.add('x', category: TargetCategory.public) as AddTargetAdded;
-      expect(r.target.postsWatermarkAt, h.clock.now());
-    });
-
-    test('failure uses now and still adds', () async {
-      h.platform.resolveUserResults.addOk(user());
-      h.platform.latestPostTimeResults.addFailure(const RateLimited(null));
-      final r =
-          await h.add('x', category: TargetCategory.public) as AddTargetAdded;
-      expect(r.target.postsWatermarkAt, h.clock.now());
+      expect(r.firstCheckScheduled, isTrue);
     });
   });
 

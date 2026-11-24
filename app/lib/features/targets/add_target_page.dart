@@ -65,9 +65,8 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
       case AddTargetAccountRestricted():
         messenger.showSnackBar(SnackBar(content: Text(l10n.tgtRestricted)));
       case AddTargetRateLimited():
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.errorRateLimitedTitle)),
-        );
+        // Shown inline, the form stays editable (TECH_SPEC 17.3).
+        break;
       case AddTargetNetwork():
         messenger.showSnackBar(
           SnackBar(
@@ -108,6 +107,10 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     }
     if (failure is AddTargetDuplicate) {
       return l10n.tgtDuplicate('@${failure.existingUsername}');
+    }
+    if (failure is AddTargetRateLimited) {
+      final minutes = ((failure.retryAfter?.inSeconds ?? 0) / 60).ceil();
+      return l10n.tgtErrRateLimited(minutes < 1 ? 1 : minutes);
     }
     final invalid = normalized == null;
     if (invalid && (form.submitted || form.username.isNotEmpty)) {
@@ -390,9 +393,8 @@ class _ErrorText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      color: color,
-    );
+    final style = Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(color: color);
     return Padding(
       padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s8),
       child: icon == null

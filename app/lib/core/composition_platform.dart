@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/instagram_platform.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -24,6 +25,7 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
     required this._accounts,
     required this._factory,
     this._fixedAccountId,
+    this._interactiveMaxWait,
   });
 
   /// The adapter of one fixed account id, whatever the active account is.
@@ -33,11 +35,28 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
     required AccountRepo accounts,
     required PlatformFactory factory,
     required int accountId,
-  }) : this(accounts: accounts, factory: factory, fixedAccountId: accountId);
+    Duration? interactiveMaxWait,
+  }) : this(
+         accounts: accounts,
+         factory: factory,
+         fixedAccountId: accountId,
+         interactiveMaxWait: interactiveMaxWait,
+       );
 
   final AccountRepo _accounts;
   final int? _fixedAccountId;
   final PlatformFactory _factory;
+
+  /// When set, the interactive ops (`resolveUser`, `refreshUser`,
+  /// `verifySession`) refuse to wait longer than this for the request budget
+  /// and return `RateLimited` instead (TECH_SPEC 17.3). Null for background.
+  final Duration? _interactiveMaxWait;
+
+  Future<T> _interactive<T>(Future<T> Function() op) {
+    final maxWait = _interactiveMaxWait;
+    return maxWait == null ? op() : RequestGovernor.withMaxWait(maxWait, op);
+  }
+
   final Map<int, Future<InstagramPlatform>> _cache = {};
   InstagramPlatform? _last;
 
@@ -58,13 +77,15 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
 
   @override
   Future<Result<RemoteUser>> resolveUser(String username) async =>
-      (await _current()).resolveUser(username);
+      _interactive(() async => (await _current()).resolveUser(username));
 
   @override
   Future<Result<RemoteUser>> refreshUser(
     String remoteUserId,
     String lastUsername,
-  ) async => (await _current()).refreshUser(remoteUserId, lastUsername);
+  ) async => _interactive(
+    () async => (await _current()).refreshUser(remoteUserId, lastUsername),
+  );
 
   @override
   Future<Result<Map<String, List<RemoteContent>>>> fetchStories(
@@ -86,7 +107,7 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
 
   @override
   Future<Result<RemoteUser>> verifySession() async =>
-      (await _current()).verifySession();
+      _interactive(() async => (await _current()).verifySession());
 
   @override
   Stream<List<int>> openMedia(String url, {int fromByte = 0}) async* {
