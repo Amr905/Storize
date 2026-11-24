@@ -51,3 +51,14 @@ Update the same day: on device, `current_user` returned HTTP 400 to the web sess
 Found on device: discovered `doc_id`s and page tokens exist only after a page-mode run in the same isolate, and page mode is off in the background, so every direct GraphQL call failed with `SchemaChanged` and nothing was fetched in background checks, on add, for history or for highlights. The web REST endpoints work with the session cookies.
 
 Direct mode now uses GraphQL when its `doc_id` and tokens are available and REST otherwise, per call (`FallbackTransport`). A GraphQL `SchemaChanged` is retried once on REST; a REST `SchemaChanged` or `UnknownFailure` still goes to page mode where allowed; rate-limit, session, private and not-found failures are never retried on the other transport. Every call stays a governed read-only GET (no `seen` endpoint). This supersedes "REST only where `restProven`" for the default; a proven probe can still pin REST. Details and endpoints: INSTAGRAM_EXTRACTION.md "v0.3 REST fallback". Verified on device by DEVICE_TESTS D5.
+
+### Amendment 2026-11-24 (2): REST stays gated; discovery is persisted (T-045)
+Supersedes the REST part of "REST fallback per call (T-044)". On device, with no discovery: `fetchStories via=rest` returned `SchemaChanged where=response`, `fetchNewPosts via=rest` returned 404 (`feed/user/{id}`), and shortly after the app reported a 15 min rate limit. The unproven REST endpoints answered with 404 and a soft block ("Please wait a few minutes"), and they put the account at risk. GraphQL through the real page is proven.
+
+Decision:
+- **REST is used only for ops that a probe report proved** (`restProven` per candidate), plus the first-login `verifySession` bootstrap. Without proof and without discovery, direct mode sends **nothing** and returns `SchemaChanged`: page mode in the foreground, a clean skip in the background. The REST code and tests stay, gated.
+- **`doc_id`s and page tokens are persisted per account in secure storage** and shared by all isolates (`DiscoveryStore`), so background isolates use the GraphQL that page mode discovered. Lifetimes: `doc_id` 6 h, tokens 12 h. Cleared with the session. A stale `doc_id` (GraphQL `SchemaChanged`) is dropped.
+- **The foreground refreshes discovery** at open and resume with one governed page load per account per 6 h, never while paused.
+- Rate limits are logged with op, transport, status and a letters-only hint, to find the offending call next time.
+
+Consequence: until a page load has happened (first run after install or after 6 h without opening the app), background checks skip without a request. Open the app once and background checks work (DEVICE_TESTS D5).

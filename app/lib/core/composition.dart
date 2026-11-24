@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:storize_app/core/composition_platform.dart';
+import 'package:storize_app/core/discovery_refresher.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/onboarding/login_lease.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
@@ -49,6 +50,7 @@ final class CompositionParts {
     required this.currentVersion,
     required this.pins,
     required this.biometric,
+    this.discoveryStore,
     this.crashMarker,
     this.notifications,
     this.setupOps,
@@ -124,6 +126,11 @@ final class CompositionParts {
   /// Reads a gallery photo for the full-size viewers (null in tests: the
   /// viewers then keep the thumbnail).
   final Future<Uint8List?> Function(String contentUri)? fullPhotoReader;
+
+  /// Where page discovery (`doc_id`s, page tokens) is shared across isolates
+  /// (secure storage in production). Null: memory only, and no foreground
+  /// refresh (tests).
+  final DiscoveryStore? discoveryStore;
 
   /// The crash marker, to report a pending crash after the database opens.
   final CrashMarker? crashMarker;
@@ -203,6 +210,7 @@ final class AppComposition {
     required this.activity,
     required this.checkRuns,
     required this.leases,
+    this.discoveryRefresher,
   });
 
   /// Wires everything from [parts].
@@ -260,6 +268,7 @@ final class AppComposition {
         targets: targets,
         appId: instagramWebAppId,
         log: log,
+        discoveryStore: parts.discoveryStore,
         // No `activity`: RunCheck writes PAGE_MODE_USED from the signals.
         clock: clock,
         seenGuard: seenGuard,
@@ -288,6 +297,28 @@ final class AppComposition {
     );
     final loginLease = GovernorLoginLease(webViewLease);
 
+    // Foreground only (T-045): a background isolate never loads pages, so the
+    // foreground fills the persisted discovery that both isolates read.
+    final discoveryStore = parts.discoveryStore;
+    final refresherPlatforms = <int, Future<InstagramPlatform>>{};
+    final discoveryRefresher = background || discoveryStore == null
+        ? null
+        : DiscoveryRefresher(
+            accounts: accounts,
+            targets: targets,
+            store: discoveryStore,
+            governor: governor,
+            clock: clock,
+            log: log,
+            load: (accountId, username) async {
+              final p = await refresherPlatforms.putIfAbsent(
+                accountId,
+                () => build(accountId),
+              );
+              return p.loadDiscovery(username);
+            },
+          );
+
     final deleteContent = DeleteContent(
       content: content,
       gallery: parts.gallery,
@@ -307,6 +338,7 @@ final class AppComposition {
       activity: activity,
       checkRuns: checkRuns,
       leases: leases,
+      discoveryRefresher: discoveryRefresher,
       deleteContent: deleteContent,
       runCheck: RunCheck(
         platform: platform,
@@ -427,6 +459,10 @@ final class AppComposition {
 
   /// Governor leases.
   final GovernorLeaseRepo leases;
+
+  /// Refills the persisted page discovery from the foreground; null in a
+  /// background isolate and when no discovery store is wired.
+  final DiscoveryRefresher? discoveryRefresher;
 
   /// Settings.
   SettingsRepo get settings => parts.settings;
