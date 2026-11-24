@@ -19,6 +19,7 @@ class LibraryFilters {
     this.customFrom,
     this.customTo,
     this.type = TypeFilter.all,
+    this.highlightsOnly = false,
   }) : targetIds = Set<int>.unmodifiable(targetIds);
 
   /// No filters.
@@ -39,9 +40,15 @@ class LibraryFilters {
   /// Photo, video, carousel or reel.
   final TypeFilter type;
 
+  /// Only highlight items (FR-72). They are stories in the kind switch.
+  final bool highlightsOnly;
+
   /// Whether anything narrows the library (the kind is not counted).
   bool get isActive =>
-      targetIds.isNotEmpty || date != DatePreset.any || type != TypeFilter.all;
+      targetIds.isNotEmpty ||
+      date != DatePreset.any ||
+      type != TypeFilter.all ||
+      highlightsOnly;
 
   /// The type that applies to [kind]: carousels and reels mean nothing for
   /// stories.
@@ -58,12 +65,14 @@ class LibraryFilters {
     DateTime? customFrom,
     DateTime? customTo,
     TypeFilter? type,
+    bool? highlightsOnly,
   }) => LibraryFilters(
     targetIds: targetIds ?? this.targetIds,
     date: date ?? this.date,
     customFrom: customFrom ?? this.customFrom,
     customTo: customTo ?? this.customTo,
     type: type ?? this.type,
+    highlightsOnly: highlightsOnly ?? this.highlightsOnly,
   );
 
   /// The repo filter for [kind] at [now] (UTC). Local midnights bound the
@@ -98,7 +107,11 @@ class LibraryFilters {
     }
     final t = effectiveType(kind);
     return ContentFilter(
-      kind: kind == LibraryKind.stories ? ContentKind.story : ContentKind.post,
+      kind: highlightsOnly
+          ? ContentKind.highlight
+          : kind == LibraryKind.stories
+          ? ContentKind.story
+          : ContentKind.post,
       targetIds: targetIds,
       from: from,
       to: to,
@@ -126,7 +139,8 @@ class LibraryFilters {
       other.date == date &&
       other.customFrom == customFrom &&
       other.customTo == customTo &&
-      other.type == type;
+      other.type == type &&
+      other.highlightsOnly == highlightsOnly;
 
   @override
   int get hashCode => Object.hash(
@@ -135,5 +149,6 @@ class LibraryFilters {
     customFrom,
     customTo,
     type,
+    highlightsOnly,
   );
 }

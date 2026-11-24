@@ -36,6 +36,7 @@ void main() {
   }
 
   Future<void> pickOwn(WidgetTester t) async {
+    await t.ensureVisible(find.text(l10n.tgtCatOwnTitle));
     await t.tap(find.text(l10n.tgtCatOwnTitle));
     await t.pumpAndSettle();
   }
