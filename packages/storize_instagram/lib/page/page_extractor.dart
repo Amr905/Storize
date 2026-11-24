@@ -419,7 +419,14 @@ final class PageExtractor {
     return _load(op, PagePlans.posts(name));
   }
 
+  final Map<String, DateTime?> _storyTimes = {};
+
+  /// `latest_reel_media` of [userId] as the last profile page load saw it, or
+  /// null when it showed no story (or no profile of [userId] was loaded).
+  DateTime? profileStoryTime(String userId) => _storyTimes[userId];
+
   Future<Result<RemoteUser>> _remember(UserProfile profile) async {
+    _storyTimes[profile.user.remoteUserId] = profile.latestReelMedia;
     try {
       await _usernames.remember(
         profile.user.remoteUserId,
@@ -553,6 +560,9 @@ final class PageExtractor {
     var accepted = 0;
     var droppedOrigin = 0;
     var droppedMalformed = 0;
+    final seenNames = <String?>{};
+    var withDocId = 0;
+    var withTokens = 0;
     var blocked = 0;
     try {
       // The app-wide WebView lease (QA-F7): never wipe a jar another part of
@@ -632,6 +642,9 @@ final class PageExtractor {
                 blocked++;
               case HookCapture():
                 accepted++;
+                seenNames.add(msg.friendlyName);
+                if (msg.docId != null) withDocId++;
+                if (msg.tokens.isNotEmpty) withTokens++;
                 if (_isSeenLeak(msg)) {
                   // The reply of a blocked name exists, so the request was
                   // sent: the block failed (UD-3 canary).
@@ -741,6 +754,8 @@ final class PageExtractor {
       if (leased) {
         await _guarded(op, 'lease_release', () => _lease.release(_leaseOwner));
       }
+      // What the page showed is on disk before the caller reads the store.
+      await _guarded(op, 'discovery_flush', discovery.flush);
       _droppedOrigin += droppedOrigin;
       _droppedMalformed += droppedMalformed;
       _blocked += blocked;
@@ -749,6 +764,12 @@ final class PageExtractor {
         'page',
         'op=$op accepted=$accepted dropped_origin=$droppedOrigin '
             'dropped_malformed=$droppedMalformed blocked=$blocked',
+      );
+      _log?.log(
+        LogLevel.info,
+        'page',
+        'op=$op names=${logSafeNames(seenNames).join(',')} '
+            'has_doc_id=$withDocId has_tokens=$withTokens',
       );
     }
   }

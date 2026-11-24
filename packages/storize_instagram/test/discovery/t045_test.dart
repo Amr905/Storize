@@ -115,7 +115,7 @@ void main() {
       final d = _discovery(store, clock);
       await _learn(d);
       final text = '$d ${await store.load(1)} $store';
-      expect(text, contains('docIds: 4'));
+      expect(text, contains('docIds: 5'));
       expect(text, isNot(contains('ZZFAKE')));
       expect(text, isNot(contains(fakeDtsg)));
     });

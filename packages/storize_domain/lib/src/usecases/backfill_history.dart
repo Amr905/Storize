@@ -33,6 +33,11 @@ enum BackfillOutcome {
   /// A network problem. State stays `running`; the next run retries.
   network,
 
+  /// Not possible right now: no `doc_id` or page tokens yet, or page mode is
+  /// off in the background. State stays `running`; the next run retries
+  /// (T-047). Not an error.
+  deferred,
+
   /// The backfill cannot go on (state `failed`); the user can resume it.
   failed,
 }
@@ -65,6 +70,7 @@ final class BackfillStepResult {
       outcome == BackfillOutcome.progressed ||
       outcome == BackfillOutcome.rateLimited ||
       outcome == BackfillOutcome.network ||
+      outcome == BackfillOutcome.deferred ||
       outcome == BackfillOutcome.sessionInvalid ||
       outcome == BackfillOutcome.sessionInactive;
 
@@ -84,6 +90,7 @@ final class BackfillPassResult {
     this.sessionStatus,
     this.sessionInactive = false,
     this.network = false,
+    this.deferred = false,
   });
 
   /// How many targets are still `running` after the pass.
@@ -103,6 +110,10 @@ final class BackfillPassResult {
 
   /// A step hit a network problem.
   final bool network;
+
+  /// A step was deferred (no doc_id, no tokens or page mode off): retrying
+  /// soon cannot help, so the caller should wait much longer (T-047).
+  final bool deferred;
 
   @override
   String toString() =>
@@ -245,12 +256,14 @@ final class BackfillHistory {
     var rateLimited = false;
     var network = false;
     var inactive = false;
+    var deferred = false;
     AccountStatus? session;
     for (final id in ids) {
       if (deadline != null && !_clock.now().isBefore(deadline)) break;
       final r = await step(id, policy: policy);
       fresh.addAll(r.newContentIds);
       if (r.outcome == BackfillOutcome.network) network = true;
+      if (r.outcome == BackfillOutcome.deferred) deferred = true;
       if (r.outcome == BackfillOutcome.rateLimited) {
         rateLimited = true;
         break;
@@ -272,6 +285,7 @@ final class BackfillHistory {
       sessionStatus: session,
       sessionInactive: inactive,
       network: network,
+      deferred: deferred,
     );
   }
 
@@ -435,6 +449,10 @@ final class BackfillHistory {
           BackfillOutcome.sessionInvalid,
           sessionStatus: AccountStatus.restricted,
         );
+      case SchemaChanged(:final where) when _isNotNow(where):
+        return const BackfillStepResult(BackfillOutcome.deferred);
+      case UnknownFailure(:final message) when message == _pageModeOff:
+        return const BackfillStepResult(BackfillOutcome.deferred);
       case TargetNotVisible() ||
           TargetNotFound() ||
           SchemaChanged() ||
@@ -454,4 +472,10 @@ final class BackfillHistory {
         return const BackfillStepResult(BackfillOutcome.failed);
     }
   }
+
+  static const _pageModeOff = 'page_mode_background_disabled';
+
+  /// A missing `doc_id` or page tokens is "not yet", not a broken response.
+  static bool _isNotNow(String where) =>
+      where.startsWith('doc_id:') || where == 'page_tokens';
 }

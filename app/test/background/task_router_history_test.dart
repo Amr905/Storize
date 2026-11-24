@@ -141,6 +141,22 @@ void main() {
       expect(r.enqueuer.history.single.delay, TaskRouter.historyRateLimitDelay);
     });
 
+    test('T-047: a deferred pass waits 30 min, not 1 min', () async {
+      final r = _Rig()
+        ..pass = const BackfillPassResult(
+          running: 1,
+          newContentIds: [],
+          deferred: true,
+        );
+      await r.router.route(TaskNames.history);
+      expect(r.enqueuer.history.single.delay, TaskRouter.historyDeferredDelay);
+      expect(TaskRouter.historyDeferredDelay, const Duration(minutes: 30));
+      expect(
+        TaskRouter.historyDeferredDelay,
+        greaterThan(TaskRouter.historyRateLimitDelay),
+      );
+    });
+
     test('a lost session ends the chain and notifies', () async {
       final r = _Rig()
         ..pass = const BackfillPassResult(

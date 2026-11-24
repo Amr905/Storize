@@ -272,6 +272,19 @@
     return out;
   }
 
+  // The friendly name from the request headers (`X-FB-Friendly-Name`), for a
+  // request whose body carries none. Header texts are "name:value" lines.
+  function headerName(headerTexts) {
+    try {
+      var m = /^x-fb-friendly-name:\s*([A-Za-z0-9_]{1,120})\s*$/im.exec(
+        headerTexts.join('\n')
+      );
+      return m ? m[1] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function notifyBlocked(name, via) {
     post({ type: 'blocked', friendlyName: name, origin: location.origin, via: via });
   }
@@ -317,7 +330,7 @@
             function (res) {
               try {
                 res.clone().text().then(function (t) {
-                  report(res.url || url, res.status, t, 'fetch', form.name, form.info);
+                  report(res.url || url, res.status, t, 'fetch', form.name || headerName(headerTexts), form.info);
                 });
               } catch (e) {}
             },
@@ -453,7 +466,7 @@
           } else if (xhr.responseType === 'json' && xhr.response) {
             t = JSON.stringify(xhr.response);
           }
-          if (t) report(xhr.responseURL || url, xhr.status, t, 'xhr', form.name, form.info);
+          if (t) report(xhr.responseURL || url, xhr.status, t, 'xhr', form.name || headerName(headerTexts), form.info);
         } catch (e) {}
       });
       return origSend.apply(xhr, args);

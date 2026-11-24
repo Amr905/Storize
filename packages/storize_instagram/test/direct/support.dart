@@ -108,7 +108,7 @@ Responder graphqlResponder({
 }
 
 final class FakeDocIds implements DocIdResolver {
-  FakeDocIds({this.missing = const {}});
+  FakeDocIds({this.missing = const {GraphqlQuery.postsPaging}});
 
   final Set<GraphqlQuery> missing;
 

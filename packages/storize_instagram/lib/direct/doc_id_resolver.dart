@@ -9,6 +9,10 @@ enum GraphqlQuery {
   /// The posts of a user by username.
   posts('PolarisProfilePostsQuery'),
 
+  /// The paging variant of the posts query (`..._connection`), used only
+  /// for pages after the first (it takes `first` and `after`).
+  postsPaging('PolarisProfilePostsTabContentQuery_connection'),
+
   /// The highlights tray of a profile. **The name is an assumption** (the
   /// T-002 capture saw the query but did not record its name): see
   /// INSTAGRAM_EXTRACTION.md v0.3.
@@ -19,15 +23,42 @@ enum GraphqlQuery {
   /// The `fb_api_req_friendly_name` value.
   final String friendlyName;
 
-  /// Whether [name] is this query's friendly name. The highlights tray also
-  /// accepts any name that holds both `Highlights` and `Tray`, because its
-  /// real name is unverified.
+  /// Whether [name] is this query's friendly name, or a known alias of it
+  /// (see [_aliasMatch]): Instagram renames and suffixes its queries, so an
+  /// exact match alone leaves direct mode without a `doc_id`.
   bool matchesName(String? name) {
-    if (name == null) return false;
-    if (name == friendlyName) return true;
-    return this == highlights &&
-        name.contains('Highlights') &&
-        name.contains('Tray');
+    if (name == null || name.isEmpty) return false;
+    return name == friendlyName || _aliasMatch(name);
+  }
+
+  /// Whether [name] is exactly [friendlyName] (an alias is a weaker match).
+  bool isExactName(String? name) => name == friendlyName;
+
+  // The known aliases, in ONE place. A name that is only an alias is recorded
+  // but never replaces a `doc_id` found under the exact name.
+  //  - posts: `PolarisProfilePosts...` without `_connection` (first page).
+  //  - postsPaging: `PolarisProfilePosts...` with `_connection`: its doc_id
+  //    is used only for `timelinePage`, never for the first-page timeline.
+  //  - stories: any `...StoriesV3Reel...` / `...ReelPageStandalone...` query
+  //    except the tray and the seen mutation (other variables, or blocked).
+  //  - profile: `PolarisProfilePageContentQuery...` with a suffix.
+  bool _aliasMatch(String name) {
+    switch (this) {
+      case GraphqlQuery.posts:
+        return name.startsWith('PolarisProfilePosts') &&
+            !name.contains('_connection');
+      case GraphqlQuery.postsPaging:
+        return name.startsWith('PolarisProfilePosts') &&
+            name.contains('_connection');
+      case GraphqlQuery.stories:
+        if (name.contains('Tray') || name.contains('Seen')) return false;
+        return name.contains('StoriesV3Reel') ||
+            name.contains('ReelPageStandalone');
+      case GraphqlQuery.profile:
+        return name.startsWith('PolarisProfilePageContentQuery');
+      case GraphqlQuery.highlights:
+        return name.contains('Highlights') && name.contains('Tray');
+    }
   }
 }
 

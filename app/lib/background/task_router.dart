@@ -123,6 +123,10 @@ final class TaskRouter {
   /// The wait after a rate limit.
   static const Duration historyRateLimitDelay = Duration(minutes: 15);
 
+  /// The wait after a pass in which a backfill was deferred (no `doc_id`,
+  /// no page tokens, or page mode off). Fixed, so it is also the cap.
+  static const Duration historyDeferredDelay = Duration(minutes: 30);
+
   /// A running backfill whose progress is older than this has no live
   /// `history` chain, so a check starts one.
   static const Duration historyStale = Duration(minutes: 10);
@@ -318,7 +322,9 @@ final class TaskRouter {
     if (r.running > 0 && !blocked) {
       await _enqueuer.enqueueHistory(
         wifiOnly: settings.wifiOnly,
-        delay: r.rateLimited ? historyRateLimitDelay : historyDelay,
+        delay: r.rateLimited
+            ? historyRateLimitDelay
+            : (r.deferred ? historyDeferredDelay : historyDelay),
         fromHistoryTask: true,
       );
     }

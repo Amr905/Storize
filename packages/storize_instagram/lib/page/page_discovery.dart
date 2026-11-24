@@ -52,6 +52,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
 
   final Clock _clock;
   final Map<GraphqlQuery, (String, DateTime)> _docIds = {};
+  final Set<GraphqlQuery> _exact = {};
   Map<String, String>? _tokens;
   DateTime? _tokensAt;
   // What this instance recorded and has not saved yet. Only this is merged
@@ -76,11 +77,18 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     var changed = false;
     if (docId != null && friendlyName != null) {
       for (final q in GraphqlQuery.values) {
-        if (q.matchesName(friendlyName)) {
-          _docIds[q] = (docId, now);
-          _pendingIds[q] = (docId, now);
-          changed = true;
+        if (!q.matchesName(friendlyName)) continue;
+        final exact = q.isExactName(friendlyName);
+        // An alias never replaces a fresh doc_id found under the exact name.
+        if (!exact && _exact.contains(q) && _docIdFresh(q)) continue;
+        if (exact) {
+          _exact.add(q);
+        } else {
+          _exact.remove(q);
         }
+        _docIds[q] = (docId, now);
+        _pendingIds[q] = (docId, now);
+        changed = true;
       }
     }
     if (tokens.isNotEmpty) {
@@ -99,6 +107,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   /// Forgets everything in memory and in the store.
   void clear() {
     _docIds.clear();
+    _exact.clear();
     _tokens = null;
     _tokensAt = null;
     _pendingIds.clear();
@@ -111,6 +120,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   @override
   Future<void> forget(GraphqlQuery query) async {
     _docIds.remove(query);
+    _exact.remove(query);
     _pendingIds.remove(query);
     if (store != null) _enqueue(() => _persist(drop: query));
     await flush();
@@ -264,6 +274,16 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     }
     return DiscoverySnapshot(docIds: ids, tokens: tokens, tokensAt: tokensAt);
   }
+
+  /// The queries that have a fresh doc_id in memory (names only, for
+  /// diagnostics: never a value).
+  List<GraphqlQuery> get knownQueries => [
+    for (final q in GraphqlQuery.values)
+      if (_docIdFresh(q)) q,
+  ];
+
+  /// Whether fresh tokens are held in memory.
+  bool get hasTokens => _tokensFresh();
 
   @override
   String toString() =>

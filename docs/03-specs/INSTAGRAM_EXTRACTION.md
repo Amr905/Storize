@@ -265,3 +265,22 @@ Device evidence after T-044 (2026-11-24): `storyReels via=graphql unavailable ne
 **Foreground refresh (`DiscoveryRefresher`).** At app open and on every resume (the foreground isolate only), for the active account whose snapshot is missing, without tokens or older than 6 h: one governed page-mode profile load (`InstagramPlatform.loadDiscovery`, page mode only) of a tracked target, else of the account's own profile. At most once per 6 h per account in the isolate (a failed load counts), skipped while the governor is paused, bounded wait of 8 s for the budget.
 
 **Diagnostics (INFO, secret-free).** A rate limit logs `op=<op> via=<rest|graphql|page> rate_limited status=<n> hint=<letters> [retry_after_s=<n>]` before the governor starts the backoff. A `SchemaChanged` or `UnknownFailure` from a reply adds `status=<n> keys=[<up to 8 top-level key names>]`; only names made of lowercase letters and underscores are listed, never a value, id, username or URL.
+
+## Query-name aliases and discovery diagnostics (T-047)
+
+Device evidence (T-045): the profile page load captured 7 GraphQL requests but no `doc_id` for the posts or stories queries. Instagram renames and suffixes friendly names, so `GraphqlQuery.matchesName` accepts the exact name or a known alias. The aliases live in one place (`GraphqlQuery._aliasMatch`):
+
+| Query | Accepted |
+|-------|----------|
+| posts | exact, or any name starting `PolarisProfilePosts` (including `...TabContentQuery_connection`: its variables `username`, `data`, `first`, `after` are what the timeline request builds) |
+| stories | any name containing `StoriesV3Reel` or `ReelPageStandalone`, except names with `Tray` or `Seen` |
+| profile | any name starting `PolarisProfilePageContentQuery` |
+| highlights | any name with `Highlights` and `Tray` |
+
+An alias never replaces a `doc_id` found under the exact name. The hook also reads the friendly name from the `X-FB-Friendly-Name` request header when the body has no `fb_api_req_friendly_name`.
+
+**The profile page may not run a stories query.** After a profile load, the foreground refresher may make one extra governed page-mode `fetchStories` for a tracked target whose profile showed a story newer than 24 h, inside the same 6 h throttle. Without one, background direct stories stay unavailable until a foreground check.
+
+**Diagnostics (INFO, no secrets).** After each page load: `names=` (sanitized to `[A-Za-z0-9_]`, at most 60 characters, 12 names, deduped), `has_doc_id=N has_tokens=N`. After a refresh: `state doc_ids=<queries> missing=<queries> tokens=<bool>`. Query names are Instagram code identifiers; doc_id and token values are never logged.
+
+**History.** A missing `doc_id` (`SchemaChanged('doc_id:...')`), missing page tokens, or `page_mode_background_disabled` is "not now": the backfill stays `running` (`BackfillOutcome.deferred`) and retries on the next run. Only a real response-shape `SchemaChanged`, `TargetNotFound` or `TargetNotVisible` fails it.

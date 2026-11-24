@@ -174,3 +174,20 @@ HookMessage parseHookMessage(List<Object?> args, {required String pageOrigin}) {
     tokens: Map.unmodifiable(tokens),
   );
 }
+
+/// The friendly names of one page load, made safe for the diagnostic log:
+/// each reduced to `[A-Za-z0-9_]`, cut to 60 characters, empty ones and
+/// duplicates dropped, at most 12 names. Query names are Instagram's code
+/// identifiers, not user data. Never pass a doc_id or token here.
+List<String> logSafeNames(Iterable<String?> names) {
+  final out = <String>[];
+  for (final raw in names) {
+    if (raw == null) continue;
+    var n = raw.replaceAll(RegExp('[^A-Za-z0-9_]'), '');
+    if (n.length > 60) n = n.substring(0, 60);
+    if (n.isEmpty || RegExp(r'^\d+$').hasMatch(n) || out.contains(n)) continue;
+    out.add(n);
+    if (out.length >= 12) break;
+  }
+  return out;
+}

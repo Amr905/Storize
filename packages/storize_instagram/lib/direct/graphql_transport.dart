@@ -188,7 +188,13 @@ final class GraphqlTransport implements IgTransport {
     IgCall call, {
     String? cursor,
   }) async {
-    final request = await _request(GraphqlQuery.posts, {
+    // The paging doc_id (if learned) is for pages after the first only.
+    var query = GraphqlQuery.posts;
+    if (cursor != null &&
+        await docIds.docIdFor(GraphqlQuery.postsPaging) != null) {
+      query = GraphqlQuery.postsPaging;
+    }
+    final request = await _request(query, {
       'username': username,
       if (cursor != null) ...{'after': cursor, 'first': postCount},
       'data': {
