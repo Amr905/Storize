@@ -26,6 +26,7 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
     required this._factory,
     this._fixedAccountId,
     this._interactiveMaxWait,
+    this._priority,
   });
 
   /// The adapter of one fixed account id, whatever the active account is.
@@ -36,7 +37,9 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
     required PlatformFactory factory,
     required int accountId,
     Duration? interactiveMaxWait,
+    RequestPriority? priority,
   }) : this(
+         priority: priority,
          accounts: accounts,
          factory: factory,
          fixedAccountId: accountId,
@@ -52,9 +55,33 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
   /// and return `RateLimited` instead (TECH_SPEC 17.3). Null for background.
   final Duration? _interactiveMaxWait;
 
+  /// The governor priority of every call (T-050): `background` in a
+  /// background isolate, so scheduled work leaves tokens for adding a target.
+  final RequestPriority? _priority;
+
   Future<T> _interactive<T>(Future<T> Function() op) {
     final maxWait = _interactiveMaxWait;
-    return maxWait == null ? op() : RequestGovernor.withMaxWait(maxWait, op);
+    final timed = maxWait == null
+        ? op
+        : () => RequestGovernor.withMaxWait(maxWait, op);
+    return _prio(timed);
+  }
+
+  Future<T> _prio<T>(Future<T> Function() op) {
+    final priority = _priority;
+    return priority == null ? op() : RequestGovernor.withPriority(priority, op);
+  }
+
+  /// Closes the in-page sessions of every adapter (end of a run). Never
+  /// throws.
+  Future<void> closeInPage() async {
+    for (final future in _cache.values.toList()) {
+      try {
+        await (await future).closeInPage();
+      } on Object {
+        // Clean-up only.
+      }
+    }
   }
 
   final Map<int, Future<InstagramPlatform>> _cache = {};
@@ -91,40 +118,56 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
   Future<Result<Map<String, List<RemoteContent>>>> fetchStories(
     List<String> userIds, {
     required ExtractionPolicy policy,
-  }) async => (await _current()).fetchStories(userIds, policy: policy);
+  }) async => _prio(
+    () async => (await _current()).fetchStories(userIds, policy: policy),
+  );
 
   @override
   Future<Result<List<RemoteContent>>> fetchNewPosts(
     String userId,
     DateTime watermark, {
     required ExtractionPolicy policy,
-  }) async =>
-      (await _current()).fetchNewPosts(userId, watermark, policy: policy);
+  }) async => _prio(
+    () async => (await _current()).fetchNewPosts(
+      userId,
+      watermark,
+      policy: policy,
+    ),
+  );
 
   @override
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
     required ExtractionPolicy policy,
     String? cursor,
-  }) async =>
-      (await _current()).fetchPostPage(userId, cursor: cursor, policy: policy);
+  }) async => _prio(
+    () async => (await _current()).fetchPostPage(
+      userId,
+      cursor: cursor,
+      policy: policy,
+    ),
+  );
 
   @override
   Future<Result<List<RemoteHighlight>>> fetchHighlights(
     String userId, {
     required ExtractionPolicy policy,
-  }) async => (await _current()).fetchHighlights(userId, policy: policy);
+  }) async => _prio(
+    () async => (await _current()).fetchHighlights(userId, policy: policy),
+  );
 
   @override
   Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
     List<String> highlightIds, {
     required ExtractionPolicy policy,
-  }) async =>
-      (await _current()).fetchHighlightItems(highlightIds, policy: policy);
+  }) async => _prio(
+    () async =>
+        (await _current()).fetchHighlightItems(highlightIds, policy: policy),
+  );
 
   @override
   Future<Result<DateTime?>> latestPostTime(String userId) async =>
-      (await _current()).latestPostTime(userId);
+      _prio(() async => (await _current()).latestPostTime(userId));
 
   @override
   Future<Result<RemoteUser>> verifySession() async =>

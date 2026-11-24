@@ -1,5 +1,6 @@
 import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/page/user_initiated.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -76,7 +77,8 @@ typedef PendingResolver = Future<ResolvePendingResult> Function({
 /// `false` only for "retry with back-off" (a network failure, TECH_SPEC
 /// section 7, or an unexpected error).
 ///
-/// **The 10-minute rule.** Every task works until `now + budget` (8 minutes).
+/// **The 10-minute rule.** Every task works until `now + budget - startMargin`
+/// (9 min minus 30 s).
 /// A check task runs [RunCheck] and then the downloads in the same task; when
 /// the deadline stops the downloads with files left, a one-off `download` task
 /// takes over (never a foreground service).
@@ -97,11 +99,22 @@ final class TaskRouter {
     this._historyProbe,
     this._highlights,
     this._resolvePending,
-    this.budget = const Duration(minutes: 8),
+    this.budget = const Duration(minutes: 9),
+    this.startMargin = const Duration(seconds: 30),
   });
 
-  /// The time one task may use (about 8 of the 10 minutes WorkManager gives).
+  /// The time one task may use (about 9 of the 10 minutes WorkManager gives;
+  /// in-page runs share one session and need the time, T-050).
   final Duration budget;
+
+  /// No new target is started in the last [startMargin] of the [budget].
+  final Duration startMargin;
+
+  /// The input-data key of the debug "Check now, no limit" (dev builds):
+  /// `true` runs the check under `RequestGovernor.runUnmetered`.
+  static const String inputManualUnmetered = 'manualUnmetered';
+
+  DateTime _deadline() => _clock.now().add(budget - startMargin);
 
   final CheckRunner _runCheck;
   final DownloadRunner _download;
@@ -172,6 +185,12 @@ final class TaskRouter {
   /// load pages in this background isolate, which a scheduled check may not.
   Future<bool> _check(CheckScope scope, Map<String, dynamic>? input) {
     if (input?[TaskNames.inputManual] == true) {
+      if (input?[inputManualUnmetered] == true) {
+        // Dev builds only: the governor ignores the flag in production.
+        return RequestGovernor.runUnmetered(
+          () => runUserInitiated(() => _checkRun(scope, input)),
+        );
+      }
       return runUserInitiated(() => _checkRun(scope, input));
     }
     return _checkRun(scope, input);
@@ -184,7 +203,7 @@ final class TaskRouter {
     final trigger = !manual
         ? CheckTrigger.periodic
         : (targetId == null ? CheckTrigger.manualAll : CheckTrigger.manualOne);
-    final deadline = _clock.now().add(budget);
+    final deadline = _deadline();
 
     // FR-73: targets added while Instagram was limited are looked up first,
     // so the check below already sees them as active.
@@ -322,7 +341,7 @@ final class TaskRouter {
   Future<bool> _historyTask() async {
     final run = _history;
     if (run == null) return true;
-    final deadline = _clock.now().add(budget);
+    final deadline = _deadline();
     final settings = await _settings.get();
     final policy = settings.pageModeInBackground
         ? ExtractionPolicy.directThenPage
@@ -355,7 +374,7 @@ final class TaskRouter {
   }
 
   Future<bool> _downloadTask() async {
-    await _downloads(_clock.now().add(budget), manual: false);
+    await _downloads(_deadline(), manual: false);
     return true;
   }
 

@@ -42,6 +42,11 @@ abstract final class SettingsKeys {
   /// Whether page mode may run in the background (bool).
   static const String pageModeInBackground = 'storize.pageModeInBackground';
 
+  /// The kill switch of in-page fetching in background tasks (bool, T-050).
+  /// Absent means on: only an explicit `false` turns it off. Not an
+  /// [AppSettings] field, so it is not in [byField].
+  static const String inPageInBackground = 'storize.inPageInBackground';
+
   /// When the update check last ran, epoch milliseconds UTC (int).
   static const String lastUpdateCheckAt = 'storize.lastUpdateCheckAt';
 
