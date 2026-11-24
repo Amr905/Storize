@@ -38,6 +38,7 @@ void main() {
     test('recording a tray alias never fills the stories doc_id', () async {
       final d = PageDiscovery(clock: FakeClock())
         ..record(
+          variablesSeen: true,
           friendlyName: 'PolarisProfileHighlightsTrayContentQuery',
           docId: '999',
           tokens: const {},
@@ -107,5 +108,8 @@ final class _Ids implements DocIdResolver {
 
 final class _Tok implements PageTokenProvider {
   @override
-  Future<Map<String, String>?> tokens() async => {'lsd': 'ZZFAKE_lsd'};
+  Future<Map<String, String>?> tokens() async => {
+    'fb_dtsg': 'ZZFAKE_dtsg',
+    'lsd': 'ZZFAKE_lsd',
+  };
 }

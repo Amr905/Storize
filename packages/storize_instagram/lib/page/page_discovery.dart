@@ -21,7 +21,11 @@ import 'package:storize_instagram/page/hook_protocol.dart';
 /// runs. (A resolver that loaded pages would run inside the governed call of
 /// the transport that asked it.)
 final class PageDiscovery
-    implements DocIdForgetter, PageTokenProvider, QueryShapeProvider {
+    implements
+        DocIdForgetter,
+        TokenForgetter,
+        ProviderForgetter,
+        QueryShapeProvider {
   /// Creates a store-less (memory only) discovery, or one persisted in
   /// [store] under [accountId].
   PageDiscovery({
@@ -59,6 +63,7 @@ final class PageDiscovery
   final Map<GraphqlQuery, QueryShape> _pendingShapes = {};
   Map<String, String>? _tokens;
   DateTime? _tokensAt;
+  final Map<String, String> _tokenSources = {};
   // What this instance recorded and has not saved yet. Only this is merged
   // into the store, so a stale instance never writes old memory back after a
   // logout cleared the store (QA-2).
@@ -70,50 +75,113 @@ final class PageDiscovery
 
   Duration get _tokenLife => store == null ? tokenTtl : persistedTokenTtl;
 
+  /// Merges [incoming] tokens into the held ones: a key is added or replaced,
+  /// never removed, and an empty value never replaces a good one (T-049: a
+  /// capture without `fb_dtsg` used to wipe the discovered pair). [source] is
+  /// `module` or `capture`, for the diagnostic only. Returns whether anything
+  /// changed.
+  bool _mergeTokens(Map<String, String> incoming, String source, DateTime now) {
+    final next = <String, String>{...?_tokensFreshOrNull()};
+    var changed = false;
+    for (final e in incoming.entries) {
+      if (e.value.isEmpty) continue;
+      if (next[e.key] != e.value) changed = true;
+      next[e.key] = e.value;
+      if (e.key == 'fb_dtsg' || e.key == 'lsd') _tokenSources[e.key] = source;
+    }
+    if (!changed) return false;
+    _tokens = Map.unmodifiable(next);
+    _tokensAt = now;
+    _pendingTokens = Map.unmodifiable({...?_pendingTokens, ...next});
+    _pendingTokensAt = now;
+    return true;
+  }
+
+  Map<String, String>? _tokensFreshOrNull() => _tokensFresh() ? _tokens : null;
+
+  /// Merges a shape into memory: provider values are united (the new ones
+  /// win), non-empty argument names replace, `loaded` sticks.
+  void _mergeShape(
+    GraphqlQuery q, {
+    Map<String, Object> provided = const {},
+    List<String> args = const [],
+    bool loaded = false,
+    bool overrideProvided = true,
+  }) {
+    final old = _shapes[q];
+    final merged = QueryShape(
+      provided: overrideProvided
+          ? {...?old?.provided, ...provided}
+          : {...provided, ...?old?.provided},
+      args: args.isNotEmpty ? args : (old?.args ?? const []),
+      loaded: loaded || (old?.loaded ?? false),
+    );
+    _shapes[q] = merged;
+    _pendingShapes[q] = merged;
+  }
+
   /// Stores what one captured request carried (memory now, store soon: see
-  /// [flush]).
+  /// [flush]). [provided] and [args] are the `variables` of the request: a
+  /// real request of the web app, so a fallback for providers the page's
+  /// modules did not show (T-049). Tokens are merged, never replaced.
   void record({
     required String? friendlyName,
     required String? docId,
     required Map<String, String> tokens,
+    Map<String, Object> provided = const {},
+    List<String> args = const [],
+    bool variablesSeen = false,
   }) {
     final now = _clock.now();
     var changed = false;
-    if (docId != null && friendlyName != null) {
+    if (friendlyName != null) {
       for (final q in GraphqlQuery.values) {
         if (!q.matchesName(friendlyName)) continue;
         final exact = q.isExactName(friendlyName);
-        // An alias never replaces a fresh doc_id found under the exact name.
-        if (!exact && _exact.contains(q) && _docIdFresh(q)) continue;
-        if (exact) {
-          _exact.add(q);
-        } else {
-          _exact.remove(q);
+        var docRecorded = false;
+        if (docId != null) {
+          // An alias never replaces a fresh doc_id found under the exact name.
+          if (!exact && _exact.contains(q) && _docIdFresh(q)) continue;
+          if (exact) {
+            _exact.add(q);
+          } else {
+            _exact.remove(q);
+          }
+          _docIds[q] = (docId, now);
+          _pendingIds[q] = (docId, now);
+          docRecorded = true;
+          changed = true;
         }
-        _docIds[q] = (docId, now);
-        _pendingIds[q] = (docId, now);
-        changed = true;
+        // Providers of a request belong to its own op: the exact name, or an
+        // alias whose doc_id was just taken from the same request.
+        if ((provided.isNotEmpty || args.isNotEmpty || variablesSeen) &&
+            (exact || docRecorded)) {
+          // The page's own modules (recorded by recordDiscovery) win.
+          _mergeShape(
+            q,
+            provided: provided,
+            args: _shapes[q]?.args.isNotEmpty ?? false ? const [] : args,
+            loaded: true,
+            overrideProvided: false,
+          );
+          changed = true;
+        }
       }
     }
-    if (tokens.isNotEmpty) {
-      _tokens = Map.unmodifiable(tokens);
-      _tokensAt = now;
-      _pendingTokens = _tokens;
-      _pendingTokensAt = now;
-      changed = true;
-    }
+    if (_mergeTokens(tokens, 'capture', now)) changed = true;
     if (changed && store != null) _enqueue(_persist);
   }
 
   /// Stores what the hook read from the page's own modules (T-048): for each
   /// op with an exact query name, its doc_id (an exact name beats an alias),
-  /// provider values and argument names; `fb_dtsg` and `lsd` replace the
-  /// tokens when both are present. Unknown op names are ignored. Returns the
+  /// provider values and argument names; `fb_dtsg` and `lsd` are merged into
+  /// the tokens (each on its own). Unknown op names are ignored. Returns the
   /// queries recorded.
   List<GraphqlQuery> recordDiscovery(
     List<DiscoveredOp> ops,
-    Map<String, String> tokens,
-  ) {
+    Map<String, String> tokens, {
+    Map<String, String> tokenSources = const {},
+  }) {
     final now = _clock.now();
     final recorded = <GraphqlQuery>[];
     for (final op in ops) {
@@ -122,24 +190,39 @@ final class PageDiscovery
         _exact.add(q);
         _docIds[q] = (op.docId, now);
         _pendingIds[q] = (op.docId, now);
-        final shape = QueryShape(provided: op.provided, args: op.args);
-        _shapes[q] = shape;
-        _pendingShapes[q] = shape;
+        _mergeShape(q, provided: op.provided, args: op.args, loaded: op.loaded);
         recorded.add(q);
       }
     }
-    final dtsg = tokens['fb_dtsg'];
-    final lsd = tokens['lsd'];
     var changed = recorded.isNotEmpty;
-    if (dtsg != null && dtsg.isNotEmpty && lsd != null && lsd.isNotEmpty) {
-      _tokens = Map.unmodifiable({'fb_dtsg': dtsg, 'lsd': lsd});
-      _tokensAt = now;
-      _pendingTokens = _tokens;
-      _pendingTokensAt = now;
-      changed = true;
+    final usable = {
+      for (final k in const ['fb_dtsg', 'lsd'])
+        if ((tokens[k] ?? '').isNotEmpty) k: tokens[k]!,
+    };
+    for (final src in {'module', 'capture'}) {
+      final part = {
+        for (final e in usable.entries)
+          if ((tokenSources[e.key] ?? 'module') == src) e.key: e.value,
+      };
+      if (part.isNotEmpty && _mergeTokens(part, src, now)) changed = true;
     }
     if (changed && store != null) _enqueue(_persist);
     return recorded;
+  }
+
+  /// A secret-free summary for the diagnostic log: the number of provider
+  /// values per known query and which tokens are held, with their source.
+  String describe() {
+    final per = [
+      for (final q in GraphqlQuery.values)
+        if (_shapes[q] != null)
+          '${q.friendlyName}:${_shapes[q]!.provided.length}',
+    ];
+    String tok(String k) => (_tokens?[k] ?? '').isEmpty
+        ? 'no'
+        : 'yes(${_tokenSources[k] ?? 'store'})';
+    return 'provided=${per.isEmpty ? 'none' : per.join(',')} '
+        'tokens=dtsg:${tok('fb_dtsg')},lsd:${tok('lsd')}';
   }
 
   @override
@@ -162,6 +245,7 @@ final class PageDiscovery
     _pendingIds.clear();
     _pendingTokens = null;
     _pendingTokensAt = null;
+    _tokenSources.clear();
     final s = store;
     if (s != null) _enqueue(() => s.clear(accountId));
   }
@@ -187,6 +271,25 @@ final class PageDiscovery
   Future<Map<String, String>?> tokens() async {
     if (!_tokensFresh()) await _reload();
     return _tokensFresh() ? Map.of(_tokens!) : null;
+  }
+
+  @override
+  Future<void> forgetTokens() async {
+    _tokens = null;
+    _tokensAt = null;
+    _pendingTokens = null;
+    _pendingTokensAt = null;
+    _tokenSources.clear();
+    if (store != null) _enqueue(() => _persist(dropTokens: true));
+    await flush();
+  }
+
+  @override
+  Future<void> forgetProviders(GraphqlQuery query) async {
+    _shapes.remove(query);
+    _pendingShapes.remove(query);
+    if (store != null) _enqueue(() => _persist(dropShape: query));
+    await flush();
   }
 
   bool _docIdFresh(GraphqlQuery query) {
@@ -239,11 +342,14 @@ final class PageDiscovery
     }
     final t = snap.tokens;
     final at = snap.tokensAt;
-    if (t != null &&
-        at != null &&
-        (_tokensAt == null || at.isAfter(_tokensAt!))) {
-      _tokens = Map.unmodifiable(t);
-      _tokensAt = at;
+    if (t != null && at != null) {
+      // Key-wise: a stored pair never wipes newer memory, memory never wipes
+      // a stored key it lacks.
+      final newer = _tokensAt == null || at.isAfter(_tokensAt!);
+      _tokens = Map.unmodifiable(
+        newer ? {...?_tokens, ...t} : {...t, ...?_tokens},
+      );
+      if (newer) _tokensAt = at;
     }
   }
 
@@ -275,12 +381,16 @@ final class PageDiscovery
   /// wins, expired entries and [drop] removed) and saves it, then re-reads it
   /// and repeats the merge (up to 3 times) if another isolate's write
   /// replaced ours (QA-1; narrows the race, cannot close it).
-  Future<void> _persist({GraphqlQuery? drop}) async {
+  Future<void> _persist({
+    GraphqlQuery? drop,
+    GraphqlQuery? dropShape,
+    bool dropTokens = false,
+  }) async {
     final s = store!;
     for (var attempt = 0; attempt < 3; attempt++) {
       final stored = await s.load(accountId);
       if (stored == null && _hadStored) _dropMemoryExceptPending();
-      final next = _merge(stored, drop);
+      final next = _merge(stored, drop, dropShape, dropTokens);
       await s.save(accountId, next);
       _hadStored = true;
       // Verify after the write: a concurrent writer may have replaced it
@@ -288,7 +398,7 @@ final class PageDiscovery
       final back = await s.load(accountId);
       if (_holds(back, next)) break;
     }
-    if (drop == null) {
+    if (drop == null && dropShape == null && !dropTokens) {
       _pendingIds.clear();
       _pendingShapes.clear();
       _pendingTokens = null;
@@ -306,7 +416,12 @@ final class PageDiscovery
     return true;
   }
 
-  DiscoverySnapshot _merge(DiscoverySnapshot? stored, GraphqlQuery? drop) {
+  DiscoverySnapshot _merge(
+    DiscoverySnapshot? stored,
+    GraphqlQuery? drop,
+    GraphqlQuery? dropShape,
+    bool dropTokens,
+  ) {
     final now = _clock.now();
     final ids = <String, ({String docId, DateTime at})>{...?stored?.docIds};
     for (final e in _pendingIds.entries) {
@@ -323,17 +438,22 @@ final class PageDiscovery
       ids.remove(drop.name);
       shapes.remove(drop.name);
     }
+    if (dropShape != null) shapes.remove(dropShape.name);
     ids.removeWhere((_, v) => now.difference(v.at) > docIdTtl);
     shapes.removeWhere((k, _) => !ids.containsKey(k));
-    var tokens = stored?.tokens;
-    var tokensAt = stored?.tokensAt;
+    var tokens = dropTokens ? null : stored?.tokens;
+    var tokensAt = dropTokens ? null : stored?.tokensAt;
     final mine = _pendingTokens;
     final mineAt = _pendingTokensAt;
-    if (mine != null &&
-        mineAt != null &&
-        (tokensAt == null || !tokensAt.isAfter(mineAt))) {
-      tokens = mine;
-      tokensAt = mineAt;
+    if (mine != null && mineAt != null) {
+      // Key-wise, and an empty value never replaces a good one.
+      final newer = tokensAt == null || !tokensAt.isAfter(mineAt);
+      final good = {
+        for (final e in mine.entries)
+          if (e.value.isNotEmpty) e.key: e.value,
+      };
+      tokens = newer ? {...?tokens, ...good} : {...good, ...?tokens};
+      if (newer) tokensAt = mineAt;
     }
     if (tokensAt != null && now.difference(tokensAt) > persistedTokenTtl) {
       tokens = null;

@@ -105,6 +105,7 @@ final class IgReply {
     this.retryAfter,
     this.redirectPath,
     this.contentType,
+    this.shielded = false,
   });
 
   /// The HTTP status code.
@@ -121,6 +122,19 @@ final class IgReply {
 
   /// The response `Content-Type`, when sent.
   final String? contentType;
+
+  /// The body began with the `for (;;);` guard Instagram puts before its
+  /// JSON error bodies; [json] is what followed it (T-049).
+  final bool shielded;
+
+  /// The numeric `error` code of a [shielded] error body, else null. Only
+  /// this number is ever logged, never the body.
+  int? get fbError {
+    final j = json;
+    if (!shielded || j is! Map<String, Object?>) return null;
+    final e = j['error'];
+    return e is int ? e : null;
+  }
 
   /// Whether the status is 2xx.
   bool get isSuccess => status >= 200 && status < 300;

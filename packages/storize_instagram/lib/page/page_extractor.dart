@@ -566,6 +566,7 @@ final class PageExtractor {
     var droppedMalformed = 0;
     final seenNames = <String?>{};
     var withDocId = 0;
+    var docIdRejected = 0;
     var withTokens = 0;
     var blocked = 0;
     var discoveries = 0;
@@ -649,25 +650,22 @@ final class PageExtractor {
                 final recorded = discovery.recordDiscovery(
                   msg.ops,
                   msg.tokens,
+                  tokenSources: msg.tokenSources,
                 );
                 discoveries++;
                 final names = logSafeNames(recorded.map((q) => q.friendlyName));
-                final provided = msg.ops.fold<int>(
-                  0,
-                  (n, o) => n + o.provided.length,
-                );
                 _log?.log(
                   LogLevel.info,
                   'page',
                   'op=$op discovery ops=${names.join(',')} '
-                      'provided=$provided '
-                      'tokens=${msg.tokens.isEmpty ? 'no' : 'yes'}'
+                      '${discovery.describe()}'
                       '${msg.error == null ? '' : ' error=${msg.error}'}',
                 );
               case HookCapture():
                 accepted++;
                 seenNames.add(msg.friendlyName);
                 if (msg.docId != null) withDocId++;
+                if (msg.docIdRejected) docIdRejected++;
                 if (msg.tokens.isNotEmpty) withTokens++;
                 if (_isSeenLeak(msg)) {
                   // The reply of a blocked name exists, so the request was
@@ -682,6 +680,9 @@ final class PageExtractor {
                   friendlyName: msg.friendlyName,
                   docId: msg.docId,
                   tokens: msg.tokens,
+                  provided: msg.provided,
+                  args: msg.args,
+                  variablesSeen: msg.variablesSeen,
                 );
                 if (plan.matches(msg)) _answer(plan, msg, finish, setPending);
             }
@@ -793,7 +794,8 @@ final class PageExtractor {
         LogLevel.info,
         'page',
         'op=$op names=${logSafeNames(seenNames).join(',')} '
-            'has_doc_id=$withDocId has_tokens=$withTokens '
+            'has_doc_id=$withDocId doc_id_rejected=$docIdRejected '
+            'has_tokens=$withTokens '
             'discoveries=$discoveries',
       );
     }

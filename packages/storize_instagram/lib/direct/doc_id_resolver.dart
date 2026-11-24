@@ -100,3 +100,22 @@ abstract interface class QueryShapeProvider implements DocIdResolver {
   /// The shape of [query] now, or null when unknown.
   Future<QueryShape?> shapeFor(GraphqlQuery query);
 }
+
+/// A [PageTokenProvider] that can drop tokens that proved stale (T-049).
+abstract interface class TokenForgetter implements PageTokenProvider {
+  /// Forgets the tokens (memory and store).
+  Future<void> forgetTokens();
+}
+
+/// A [DocIdResolver] that can drop the provider values of one query that
+/// proved wrong or missing (T-049); its `doc_id` stays.
+abstract interface class ProviderForgetter implements DocIdResolver {
+  /// Forgets the shape (providers) of [query] (memory and store).
+  Future<void> forgetProviders(GraphqlQuery query);
+}
+
+/// Whether [tokens] holds both `fb_dtsg` and `lsd`, the two a GraphQL POST
+/// cannot do without (T-049: without `fb_dtsg` Instagram answers a
+/// `for (;;);` error body).
+bool pageTokensComplete(Map<String, String>? tokens) =>
+    (tokens?['fb_dtsg'] ?? '').isNotEmpty && (tokens?['lsd'] ?? '').isNotEmpty;

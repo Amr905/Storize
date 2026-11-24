@@ -22,10 +22,21 @@ Duration? clampedRetryAfter(
   return Duration(seconds: seconds);
 }
 
+/// The `for (;;);` error code that means "not logged in". Any other code of
+/// such a body (a stale or missing `fb_dtsg`, for example 1357004) means the
+/// page tokens are no good. Deliberately narrow: a wrong `SessionInvalid`
+/// would make the user log in again for nothing.
+const int fbLoginErrorCode = 1357001;
+
 /// Turns a reply into the `Failure` of the TECH_SPEC 4.1 failure map, or null
 /// when the reply is a usable JSON object.
 ///
 /// Rules, in this order (the first that matches wins):
+/// 0. (T-049) A `for (;;);` error body: code 1357001 is
+///    `SessionInvalid(loginRequired)`, any other code is
+///    `SchemaChanged('page_tokens')`. A GraphQL `errors[]` message with
+///    `missing_required_variable` and no `data` is
+///    `SchemaChanged('providers')`.
 /// 1. `checkpoint_required`, `challenge_required`, a `challenge` object or a
 ///    redirect to `/challenge/...`: `SessionInvalid(challenge)`.
 /// 2. 401, a redirect to the login page, `login_required`,
@@ -59,6 +70,15 @@ final class FailureClassifier {
     final body = reply.json is Map<String, Object?>
         ? reply.json! as Map<String, Object?>
         : null;
+    final fbError = reply.fbError;
+    if (fbError != null) {
+      return fbError == fbLoginErrorCode
+          ? const SessionInvalid(SessionReason.loginRequired)
+          : const SchemaChanged('page_tokens');
+    }
+    if (reply.isSuccess && body != null && _missingProviders(body)) {
+      return const SchemaChanged('providers');
+    }
     if (reply.isSuccess) {
       if (body == null) return const SchemaChanged('response');
       if (!_isFailBody(body)) return null;
@@ -128,6 +148,22 @@ final class FailureClassifier {
   Duration? _cappedHint(Duration? hint) {
     if (hint == null || hint.isNegative) return null;
     return hint > maxRetryAfter ? maxRetryAfter : hint;
+  }
+
+  /// A GraphQL answer without `data` whose `errors[]` says a required
+  /// variable (a relay provider) was not sent.
+  bool _missingProviders(Map<String, Object?> body) {
+    if (body['data'] != null) return false;
+    final errors = body['errors'];
+    if (errors is! List<Object?>) return false;
+    for (final e in errors) {
+      if (e is Map<String, Object?> &&
+          e['message'] is String &&
+          (e['message']! as String).contains('missing_required_variable')) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Whether a 2xx body is really a failure.

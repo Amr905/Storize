@@ -35,6 +35,10 @@ final class HookCapture extends HookMessage {
     this.friendlyName,
     this.docId,
     this.tokens = const {},
+    this.provided = const {},
+    this.args = const [],
+    this.variablesSeen = false,
+    this.docIdRejected = false,
   });
 
   /// The URL path (the query is dropped on parsing).
@@ -54,6 +58,21 @@ final class HookCapture extends HookMessage {
 
   /// The request's page tokens. Secret: never log.
   final Map<String, String> tokens;
+
+  /// The `__relay_internal__pv__*` scalars of the request's `variables`
+  /// (T-049). Code constants of the web app, not secret.
+  final Map<String, Object> provided;
+
+  /// The argument names of the request's `variables` (providers excluded).
+  final List<String> args;
+
+  /// The request carried a `variables` object (so an empty [provided] is
+  /// real: the query takes none).
+  final bool variablesSeen;
+
+  /// The request had a `doc_id` field whose shape was not accepted (for the
+  /// diagnostic count only; the value is never kept).
+  final bool docIdRejected;
 
   @override
   String toString() => 'HookCapture(status: $status)';
@@ -81,6 +100,8 @@ final class DiscoveredOp {
     required this.docId,
     this.provided = const {},
     this.args = const [],
+    this.loaded = false,
+    this.source = 'none',
   });
 
   /// The operation name (for example `PolarisProfilePostsQuery`).
@@ -95,6 +116,12 @@ final class DiscoveredOp {
   /// The argument names of the operation.
   final List<String> args;
 
+  /// The op's `.graphql` module was loaded, so an empty [provided] is real.
+  final bool loaded;
+
+  /// Where [provided] came from: `module`, `capture` or `none`.
+  final String source;
+
   @override
   String toString() => 'DiscoveredOp($name)';
 }
@@ -105,6 +132,7 @@ final class HookDiscovery extends HookMessage {
   const HookDiscovery({
     this.ops = const [],
     this.tokens = const {},
+    this.tokenSources = const {},
     this.error,
   });
 
@@ -113,6 +141,9 @@ final class HookDiscovery extends HookMessage {
 
   /// `fb_dtsg` and `lsd`, when present. Secret: never printed.
   final Map<String, String> tokens;
+
+  /// Where each token came from (`module` or `capture`), by token name.
+  final Map<String, String> tokenSources;
 
   /// The error code of a failed routine (letters and underscores).
   final String? error;
@@ -204,11 +235,40 @@ HookMessage parseHookMessage(List<Object?> args, {required String pageOrigin}) {
     return const HookDropped(HookDropReason.malformed);
   }
   String? docId;
+  var docIdRejected = false;
   final tokens = <String, String>{};
+  final provided = <String, Object>{};
+  final argNames = <String>[];
+  var variablesSeen = false;
   final request = data['request'];
   if (request is Map) {
     final d = request['docId'];
-    if (d is String && _docIdShape.hasMatch(d)) docId = d;
+    if (d is String) {
+      if (_docIdShape.hasMatch(d)) {
+        docId = d;
+      } else {
+        docIdRejected = true;
+      }
+    }
+    final pv = request['provided'];
+    if (pv is Map && pv.length <= 40) {
+      pv.forEach((k, v) {
+        if (k is String &&
+            _providerKeyShape.hasMatch(k) &&
+            (v is bool ||
+                (v is num && v.isFinite) ||
+                (v is String && v.length <= 64))) {
+          provided[k] = v as Object;
+        }
+      });
+    }
+    variablesSeen = request['vars'] == true;
+    final av = request['args'];
+    if (av is List && av.length <= 40) {
+      for (final a in av) {
+        if (a is String && _argShape.hasMatch(a)) argNames.add(a);
+      }
+    }
     final t = request['tokens'];
     if (t is Map) {
       t.forEach((k, v) {
@@ -228,6 +288,10 @@ HookMessage parseHookMessage(List<Object?> args, {required String pageOrigin}) {
     friendlyName: friendly,
     docId: docId,
     tokens: Map.unmodifiable(tokens),
+    provided: Map.unmodifiable(provided),
+    args: List.unmodifiable(argNames),
+    variablesSeen: variablesSeen,
+    docIdRejected: docIdRejected,
   );
 }
 
@@ -277,8 +341,22 @@ HookMessage _parseDiscovery(Map<Object?, Object?> data) {
         docId: docId,
         provided: Map.unmodifiable(provided),
         args: List.unmodifiable(args),
+        loaded: raw['loaded'] == true,
+        source: switch (raw['src']) {
+          'module' => 'module',
+          'capture' => 'capture',
+          _ => 'none',
+        },
       ),
     );
+  }
+  final tokenSources = <String, String>{};
+  final rawSources = data['tokenSources'];
+  if (rawSources is Map) {
+    for (final key in const ['fb_dtsg', 'lsd']) {
+      final v = rawSources[key];
+      if (v == 'module' || v == 'capture') tokenSources[key] = v as String;
+    }
   }
   final tokens = <String, String>{};
   final rawTokens = data['tokens'];
@@ -300,6 +378,7 @@ HookMessage _parseDiscovery(Map<Object?, Object?> data) {
   return HookDiscovery(
     ops: List.unmodifiable(ops),
     tokens: Map.unmodifiable(tokens),
+    tokenSources: Map.unmodifiable(tokenSources),
     error: code,
   );
 }

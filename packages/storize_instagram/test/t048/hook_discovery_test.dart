@@ -136,7 +136,9 @@ void main() {
 
     test('nothing resolving posts nothing; posts are bounded', () {
       expect(s('nothing_resolves')['msgs'], isEmpty);
-      expect(s('bounded_posts')['count'], 6);
+      // Unchanged modules are posted once (T-049 dedupe); the cap is tested
+      // in the T-049 harness.
+      expect(s('bounded_posts')['count'], 1);
     }, skip: noNode);
   });
 
@@ -293,10 +295,14 @@ void main() {
       expect(await d.tokens(), {'fb_dtsg': _dtsg, 'lsd': _lsd});
     });
 
-    test('only one token present: tokens are left alone', () async {
-      final d = PageDiscovery()..recordDiscovery(ops, {'fb_dtsg': _dtsg});
-      expect(await d.tokens(), isNull);
-    });
+    test(
+      'only one token present: kept, but not a complete pair (T-049)',
+      () async {
+        final d = PageDiscovery()..recordDiscovery(ops, {'fb_dtsg': _dtsg});
+        expect(await d.tokens(), {'fb_dtsg': _dtsg});
+        expect(pageTokensComplete(await d.tokens()), isFalse);
+      },
+    );
 
     test('shapes and docIds persist through the store', () async {
       final store = InMemoryDiscoveryStore();
@@ -381,8 +387,14 @@ void main() {
             'PolarisStoriesV3ReelPageStandaloneQuery',
           ),
         );
-        expect(line, contains('provided=2'));
-        expect(line, contains('tokens=yes'));
+        expect(
+          line,
+          contains(
+            'provided=PolarisStoriesV3ReelPageStandaloneQuery:0,'
+            'PolarisProfilePostsQuery:2',
+          ),
+        );
+        expect(line, contains('tokens=dtsg:yes(module),lsd:yes(module)'));
       },
     );
 

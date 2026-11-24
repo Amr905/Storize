@@ -10,8 +10,9 @@ import 'package:storize_model/storize_model.dart';
 /// Direct mode over the GraphQL queries the web app uses (observed in the
 /// T-002 capture): `POST /api/graphql` with a runtime-discovered `doc_id`.
 ///
-/// Nothing here hard-codes a `doc_id`. A missing `doc_id` or missing page
-/// tokens give `SchemaChanged`, which sends the run to page mode.
+/// Nothing here hard-codes a `doc_id`. A missing `doc_id`, incomplete page
+/// tokens (`fb_dtsg` and `lsd`) or unknown provider values give
+/// `SchemaChanged` (before anything is sent), which sends the run to page mode.
 ///
 /// **Variables (T-048).** When the resolver knows the shape of a query (a
 /// [QueryShapeProvider], filled by the in-page discovery), the variables are
@@ -53,7 +54,8 @@ final class GraphqlTransport implements IgTransport {
       'enable_integrity_filters': true,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    final result = await callAndParse<(UserProfile?, String?)>(
+    final result = await _send<(UserProfile?, String?)>(
+      GraphqlQuery.profile,
       call,
       (request as Ok<IgRequest>).value,
       mapper.graphqlProfile,
@@ -88,7 +90,8 @@ final class GraphqlTransport implements IgTransport {
       'is_highlight': false,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    return callAndParse(
+    return _send(
+      GraphqlQuery.stories,
       call,
       (request as Ok<IgRequest>).value,
       mapper.graphqlStories,
@@ -117,7 +120,8 @@ final class GraphqlTransport implements IgTransport {
       'enable_integrity_filters': true,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    final result = await callAndParse<Viewer?>(
+    final result = await _send<Viewer?>(
+      GraphqlQuery.profile,
       call,
       (request as Ok<IgRequest>).value,
       (body) {
@@ -168,7 +172,8 @@ final class GraphqlTransport implements IgTransport {
       'first': highlightsFirst,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    return callAndParse(
+    return _send(
+      GraphqlQuery.highlights,
       call,
       (request as Ok<IgRequest>).value,
       mapper.graphqlHighlights,
@@ -186,7 +191,8 @@ final class GraphqlTransport implements IgTransport {
       'is_highlight': true,
     });
     if (request is Err<IgRequest>) return Err(request.failure);
-    return callAndParse(
+    return _send(
+      GraphqlQuery.stories,
       call,
       (request as Ok<IgRequest>).value,
       (body) => mapper.graphqlHighlightItems(body, highlightIds),
@@ -230,7 +236,8 @@ final class GraphqlTransport implements IgTransport {
             },
     );
     if (request is Err<IgRequest>) return Err(request.failure);
-    return callAndParse(
+    return _send(
+      query,
       call,
       (request as Ok<IgRequest>).value,
       (body) => mapper.graphqlTimeline(body, usernameUsed: username),
@@ -264,6 +271,33 @@ final class GraphqlTransport implements IgTransport {
     return common != null && common.length == 1 ? common.first : null;
   }
 
+  /// Sends and parses; a stale-token or missing-provider answer also drops
+  /// what was wrong (tokens, or the providers of [query]) so the next
+  /// discovery starts clean (T-049).
+  Future<Result<R>> _send<R>(
+    GraphqlQuery query,
+    IgCall call,
+    IgRequest request,
+    R Function(Node body) parse,
+  ) async {
+    final result = await callAndParse<R>(call, request, parse);
+    if (result case Err<R>(failure: SchemaChanged(:final where))) {
+      try {
+        final t = tokens;
+        if (where == 'page_tokens' && t is TokenForgetter) {
+          await t.forgetTokens();
+        }
+        final d = docIds;
+        if (where == 'providers' && d is ProviderForgetter) {
+          await d.forgetProviders(query);
+        }
+      } on Object {
+        // Only a clean-up.
+      }
+    }
+    return result;
+  }
+
   Future<Result<IgRequest>> _request(
     GraphqlQuery query,
     Map<String, Object?> candidates,
@@ -272,14 +306,22 @@ final class GraphqlTransport implements IgTransport {
     if (docId == null || docId.isEmpty) {
       return Err(SchemaChanged('doc_id:${query.friendlyName}'));
     }
+    // Nothing is sent without both tokens or with unknown providers: it would
+    // be a wasted (and, for the providers, certainly failing) request.
     final extra = await tokens.tokens();
-    if (extra == null) return const Err(SchemaChanged('page_tokens'));
+    if (!pageTokensComplete(extra)) {
+      return const Err(SchemaChanged('page_tokens'));
+    }
     final resolver = docIds;
-    final shape = resolver is QueryShapeProvider
-        ? await resolver.shapeFor(query)
-        : null;
+    QueryShape? shape;
+    if (resolver is QueryShapeProvider) {
+      shape = await resolver.shapeFor(query);
+      if (shape == null || !shape.isKnown) {
+        return const Err(SchemaChanged('providers'));
+      }
+    }
     final variables = buildVariables(candidates, shape);
-    final dtsg = extra['fb_dtsg'];
+    final dtsg = extra!['fb_dtsg'];
     final lsd = extra['lsd'];
     final request = IgRequest.postForm(
       path: '/api/graphql',
@@ -313,8 +355,12 @@ final class GraphqlTransport implements IgTransport {
     Map<String, Object?> candidates,
     QueryShape? shape,
   ) {
-    if (shape == null || shape.args.isEmpty) {
+    if (shape == null) {
       return {...candidates}..removeWhere((_, v) => v == null);
+    }
+    if (shape.args.isEmpty) {
+      return {...candidates, ...shape.provided}
+        ..removeWhere((_, v) => v == null);
     }
     return {
       for (final e in candidates.entries)

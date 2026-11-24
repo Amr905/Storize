@@ -26,10 +26,20 @@
  * (<Name>_instagramRelayOperation), the relay provided-variable values and
  * the argument names (<Name>.graphql), plus the fb_dtsg / lsd tokens. It posts
  * {type:'discovery', origin, ops:[{name, docId, provided, args}], tokens} once
- * the page is ready (a few spaced tries, and before the first captured
- * response) and again on a window message {storizeDiscover:true}. A failure
- * posts an empty ops list and an error code, never a value. It never touches
- * stories UI or the seen mutation.
+ * the page is ready and again on a window message {storizeDiscover:true}.
+ * A failure posts an empty ops list and an error code, never a value. It
+ * never touches stories UI or the seen mutation.
+ *
+ * T-049: discovery is COMPLETE only when every found op has its provided
+ * variables (its <Name>.graphql module is loaded, or they were taken from a
+ * captured request) AND fb_dtsg and lsd are known (modules, or the forms /
+ * X-FB-LSD header of captured requests). Until then it retries (0, 0.4, 1.5,
+ * 4, 9, 15 s, on load, on message, on each capture), MERGES what it finds
+ * (nothing found earlier is lost) and posts only when something new appears
+ * (capped). A missing <Name>.graphql module is asked for once through
+ * window.requireLazy (static JS only, no API call). A captured request for an
+ * allowlisted op also gives its __relay_internal__pv__* scalars, its argument
+ * names, and its fb_dtsg / lsd.
  *
  * SEEN-MUTATION BLOCKING (UD-3, BR-8) - FAILS CLOSED. Opening a story page
  * makes the page fire PolarisStoriesV3SeenMutation, which marks the story as
@@ -137,6 +147,7 @@
       if (friendlyName) msg.friendlyName = friendlyName;
       if (includeBody) msg.body = text;
       if (requestInfo) msg.request = requestInfo;
+      noteCapture(friendlyName, requestInfo);
       if (!discoveryDone) runDiscovery(); // before the capture that may end the run
       post(msg);
     } catch (e) {
@@ -165,11 +176,18 @@
   var DOC_ID = /^\d{5,32}$/;
   var MAX_ARGS = 40;
   var MAX_PROVIDED = 40;
-  var MAX_DISCOVERY_POSTS = 6;
+  var MAX_DISCOVERY_POSTS = 10;
   var discoveryPosts = 0;
   var discoveryDone = false;
   var requireErrors = 0;
   var errorPosted = false;
+  var foundOps = {}; // name -> merged {name, docId, provided, args, loaded}
+  var modTokens = {}; // fb_dtsg / lsd from the page's modules
+  var capTokens = {}; // fb_dtsg / lsd from captured requests
+  var capProvided = {}; // op name -> provided scalars of a captured request
+  var capArgs = {}; // op name -> argument names of a captured request
+  var lazyAsked = {};
+  var lastSig = '';
 
   function reqModule(name) {
     try {
@@ -190,13 +208,31 @@
     return undefined;
   }
 
+  function askLazy(name) {
+    // Loads the static <Name>.graphql module if the page has not yet. No API
+    // call: only the JS module. Asked once per name, fully guarded.
+    if (lazyAsked[name]) return;
+    lazyAsked[name] = true;
+    try {
+      if (typeof window.requireLazy !== 'function') return;
+      window.requireLazy([name + '.graphql'], function () {
+        try { setTimeout(runDiscovery, 0); } catch (e) {}
+      });
+    } catch (e) {
+      /* never break the page */
+    }
+  }
+
   function readOp(name) {
     var id = reqModule(name + '_instagramRelayOperation');
     if (typeof id !== 'string' || !DOC_ID.test(id)) return null;
     var provided = {};
     var args = [];
+    var loaded = false;
     try {
       var g = reqModule(name + '.graphql');
+      loaded = !!g && typeof g === 'object';
+      if (!loaded) askLazy(name);
       var pv = g && g.params && g.params.providedVariables;
       if (pv && typeof pv === 'object') {
         Object.keys(pv).slice(0, MAX_PROVIDED).forEach(function (k) {
@@ -216,7 +252,7 @@
     } catch (e) {
       /* the doc_id alone is still useful */
     }
-    return { name: name, docId: id, provided: provided, args: args };
+    return { name: name, docId: id, provided: provided, args: args, loaded: loaded };
   }
 
   function tokenOf(moduleName) {
@@ -225,40 +261,118 @@
     return typeof t === 'string' && t.length > 0 && t.length <= 4096 ? t : null;
   }
 
-  function postDiscovery(ops, tokens, error) {
+  function postDiscovery(ops, tokens, error, sources) {
     if (discoveryPosts >= MAX_DISCOVERY_POSTS) return;
     discoveryPosts++;
     var msg = { type: 'discovery', origin: location.origin, ops: ops, tokens: tokens || {} };
+    if (sources) msg.tokenSources = sources;
     if (error) msg.error = error;
     post(msg);
   }
 
-  // Returns true when at least one op resolved (and was posted).
+  function copyInto(dst, src) {
+    Object.keys(src).forEach(function (k) { dst[k] = src[k]; });
+    return dst;
+  }
+
+  // The merged view of one op: module values win over captured ones.
+  function viewOf(op) {
+    var cp = capProvided[op.name] || {};
+    var provided = copyInto(copyInto({}, cp), op.provided);
+    var fromModule = Object.keys(op.provided).length > 0;
+    var fromCapture = Object.keys(cp).length > 0;
+    var args = op.args.length > 0 ? op.args : capArgs[op.name] || [];
+    return {
+      name: op.name,
+      docId: op.docId,
+      provided: provided,
+      args: args,
+      loaded: op.loaded === true || (!fromModule && capArgs[op.name] !== undefined),
+      src: fromModule ? 'module' : fromCapture ? 'capture' : 'none',
+    };
+  }
+
+  function opComplete(v) {
+    return v.loaded || Object.keys(v.provided).length > 0;
+  }
+
+  function mergedTokens() {
+    var tokens = {};
+    var sources = {};
+    ['fb_dtsg', 'lsd'].forEach(function (k) {
+      if (modTokens[k]) { tokens[k] = modTokens[k]; sources[k] = 'module'; }
+      else if (capTokens[k]) { tokens[k] = capTokens[k]; sources[k] = 'capture'; }
+    });
+    return { tokens: tokens, sources: sources };
+  }
+
+  // A captured request of an allowlisted op: its provider scalars, argument
+  // names and tokens. Values only go to Dart (never logged).
+  function noteCapture(name, info) {
+    try {
+      if (!includeRequestSecrets || !info) return;
+      if (name && DISCOVERY_OPS.indexOf(name) !== -1) {
+        if (info.provided && Object.keys(info.provided).length > 0) {
+          capProvided[name] = copyInto(capProvided[name] || {}, info.provided);
+        }
+        if (info.args && info.args.length > 0) capArgs[name] = info.args;
+        else if (info.vars === true && capArgs[name] === undefined) capArgs[name] = [];
+      }
+      var t = info.tokens || {};
+      ['fb_dtsg', 'lsd'].forEach(function (k) {
+        if (typeof t[k] === 'string' && t[k].length > 0 && t[k].length <= 4096) capTokens[k] = t[k];
+      });
+    } catch (e) {}
+  }
+
+  // Merges what the modules show now into what was found before, posts when
+  // something is new, and returns true once discovery is complete.
   function runDiscovery() {
     if (!includeRequestSecrets) return false;
     try {
       if (typeof window.require !== 'function') return false;
-      var ops = [];
       DISCOVERY_OPS.forEach(function (name) {
         try {
           var op = readOp(name);
-          if (op) ops.push(op);
+          if (!op) return;
+          var old = foundOps[name];
+          if (old) {
+            op.provided = copyInto(copyInto({}, old.provided), op.provided);
+            if (op.args.length === 0) op.args = old.args;
+            op.loaded = old.loaded || op.loaded;
+          }
+          foundOps[name] = op;
         } catch (e) {}
       });
-      var tokens = {};
-      var dtsg = tokenOf('DTSGInitialData');
+      var dtsg = tokenOf('DTSGInitialData') || tokenOf('DTSGInitData');
       var lsd = tokenOf('LSD');
-      if (dtsg) tokens.fb_dtsg = dtsg;
-      if (lsd) tokens.lsd = lsd;
-      if (ops.length === 0 && !dtsg && !lsd) {
+      if (dtsg) modTokens.fb_dtsg = dtsg;
+      if (lsd) modTokens.lsd = lsd;
+      var views = Object.keys(foundOps).map(function (n) { return viewOf(foundOps[n]); });
+      var mt = mergedTokens();
+      if (views.length === 0 && !mt.tokens.fb_dtsg && !mt.tokens.lsd) {
         if (requireErrors > 0 && !errorPosted) {
           errorPosted = true;
           postDiscovery([], {}, 'require_failed');
         }
         return false;
       }
-      postDiscovery(ops, tokens, null);
-      discoveryDone = ops.length > 0;
+      var sig = JSON.stringify([ // local only, never posted
+        views.map(function (v) {
+          return [v.name, v.docId, Object.keys(v.provided).sort(), v.args, v.loaded, v.src];
+        }),
+        mt.tokens.fb_dtsg || '',
+        mt.tokens.lsd || '',
+      ]);
+      if (sig !== lastSig) {
+        lastSig = sig;
+        postDiscovery(views, mt.tokens, null, mt.sources);
+      }
+      discoveryDone =
+        views.length > 0 &&
+        views.every(opComplete) &&
+        !!mt.tokens.fb_dtsg &&
+        !!mt.tokens.lsd;
       return discoveryDone;
     } catch (e) {
       try { postDiscovery([], {}, 'discovery_failed'); } catch (e2) {}
@@ -266,12 +380,13 @@
     }
   }
 
-  // After the page is ready, a few spaced tries (modules appear as the page
-  // boots), and again on a message from the page or the app.
+  // Modules appear as the page boots (some only after seconds, the .graphql
+  // ones lazily): keep trying until discovery is complete, and again on a
+  // message from the page or the app.
   function scheduleDiscovery() {
     if (!includeRequestSecrets) return;
     try {
-      [0, 400, 1500, 4000, 9000].forEach(function (ms) {
+      [0, 400, 1500, 4000, 9000, 15000].forEach(function (ms) {
         setTimeout(function () {
           if (!discoveryDone) runDiscovery();
         }, ms);
@@ -408,24 +523,92 @@
     return items.some(isThenable) ? Promise.all(items).then(fn) : fn(items);
   }
 
-  // {name, info} from a urlencoded body: the friendly name and, only when
-  // configured, the page's own doc_id and tokens.
-  function formInfo(text) {
+  // The fields of a request body: urlencoded, JSON or multipart FormData text.
+  // A trailing newline (the pieces of a request are joined with one) is
+  // dropped first: otherwise the LAST field (doc_id on the web app) carries it
+  // and no shape check accepts it (T-049: has_doc_id=0 on the phone).
+  function fieldsOf(text) {
+    var out = {};
+    function put(k, v) {
+      if (!Object.prototype.hasOwnProperty.call(out, k)) out[k] = v;
+    }
+    try {
+      var t = String(text).replace(/\s+$/, '');
+      if (t.charAt(0) === '{') {
+        var o = JSON.parse(t);
+        Object.keys(o).forEach(function (k) {
+          var v = o[k];
+          put(k, typeof v === 'string' ? v : v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v));
+        });
+      } else if (/content-disposition:\s*form-data/i.test(t)) {
+        var re = /name="([^"]{1,80})"\r?\n\r?\n([\s\S]*?)\r?\n--/g;
+        var m;
+        while ((m = re.exec(t + '\n--')) !== null) put(m[1], m[2]);
+      } else {
+        new URLSearchParams(t).forEach(function (v, k) { put(k, v); });
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  function queryParam(url, key) {
+    try { return new URL(url, location.href).searchParams.get(key); } catch (e) { return null; }
+  }
+
+  function lsdHeader(headerTexts) {
+    try {
+      var m = /^x-fb-lsd:\s*(\S{1,4096})\s*$/im.exec((headerTexts || []).join('\n'));
+      return m ? m[1] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // {name, info} from a request body: the friendly name and, only when
+  // configured, the page's own doc_id, tokens (form fields, or the X-FB-LSD
+  // header), provider scalars and argument names of its `variables`.
+  function formInfo(text, url, headerTexts) {
     var out = { name: null, info: null };
     try {
-      var form = new URLSearchParams(text);
-      var name = form.get(NAME_KEY);
-      if (name) out.name = String(name);
-      if (includeRequestSecrets && form.get('doc_id')) {
+      var f = fieldsOf(text);
+      if (f[NAME_KEY]) out.name = String(f[NAME_KEY]);
+      var docId = f.doc_id || queryParam(url, 'doc_id');
+      var vars = null;
+      try {
+        vars = f.variables ? JSON.parse(f.variables) : null;
+      } catch (e) {}
+      if (!vars || typeof vars !== 'object' || Array.isArray(vars)) vars = null;
+      if (includeRequestSecrets && (docId || vars)) {
         var tokens = {};
         var count = 0;
-        form.forEach(function (value, key) {
+        Object.keys(f).forEach(function (key) {
+          var value = f[key];
           if (NOT_TOKENS[key] || count >= MAX_TOKENS) return;
           if (value.length === 0 || value.length > MAX_TOKEN_LENGTH) return;
           tokens[key] = value;
           count++;
         });
-        out.info = { docId: form.get('doc_id') || null, tokens: tokens };
+        var h = lsdHeader(headerTexts);
+        if (!tokens.lsd && h) tokens.lsd = h;
+        var provided = {};
+        var args = [];
+        if (vars) {
+          Object.keys(vars).slice(0, 120).forEach(function (k) {
+            if (PROVIDER_KEY.test(k)) {
+              var v = scalar(vars[k]);
+              if (v !== undefined && Object.keys(provided).length < MAX_PROVIDED) provided[k] = v;
+            } else if (ARG_NAME.test(k) && args.length < MAX_ARGS) {
+              args.push(k);
+            }
+          });
+        }
+        out.info = {
+          docId: docId || null,
+          tokens: tokens,
+          provided: provided,
+          args: args,
+          vars: vars !== null,
+        };
       }
     } catch (e) {}
     return out;
@@ -482,7 +665,7 @@
           notifyBlocked(d.name, 'fetch');
           return Promise.resolve(fakeResponse());
         }
-        var form = formInfo(d.body);
+        var form = formInfo(d.body, url, headerTexts);
         var p = origFetch.apply(self, args);
         try {
           p.then(
@@ -616,7 +799,7 @@
         answerLocally(xhr, url);
         return undefined;
       }
-      var form = formInfo(d.body);
+      var form = formInfo(d.body, url, headerTexts);
       xhr.addEventListener('loadend', function () {
         try {
           var t = '';

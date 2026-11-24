@@ -174,13 +174,14 @@ void main() {
     });
 
     test(
-      'without a discovered shape the candidates are sent as before',
+      'a capture with variables but no providers: the candidates are sent',
       () async {
         final d = PageDiscovery()
           ..record(
             friendlyName: 'PolarisProfilePostsQuery',
             docId: '12345678',
             tokens: {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
+            variablesSeen: true,
           );
         final rig = _rig(d, usernames: _names());
         await rig.run(rig.extractor.fetchNewPosts('user_1', _t(1)));
@@ -190,6 +191,18 @@ void main() {
         ]);
       },
     );
+
+    test('without any shape nothing is sent (providers unknown)', () async {
+      final d = PageDiscovery()
+        ..record(
+          friendlyName: 'PolarisProfilePostsQuery',
+          docId: '12345678',
+          tokens: {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
+        );
+      final rig = _rig(d, usernames: _names());
+      await rig.run(rig.extractor.fetchNewPosts('user_1', _t(1)));
+      expect(rig.http.requests, isEmpty);
+    });
   });
 
   group('stories, highlights, tray, profile', () {

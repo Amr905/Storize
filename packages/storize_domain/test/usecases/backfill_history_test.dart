@@ -386,6 +386,7 @@ void main() {
         for (final f in const <Failure>[
           SchemaChanged('doc_id:PolarisProfilePostsQuery'),
           SchemaChanged('page_tokens'),
+          SchemaChanged('providers'),
           UnknownFailure(null, 'page_mode_background_disabled'),
         ]) {
           h.platform.fetchPostPageResults.addFailure(f);

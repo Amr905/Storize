@@ -128,7 +128,9 @@ final class DirectExtractor {
     // once; every other operation stays on GraphQL (ADR-0003 addendum,
     // amendment 2026-11-22).
     if (r case Err(failure: SchemaChanged(:final where))
-        when where.startsWith('doc_id:') || where == 'page_tokens') {
+        when where.startsWith('doc_id:') ||
+            where == 'page_tokens' ||
+            where == 'providers') {
       _log?.log(LogLevel.info, 'direct', 'op=verifySession rest_bootstrap');
       r = await const RestTransport().viewer(own, call);
       // `current_user` belongs to the mobile API, so the web session may be
@@ -605,6 +607,7 @@ final class _ReplyTrace {
   static final RegExp _queryName = RegExp(r'^[A-Za-z0-9_]{1,80}$');
 
   int? _status;
+  int? _fbError;
   List<String> _keys = const [];
   String? _query;
 
@@ -616,6 +619,7 @@ final class _ReplyTrace {
 
   void note(IgReply reply) {
     _status = reply.status;
+    _fbError = reply.fbError;
     final json = reply.json;
     _keys = json is Map<String, Object?>
         ? [
@@ -629,6 +633,7 @@ final class _ReplyTrace {
     final status = _status;
     if (status == null) return '';
     final query = _query == null ? '' : ' query=$_query';
-    return '$query status=$status keys=[${_keys.join(',')}]';
+    final fb = _fbError == null ? '' : ' fb_error=$_fbError';
+    return '$query status=$status keys=[${_keys.join(',')}]$fb';
   }
 }

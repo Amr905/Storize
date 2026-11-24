@@ -80,6 +80,7 @@ class _Rig {
     if (seedDiscovery) {
       for (final q in GraphqlQuery.values) {
         discovery.record(
+          variablesSeen: true,
           friendlyName: q.friendlyName,
           docId: p.fakeDocId,
           tokens: {'fb_dtsg': d.fakeDtsg, 'lsd': d.fakeLsd},
