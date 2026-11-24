@@ -6,6 +6,8 @@ export 'discovery_store.dart';
 export 'dom_fallback.dart';
 export 'hook_config.dart';
 export 'hook_protocol.dart';
+export 'inpage_client.dart';
+export 'inpage_script.dart';
 export 'page_discovery.dart';
 export 'page_driver.dart';
 export 'page_extractor.dart';

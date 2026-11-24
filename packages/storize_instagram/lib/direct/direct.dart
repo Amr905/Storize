@@ -10,6 +10,7 @@ export 'graphql_transport.dart';
 export 'ig_http.dart';
 export 'ig_session.dart';
 export 'ig_transport.dart';
+export 'inpage_transport.dart';
 export 'rest_requests.dart';
 export 'rest_transport.dart';
 export 'username_cache.dart';

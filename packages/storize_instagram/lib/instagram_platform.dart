@@ -100,7 +100,10 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     this.lookupPolicy = ExtractionPolicy.directThenPage,
     PlatformSignals? signals,
     this._usernames,
+    InPageOps? inPage,
   }) : _seenGuard = seenGuard ?? SeenGuard.shared,
+       // ignore: prefer_initializing_formals, a private field behind a name.
+       _inPage = inPage,
        signals = signals ?? PlatformSignals();
 
   /// Builds the platform and wires the shared parts (T-013/T-014 follow-ups):
@@ -148,6 +151,9 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     PageTimerFactory? pageTimer,
     Duration cleanupTimeout = const Duration(seconds: 5),
     PlatformSignals? signals,
+    String? inPageScript,
+    FutureOr<bool> Function()? inPageInBackground,
+    InPageOps? inPage,
   }) {
     final sharedSignals = signals ?? PlatformSignals();
     final sharedDiscovery =
@@ -213,7 +219,52 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       cleanupTimeout: cleanupTimeout,
       timer: pageTimer ?? Timer.new,
     );
+    var inPageOps = inPage;
+    if (inPageOps == null && inPageScript != null) {
+      // In-page fetching (T-050): its own page driver (no open counting:
+      // it is not page mode), the same lease, discovery and seen guard.
+      final client = InPageClient(
+        accountId: accountId,
+        governor: governor,
+        sessions: sessions,
+        driver: webViewLease is GovernorWebViewLease
+            ? LeaseHoldingPageDriver(pageDriver, webViewLease)
+            : pageDriver,
+        hookSource: hookSource,
+        script: inPageScript,
+        runsInBackground: runsInBackground,
+        inPageInBackground: inPageInBackground,
+        log: log,
+        hookConfig: hookConfig,
+        discovery: sharedDiscovery,
+        seenGuard: guard,
+        webViewLease: webViewLease,
+        classifier: classifier,
+        clock: clock,
+        timer: pageTimer ?? Timer.new,
+        cleanupTimeout: cleanupTimeout,
+      );
+      inPageOps = InPageOps(
+        client: client,
+        usernames: sharedNames,
+        extractor: DirectExtractor(
+          accountId: accountId,
+          governor: governor,
+          sessions: sessions,
+          http: InPageHttp(client),
+          transport: SkipCountingTransport(
+            const InPageTransport(),
+            sharedSignals,
+          ),
+          log: log,
+          appId: appId,
+          classifier: classifier,
+          usernames: sharedNames,
+        ),
+      );
+    }
     return InstagramPlatform(
+      inPage: inPageOps,
       direct: DirectExtractorOps(direct),
       page: PageExtractorOps(page, counter: opens),
       media: CdnMediaOpener(http: cdnHttp, log: log),
@@ -242,6 +293,18 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   final Clock _clock;
   final UsernameCache? _usernames;
 
+  /// In-page fetching, the primary transport (T-050); null disables it.
+  final InPageOps? _inPage;
+
+  /// Closes the in-page session (end of a run). Idempotent, never throws.
+  Future<void> closeInPage() async {
+    try {
+      await _inPage?.close();
+    } on Object {
+      // Clean-up only.
+    }
+  }
+
   @override
   PlatformId get id => PlatformId.instagram;
 
@@ -261,6 +324,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     lookupPolicy,
     () => _direct.resolveUser(username),
     () => _page.resolveUser(username),
+    inPage: (o) => o.resolveUser(username),
   );
 
   @override
@@ -272,6 +336,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     lookupPolicy,
     () => _direct.refreshUser(remoteUserId, lastUsername),
     () => _page.refreshUser(remoteUserId, lastUsername),
+    inPage: (o) => o.refreshUser(remoteUserId, lastUsername),
   );
 
   /// Loads the profile of [username] in **page mode only**, so the page's
@@ -308,6 +373,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       () => _direct.fetchStories(userIds),
       () => _pageStories(userIds, progress),
       pageLoadedData: () => progress.loadedUsers > 0,
+      inPage: (o) => o.fetchStories(userIds),
     );
   }
 
@@ -321,6 +387,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     policy,
     () => _direct.fetchNewPosts(userId, watermark),
     () => _page.fetchNewPosts(userId, watermark),
+    inPage: (o) => o.fetchNewPosts(userId, watermark),
   );
 
   @override
@@ -329,6 +396,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     lookupPolicy,
     () => _direct.latestPostTime(userId),
     () => _page.latestPostTime(userId),
+    inPage: (o) => o.latestPostTime(userId),
   );
 
   @override
@@ -343,6 +411,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
         policy,
         () => _history(_direct, (o) => o.fetchPostPage(userId, cursor: cursor)),
         () => _history(_page, (o) => o.fetchPostPage(userId, cursor: cursor)),
+        inPage: (o) => o.fetchPostPage(userId, cursor: cursor),
       );
     } finally {
       await _seenGuard.flush();
@@ -358,6 +427,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     policy,
     () => _history(_direct, (o) => o.fetchHighlights(userId)),
     () => _history(_page, (o) => o.fetchHighlights(userId)),
+    inPage: (o) => o.fetchHighlights(userId),
   );
 
   @override
@@ -372,6 +442,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       () => _history(_direct, (o) => o.fetchHighlightItems(highlightIds)),
       () => _pageHighlightItems(highlightIds, progress),
       pageLoadedData: () => progress.loadedUsers > 0,
+      inPage: (o) => o.fetchHighlightItems(highlightIds),
     );
   }
 
@@ -502,7 +573,19 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     Future<Result<T>> Function() direct,
     Future<Result<T>> Function() page, {
     bool Function()? pageLoadedData,
+    Future<Result<T>> Function(InPageOps ops)? inPage,
   }) async {
+    final inPageOps = _inPage;
+    if (inPageOps != null && inPage != null) {
+      // In-page fetching first (T-050). Only "unavailable" falls through to
+      // direct HTTP (and then page mode); every other result is final. The
+      // session is closed before the fallback so no WebView or cookie jar is
+      // shared with page mode.
+      final r = await _guarded(() => inPage(inPageOps));
+      if (!isInPageUnavailable(r.failureOrNull)) return _normalize(r);
+      _log?.log(LogLevel.info, 'platform', 'op=$op inpage_unavailable');
+      await closeInPage();
+    }
     final first = await _guarded(direct);
     if (first.failureOrNull is! SchemaChanged ||
         policy == ExtractionPolicy.directOnly) {
