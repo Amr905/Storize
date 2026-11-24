@@ -224,7 +224,7 @@ void main() {
 
   group('3 cursors', () {
     test(
-      'page mode: posts sharing the cursor second are dropped (KNOWN)',
+      'page mode: posts sharing the cursor second are not dropped (F1)',
       () async {
         // Two posts share second 1800000500; the page ends between them.
         final all = _timeline([
@@ -241,14 +241,12 @@ void main() {
         );
         final p1 = (await rig.run(rig.extractor.fetchPostPage(_userId)))
             .valueOrNull!;
-        expect(p1.items.map((c) => c.remoteId), ['ZZFAKE_p1', 'ZZFAKE_p2']);
+        expect(p1.items.map((c) => c.remoteId), ['ZZFAKE_p1', 'ZZFAKE_p3']);
         final p2 = (await rig.run(
           rig.extractor.fetchPostPage(_userId, cursor: p1.nextCursor),
         )).valueOrNull!;
         final got = p2.items.map((c) => c.remoteId).toList();
-        // Current behaviour: p3 is never delivered. Flip when fixed.
-        expect(got, ['ZZFAKE_p4']);
-        expect(got, isNot(contains('ZZFAKE_p3')));
+        expect(got, ['ZZFAKE_p2', 'ZZFAKE_p4']);
       },
     );
 
@@ -267,12 +265,7 @@ void main() {
         final r = await rig.run(
           rig.extractor.fetchPostPage(_userId, cursor: bad),
         );
-        // Overflowing seconds wrap silently and the text is passed on as the
-        // Instagram cursor (Low, harmless); every other bad text is an Err.
-        final wraps =
-            bad.contains('9223372036854775807') ||
-            bad.contains('-9223372036854775808');
-        expect(r.isErr, !wraps);
+        expect(r.isErr, isTrue);
         expect(rig.http.requests.length, lessThanOrEqualTo(1));
         final pr = _pageRig(
           onLoad: (s, url) => s
@@ -342,9 +335,8 @@ void main() {
                 as String;
         final r = await rig.run(rig.extractor.fetchHighlightItems([id]));
         final sent = d.variablesOf(rig.http.requests.single)['reel_ids_arr'];
-        // Documented: double prefix is sent and the result is empty.
-        expect(sent, ['highlight:$id'], reason: 'KNOWN: double prefix');
-        expect(r.valueOrNull, isEmpty, reason: 'KNOWN: silently empty');
+        expect(sent, [id], reason: 'prefix sent once');
+        expect(r.valueOrNull!.keys, [id.substring('highlight:'.length)]);
       },
     );
 

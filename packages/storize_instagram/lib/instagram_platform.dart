@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/governor/governor.dart';
+import 'package:storize_instagram/mapper/mapper.dart';
 import 'package:storize_instagram/media/media.dart';
 import 'package:storize_instagram/page/page.dart';
 import 'package:storize_instagram/platform/platform.dart';
@@ -431,7 +432,8 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   ) async {
     final ids = {
       for (final id in highlightIds)
-        if (id.trim().isNotEmpty) id.trim(),
+        if (stripHighlightPrefix(id.trim()).isNotEmpty)
+          stripHighlightPrefix(id.trim()),
     }.toList();
     final out = <String, List<RemoteContent>>{};
     try {

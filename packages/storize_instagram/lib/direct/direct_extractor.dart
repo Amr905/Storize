@@ -345,10 +345,14 @@ final class DirectExtractor {
               return const Err(SchemaChanged('page_info.end_cursor'));
             }
             final seen = <String>{};
-            final mine = [
-              for (final e in value.entries)
-                if (e.belongsTo(userId) && seen.add(e.pk)) e,
-            ]..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+            final mine =
+                [
+                  for (final e in value.entries)
+                    if (e.belongsTo(userId) && seen.add(e.pk)) e,
+                ]..sort((a, b) {
+                  final byTime = b.takenAt.compareTo(a.takenAt);
+                  return byTime != 0 ? byTime : b.pk.compareTo(a.pk);
+                });
             DateTime? oldest;
             for (final e in mine) {
               if (e.pinned) continue;
@@ -371,7 +375,16 @@ final class DirectExtractor {
                     ),
                 ],
                 nextCursor: hasNext
-                    ? PostCursor(takenAt: oldest!, igCursor: end!).encode()
+                    ? PostCursor(
+                        takenAt: oldest!,
+                        igCursor: end!,
+                        boundaryPks: {
+                          for (final e in mine)
+                            if (e.takenAt == oldest) e.pk,
+                          if (parsed != null && parsed.takenAt == oldest)
+                            ...parsed.boundaryPks,
+                        },
+                      ).encode()
                     : null,
               ),
             );
@@ -393,7 +406,8 @@ final class DirectExtractor {
   }) => _op('fetchHighlightItems', (call) async {
     final ids = {
       for (final id in highlightIds)
-        if (id.trim().isNotEmpty) id.trim(),
+        if (stripHighlightPrefix(id.trim()).isNotEmpty)
+          stripHighlightPrefix(id.trim()),
     }.toList();
     final out = <String, List<RemoteContent>>{};
     for (var i = 0; i < ids.length; i += storyChunkSize) {

@@ -346,7 +346,8 @@ final class PageExtractor {
   }) => _op('fetchHighlightItems', () async {
     final ids = {
       for (final id in highlightIds)
-        if (id.trim().isNotEmpty) id.trim(),
+        if (stripHighlightPrefix(id.trim()).isNotEmpty)
+          stripHighlightPrefix(id.trim()),
     }.toList();
     for (final id in ids) {
       if (!_highlightIdShape.hasMatch(id)) {

@@ -192,4 +192,76 @@ void main() {
       },
     );
   });
+
+  group('same-second posts across a page boundary (F1)', () {
+    HookEvent connection(List<(String, int)> posts) {
+      final b = loadSynthetic('timeline_page1.json')! as Map<String, Object?>;
+      final conn =
+          (b['data']!
+                  as Map)['xdt_api__v1__feed__user_timeline_graphql_connection']
+              as Map;
+      final tmpl = (conn['edges']! as List)[1] as Map;
+      conn['edges'] = [
+        for (final (pk, t) in posts)
+          {
+            'node': {
+              ...(tmpl['node']! as Map).cast<String, Object?>(),
+              'pk': pk,
+              'taken_at': t,
+              'code': 'ZZFAKE_c_$pk',
+              'timeline_pinned_user_ids': <Object?>[],
+            },
+          },
+      ];
+      (conn['page_info']! as Map)['has_next_page'] = false;
+      return hookResponse(b, name: postsName);
+    }
+
+    Future<List<List<String>>> walk(
+      List<(String, int)> posts,
+      int pageSize,
+    ) async {
+      final rig = Rig(
+        usernames: _names,
+        postPageSize: pageSize,
+        onLoad: (s, url) => s
+          ..emit(connection(posts))
+          ..emit(const LoadStopEvent()),
+      );
+      final pages = <List<String>>[];
+      String? cursor;
+      do {
+        final page = (await rig.run(
+          rig.extractor.fetchPostPage(_userId, cursor: cursor),
+        )).valueOrNull!;
+        pages.add([for (final c in page.items) c.remoteId]);
+        cursor = page.nextCursor;
+      } while (cursor != null && pages.length < 10);
+      return pages;
+    }
+
+    test('QA repro: size 2, posts at 900, 500, 500, 100', () async {
+      final pages = await walk([
+        ('ZZFAKE_p1', 900),
+        ('ZZFAKE_p2', 500),
+        ('ZZFAKE_p3', 500),
+        ('ZZFAKE_p4', 100),
+      ], 2);
+      final all = pages.expand((p) => p).toList();
+      expect(all.toSet(), {'ZZFAKE_p1', 'ZZFAKE_p2', 'ZZFAKE_p3', 'ZZFAKE_p4'});
+      expect(all, hasLength(4), reason: 'none repeated');
+    });
+
+    test('five posts in one second over several page boundaries', () async {
+      final posts = [
+        ('ZZFAKE_a', 900),
+        for (var i = 0; i < 5; i++) ('ZZFAKE_t$i', 500),
+        ('ZZFAKE_z', 100),
+      ];
+      final pages = await walk(posts, 2);
+      final all = pages.expand((p) => p).toList();
+      expect(all.toSet(), {for (final (pk, _) in posts) pk});
+      expect(all, hasLength(posts.length));
+    });
+  });
 }

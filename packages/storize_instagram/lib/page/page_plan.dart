@@ -162,12 +162,20 @@ abstract final class PagePlans {
     bool? hasNext;
     const mapper = EnvelopeMapper();
 
+    // Order: time desc, then pk desc (total, so a tie splits the same way
+    // every time). The boundary second keeps the posts not yet delivered.
     List<TimelineEntry> older() {
       final t = cursor?.takenAt;
       return [
         for (final e in collected.values)
-          if (t == null || e.takenAt.isBefore(t)) e,
-      ]..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+          if (t == null ||
+              e.takenAt.isBefore(t) ||
+              (e.takenAt == t && !cursor!.boundaryPks.contains(e.pk)))
+            e,
+      ]..sort((a, b) {
+        final byTime = b.takenAt.compareTo(a.takenAt);
+        return byTime != 0 ? byTime : b.pk.compareTo(a.pk);
+      });
     }
 
     return PagePlan(
@@ -216,6 +224,13 @@ abstract final class PagePlans {
                   ? PostCursor(
                       takenAt: page.last.takenAt,
                       igCursor: '',
+                      boundaryPks: {
+                        for (final e in page)
+                          if (e.takenAt == page.last.takenAt) e.pk,
+                        if (cursor != null &&
+                            cursor.takenAt == page.last.takenAt)
+                          ...cursor.boundaryPks,
+                      },
                     ).encode()
                   : null,
             ),
