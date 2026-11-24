@@ -3,6 +3,7 @@ import 'package:storize_app/background/task_router.dart';
 import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
+import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_model/storize_model.dart';
 
 final DateTime _t0 = DateTime.utc(2026, 11, 20, 8);
@@ -64,7 +65,7 @@ typedef _CheckCall = ({
 typedef _DownloadCall = ({DateTime? deadline, ExtractionPolicy policy});
 
 final class _Rig {
-  _Rig({AppSettings settings = const AppSettings()})
+  _Rig({AppSettings settings = const AppSettings(), this.onCheck})
     : settings = FakeSettingsRepo(settings);
 
   final FakeSettingsRepo settings;
@@ -82,6 +83,7 @@ final class _Rig {
     DownloadStopReason.completed,
   );
   Exception? checkThrows;
+  final Future<void> Function()? onCheck;
 
   late final TaskRouter router = TaskRouter(
     runCheck: ({required scope, required trigger, targetId, deadline}) async {
@@ -92,6 +94,7 @@ final class _Rig {
         targetId: targetId,
         deadline: deadline,
       ));
+      await onCheck?.call();
       final e = checkThrows;
       if (e != null) throw e;
       return checkResult;
@@ -123,6 +126,7 @@ final class _Rig {
 }
 
 void main() {
+  unmeteredGroup();
   group('routing (AC3, AC6)', () {
     test(
       'check-stories runs RunCheck(stories, periodic) then downloads',
@@ -210,14 +214,14 @@ void main() {
     });
   });
 
-  group('the 8-minute budget and the download roll-over (AC3)', () {
+  group('the 9-minute budget and the download roll-over (AC3)', () {
     test(
-      'RunCheck and DownloadPending share one deadline of now + 8 min',
+      'RunCheck and DownloadPending share one deadline (9 min - 30 s margin)',
       () async {
         final r = _Rig();
         await r.router.route(TaskNames.checkStories);
 
-        final expected = _t0.add(const Duration(minutes: 8));
+        final expected = _t0.add(const Duration(minutes: 8, seconds: 30));
         expect(r.checks.single.deadline, expected);
         expect(r.downloads.single.deadline, expected);
       },
@@ -333,6 +337,68 @@ void main() {
       expect(messages, contains('task_failed task=check-stories'));
       expect(messages, contains('FormatException'));
       expect(messages, isNot(contains('secret')));
+    });
+  });
+}
+
+/// Whether a governed call inside the check callback is let through with an
+/// empty bucket (the unmetered scope took effect).
+Future<bool> _unmeteredHolds({
+  required bool allowUnmetered,
+  required bool flag,
+}) async {
+  final clock = FakeClock();
+  final governor = RequestGovernor(
+    leases: FakeGovernorLeaseRepo(clock),
+    clock: clock,
+    holder: 'test',
+    config: const GovernorConfig(
+      jitterMin: Duration.zero,
+      jitterMax: Duration.zero,
+    ),
+    delay: (d) async => clock.set(clock.now().add(d)),
+    allowUnmetered: allowUnmetered,
+  );
+  for (var i = 0; i < 6; i++) {
+    await governor.run(
+      accountId: 1,
+      cost: RequestCost.api,
+      call: () async => 1,
+    );
+  }
+  var let = false;
+  final r = _Rig(
+    onCheck: () async {
+      try {
+        await governor.run(
+          accountId: 1,
+          cost: RequestCost.api,
+          call: () async => 1,
+          maxWait: const Duration(seconds: 5),
+        );
+        let = true;
+      } on GovernorPaused {
+        let = false;
+      }
+    },
+  );
+  await r.router.route(TaskNames.checkStories, {
+    TaskNames.inputManual: true,
+    if (flag) TaskRouter.inputManualUnmetered: true,
+  });
+  return let;
+}
+
+void unmeteredGroup() {
+  group('debug "Check now, no limit" (T-050)', () {
+    test('dev governor: the flag runs the check unmetered', () async {
+      expect(await _unmeteredHolds(allowUnmetered: true, flag: true), isTrue);
+    });
+    test('without the flag the check is metered', () async {
+      expect(await _unmeteredHolds(allowUnmetered: true, flag: false), isFalse);
+    });
+    test('prod governor: the flag changes nothing', () async {
+      expect(await _unmeteredHolds(allowUnmetered: false, flag: true), isFalse);
     });
   });
 }

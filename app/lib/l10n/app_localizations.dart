@@ -2015,6 +2015,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Nothing new} =1{1 new item} other{{count} new items}}'**
   String tgtCheckDone(int count);
 
+  /// Dev builds only: overflow menu item on S-07 that runs a check without the hourly request limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now (debug, no limit)'**
+  String get debugCheckNowUnmetered;
+
   /// Snackbar when Check now fails.
   ///
   /// In en, this message translates to:

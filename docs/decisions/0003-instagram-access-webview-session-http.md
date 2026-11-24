@@ -73,3 +73,17 @@ Decision:
 - **A manual "Check now" may load pages** in the background isolate (a user-initiated run); scheduled checks still need `pageModeInBackground`.
 Details and the ground truth: INSTAGRAM_EXTRACTION.md "2026-11-24 ground truth (web)". Verified on device by DEVICE_TESTS D6.
 
+### Amendment 2026-11-25 (4): in-page fetch is primary; direct HTTP is a fallback (T-050)
+Found on device (log 00:24): direct GraphQL from Dart with tokens copied out of the WebView answered `for (;;);` `fb_error=1357054` (tokens refused). Page loads cost 3 governor tokens each, the retries drained the budget, adds sat "Waiting to look up" and background tasks hit their deadline (`task_stopped reason=timeout`). The user's direction: mimic opening the Instagram page and take the data from it.
+
+Decision:
+- **Queries run inside the page.** One headless WebView session on `https://www.instagram.com/` (hook and seen block installed, WebView lease held, logged-out and challenge detection as in page mode) runs the web app's own GraphQL read queries from the page's JavaScript (`assets/inpage_query.js`, `callAsyncJavaScript`). The page has the right cookies, user agent and tokens, so the request is accepted.
+- **Fixed script, hard allowlist.** The script builds the POST itself; Dart passes only `name` and a JSON `variables` string as arguments. Allowed: `PolarisProfilePostsQuery`, `PolarisProfilePostsTabContentQuery_connection`, `PolarisStoriesV3ReelPageStandaloneQuery`, `PolarisProfileStoryHighlightsTrayContentQuery`. Names containing `Mutation` or `Seen` are refused on both sides. The seen mutation stays blocked by the hook.
+- **One session per run.** One governed page load (3 tokens) opens it; each query is one governed `api` call (1 token). It closes at the end of the run, or after 2 min idle. Ten targets cost about 3 + 10 tokens, not ten page loads.
+- **Primary for every operation** (stories, new posts, post pages, highlights tray and items, `resolveUser`). `resolveUser` reads the user from the posts query; an account without posts is read from its profile page in the same session.
+- **Direct HTTP (GraphQL, REST) and page mode stay in the code** and run only when in-page reports it is unavailable (no module, no token, no document-start script, page not ready in about 10 s, kill switch). Every other in-page result, including real failures, is final.
+- **Background:** in-page runs in background tasks by default. `storize.inPageInBackground` (absent means on) is a kill switch; only an explicit `false` turns it off. Background calls leave 3 tokens of the burst for interactive calls (governor `priority`), so adding an account is not starved. Background task budget: 9 min, no new target in the last 30 s.
+- **Debug only:** `RequestGovernor.runUnmetered` (dev builds) skips the hourly and burst budget with a 1 s spacing and still respects an active back-off.
+
+Logs (no values): `[inpage] session_open ms= ready= modules=`, `[inpage] op=<name> status= items=` or `error=<code>`, `[inpage] session_close queries=`.
+

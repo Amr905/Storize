@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart' show appFlavor;
 import 'package:flutter_riverpod/misc.dart';
 import 'package:storize_app/core/composition.dart';
 import 'package:storize_app/core/discovery_secure_store.dart';
@@ -125,6 +126,11 @@ Future<AppComposition> composeProduction({
     igHttp: DartIoHttp(),
     cdnHttp: DartIoCdnHttp(),
     pageDriver: const InAppPageDriver(),
+    inPageScript: loadInPageSource,
+    inPageInBackground: InPageBackgroundSetting().get,
+    // Only the dev flavor may use the debug "no limit" check.
+    // ignore: avoid_redundant_argument_values, flavor is a build-time value.
+    allowUnmetered: appFlavor == 'dev',
     hookSource: loadHookSource,
     seenStore: SharedPrefsSeenBreakerStore(),
     log: diagnostics.log,
@@ -210,6 +216,7 @@ List<Override> appOverrides(AppComposition c) => [
   governorLeaseRepoProvider.overrideWithValue(c.leases),
   contentPlatformProvider.overrideWithValue(c.platform),
   schedulerProvider.overrideWithValue(c.scheduler),
+  allowUnmeteredProvider.overrideWithValue(c.parts.allowUnmetered),
   backfillHistoryProvider.overrideWithValue(c.backfillHistory),
   syncHighlightsProvider.overrideWithValue(c.syncHighlights),
   clockProvider.overrideWithValue(c.clock),

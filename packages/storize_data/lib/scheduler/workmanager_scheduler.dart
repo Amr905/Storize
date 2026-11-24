@@ -105,6 +105,7 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
   Future<void> checkNow({
     CheckScope scope = CheckScope.all,
     int? targetId,
+    bool unmetered = false,
   }) async {
     final scopes = scope == CheckScope.all
         ? const [CheckScope.stories, CheckScope.posts]
@@ -117,6 +118,7 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
         policy: ExistingWorkPolicy.keep,
         inputData: {
           TaskNames.inputManual: true,
+          if (unmetered) TaskNames.inputManualUnmetered: true,
           TaskNames.inputTargetId: ?targetId,
         },
         expedited: true,

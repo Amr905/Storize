@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/core/ui_state.dart';
 import 'package:storize_app/core/ui_state_view.dart';
 import 'package:storize_app/features/shared/session_banner_slot.dart';
@@ -55,6 +56,18 @@ class TargetsPage extends ConsumerWidget {
             running: checking,
             onPressed: () => unawaited(_checkNow(context, ref)),
           ),
+          if (ref.watch(allowUnmeteredProvider))
+            PopupMenuButton<String>(
+              onSelected: (_) => unawaited(
+                ref.read(schedulerProvider).checkNow(unmetered: true),
+              ),
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'unmetered',
+                  child: Text(l10n.debugCheckNowUnmetered),
+                ),
+              ],
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

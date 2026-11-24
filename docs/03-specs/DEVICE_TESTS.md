@@ -201,6 +201,7 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 | D4 | Highlight items: reel query with `highlight:<id>`; `/stories/highlights/<id>/` in page mode; confirm the seen mutation is blocked (0 leaks) and the highlight is not marked seen | | | |
 | D5 | Background check with no page mode (T-045): after the app was opened once, a story and a post are downloaded over GraphQL from the persisted discovery; with no discovery the check skips with no request | | | |
 | D6 | First open: in-page discovery (ops >= 3 in the log) and "Check now" downloads (T-048) | | | |
+| D7 | In-page fetch (T-050): Check now downloads today's story and post; adding an account resolves at once | | | |
 | C | 24 h soak (see SOAK.md) | | | |
 
 ## D5. Background check works after opening the app once (T-045, replaces T-044)
@@ -219,6 +220,14 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 3. Tap "Check now". **Expected:** `op=fetchStories via=graphql ok` and `op=fetchNewPosts via=graphql ok` (or a page-mode load, never `page_mode_background_disabled`); the story and the post are in `Pictures/Storize/<username>/`.
 4. Leave it alone for 5 minutes. **Expected:** no burst of background checks (at most the scheduled ones); a failing check does not start another.
 5. **FAIL if:** `discovery ops=` lists fewer than 3 names, a request answers 400/404 (copy the `query=... status=... keys=[...]` line: names only), or a checkpoint or login redirect appears. Stop and do not retry more than once.
+
+## D7. In-page fetch (T-050)
+**Needs:** Phone A, test account, a tracked account with an active story and a new post, a second public account to add.
+1. Open the app, tap "Check now". **Expected in the diagnostics:** one `[inpage] session_open ms=... ready=yes modules=<n>`, then `[inpage] op=PolarisStoriesV3ReelPageStandaloneQuery status=200 items=<n>` and `[inpage] op=PolarisProfilePostsQuery status=200 items=<n>`, then `[inpage] session_close queries=<n>`. The story and the post are in `Pictures/Storize/<username>/`. No `fb_error`, no `page_mode_background_disabled`.
+2. Add another public account. **Expected:** it resolves at once (no "Waiting to look up"), through `[inpage] op=PolarisProfilePostsQuery status=200` (an account without posts shows one profile-page load in the same session).
+3. Force-stop, run a scheduled or background check. **Expected:** the same `[inpage]` lines, no `task_stopped reason=timeout`, and the task ends before about 9 min.
+4. While a background check runs, add an account in the app. **Expected:** it is not starved (3 tokens are kept for the foreground).
+5. **FAIL if:** `[inpage] ... error=unavailable:...` repeats (copy the code: names only; direct HTTP then runs as a fallback), a `rate_limited` line appears, or a checkpoint or login redirect appears. Stop and do not retry more than once.
 
 ## Open questions
 - The debug actions named above ("page-mode story load", "run check now", "run the probe", cookie count, Library seed) belong to the app wiring. Any that do not exist yet make their tests "blocked"; the Lead decides whether to add them before the soak.

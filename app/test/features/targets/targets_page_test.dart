@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/targets/target_list_row.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -235,5 +236,41 @@ void main() {
       find.widgetWithText(TextButton, l10n.tgtCheckNow),
     );
     expect(button.onPressed, isNull);
+  });
+
+  group('debug Check now, no limit (T-050)', () {
+    testWidgets('prod: there is no overflow menu', (t) async {
+      final rig = TargetsRig();
+      await rig.addAccount();
+      await pumpTargets(t, rig: rig);
+      l10n = await loc(t);
+
+      expect(find.byType(PopupMenuButton<String>), findsNothing);
+      expect(find.text(l10n.debugCheckNowUnmetered), findsNothing);
+    });
+
+    testWidgets(
+      'dev: the menu item asks the scheduler for an unmetered check',
+      (
+        t,
+      ) async {
+        final rig = TargetsRig();
+        await rig.addAccount();
+        await pumpTargets(
+          t,
+          rig: rig,
+          extra: [allowUnmeteredProvider.overrideWithValue(true)],
+        );
+        l10n = await loc(t);
+
+        await t.tap(find.byType(PopupMenuButton<String>));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.debugCheckNowUnmetered));
+        await t.pumpAndSettle();
+
+        expect(rig.scheduler.unmeteredCheckNowCount, 1);
+        expect(rig.scheduler.checkNowCalls, hasLength(1));
+      },
+    );
   });
 }

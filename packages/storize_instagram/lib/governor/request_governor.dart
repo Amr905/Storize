@@ -25,6 +25,21 @@ final Object _runningKey = Object();
 /// [RequestGovernor.withMaxWait]).
 final Object _maxWaitKey = Object();
 
+/// Zone key: the default [RequestPriority] of every `run` started in this
+/// zone (see [RequestGovernor.withPriority]).
+final Object _priorityKey = Object();
+
+/// Zone key: the scope of [RequestGovernor.runUnmetered] (T-050 debug).
+final Object _unmeteredKey = Object();
+
+/// The marker of one `runUnmetered` scope; remembers that it was logged.
+final class _UnmeteredScope {
+  bool logged = false;
+}
+
+/// The spacing between calls of an unmetered run.
+const Duration _unmeteredGap = Duration(seconds: 1);
+
 /// Attempts to record a rate limit before giving up (N2).
 const int _limitRecordAttempts = 3;
 
@@ -61,6 +76,7 @@ class RequestGovernor {
     this._delay = _realDelay,
     Random? random,
     this._log,
+    this.allowUnmetered = false,
   }) : _random = random ?? Random();
 
   final GovernorLeaseRepo _leases;
@@ -70,6 +86,10 @@ class RequestGovernor {
   final Delay _delay;
   final Random _random;
   final GovernorLog? _log;
+
+  /// Whether [runUnmetered] has an effect. Only dev builds set it (T-050); in
+  /// production `runUnmetered` is a normal run.
+  final bool allowUnmetered;
 
   final Map<int, _AccountState> _states = {};
 
@@ -107,10 +127,27 @@ class RequestGovernor {
     required RequestCost cost,
     required Future<T> Function() call,
     Duration? maxWait,
+    RequestPriority? priority,
   }) {
     maxWait ??= Zone.current[_maxWaitKey] as Duration?;
+    priority ??=
+        Zone.current[_priorityKey] as RequestPriority? ??
+        RequestPriority.interactive;
     final weight = _config.weightOf(cost);
-    if (weight > _config.burst) {
+    final scope = allowUnmetered
+        ? Zone.current[_unmeteredKey] as _UnmeteredScope?
+        : null;
+    final unmetered = scope != null;
+    if (scope != null && !scope.logged) {
+      scope.logged = true;
+      _log?.call('unmetered=yes');
+    }
+    // A background call keeps tokens for interactive work (T-050), as far as
+    // the burst allows.
+    final reserve = !unmetered && priority == RequestPriority.background
+        ? max(0, min(_config.interactiveReserve, _config.burst - weight))
+        : 0;
+    if (!unmetered && weight > _config.burst) {
       throw ArgumentError.value(
         cost,
         'cost',
@@ -127,7 +164,7 @@ class RequestGovernor {
     }
     return _exclusive(accountId, (state) async {
       final queuedAt = _clock.now();
-      await _prepare(accountId, state, weight, maxWait);
+      await _prepare(accountId, state, weight, maxWait, reserve, unmetered);
       final waited = _clock.now().difference(queuedAt);
       T result;
       try {
@@ -159,6 +196,23 @@ class RequestGovernor {
       return result;
     });
   }
+
+  /// Debug "Check now without the hourly limit" (T-050). Inside [body], when
+  /// the governor was built with `allowUnmetered` (dev builds only), calls
+  /// skip the hourly and burst token budget and the random jitter: they keep
+  /// a fixed 1 s spacing and still respect an active back-off (the pause
+  /// after a rate limit). `unmetered=yes` is logged once per scope. On a
+  /// governor without `allowUnmetered` (production) this is just [body].
+  static Future<T> runUnmetered<T>(Future<T> Function() body) =>
+      runZoned(body, zoneValues: {_unmeteredKey: _UnmeteredScope()});
+
+  /// Runs [body] so that every `run` started inside it (and not given its own
+  /// `priority`) uses [priority]. Background isolates wrap their work in it
+  /// with [RequestPriority.background].
+  static Future<T> withPriority<T>(
+    RequestPriority priority,
+    Future<T> Function() body,
+  ) => runZoned(body, zoneValues: {_priorityKey: priority});
 
   /// Runs [body] so that every `run` started inside it (and not given its own
   /// `maxWait`) uses [maxWait]. For interactive paths: the user must not
@@ -264,9 +318,11 @@ class RequestGovernor {
     _AccountState state,
     int weight,
     Duration? maxWait,
+    int reserve,
+    bool unmetered,
   ) async {
     final startedAt = _clock.now();
-    final gap = _drawGap();
+    final gap = unmetered ? _unmeteredGap : _drawGap();
     DateTime? readyAt; // When the jitter gap is satisfied.
     while (true) {
       final lease = await _acquire(
@@ -320,12 +376,15 @@ class RequestGovernor {
       // us back by a fresh random gap each time.
       final ready = readyAt == null
           ? last.add(gap)
-          : _later(readyAt, last.add(_config.jitterMin));
+          : _later(
+              readyAt,
+              last.add(unmetered ? _unmeteredGap : _config.jitterMin),
+            );
       readyAt = ready;
       final jitter = ready.difference(now);
       final wait = _maxDuration(
         jitter.isNegative ? Duration.zero : jitter,
-        _tokenWait(bucket, weight),
+        unmetered ? Duration.zero : _tokenWait(bucket, weight + reserve),
       );
       if (maxWait != null && wait > Duration.zero) {
         final left = maxWait - now.difference(startedAt);
@@ -350,7 +409,7 @@ class RequestGovernor {
         accountId: accountId,
         holder: _holder,
         bucket: GovernorBucket(
-          tokens: max(0, bucket.tokens - weight),
+          tokens: unmetered ? bucket.tokens : max(0, bucket.tokens - weight),
           lastRefillAt: now,
           backoffUntil: bucket.backoffUntil,
           backoffMultiplier: bucket.backoffMultiplier,

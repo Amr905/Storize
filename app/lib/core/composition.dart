@@ -59,6 +59,9 @@ final class CompositionParts {
     this.fullPhotoReader,
     this.clock = const SystemClock(),
     this.governorConfig = const GovernorConfig(),
+    this.allowUnmetered = false,
+    this.inPageScript,
+    this.inPageInBackground,
     this.closers = const [],
   });
 
@@ -144,6 +147,17 @@ final class CompositionParts {
 
   /// Governor tuning (tests make it fast).
   final GovernorConfig governorConfig;
+
+  /// Dev builds only: lets `RequestGovernor.runUnmetered` skip the hourly
+  /// budget (the debug "Check now, no limit"). Always false in production.
+  final bool allowUnmetered;
+
+  /// Loads `inpage_query.js` (an asset in production). Null turns in-page
+  /// fetching off (direct HTTP and page mode as before).
+  final Future<String> Function()? inPageScript;
+
+  /// The in-page kill switch for background tasks (T-050). Null: allowed.
+  final FutureOr<bool> Function()? inPageInBackground;
 
   /// Called by [AppComposition.dispose], in order (closing the database,
   /// the update checker's client).
@@ -246,7 +260,12 @@ final class AppComposition {
       clock: clock,
       holder: holderId,
       config: parts.governorConfig,
-      log: (message) => log.log(LogLevel.debug, 'governor', message),
+      allowUnmetered: parts.allowUnmetered,
+      log: (message) => log.log(
+        message.startsWith('unmetered') ? LogLevel.info : LogLevel.debug,
+        'governor',
+        message,
+      ),
     );
     final webViewLease = GovernorWebViewLease(
       repo: leases,
@@ -257,8 +276,13 @@ final class AppComposition {
     final seenGuard = SeenGuard(store: parts.seenStore, log: log);
 
     Future<String>? hook;
+    Future<String>? inPage;
     Future<InstagramPlatform> build(int accountId) async {
       final source = await (hook ??= parts.hookSource());
+      final loadScript = parts.inPageScript;
+      final script = loadScript == null
+          ? null
+          : await (inPage ??= loadScript());
       return InstagramPlatform.assemble(
         accountId: accountId,
         governor: governor,
@@ -276,6 +300,8 @@ final class AppComposition {
         seenGuard: seenGuard,
         webViewLease: webViewLease,
         runsInBackground: background,
+        inPageScript: script,
+        inPageInBackground: parts.inPageInBackground,
         pageModeInBackground: () async =>
             (await parts.settings.get()).pageModeInBackground,
       );
@@ -288,6 +314,7 @@ final class AppComposition {
       accounts: accounts,
       factory: build,
       interactiveMaxWait: interactiveWait,
+      priority: background ? RequestPriority.background : null,
     );
     // S-02 verifies a new session under the staging id before it belongs to
     // any account (never the active account's session).
@@ -296,6 +323,7 @@ final class AppComposition {
       factory: build,
       accountId: LoginAccount.unsavedId,
       interactiveMaxWait: interactiveWait,
+      priority: background ? RequestPriority.background : null,
     );
     final loginLease = GovernorLoginLease(webViewLease);
 
@@ -661,6 +689,8 @@ final class AppComposition {
       await s.cancel();
     }
     _subscriptions.clear();
+    // The in-page session of this run (T-050).
+    await platform.closeInPage();
     for (final close in parts.closers) {
       try {
         await close();

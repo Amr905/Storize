@@ -11,8 +11,13 @@ abstract interface class Scheduler {
   });
 
   /// Enqueues an expedited one-off check for [scope]. When [targetId] is set,
-  /// only that target is checked.
-  Future<void> checkNow({CheckScope scope = CheckScope.all, int? targetId});
+  /// only that target is checked. [unmetered] is the dev-only debug check that
+  /// skips the hourly request limit (T-050); production governors ignore it.
+  Future<void> checkNow({
+    CheckScope scope = CheckScope.all,
+    int? targetId,
+    bool unmetered = false,
+  });
 
   /// Enqueues the one-off `history` task now (post-history backfill). It
   /// keeps an existing request, so calling it twice does not duplicate.

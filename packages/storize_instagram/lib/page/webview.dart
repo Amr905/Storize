@@ -10,6 +10,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:storize_instagram/page/dom_fallback.dart';
 import 'package:storize_instagram/page/hook_protocol.dart';
+import 'package:storize_instagram/page/inpage_script.dart';
 import 'package:storize_instagram/page/page_driver.dart';
 
 /// Where `hook.js` is bundled.
@@ -18,6 +19,13 @@ const String hookAssetPath = 'packages/storize_instagram/assets/hook.js';
 /// Loads the content of `hook.js` from the asset bundle. In a background
 /// isolate the Flutter binding must be initialised first.
 Future<String> loadHookSource() => rootBundle.loadString(hookAssetPath);
+
+/// Where `inpage_query.js` is bundled (T-050).
+const String inPageAssetPath =
+    'packages/storize_instagram/assets/inpage_query.js';
+
+/// Loads the content of `inpage_query.js` from the asset bundle.
+Future<String> loadInPageSource() => rootBundle.loadString(inPageAssetPath);
 
 /// Anchored patterns for `javaScriptHandlersOriginAllowList`: exactly the two
 /// instagram origins of `allowedPageOrigins`.
@@ -91,7 +99,7 @@ Future<void> _wipe() async {
 /// Pixels per scroll step: a few screens, so the list's loader fires.
 const int _scrollStep = 4000;
 
-final class _InAppPageSession implements PageSession {
+final class _InAppPageSession implements PageSession, InPageScriptRunner {
   _InAppPageSession(this._config);
 
   final PageSessionConfig _config;
@@ -180,6 +188,25 @@ final class _InAppPageSession implements PageSession {
     final controller = _controller;
     if (controller == null) return null;
     return controller.evaluateJavascript(source: domCollectScript);
+  }
+
+  @override
+  Future<Object?> callAsync(
+    String functionBody,
+    Map<String, Object?> arguments,
+  ) async {
+    final controller = _controller;
+    if (controller == null) throw StateError('not started');
+    final result = await controller.callAsyncJavaScript(
+      functionBody: functionBody,
+      arguments: arguments,
+      // The page's own world: it has `window.require` and the tokens.
+      contentWorld: ContentWorld.PAGE,
+    );
+    if (result == null || result.error != null) {
+      throw StateError('script_failed');
+    }
+    return result.value;
   }
 
   @override

@@ -65,6 +65,10 @@ final schedulerProvider = Provider<Scheduler>(
   (ref) => _unwired('schedulerProvider'),
 );
 
+/// Whether the dev-only "Check now (debug, no limit)" may be offered. False
+/// unless the composition overrides it for the dev flavor (T-050).
+final allowUnmeteredProvider = Provider<bool>((ref) => false);
+
 /// [Clock].
 final clockProvider = Provider<Clock>((ref) => _unwired('clockProvider'));
 

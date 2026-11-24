@@ -1154,6 +1154,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get debugCheckNowUnmetered => 'Check now (debug, no limit)';
+
+  @override
   String get tgtCheckFailed => 'The check could not run.';
 
   @override

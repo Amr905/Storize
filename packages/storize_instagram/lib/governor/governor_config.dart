@@ -3,6 +3,17 @@
 /// CDN media downloads are deliberately **not** governed: they are plain
 /// HTTPS GETs of signed CDN URLs and do not count against the Instagram
 /// budget (ADR-5, ADR-9). Only calls to Instagram itself use a cost.
+/// Who a governed call is for (T-050). Interactive calls (the user is
+/// waiting) may use every token; background calls leave
+/// [GovernorConfig.interactiveReserve] tokens of the burst untouched.
+enum RequestPriority {
+  /// A foreground call the user waits for.
+  interactive,
+
+  /// A scheduled or background call.
+  background,
+}
+
 enum RequestCost {
   /// One direct API call (user lookup, stories, posts).
   api,
@@ -32,6 +43,7 @@ final class GovernorConfig {
     this.repeatMultiplier = 4,
     this.multiplierDuration = const Duration(hours: 2),
     this.repeatWindow = const Duration(hours: 24),
+    this.interactiveReserve = 3,
   }) : assert(callsPerHour > 0, 'callsPerHour must be positive'),
        assert(burst > 0, 'burst must be positive'),
        assert(apiCost > 0, 'apiCost must be positive'),
@@ -89,6 +101,11 @@ final class GovernorConfig {
   /// A rate limit this soon after the previous pause ended is a repeat
   /// (default 24 h).
   final Duration repeatWindow;
+
+  /// Tokens a background call leaves for interactive calls (T-050). A
+  /// background call waits until the bucket holds its own weight plus this
+  /// many tokens (cut so that it never exceeds the burst).
+  final int interactiveReserve;
 
   /// The token weight of [cost].
   int weightOf(RequestCost cost) => switch (cost) {

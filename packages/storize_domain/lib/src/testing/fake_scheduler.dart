@@ -31,12 +31,19 @@ final class FakeScheduler implements Scheduler {
     _applyCalls.add((storyMin: storyMin, postMin: postMin, wifiOnly: wifiOnly));
   }
 
+  int _unmeteredCalls = 0;
+
+  /// How many `checkNow` calls had `unmetered: true`.
+  int get unmeteredCheckNowCount => _unmeteredCalls;
+
   @override
   Future<void> checkNow({
     CheckScope scope = CheckScope.all,
     int? targetId,
+    bool unmetered = false,
   }) async {
     _checkNowCalls.add((scope: scope, targetId: targetId));
+    if (unmetered) _unmeteredCalls++;
   }
 
   @override

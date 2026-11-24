@@ -374,6 +374,7 @@ class _ThrowingScheduler implements Scheduler {
   Future<void> checkNow({
     CheckScope scope = CheckScope.all,
     int? targetId,
+    bool unmetered = false,
   }) async => throw StateError('x');
 
   @override

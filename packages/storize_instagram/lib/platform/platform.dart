@@ -7,6 +7,7 @@ export 'package:storize_instagram/page/seen_breaker_store.dart';
 
 export 'extraction_ops.dart';
 export 'governor_webview_lease.dart';
+export 'inpage_ops.dart';
 export 'page_open_counter.dart';
 export 'platform_signals.dart';
 export 'skip_counting_transport.dart';
