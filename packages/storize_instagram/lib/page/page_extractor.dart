@@ -16,6 +16,8 @@ import 'package:storize_instagram/page/page_plan.dart';
 import 'package:storize_instagram/page/webview_lease.dart';
 import 'package:storize_model/storize_model.dart';
 
+final RegExp _highlightIdShape = RegExp(r'^[A-Za-z0-9_]{1,40}$');
+
 /// Creates the timeout timer. Injected so tests control time.
 typedef PageTimerFactory = Timer Function(Duration d, void Function() fire);
 
@@ -63,6 +65,10 @@ final class PageExtractor {
     this.cleanupTimeout = const Duration(seconds: 5),
     this.emptyGrace = const Duration(seconds: 2),
     this.domSettle = const Duration(seconds: 3),
+    this.scrollTimeout = const Duration(seconds: 60),
+    this.scrollInterval = const Duration(milliseconds: 1500),
+    this.maxScrollSteps = 30,
+    this.postPageSize = 12,
     WebViewLease? webViewLease,
     SeenGuard? seenGuard,
     this.classifier = const FailureClassifier(),
@@ -98,6 +104,20 @@ final class PageExtractor {
   /// "username mismatch") is accepted. A definitive reply wins if it comes
   /// first.
   final Duration emptyGrace;
+
+  /// The overall limit of a scrolling load (post history).
+  final Duration scrollTimeout;
+
+  /// The wait before each scroll step, and after the last one, for the
+  /// page's own request to answer.
+  final Duration scrollInterval;
+
+  /// The most scroll steps of one `fetchPostPage` (bounds the depth: about
+  /// `12 * maxScrollSteps` posts).
+  final int maxScrollSteps;
+
+  /// Posts per page of `fetchPostPage`.
+  final int postPageSize;
 
   /// The breaker of the story "seen" guard (process-wide by default).
   final SeenGuard seenGuard;
@@ -144,25 +164,21 @@ final class PageExtractor {
   // ----------------------------------------------------------------- users
 
   /// Looks up [username] on its profile page.
-  Future<Result<RemoteUser>> resolveUser(String username) => _op(
-    'resolveUser',
-    () async {
-      final clean = username.trim().replaceFirst(RegExp('^@'), '');
-      if (!pageUsernameShape.hasMatch(clean)) {
-        return const Err(TargetNotFound());
-      }
-      final r = await _load('resolveUser', PagePlans.profile(clean));
-      return switch (r) {
-        Err(:final failure) => Err(failure),
-        Ok(:final value)
-            when value.user.username.toLowerCase() != clean.toLowerCase() =>
-          const Err(
-            UnknownFailure(null, 'username_mismatch'),
-          ),
-        Ok(:final value) => await _remember(value),
-      };
-    },
-  );
+  Future<Result<RemoteUser>> resolveUser(String username) =>
+      _op('resolveUser', () async {
+        final clean = username.trim().replaceFirst(RegExp('^@'), '');
+        if (!pageUsernameShape.hasMatch(clean)) {
+          return const Err(TargetNotFound());
+        }
+        final r = await _load('resolveUser', PagePlans.profile(clean));
+        return switch (r) {
+          Err(:final failure) => Err(failure),
+          Ok(:final value)
+              when value.user.username.toLowerCase() != clean.toLowerCase() =>
+            const Err(UnknownFailure(null, 'username_mismatch')),
+          Ok(:final value) => await _remember(value),
+        };
+      });
 
   /// Reloads a user by loading the profile page of [lastUsername]. The answer
   /// counts only if it has the id [remoteUserId].
@@ -182,13 +198,11 @@ final class PageExtractor {
   });
 
   /// The time of the newest story item of [userId] (profile page).
-  Future<Result<DateTime?>> latestStoryTime(String userId) => _op(
-    'latestStoryTime',
-    () async {
-      final profile = await _profileOf(userId, 'latestStoryTime');
-      return profile.map((p) => p.latestReelMedia);
-    },
-  );
+  Future<Result<DateTime?>> latestStoryTime(String userId) =>
+      _op('latestStoryTime', () async {
+        final profile = await _profileOf(userId, 'latestStoryTime');
+        return profile.map((p) => p.latestReelMedia);
+      });
 
   // --------------------------------------------------------------- stories
 
@@ -257,31 +271,105 @@ final class PageExtractor {
   });
 
   /// The publish time of the newest post of [userId], or null.
-  Future<Result<DateTime?>> latestPostTime(String userId) => _op(
-    'latestPostTime',
-    () async {
-      final t = await _timelineOf(userId, 'latestPostTime');
-      return t.map((timeline) {
-        DateTime? latest;
-        for (final e in timeline.entries) {
-          if (!e.belongsTo(userId)) continue;
-          if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
-        }
-        return latest;
+  Future<Result<DateTime?>> latestPostTime(String userId) =>
+      _op('latestPostTime', () async {
+        final t = await _timelineOf(userId, 'latestPostTime');
+        return t.map((timeline) {
+          DateTime? latest;
+          for (final e in timeline.entries) {
+            if (!e.belongsTo(userId)) continue;
+            if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+          }
+          return latest;
+        });
       });
-    },
-  );
 
   /// One post, carousel or reel by [shortcode], from the page's own
   /// `media/<pk>/info/` request. Used to refresh an expired media URL.
-  Future<Result<RemoteContent>> fetchPost(String shortcode) => _op(
-    'fetchPost',
-    () async {
-      final plan = PagePlans.post(shortcode);
-      if (plan == null) return const Err(TargetNotFound());
-      return _load('fetchPost', plan);
-    },
-  );
+  Future<Result<RemoteContent>> fetchPost(String shortcode) =>
+      _op('fetchPost', () async {
+        final plan = PagePlans.post(shortcode);
+        if (plan == null) return const Err(TargetNotFound());
+        return _load('fetchPost', plan);
+      });
+
+  /// One page of the posts of [userId] older than [cursor] (a `PostCursor`
+  /// text, null for the newest). One governed page load: the profile is
+  /// loaded and scrolled in steps, which triggers the web app's own
+  /// pagination; the responses the hook captured are the data. Bounded by
+  /// [maxScrollSteps] and [scrollTimeout]. A page deep in the history costs
+  /// more scrolling than a shallow one.
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor}) =>
+      _op('fetchPostPage', () async {
+        PostCursor? parsed;
+        if (cursor != null) {
+          parsed = PostCursor.parse(cursor);
+          if (parsed == null) {
+            return const Err(UnknownFailure(null, 'bad_cursor'));
+          }
+        }
+        final name = await _usernameOf(userId);
+        if (name == null || !pageUsernameShape.hasMatch(name)) {
+          return const Err(UnknownFailure(null, 'username_unknown'));
+        }
+        return _load(
+          'fetchPostPage',
+          PagePlans.postsScroll(
+            userId,
+            name,
+            cursor: parsed,
+            pageSize: postPageSize,
+            maxSteps: maxScrollSteps,
+          ),
+        );
+      });
+
+  // ------------------------------------------------------------ highlights
+
+  /// The highlights tray of [userId], from the profile page.
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
+      _op('fetchHighlights', () async {
+        final name = await _usernameOf(userId);
+        if (name == null || !pageUsernameShape.hasMatch(name)) {
+          return const Err(UnknownFailure(null, 'username_unknown'));
+        }
+        return _load('fetchHighlights', PagePlans.highlights(name));
+      });
+
+  /// The items of [highlightIds], one highlight page per id (cost 3 each),
+  /// keyed by id. The page fires the story "seen" mutation: the hook blocks
+  /// it, and a tripped `SeenGuard` refuses the load. The first failure fails
+  /// the call. [orderStart] is added to each `highlightOrder`.
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  }) => _op('fetchHighlightItems', () async {
+    final ids = {
+      for (final id in highlightIds)
+        if (id.trim().isNotEmpty) id.trim(),
+    }.toList();
+    for (final id in ids) {
+      if (!_highlightIdShape.hasMatch(id)) {
+        return const Err(UnknownFailure(null, 'bad_highlight_id'));
+      }
+    }
+    final out = <String, List<RemoteContent>>{};
+    for (var i = 0; i < ids.length; i++) {
+      final r = await _load(
+        'fetchHighlightItems',
+        PagePlans.highlightItems(ids[i]),
+      );
+      switch (r) {
+        case Err(:final failure):
+          return Err(failure);
+        case Ok(:final value):
+          out[ids[i]] = [
+            for (final c in value) withHighlightOrder(c, orderStart + i),
+          ];
+      }
+    }
+    return Ok(out);
+  });
 
   // ------------------------------------------------------------ last resort
 
@@ -432,16 +520,14 @@ final class PageExtractor {
   /// Drives one WebView until the plan is answered, fails or times out.
   /// Nothing governed happens in here, and it always completes: the lease,
   /// the open, the wait and every clean-up step are bounded.
-  Future<Result<T>> _drive<T>(
-    String op,
-    PagePlan<T> plan,
-    IgSession ig,
-  ) async {
+  Future<Result<T>> _drive<T>(String op, PagePlan<T> plan, IgSession ig) async {
     PageSession? page;
     StreamSubscription<PageEvent>? sub;
     Timer? timer;
     Timer? settle;
     Timer? grace;
+    final scrollTimers = <Timer>[];
+    var scrolling = false;
     var leased = false;
     final done = Completer<Result<T>>();
     Result<T>? pending;
@@ -571,6 +657,19 @@ final class PageExtractor {
           case LoadStopEvent():
             loadStopped = true;
             armGrace();
+            final scroll = plan.scroll;
+            if (scroll != null && !scrolling) {
+              scrolling = true;
+              _scrollLoop(
+                op,
+                plan,
+                scroll,
+                opened!,
+                done,
+                finish,
+                scrollTimers,
+              );
+            }
             final collect = plan.collectOnLoad;
             if (collect != null && settle == null) {
               settle = _timer(domSettle, () async {
@@ -589,8 +688,12 @@ final class PageExtractor {
         }
       });
       timer = _timer(
-        timeout,
-        () => finish(pending ?? const Err(SchemaChanged('page_timeout'))),
+        plan.scroll == null ? timeout : scrollTimeout,
+        () => finish(
+          plan.scroll?.result() ??
+              pending ??
+              const Err(SchemaChanged('page_timeout')),
+        ),
       );
       // Not awaited: a load that hangs must not outlive the run timer.
       try {
@@ -621,6 +724,9 @@ final class PageExtractor {
       timer?.cancel();
       settle?.cancel();
       grace?.cancel();
+      for (final t in scrollTimers) {
+        t.cancel();
+      }
       await _guarded(op, 'cancel_events', () async => sub?.cancel());
       final opened = page;
       if (opened != null) await _closeSession(op, opened);
@@ -637,6 +743,52 @@ final class PageExtractor {
             'dropped_malformed=$droppedMalformed blocked=$blocked',
       );
     }
+  }
+
+  /// Scrolls the page in steps and finishes the run when the plan is
+  /// satisfied or the steps are used up. Runs next to the event listener;
+  /// every wait is a timer (cancelled by the caller's `finally`), every scroll
+  /// is bounded and a failing scroll just ends the loop. Not governed: it is
+  /// part of the one governed page load.
+  void _scrollLoop<T>(
+    String op,
+    PagePlan<T> plan,
+    PageScroll<T> scroll,
+    PageSession page,
+    Completer<Result<T>> done,
+    void Function(Result<T>) finish,
+    List<Timer> timers,
+  ) {
+    Future<void> wait() {
+      final c = Completer<void>();
+      timers.add(_timer(scrollInterval, c.complete));
+      return c.future;
+    }
+
+    Future<void> run() async {
+      var steps = 0;
+      while (!done.isCompleted) {
+        await wait();
+        if (done.isCompleted) return;
+        if (scroll.satisfied() || steps >= scroll.maxSteps) break;
+        try {
+          await page.scrollDown().timeout(cleanupTimeout);
+        } on Object catch (error) {
+          _log?.log(
+            LogLevel.warn,
+            'page',
+            'op=$op scroll_failed type=${error.runtimeType}',
+          );
+          break;
+        }
+        steps++;
+      }
+      if (done.isCompleted) return;
+      _log?.log(LogLevel.info, 'page', 'op=$op scroll_steps=$steps');
+      finish(scroll.result() ?? const Err(SchemaChanged('page_timeout')));
+    }
+
+    run().ignore();
   }
 
   String get _leaseOwner => 'page_mode:$accountId';
@@ -658,11 +810,7 @@ final class PageExtractor {
     try {
       await action().timeout(cleanupTimeout);
     } on TimeoutException {
-      _log?.log(
-        LogLevel.warn,
-        'page',
-        'op=$op cleanup_timeout step=$step',
-      );
+      _log?.log(LogLevel.warn, 'page', 'op=$op cleanup_timeout step=$step');
     } on Object catch (error) {
       _log?.log(
         LogLevel.warn,

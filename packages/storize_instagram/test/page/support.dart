@@ -119,6 +119,7 @@ final class FakePageSession implements PageSession {
   bool cleared = false;
   bool disposed = false;
   int collectCalls = 0;
+  int scrolls = 0;
 
   void emit(PageEvent e) => controller.add(e);
 
@@ -137,6 +138,14 @@ final class FakePageSession implements PageSession {
   Future<Object?> collectDomMedia() async {
     collectCalls++;
     return driver.domResult;
+  }
+
+  @override
+  Future<void> scrollDown() async {
+    scrolls++;
+    driver.log.add('scroll');
+    final hook = driver.onScroll;
+    if (hook != null) scheduleMicrotask(() => hook(this, scrolls));
   }
 
   @override
@@ -171,6 +180,9 @@ final class FakePageDriver implements PageDriver {
   });
 
   OnLoad onLoad;
+
+  /// Called after each `scrollDown` with the step number (1-based).
+  void Function(FakePageSession session, int step)? onScroll;
   final bool openThrows;
   final bool clearThrows;
   final bool clearHangs;
@@ -299,6 +311,9 @@ final class Rig {
     final t = ManualTimer(d, fire);
     (d == const Duration(seconds: 10) ? openTimers : timers).add(t);
     if (autoGrace && d == const Duration(seconds: 2)) scheduleMicrotask(t.fire);
+    if (autoScroll && d == const Duration(milliseconds: 1500)) {
+      scheduleMicrotask(t.fire);
+    }
     return t;
   }
 
@@ -308,6 +323,9 @@ final class Rig {
   /// right after it is armed (a microtask later). Set false to fire it by
   /// hand from `timers`.
   final bool autoGrace;
+
+  /// When true the scroll-interval timer (1.5 s) fires by itself.
+  final bool autoScroll = true;
   final FakeTime time = FakeTime();
   late final FakeGovernorLeaseRepo leases;
   late final RequestGovernor governor;

@@ -75,20 +75,18 @@ final class DirectExtractor {
 
   /// Looks up [username] (IG-1 purpose). Visibility is left to the caller:
   /// the result carries `isPrivate`, `followedByViewer` and `blockedByViewer`.
-  Future<Result<RemoteUser>> resolveUser(String username) => _op(
-    'resolveUser',
-    (call) async {
-      final clean = username.trim().replaceFirst(RegExp('^@'), '');
-      if (clean.isEmpty) return const Err(TargetNotFound());
-      final r = await transport.userByUsername(clean, call);
-      if (r is Ok<UserProfile> &&
-          r.value.user.username.toLowerCase() != clean.toLowerCase()) {
-        // The profile of the id we found is not the user we asked for.
-        return const Err(UnknownFailure(null, 'username_mismatch'));
-      }
-      return _rememberResult(r);
-    },
-  );
+  Future<Result<RemoteUser>> resolveUser(String username) =>
+      _op('resolveUser', (call) async {
+        final clean = username.trim().replaceFirst(RegExp('^@'), '');
+        if (clean.isEmpty) return const Err(TargetNotFound());
+        final r = await transport.userByUsername(clean, call);
+        if (r is Ok<UserProfile> &&
+            r.value.user.username.toLowerCase() != clean.toLowerCase()) {
+          // The profile of the id we found is not the user we asked for.
+          return const Err(UnknownFailure(null, 'username_mismatch'));
+        }
+        return _rememberResult(r);
+      });
 
   /// Reloads a user by id to detect a rename (IG-3 purpose). If the id lookup
   /// finds nothing (or fails in an unknown way), [lastUsername] is tried; the
@@ -282,35 +280,144 @@ final class DirectExtractor {
   /// counts by its time like any other, so a freshly pinned new post is not
   /// downloaded later as "new". Costs 1 call when the username is cached,
   /// else 2.
-  Future<Result<DateTime?>> latestPostTime(String userId) => _op(
-    'latestPostTime',
-    (call) async {
-      final r = await transport.timeline(
-        userId,
-        call,
-        usernameHint: await _usernameOf(userId),
-      );
-      if (r is Ok<Timeline>) {
-        await _cacheUsername(userId, r.value.usernameUsed);
-        _logSkipped('latestPostTime', r.value.skippedMalformed);
-      }
-      return r.map((t) {
-        DateTime? latest;
-        for (final e in t.entries) {
-          if (!e.belongsTo(userId)) continue;
-          if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+  Future<Result<DateTime?>> latestPostTime(String userId) =>
+      _op('latestPostTime', (call) async {
+        final r = await transport.timeline(
+          userId,
+          call,
+          usernameHint: await _usernameOf(userId),
+        );
+        if (r is Ok<Timeline>) {
+          await _cacheUsername(userId, r.value.usernameUsed);
+          _logSkipped('latestPostTime', r.value.skippedMalformed);
         }
-        return latest;
+        return r.map((t) {
+          DateTime? latest;
+          for (final e in t.entries) {
+            if (!e.belongsTo(userId)) continue;
+            if (latest == null || e.takenAt.isAfter(latest)) latest = e.takenAt;
+          }
+          return latest;
+        });
       });
-    },
-  );
+
+  /// One page of the posts of [userId], newest first (FR-68). [cursor] is the
+  /// `nextCursor` of the previous page; null is the first page.
+  ///
+  /// Reads `page_info`: a page that does not say whether more follows is
+  /// `SchemaChanged` (ending silently would cut the history short). A cursor
+  /// made by page mode (no Instagram cursor in it) is `SchemaChanged`, which
+  /// lets the platform continue in page mode. The next cursor holds the
+  /// oldest unpinned `taken_at` of the page. Costs 1 call when the username
+  /// is cached, else 2.
+  Future<Result<PostPage>> fetchPostPage(String userId, {String? cursor}) =>
+      _op('fetchPostPage', (call) async {
+        String? igCursor;
+        PostCursor? parsed;
+        if (cursor != null) {
+          parsed = PostCursor.parse(cursor);
+          if (parsed == null) {
+            return const Err(UnknownFailure(null, 'bad_cursor'));
+          }
+          if (parsed.igCursor.isEmpty) {
+            return const Err(SchemaChanged('cursor_from_page_mode'));
+          }
+          igCursor = parsed.igCursor;
+        }
+        final r = await transport.timelinePage(
+          userId,
+          call,
+          cursor: igCursor,
+          usernameHint: await _usernameOf(userId),
+        );
+        switch (r) {
+          case Err(:final failure):
+            return Err(failure);
+          case Ok(:final value):
+            await _cacheUsername(userId, value.usernameUsed);
+            _logSkipped('fetchPostPage', value.skippedMalformed);
+            final hasNext = value.hasNextPage;
+            if (hasNext == null) {
+              return const Err(SchemaChanged('page_info.has_next_page'));
+            }
+            final end = value.endCursor;
+            if (hasNext && end == null) {
+              return const Err(SchemaChanged('page_info.end_cursor'));
+            }
+            final seen = <String>{};
+            final mine = [
+              for (final e in value.entries)
+                if (e.belongsTo(userId) && seen.add(e.pk)) e,
+            ]..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+            DateTime? oldest;
+            for (final e in mine) {
+              if (e.pinned) continue;
+              if (oldest == null || e.takenAt.isBefore(oldest)) {
+                oldest = e.takenAt;
+              }
+            }
+            oldest ??= mine.isEmpty ? null : mine.last.takenAt;
+            oldest ??=
+                parsed?.takenAt ??
+                DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+            return guardMapping(
+              () => PostPage(
+                items: [
+                  for (final e in mine)
+                    _media.post(
+                      e.node,
+                      pinned: e.pinned,
+                      collab: e.isCollabOf(userId),
+                    ),
+                ],
+                nextCursor: hasNext
+                    ? PostCursor(takenAt: oldest!, igCursor: end!).encode()
+                    : null,
+              ),
+            );
+        }
+      });
+
+  // ------------------------------------------------------------ highlights
+
+  /// The highlights tray of [userId], in tray order (FR-71). One call.
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
+      _op('fetchHighlights', (call) => transport.highlights(userId, call));
+
+  /// The items of the highlights [highlightIds], in chunks of at most
+  /// [storyChunkSize]; keyed by highlight id. [orderStart] is added to each
+  /// `highlightOrder`. Any failing chunk fails the call.
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    int orderStart = 0,
+  }) => _op('fetchHighlightItems', (call) async {
+    final ids = {
+      for (final id in highlightIds)
+        if (id.trim().isNotEmpty) id.trim(),
+    }.toList();
+    final out = <String, List<RemoteContent>>{};
+    for (var i = 0; i < ids.length; i += storyChunkSize) {
+      final chunk = ids.sublist(i, min(i + storyChunkSize, ids.length));
+      final r = await transport.highlightItems(chunk, call);
+      switch (r) {
+        case Err(:final failure):
+          return Err(failure);
+        case Ok(:final value):
+          for (final e in value.entries) {
+            out[e.key] = [
+              for (final c in e.value)
+                withHighlightOrder(c, orderStart + ids.indexOf(e.key)),
+            ];
+          }
+      }
+    }
+    return Ok(out);
+  });
 
   // --------------------------------------------------------------- plumbing
 
   /// Remembers the username of a successful profile and returns the user.
-  Future<Result<RemoteUser>> _rememberResult(
-    Result<UserProfile> result,
-  ) async {
+  Future<Result<RemoteUser>> _rememberResult(Result<UserProfile> result) async {
     if (result is Ok<UserProfile>) {
       final user = result.value.user;
       await _cacheUsername(user.remoteUserId, user.username);
@@ -338,11 +445,7 @@ final class DirectExtractor {
 
   void _logSkipped(String op, int skipped) {
     if (skipped > 0) {
-      _log?.log(
-        LogLevel.warn,
-        'direct',
-        'op=$op skipped_malformed=$skipped',
-      );
+      _log?.log(LogLevel.warn, 'direct', 'op=$op skipped_malformed=$skipped');
     }
   }
 

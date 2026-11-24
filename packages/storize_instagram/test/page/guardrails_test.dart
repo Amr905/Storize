@@ -71,8 +71,15 @@ void main() {
   test('page mode never interacts with the page UI (UD-3)', () {
     for (final f in _dart('lib/page')) {
       final src = _read(f.path).replaceAll(RegExp('///.*'), '');
-      for (final w in ['.click(', 'scrollTo', 'tap(', 'evaluateJavascript']) {
-        if (f.path.endsWith('webview.dart') && w == 'evaluateJavascript') {
+      for (final w in [
+        '.click(',
+        'scrollTo',
+        'scrollBy',
+        'tap(',
+        'evaluateJavascript',
+      ]) {
+        if (f.path.endsWith('webview.dart') &&
+            (w == 'evaluateJavascript' || w == 'scrollBy')) {
           continue; // only the read-only domCollectScript
         }
         expect(src.contains(w), isFalse, reason: '${f.path} $w');
@@ -84,6 +91,8 @@ void main() {
       hasLength(1),
     );
     expect(adapter, contains('source: domCollectScript'));
+    // The one scroll (T-041 post history): `PageSession.scrollDown` only.
+    expect(RegExp('scrollBy').allMatches(adapter), hasLength(1));
   });
 
   test('no hard-coded doc_id: the page supplies it', () {

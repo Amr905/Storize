@@ -130,9 +130,67 @@ final class GraphqlTransport implements IgTransport {
     };
   }
 
-  Future<Result<Timeline>> _timeline(String username, IgCall call) async {
+  @override
+  Future<Result<Timeline>> timelinePage(
+    String userId,
+    IgCall call, {
+    String? cursor,
+    String? usernameHint,
+  }) async {
+    var username = usernameHint;
+    if (username == null) {
+      final profile = await userById(userId, call);
+      if (profile is Err<UserProfile>) return Err(profile.failure);
+      username = (profile as Ok<UserProfile>).value.user.username;
+    }
+    return _timeline(username, call, cursor: cursor);
+  }
+
+  /// **Unverified shape** (INSTAGRAM_EXTRACTION v0.3): the user id as
+  /// `user_id`.
+  @override
+  Future<Result<List<RemoteHighlight>>> highlights(
+    String userId,
+    IgCall call,
+  ) async {
+    final request = await _request(GraphqlQuery.highlights, {
+      'user_id': userId,
+    });
+    if (request is Err<IgRequest>) return Err(request.failure);
+    return callAndParse(
+      call,
+      (request as Ok<IgRequest>).value,
+      mapper.graphqlHighlights,
+    );
+  }
+
+  /// The stories reel query with `highlight:<id>` reel ids.
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
+    List<String> highlightIds,
+    IgCall call,
+  ) async {
+    final request = await _request(GraphqlQuery.stories, {
+      'reel_ids_arr': [for (final id in highlightIds) 'highlight:$id'],
+    });
+    if (request is Err<IgRequest>) return Err(request.failure);
+    return callAndParse(
+      call,
+      (request as Ok<IgRequest>).value,
+      (body) => mapper.graphqlHighlightItems(body, highlightIds),
+    );
+  }
+
+  /// With a [cursor], the connection variables `after` and `first` are added
+  /// (**unverified**: the capture saw only the first page).
+  Future<Result<Timeline>> _timeline(
+    String username,
+    IgCall call, {
+    String? cursor,
+  }) async {
     final request = await _request(GraphqlQuery.posts, {
       'username': username,
+      if (cursor != null) ...{'after': cursor, 'first': postCount},
       'data': {
         'count': postCount,
         'include_reel_media_seen_timestamp': true,

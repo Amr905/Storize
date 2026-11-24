@@ -38,7 +38,7 @@ final class PageDiscovery implements DocIdResolver, PageTokenProvider {
     final now = _clock.now();
     if (docId != null && friendlyName != null) {
       for (final q in GraphqlQuery.values) {
-        if (q.friendlyName == friendlyName) _docIds[q] = (docId, now);
+        if (q.matchesName(friendlyName)) _docIds[q] = (docId, now);
       }
     }
     if (tokens.isNotEmpty) {

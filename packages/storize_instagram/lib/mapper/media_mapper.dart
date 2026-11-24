@@ -56,6 +56,35 @@ final class MediaMapper {
     );
   }
 
+  /// Maps an item of a highlight: a story-shaped item with kind highlight and
+  /// the [HighlightExtras] keys. `expiring_at` is not read (highlights do not
+  /// expire). Returns null for a live item.
+  RemoteContent? highlight(
+    Node item, {
+    required String highlightId,
+    required int order,
+    String? title,
+  }) {
+    if (isLive(item)) return null;
+    _mediaType(item, allowCarousel: false);
+    final slide = _slide(item, 0);
+    return RemoteContent(
+      remoteId: item['pk'].string,
+      kind: ContentKind.highlight,
+      postedAt: item['taken_at'].unixTime,
+      closeFriends: _closeFriends(item),
+      slides: [?slide.media],
+      extras: {
+        if (_linkStickers(item) case final stickers when stickers.isNotEmpty)
+          linkStickersKey: stickers,
+        if (slide.unsupported) unsupportedStreamKey: const [0],
+        HighlightExtras.id: highlightId,
+        HighlightExtras.title: ?title,
+        HighlightExtras.order: order,
+      },
+    );
+  }
+
   /// Maps a post (a timeline node or a `media/info` item).
   ///
   /// [pinned] and [collab] only set markers in `extras`. `pinned` means
@@ -251,3 +280,18 @@ final class _Slide {
   final RemoteMedia? media;
   final bool unsupported;
 }
+
+/// [content] with the `highlightOrder` extra set to [order].
+RemoteContent withHighlightOrder(RemoteContent content, int order) =>
+    RemoteContent(
+      remoteId: content.remoteId,
+      kind: content.kind,
+      postedAt: content.postedAt,
+      slides: content.slides,
+      shortcode: content.shortcode,
+      postType: content.postType,
+      expiresAt: content.expiresAt,
+      caption: content.caption,
+      closeFriends: content.closeFriends,
+      extras: {...content.extras, HighlightExtras.order: order},
+    );

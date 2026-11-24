@@ -88,6 +88,9 @@ Future<void> _wipe() async {
   await InAppWebViewController.clearAllCache();
 }
 
+/// Pixels per scroll step: a few screens, so the list's loader fires.
+const int _scrollStep = 4000;
+
 final class _InAppPageSession implements PageSession {
   _InAppPageSession(this._config);
 
@@ -177,6 +180,13 @@ final class _InAppPageSession implements PageSession {
     final controller = _controller;
     if (controller == null) return null;
     return controller.evaluateJavascript(source: domCollectScript);
+  }
+
+  @override
+  Future<void> scrollDown() async {
+    final controller = _controller;
+    if (controller == null) return;
+    await controller.scrollBy(x: 0, y: _scrollStep);
   }
 
   @override

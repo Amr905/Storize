@@ -137,6 +137,11 @@ abstract interface class PageSession {
   /// returns its result. Never clicks or scrolls.
   Future<Object?> collectDomMedia();
 
+  /// Scrolls the page down by one step, so the web app loads the next page of
+  /// a list by itself. Used only by the post-history plan (T-041); it never
+  /// clicks or taps.
+  Future<void> scrollDown();
+
   /// Removes cookies, web storage and cache. Called in a `finally`.
   Future<void> clearData();
 

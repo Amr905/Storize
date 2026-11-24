@@ -119,6 +119,21 @@ final class _LateThrowTransport implements IgTransport {
     String? usernameHint,
   }) => throw UnimplementedError();
   @override
+  Future<Result<Timeline>> timelinePage(
+    String id,
+    IgCall call, {
+    String? cursor,
+    String? usernameHint,
+  }) => throw UnimplementedError();
+  @override
+  Future<Result<List<RemoteHighlight>>> highlights(String id, IgCall call) =>
+      throw UnimplementedError();
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
+    List<String> ids,
+    IgCall call,
+  ) => throw UnimplementedError();
+  @override
   Future<Result<Viewer>> viewer(String own, IgCall call) =>
       throw UnimplementedError();
 }

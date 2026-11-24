@@ -3,6 +3,10 @@ import 'package:storize_instagram/mapper/node.dart';
 import 'package:storize_instagram/mapper/user_mapper.dart';
 import 'package:storize_model/storize_model.dart';
 
+/// The id of a highlight without the `highlight:` prefix.
+String stripHighlightPrefix(String id) =>
+    id.startsWith('highlight:') ? id.substring('highlight:'.length) : id;
+
 /// The stories of one user from a reels response.
 final class StoryReel {
   /// Creates a reel.
@@ -74,7 +78,15 @@ final class Timeline {
     this.viewerId,
     this.usernameUsed,
     this.skippedMalformed = 0,
+    this.endCursor,
+    this.hasNextPage,
   });
+
+  /// `page_info.end_cursor` of the connection, when present (GraphQL only).
+  final String? endCursor;
+
+  /// `page_info.has_next_page`, or null when the response did not say.
+  final bool? hasNextPage;
 
   /// How many edges were left out because their `pk` or `taken_at` was
   /// missing or broken. The page fails only when every edge is malformed.
@@ -146,14 +158,72 @@ final class EnvelopeMapper {
   /// and the viewer id from `data.xdt_viewer.user.id`.
   Timeline graphqlTimeline(Node body, {String? usernameUsed}) {
     final data = body['data'];
-    final edges =
-        data['xdt_api__v1__feed__user_timeline_graphql_connection']['edges']
-            .list;
+    final connection =
+        data['xdt_api__v1__feed__user_timeline_graphql_connection'];
+    final edges = connection['edges'].list;
+    final info = connection['page_info'];
+    final cursor = info['end_cursor'].stringOrNull;
     return _timeline(
       [for (final e in edges) e['node']],
       viewerId: data['xdt_viewer']['user']['id'].stringOrNull,
       usernameUsed: usernameUsed,
+      endCursor: cursor == null || cursor.isEmpty ? null : cursor,
+      hasNextPage: info['has_next_page'].boolOrNull,
     );
+  }
+
+  /// The highlights tray: `data.highlights.edges[].node` (**unverified
+  /// shape**, see INSTAGRAM_EXTRACTION v0.3). Order is the tray order. A node
+  /// without an `id` is skipped; the tray fails only when every node is
+  /// malformed.
+  List<RemoteHighlight> graphqlHighlights(Node body) {
+    final edges = body['data']['highlights']['edges'].list;
+    final out = <RemoteHighlight>[];
+    SchemaException? first;
+    for (final edge in edges) {
+      final node = edge['node'];
+      try {
+        final id = stripHighlightPrefix(node['id'].string);
+        if (id.isEmpty) throw SchemaException(node['id'].path);
+        out.add(
+          RemoteHighlight(
+            id: id,
+            title: node['title'].stringOrNull ?? '',
+            coverUrl: node['cover_media']['cropped_image_version']['url']
+                .stringOrNull,
+            itemCount: node['media_count'].intOrNull,
+            latestItemAt: node['latest_reel_media'].unixTimeOrNull,
+          ),
+        );
+      } on SchemaException catch (e) {
+        first ??= e;
+      }
+    }
+    if (out.isEmpty && first != null) throw first;
+    return out;
+  }
+
+  /// The items of highlight reels from the stories reel query. Reels carry
+  /// `id` = `highlight:<id>`. Only the [requested] ids are read; the map is
+  /// keyed by the plain id and ordered by `postedAt`, oldest first. The
+  /// `order` extra is the position in [requested] (the caller may overwrite).
+  Map<String, List<RemoteContent>> graphqlHighlightItems(
+    Node body,
+    List<String> requested,
+  ) {
+    final root = body['data']['xdt_api__v1__feed__reels_media'];
+    final out = <String, List<RemoteContent>>{};
+    for (final reel in root['reels_media'].list) {
+      final id = stripHighlightPrefix(reel['id'].string);
+      final order = requested.indexOf(id);
+      if (order < 0) continue;
+      final title = reel['title'].stringOrNull;
+      out[id] = [
+        for (final item in reel['items'].listOrEmpty)
+          ?media.highlight(item, highlightId: id, title: title, order: order),
+      ]..sort((a, b) => a.postedAt.compareTo(b.postedAt));
+    }
+    return out;
   }
 
   // ---------------------------------------------------------------- REST
@@ -228,6 +298,8 @@ final class EnvelopeMapper {
     List<Node> nodes, {
     String? viewerId,
     String? usernameUsed,
+    String? endCursor,
+    bool? hasNextPage,
   }) {
     final entries = <TimelineEntry>[];
     SchemaException? first;
@@ -246,6 +318,8 @@ final class EnvelopeMapper {
       viewerId: viewerId,
       usernameUsed: usernameUsed,
       skippedMalformed: skipped,
+      endCursor: endCursor,
+      hasNextPage: hasNextPage,
     );
   }
 

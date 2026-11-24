@@ -258,9 +258,8 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   );
 
   @override
-  Future<Result<RemoteUser>> verifySession() async => _normalize(
-    await _guarded(_direct.verifySession),
-  );
+  Future<Result<RemoteUser>> verifySession() async =>
+      _normalize(await _guarded(_direct.verifySession));
 
   // --------------------------------------------------------------- content
 
@@ -299,25 +298,49 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     () => _page.latestPostTime(userId),
   );
 
-  // T-041 implements the three methods below.
   @override
   Future<Result<PostPage>> fetchPostPage(
     String userId, {
     required ExtractionPolicy policy,
     String? cursor,
-  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+  }) async {
+    try {
+      return await _run(
+        'fetchPostPage',
+        policy,
+        () => _history(_direct, (o) => o.fetchPostPage(userId, cursor: cursor)),
+        () => _history(_page, (o) => o.fetchPostPage(userId, cursor: cursor)),
+      );
+    } finally {
+      await _seenGuard.flush();
+    }
+  }
 
   @override
   Future<Result<List<RemoteHighlight>>> fetchHighlights(
     String userId, {
     required ExtractionPolicy policy,
-  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+  }) => _run(
+    'fetchHighlights',
+    policy,
+    () => _history(_direct, (o) => o.fetchHighlights(userId)),
+    () => _history(_page, (o) => o.fetchHighlights(userId)),
+  );
 
   @override
   Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
     List<String> highlightIds, {
     required ExtractionPolicy policy,
-  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+  }) {
+    final progress = _StoriesProgress();
+    return _run(
+      'fetchHighlightItems',
+      policy,
+      () => _history(_direct, (o) => o.fetchHighlightItems(highlightIds)),
+      () => _pageHighlightItems(highlightIds, progress),
+      pageLoadedData: () => progress.loadedUsers > 0,
+    );
+  }
 
   @override
   Stream<List<int>> openMedia(String url, {int fromByte = 0}) =>
@@ -398,6 +421,46 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       await _seenGuard.flush();
     }
   }
+
+  /// Page-mode highlight items, one highlight page per id, so the persisted
+  /// seen breaker is read before **each** page (like `_pageStories`) and a
+  /// trip stops the loop at once. The first failure fails the call.
+  Future<Result<Map<String, List<RemoteContent>>>> _pageHighlightItems(
+    List<String> highlightIds,
+    _StoriesProgress progress,
+  ) async {
+    final ids = {
+      for (final id in highlightIds)
+        if (id.trim().isNotEmpty) id.trim(),
+    }.toList();
+    final out = <String, List<RemoteContent>>{};
+    try {
+      for (var i = 0; i < ids.length; i++) {
+        await _seenGuard.refresh();
+        final r = await _history(
+          _page,
+          (o) => o.fetchHighlightItems([ids[i]], orderStart: i),
+        );
+        switch (r) {
+          case Err(:final failure):
+            return Err(failure);
+          case Ok(:final value):
+            progress.loadedUsers++;
+            out.addAll(value);
+        }
+      }
+      return Ok(out);
+    } finally {
+      await _seenGuard.flush();
+    }
+  }
+
+  Future<Result<T>> _history<T>(
+    ExtractionOps mode,
+    Future<Result<T>> Function(HistoryOps ops) body,
+  ) async => mode is HistoryOps
+      ? body(mode as HistoryOps)
+      : Err<T>(const UnknownFailure(null, 'not_implemented'));
 
   Future<Result<T>> _run<T>(
     String op,
