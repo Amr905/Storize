@@ -1,6 +1,5 @@
 // T-041 mode selection of the history operations in InstagramPlatform.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_domain/testing.dart';
 import 'package:storize_instagram/instagram_platform.dart';
 import 'package:storize_instagram/media/media.dart';
@@ -84,7 +83,7 @@ void main() {
 
   test('a rate limit from direct never reaches page mode', () async {
     final r = _rig();
-    r.direct.highlightItems = (_) => Err(RateLimited(null));
+    r.direct.highlightItems = (_) => const Err(RateLimited(null));
     final x = await r.platform.fetchHighlightItems([
       'h',
     ], policy: ExtractionPolicy.directThenPage);

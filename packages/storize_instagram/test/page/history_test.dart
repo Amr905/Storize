@@ -9,7 +9,7 @@ import 'package:storize_model/storize_model.dart';
 import 'support.dart';
 
 const _userId = 'ZZFAKE_user_a';
-const _names = {_userId: fakeUser};
+const Map<String, String> _names = {_userId: fakeUser};
 
 HookEvent _posts(String file) =>
     hookResponse(loadSynthetic(file), name: postsName);
@@ -22,8 +22,9 @@ Rig _scrollRig({int pageSize = 3, int maxSteps = 30, bool more = true}) {
     postPageSize: pageSize,
     maxScrollSteps: maxSteps,
     onLoad: (s, url) {
-      s.emit(_posts('timeline_page1.json'));
-      s.emit(const LoadStopEvent());
+      s
+        ..emit(_posts('timeline_page1.json'))
+        ..emit(const LoadStopEvent());
     },
   );
   rig.driver.onScroll = (s, step) {
