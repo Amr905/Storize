@@ -23,3 +23,4 @@ dev_dependencies:
 flutter:
   assets:
     - assets/hook.js
+    - assets/inpage_query.js
