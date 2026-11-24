@@ -263,6 +263,8 @@ final class Rig {
     SeenGuard? seenGuard,
     Map<String, String> usernames = const {'user_1': fakeUser},
     PageHookConfig? hookConfig,
+    int postPageSize = 12,
+    int maxScrollSteps = 30,
   }) {
     leases = FakeGovernorLeaseRepo(time.clock);
     governor = RequestGovernor(
@@ -302,6 +304,8 @@ final class Rig {
       cleanupTimeout: cleanupTimeout,
       webViewLease: webViewLease,
       seenGuard: seenGuard ?? SeenGuard(),
+      postPageSize: postPageSize,
+      maxScrollSteps: maxScrollSteps,
     );
   }
 
