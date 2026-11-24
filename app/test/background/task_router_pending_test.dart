@@ -38,8 +38,8 @@ TaskRouter _router(List<String> order, {bool resolveThrows = false}) {
       return DownloadPendingResult(
         stopReason: DownloadStopReason.completed,
         remaining: 0,
-        counts: [],
-        failures: [],
+        counts: const [],
+        failures: const [],
       );
     },
     retention: () async => null,
