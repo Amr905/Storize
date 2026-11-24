@@ -379,6 +379,51 @@ void main() {
       expect((await h.get(t.id)).historyProgress?.state, HistoryState.running);
     });
 
+    test(
+      'T-047: a missing doc_id, tokens or page mode defer, not fail',
+      () async {
+        await h.backfill.start(t.id, HistoryRange.all);
+        for (final f in const <Failure>[
+          SchemaChanged('doc_id:PolarisProfilePostsQuery'),
+          SchemaChanged('page_tokens'),
+          UnknownFailure(null, 'page_mode_background_disabled'),
+        ]) {
+          h.platform.fetchPostPageResults.addFailure(f);
+          final r = await h.backfill.step(t.id);
+          expect(r.outcome, BackfillOutcome.deferred);
+          expect(r.stillRunning, isTrue);
+          expect(
+            (await h.get(t.id)).historyProgress?.state,
+            HistoryState.running,
+          );
+        }
+        // The next run retries and can finish.
+        h.platform.fetchPostPageResults.addOk(
+          PostPage(items: [post('1', daysAgo(1))]),
+        );
+        expect((await h.backfill.step(t.id)).outcome, BackfillOutcome.done);
+      },
+    );
+
+    test(
+      'T-047: a real response-shape change, not found, not visible fail',
+      () async {
+        for (final f in const <Failure>[
+          SchemaChanged('data.user'),
+          TargetNotFound(),
+          TargetNotVisible(),
+        ]) {
+          await h.backfill.start(t.id, HistoryRange.all);
+          h.platform.fetchPostPageResults.addFailure(f);
+          expect((await h.backfill.step(t.id)).outcome, BackfillOutcome.failed);
+          expect(
+            (await h.get(t.id)).historyProgress?.state,
+            HistoryState.failed,
+          );
+        }
+      },
+    );
+
     test('not_implemented and other hard failures end as failed', () async {
       await h.backfill.start(t.id, HistoryRange.all);
       h.platform.fetchPostPageResults.addFailure(

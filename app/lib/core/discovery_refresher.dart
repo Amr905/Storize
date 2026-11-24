@@ -1,4 +1,5 @@
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_instagram/direct/doc_id_resolver.dart';
 import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/page/discovery_store.dart';
 import 'package:storize_model/storize_model.dart';
@@ -8,6 +9,21 @@ import 'package:storize_model/storize_model.dart';
 typedef DiscoveryLoad = Future<Result<RemoteUser>> Function(
   int accountId,
   String username,
+);
+
+/// When the newest story of [remoteUserId] was posted, as the profile page
+/// just loaded showed it (no request), or null when it showed none (T-047).
+typedef ProfileStoryTime = DateTime? Function(
+  int accountId,
+  String remoteUserId,
+);
+
+/// One governed page-mode stories load of [target] (through the platform's
+/// `fetchStories`, so the SeenGuard and the seen block apply), which lets the
+/// stories page's `doc_id` reach the shared discovery (T-047).
+typedef DiscoveryStoriesLoad = Future<Result<Object?>> Function(
+  int accountId,
+  Target target,
 );
 
 /// What one [DiscoveryRefresher.refresh] did.
@@ -58,6 +74,8 @@ final class DiscoveryRefresher {
     required this.load,
     required this.clock,
     this.log,
+    this.profileStoryTime,
+    this.loadStories,
     this.interval = const Duration(hours: 6),
     this.maxWait = const Duration(seconds: 8),
     this.tokenLife = const Duration(hours: 12),
@@ -83,6 +101,16 @@ final class DiscoveryRefresher {
 
   /// The diagnostic log, or null.
   final DiagnosticLog? log;
+
+  /// What the last profile load showed of a user's story, or null (then no
+  /// extra stories load is made).
+  final ProfileStoryTime? profileStoryTime;
+
+  /// The one extra stories load, or null (then none is made). It runs only
+  /// for a tracked target whose profile showed a story newer than 24 h, only
+  /// after a successful profile load, and inside the same [interval]
+  /// throttle: never more than once per refresh.
+  final DiscoveryStoriesLoad? loadStories;
 
   /// The refresh period: stored discovery older than this is refilled.
   final Duration interval;
@@ -178,7 +206,66 @@ final class DiscoveryRefresher {
     final failure = result.failureOrNull;
     final outcome = failure == null ? 'ok' : 'failure=${failure.runtimeType}';
     log?.log(LogLevel.info, 'discovery', 'refresh_done $outcome');
+    final user = result.valueOrNull;
+    if (user != null) await _extraStories(id, user, now);
+    await _logState(id);
     return DiscoveryRefreshOutcome.loaded;
+  }
+
+  /// The extra stories load: a profile page does not necessarily run the
+  /// stories query, so its `doc_id` may be missing. Only for a tracked target
+  /// with a current story; otherwise nothing is sent.
+  Future<void> _extraStories(int id, RemoteUser user, DateTime now) async {
+    final load = loadStories;
+    final storyTime = profileStoryTime;
+    if (load == null || storyTime == null) return;
+    final at = storyTime(id, user.remoteUserId);
+    if (at == null || now.difference(at) >= const Duration(hours: 24)) return;
+    Target? target;
+    for (final t in await targets.listActive(CheckScope.all)) {
+      if (t.remoteUserId == user.remoteUserId && t.trackStories) {
+        target = t;
+        break;
+      }
+    }
+    if (target == null) return;
+    if (await governor.isPaused(id)) return;
+    final r = await RequestGovernor.withMaxWait(
+      maxWait,
+      () => load(id, target!),
+    );
+    final f = r.failureOrNull;
+    log?.log(
+      LogLevel.info,
+      'discovery',
+      'stories_load ${f == null ? 'ok' : 'failure=${f.runtimeType}'}',
+    );
+  }
+
+  /// Which queries have a doc_id and whether tokens exist, by name only.
+  Future<void> _logState(int id) async {
+    try {
+      final snap = await store.load(id);
+      final names = [
+        for (final q in GraphqlQuery.values)
+          if (snap?.docIds.containsKey(q.name) ?? false) q.name,
+      ];
+      log?.log(
+        LogLevel.info,
+        'discovery',
+        'state doc_ids=${names.join(',')} '
+            'missing=${[
+              for (final q in GraphqlQuery.values)
+                if (!names.contains(q.name)) q.name,
+            ].join(',')} tokens=${snap?.tokens != null}',
+      );
+    } on Object catch (error) {
+      log?.log(
+        LogLevel.warn,
+        'discovery',
+        'state_failed type=${error.runtimeType}',
+      );
+    }
   }
 
   /// A tracked profile (its page shows the story and post queries), else the

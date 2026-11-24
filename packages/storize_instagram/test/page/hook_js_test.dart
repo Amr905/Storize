@@ -82,6 +82,17 @@ void main() {
     expect(s('xhr_other_passes')['sent'], 1);
   }, skip: noNode);
 
+  test('the friendly name is read from X-FB-Friendly-Name when the body has '
+      'none', () {
+    final r = s('fetch_name_from_header_only');
+    final msg = (r['handled'] as List).single as Map;
+    expect(
+      msg['friendlyName'],
+      'PolarisProfilePostsTabContentQuery_connection',
+    );
+    expect((msg['request'] as Map)['docId'], isNotEmpty);
+  }, skip: noNode);
+
   test('request secrets and the body are sent only when configured', () {
     final msg =
         (s('fetch_no_secrets_when_not_configured')['handled'] as List).single

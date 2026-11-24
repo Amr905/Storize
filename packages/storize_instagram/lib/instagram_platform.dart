@@ -281,6 +281,15 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   Future<Result<RemoteUser>> loadDiscovery(String username) =>
       _guarded(() => _page.resolveUser(username));
 
+  /// When the newest story of [userId] was posted, as the last profile page
+  /// load saw it (no request); null when it showed none (T-047).
+  DateTime? profileStoryTime(String userId) {
+    final page = _page;
+    return page is PageExtractorOps
+        ? page.extractor.profileStoryTime(userId)
+        : null;
+  }
+
   @override
   Future<Result<RemoteUser>> verifySession() async =>
       _normalize(await _guarded(_direct.verifySession));

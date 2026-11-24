@@ -169,5 +169,19 @@ async function scenario(name, config, fn) {
     return { sent: sent.fetch.length };
   });
 
+  await scenario('fetch_name_from_header_only', secrets, async ({ ctx, handled }) => {
+    const p = new URLSearchParams();
+    p.set('doc_id', '1234567890');
+    p.set('variables', '{}');
+    p.set('lsd', 'ZZFAKE_lsd');
+    await ctx.fetch(GQL, {
+      method: 'POST',
+      headers: { 'X-FB-Friendly-Name': 'PolarisProfilePostsTabContentQuery_connection' },
+      body: p.toString(),
+    });
+    await wait(20);
+    return { handled: handled.map((h) => h.msg) };
+  });
+
   console.log(JSON.stringify(results));
 })();

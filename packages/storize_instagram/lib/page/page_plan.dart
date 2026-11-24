@@ -90,7 +90,7 @@ abstract final class PagePlans {
   /// `/<username>/`: fires the profile and the posts queries.
   static PagePlan<UserProfile> profile(String username) => PagePlan(
     url: _https('/$username/'),
-    matches: (c) => c.friendlyName == GraphqlQuery.profile.friendlyName,
+    matches: (c) => GraphqlQuery.profile.matchesName(c.friendlyName),
     parse: (body) {
       final (profile, _) = const EnvelopeMapper().graphqlProfile(body);
       return profile == null ? const Err(TargetNotFound()) : Ok(profile);
@@ -100,7 +100,7 @@ abstract final class PagePlans {
   /// `/<username>/`, waiting for the posts query.
   static PagePlan<Timeline> posts(String username) => PagePlan(
     url: _https('/$username/'),
-    matches: (c) => c.friendlyName == GraphqlQuery.posts.friendlyName,
+    matches: (c) => GraphqlQuery.posts.matchesName(c.friendlyName),
     parse: (body) => Ok(
       const EnvelopeMapper().graphqlTimeline(body, usernameUsed: username),
     ),
@@ -125,7 +125,7 @@ abstract final class PagePlans {
   static PagePlan<List<RemoteContent>> highlightItems(String highlightId) =>
       PagePlan(
         url: _https('/stories/highlights/$highlightId/'),
-        matches: (c) => c.friendlyName == GraphqlQuery.stories.friendlyName,
+        matches: (c) => GraphqlQuery.stories.matchesName(c.friendlyName),
         parse: (body) {
           final mine = const EnvelopeMapper().graphqlHighlightItems(body, [
             highlightId,
@@ -181,8 +181,7 @@ abstract final class PagePlans {
     return PagePlan(
       url: _https('/$username/'),
       matches: (c) =>
-          (c.friendlyName?.startsWith(GraphqlQuery.posts.friendlyName) ??
-              false) ||
+          GraphqlQuery.posts.matchesName(c.friendlyName) ||
           _hasConnection(c.json),
       parse: (body) {
         if (!_hasConnection(body.value)) return null;
@@ -258,7 +257,7 @@ abstract final class PagePlans {
   static PagePlan<StoryReel> stories(String userId, String username) =>
       PagePlan(
         url: _https('/stories/$username/'),
-        matches: (c) => c.friendlyName == GraphqlQuery.stories.friendlyName,
+        matches: (c) => GraphqlQuery.stories.matchesName(c.friendlyName),
         parse: (body) {
           final mine = const EnvelopeMapper().graphqlStories(body)[userId];
           return mine == null ? null : Ok(mine);

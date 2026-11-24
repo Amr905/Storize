@@ -33,6 +33,11 @@ enum BackfillOutcome {
   /// A network problem. State stays `running`; the next run retries.
   network,
 
+  /// Not possible right now: no `doc_id` or page tokens yet, or page mode is
+  /// off in the background. State stays `running`; the next run retries
+  /// (T-047). Not an error.
+  deferred,
+
   /// The backfill cannot go on (state `failed`); the user can resume it.
   failed,
 }
@@ -65,6 +70,7 @@ final class BackfillStepResult {
       outcome == BackfillOutcome.progressed ||
       outcome == BackfillOutcome.rateLimited ||
       outcome == BackfillOutcome.network ||
+      outcome == BackfillOutcome.deferred ||
       outcome == BackfillOutcome.sessionInvalid ||
       outcome == BackfillOutcome.sessionInactive;
 
@@ -435,6 +441,10 @@ final class BackfillHistory {
           BackfillOutcome.sessionInvalid,
           sessionStatus: AccountStatus.restricted,
         );
+      case SchemaChanged(:final where) when _isNotNow(where):
+        return const BackfillStepResult(BackfillOutcome.deferred);
+      case UnknownFailure(:final message) when message == _pageModeOff:
+        return const BackfillStepResult(BackfillOutcome.deferred);
       case TargetNotVisible() ||
           TargetNotFound() ||
           SchemaChanged() ||
@@ -454,4 +464,10 @@ final class BackfillHistory {
         return const BackfillStepResult(BackfillOutcome.failed);
     }
   }
+
+  static const _pageModeOff = 'page_mode_background_disabled';
+
+  /// A missing `doc_id` or page tokens is "not yet", not a broken response.
+  static bool _isNotNow(String where) =>
+      where.startsWith('doc_id:') || where == 'page_tokens';
 }
