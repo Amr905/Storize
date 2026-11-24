@@ -643,5 +643,8 @@ Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(List<String
 ### 17.4 Governor: interactive calls never hang
 `RequestGovernor.run(..., maxWait: Duration?)`: when the tokens or backoff would make the call wait longer than `maxWait`, it returns at once with `RateLimited(retryAfter: <the wait>)`. Interactive paths (S-08 add, S-02 verify, Check now resolve) use `maxWait: 8 s`; background jobs keep waiting.
 
+### 17.4a In-page fetch (T-050, ADR-0003 amendment 4)
+`InPageClient` (storize_instagram/page) keeps one headless session per run on `https://www.instagram.com/`; `InPageOps` runs the shared `DirectExtractor` logic over an `InPageTransport` whose requests are run in the page by `assets/inpage_query.js` (`__storizeQuery(name, varsJson)`, allowlist, `for (;;);` stripped, missing `.graphql` modules loaded with `requireLazy`). Governor costs: 3 for the session load, 1 per query. `InstagramPlatform` tries in-page first for every op; only `UnknownFailure('inpage_unavailable')` falls back to direct, then page mode. `RequestGovernor.run(priority:)` (`interactive` default, `background` leaves `interactiveReserve` = 3 tokens) and `withPriority` for background isolates. Kill switch `storize.inPageInBackground` (default true). Task budget 9 min with a 30 s start margin. Dev only: `RequestGovernor.runUnmetered`.
+
 ### 17.5 Gallery paths
 `Pictures/Storize/<username>/Highlights/<sanitized title>/`.
