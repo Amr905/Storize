@@ -41,8 +41,9 @@ void main() {
     expect(f['fb_api_req_friendly_name'], 'PolarisProfilePostsQuery');
     expect(f['server_timestamps'], 'true');
     // The variables are the caller's plus the provided relay values.
-    expect((f['variables'] as Map)['username'], 'zzfake');
-    expect((f['variables'] as Map)['__relay_internal__pv__X'], true);
+    final vars = f['variables'] as Map;
+    expect(vars['username'], 'zzfake');
+    expect(vars['__relay_internal__pv__X'], true);
     expect(res['ok'], {
       'status': 200,
       'json': {
@@ -55,8 +56,10 @@ void main() {
     final rejected = res['rejected'] as Map;
     expect(rejected, isNotEmpty);
     for (final e in rejected.entries) {
-      expect((e.value as Map)['r'], {'error': 'not_allowed'}, reason: e.key);
-      expect((e.value as Map)['sent'], 0, reason: e.key);
+      expect((e.value as Map)['r'], {
+        'error': 'not_allowed',
+      }, reason: '${e.key}');
+      expect((e.value as Map)['sent'], 0, reason: '${e.key}');
     }
     expect(res['nonstring'], {'error': 'not_allowed'});
   }, skip: noNode);

@@ -216,7 +216,7 @@ void main() {
 
   group('the 9-minute budget and the download roll-over (AC3)', () {
     test(
-      'RunCheck and DownloadPending share one deadline: 9 min minus a 30 s start margin',
+      'RunCheck and DownloadPending share one deadline (9 min - 30 s margin)',
       () async {
         final r = _Rig();
         await r.router.route(TaskNames.checkStories);

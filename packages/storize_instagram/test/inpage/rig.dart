@@ -3,14 +3,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:storize_domain/testing.dart';
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_domain/testing.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/instagram_platform.dart';
 import 'package:storize_instagram/media/media.dart';
 import 'package:storize_instagram/page/page.dart';
-import 'package:storize_instagram/platform/platform.dart';
 import 'package:storize_model/storize_model.dart';
 
 import '../direct/support.dart' as d;
@@ -121,7 +120,8 @@ Map<String, Object?> postsFor(String username) {
               as Map)['xdt_api__v1__feed__user_timeline_graphql_connection']!
           as Map;
   for (final e in c['edges']! as List) {
-    ((e as Map)['node'] as Map)['user']['username'] = username;
+    final node = (e as Map)['node']! as Map;
+    (node['user']! as Map)['username'] = username;
   }
   return body;
 }

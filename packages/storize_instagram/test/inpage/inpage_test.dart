@@ -1,9 +1,6 @@
 // T-050: in-page fetching is the primary transport; direct HTTP is only the
 // fallback for "unavailable".
 import 'package:flutter_test/flutter_test.dart';
-import 'package:storize_domain/storize_domain.dart';
-import 'package:storize_instagram/direct/direct.dart';
-import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/page/page.dart';
 import 'package:storize_model/storize_model.dart';
 
@@ -11,7 +8,7 @@ import '../direct/support.dart' as d;
 import '../page/support.dart' as p;
 import 'rig.dart';
 
-const _policy = ExtractionPolicy.directThenPage;
+const ExtractionPolicy _policy = ExtractionPolicy.directThenPage;
 
 Object? _answer(String name, Map<String, Object?> vars) => switch (name) {
   'PolarisProfilePostsQuery' => script(postsFor(p.fakeUser)),
@@ -182,7 +179,7 @@ void main() {
       expect(rig.http.requests, isEmpty);
     });
 
-    test('an account without posts falls back to its profile page in the same session', () async {
+    test('an account without posts: profile page, same session', () async {
       final rig = InPageRig(
         handler: (n, v) => script(emptyPosts()),
       );
@@ -279,10 +276,11 @@ void main() {
     await rig.run(
       rig.platform.fetchNewPosts('user_1', DateTime.utc(2000), policy: _policy),
     );
-    final idle = rig.manual.lastWhere(
-      (t) => t.duration == const Duration(minutes: 2) && t.isActive,
-    );
-    idle.fire();
+    rig.manual
+        .lastWhere(
+          (t) => t.duration == const Duration(minutes: 2) && t.isActive,
+        )
+        .fire();
     await rig.time.pump();
     expect(rig.driver.sessions.single.disposed, isTrue);
   });
