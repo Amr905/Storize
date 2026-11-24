@@ -184,7 +184,6 @@ void main() {
         );
         expect(await r.refresher().refresh(), DiscoveryRefreshOutcome.loaded);
       },
-      skip: 'QA-4: newestAt ignores token expiry, see T-045.md',
     );
 
     test(
@@ -202,7 +201,6 @@ void main() {
           reason: 'throttle is per process: every app start retries a failure',
         );
       },
-      skip: 'QA-3: throttle is in memory only, see T-045.md',
     );
 
     test('logs are outcome types only', () async {

@@ -57,7 +57,7 @@ void main() {
   group('concurrency (two isolates, one store)', () {
     test(
       'interleaved writers keep valid data; both doc_ids survive',
-      skip: 'QA-1: lost update, see docs/05-reviews/T-045.md',
+
       () async {
         final clock = FakeClock();
         final store = _SlowStore(3);
@@ -107,7 +107,7 @@ void main() {
   group('logout', () {
     test(
       'clear() in one isolate: a stale instance does not resurrect tokens',
-      skip: 'QA-2: tokens written back after logout, see T-045.md',
+
       () async {
         final clock = FakeClock();
         final store = InMemoryDiscoveryStore();

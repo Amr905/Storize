@@ -54,6 +54,13 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   final Map<GraphqlQuery, (String, DateTime)> _docIds = {};
   Map<String, String>? _tokens;
   DateTime? _tokensAt;
+  // What this instance recorded and has not saved yet. Only this is merged
+  // into the store, so a stale instance never writes old memory back after a
+  // logout cleared the store (QA-2).
+  final Map<GraphqlQuery, (String, DateTime)> _pendingIds = {};
+  Map<String, String>? _pendingTokens;
+  DateTime? _pendingTokensAt;
+  bool _hadStored = false;
   Future<void> _writes = Future<void>.value();
 
   Duration get _tokenLife => store == null ? tokenTtl : persistedTokenTtl;
@@ -71,6 +78,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
       for (final q in GraphqlQuery.values) {
         if (q.matchesName(friendlyName)) {
           _docIds[q] = (docId, now);
+          _pendingIds[q] = (docId, now);
           changed = true;
         }
       }
@@ -78,6 +86,8 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     if (tokens.isNotEmpty) {
       _tokens = Map.unmodifiable(tokens);
       _tokensAt = now;
+      _pendingTokens = _tokens;
+      _pendingTokensAt = now;
       changed = true;
     }
     if (changed && store != null) _enqueue(_persist);
@@ -91,6 +101,9 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     _docIds.clear();
     _tokens = null;
     _tokensAt = null;
+    _pendingIds.clear();
+    _pendingTokens = null;
+    _pendingTokensAt = null;
     final s = store;
     if (s != null) _enqueue(() => s.clear(accountId));
   }
@@ -98,6 +111,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
   @override
   Future<void> forget(GraphqlQuery query) async {
     _docIds.remove(query);
+    _pendingIds.remove(query);
     if (store != null) _enqueue(() => _persist(drop: query));
     await flush();
   }
@@ -147,7 +161,11 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
       onWriteError?.call('load:${e.runtimeType}');
       return;
     }
-    if (snap == null) return;
+    if (snap == null) {
+      if (_hadStored) _dropMemoryExceptPending(); // cleared behind us
+      return;
+    }
+    _hadStored = true;
     for (final q in GraphqlQuery.values) {
       final e = snap.docIds[q.name];
       if (e == null) continue;
@@ -174,14 +192,55 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     });
   }
 
-  /// Merges memory into the stored snapshot (newest wins, expired entries
-  /// and [drop] removed) and saves it.
+  /// The store was cleared (logout) after this instance used it: forget what
+  /// it held, keep only what it recorded itself and has not saved.
+  void _dropMemoryExceptPending() {
+    _hadStored = false;
+    _docIds
+      ..clear()
+      ..addAll(_pendingIds);
+    _tokens = _pendingTokens;
+    _tokensAt = _pendingTokensAt;
+  }
+
+  /// Merges what this instance recorded into the stored snapshot (newest
+  /// wins, expired entries and [drop] removed) and saves it, then re-reads it
+  /// and repeats the merge (up to 3 times) if another isolate's write
+  /// replaced ours (QA-1; narrows the race, cannot close it).
   Future<void> _persist({GraphqlQuery? drop}) async {
     final s = store!;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      final stored = await s.load(accountId);
+      if (stored == null && _hadStored) _dropMemoryExceptPending();
+      final next = _merge(stored, drop);
+      await s.save(accountId, next);
+      _hadStored = true;
+      // Verify after the write: a concurrent writer may have replaced it
+      // with a snapshot built before ours. Repeat the merge if we are gone.
+      final back = await s.load(accountId);
+      if (_holds(back, next)) break;
+    }
+    if (drop == null) {
+      _pendingIds.clear();
+      _pendingTokens = null;
+      _pendingTokensAt = null;
+    }
+  }
+
+  /// Whether [back] still has every doc_id of [mine] (or a newer one).
+  bool _holds(DiscoverySnapshot? back, DiscoverySnapshot mine) {
+    if (back == null) return false;
+    for (final e in mine.docIds.entries) {
+      final got = back.docIds[e.key];
+      if (got == null || got.at.isBefore(e.value.at)) return false;
+    }
+    return true;
+  }
+
+  DiscoverySnapshot _merge(DiscoverySnapshot? stored, GraphqlQuery? drop) {
     final now = _clock.now();
-    final stored = await s.load(accountId);
     final ids = <String, ({String docId, DateTime at})>{...?stored?.docIds};
-    for (final e in _docIds.entries) {
+    for (final e in _pendingIds.entries) {
       final old = ids[e.key.name];
       if (old == null || !old.at.isAfter(e.value.$2)) {
         ids[e.key.name] = (docId: e.value.$1, at: e.value.$2);
@@ -191,8 +250,8 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
     ids.removeWhere((_, v) => now.difference(v.at) > docIdTtl);
     var tokens = stored?.tokens;
     var tokensAt = stored?.tokensAt;
-    final mine = _tokens;
-    final mineAt = _tokensAt;
+    final mine = _pendingTokens;
+    final mineAt = _pendingTokensAt;
     if (mine != null &&
         mineAt != null &&
         (tokensAt == null || !tokensAt.isAfter(mineAt))) {
@@ -203,16 +262,7 @@ final class PageDiscovery implements DocIdForgetter, PageTokenProvider {
       tokens = null;
       tokensAt = null;
     }
-    final next = DiscoverySnapshot(
-      docIds: ids,
-      tokens: tokens,
-      tokensAt: tokensAt,
-    );
-    if (next.isEmpty) {
-      await s.clear(accountId);
-    } else {
-      await s.save(accountId, next);
-    }
+    return DiscoverySnapshot(docIds: ids, tokens: tokens, tokensAt: tokensAt);
   }
 
   @override

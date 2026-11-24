@@ -60,6 +60,7 @@ final class DiscoveryRefresher {
     this.log,
     this.interval = const Duration(hours: 6),
     this.maxWait = const Duration(seconds: 8),
+    this.tokenLife = const Duration(hours: 12),
   });
 
   /// Where the active account comes from.
@@ -85,6 +86,9 @@ final class DiscoveryRefresher {
 
   /// The refresh period: stored discovery older than this is refilled.
   final Duration interval;
+
+  /// How long stored tokens stay usable (the persisted token lifetime).
+  final Duration tokenLife;
 
   /// The longest a load may wait for the request budget.
   final Duration maxWait;
@@ -117,15 +121,39 @@ final class DiscoveryRefresher {
     }
     final id = account.id;
     final now = clock.now();
-    final last = _lastAttempt[id];
+    final attempts = store is DiscoveryAttemptStore
+        ? store as DiscoveryAttemptStore
+        : null;
+    var last = _lastAttempt[id];
+    if (last == null && attempts != null) {
+      // Another process (or an earlier start) may have tried: not secret, and
+      // it stops a failing load from repeating at every app start.
+      try {
+        last = await attempts.lastAttempt(id);
+      } on Object {
+        last = null;
+      }
+    }
     if (last != null && now.difference(last) < interval) {
       return DiscoveryRefreshOutcome.throttled;
     }
     final snap = await store.load(id);
-    final newest = snap?.newestAt;
+    DateTime? newestDocId;
+    if (snap != null) {
+      for (final e in snap.docIds.values) {
+        if (newestDocId == null || e.at.isAfter(newestDocId)) {
+          newestDocId = e.at;
+        }
+      }
+    }
+    final tokensAt = snap?.tokensAt;
+    // Expired tokens are as good as none: background GraphQL needs them.
     final complete =
-        snap != null && snap.docIds.isNotEmpty && snap.tokens != null;
-    if (complete && newest != null && now.difference(newest) < interval) {
+        newestDocId != null &&
+        snap?.tokens != null &&
+        tokensAt != null &&
+        now.difference(tokensAt) < tokenLife;
+    if (complete && now.difference(newestDocId) < interval) {
       return DiscoveryRefreshOutcome.fresh;
     }
     if (await governor.isPaused(id)) {
@@ -136,6 +164,13 @@ final class DiscoveryRefresher {
     if (username == null) return DiscoveryRefreshOutcome.nothingToLoad;
 
     _lastAttempt[id] = now;
+    if (attempts != null) {
+      try {
+        await attempts.markAttempt(id, now);
+      } on Object {
+        // Memory still throttles this process.
+      }
+    }
     final result = await RequestGovernor.withMaxWait(
       maxWait,
       () => load(id, username),

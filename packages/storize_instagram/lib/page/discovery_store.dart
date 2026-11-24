@@ -108,10 +108,22 @@ abstract interface class DiscoveryStore {
   Future<void> clear(int accountId);
 }
 
+/// A [DiscoveryStore] that also remembers when a foreground refresh was last
+/// attempted per account, so a failing load is not retried at every app start
+/// (T-045 QA-3). Not secret. [DiscoveryStore.clear] forgets it too.
+abstract interface class DiscoveryAttemptStore implements DiscoveryStore {
+  /// When a refresh was last attempted for [accountId], or null.
+  Future<DateTime?> lastAttempt(int accountId);
+
+  /// Records an attempt at [at].
+  Future<void> markAttempt(int accountId, DateTime at);
+}
+
 /// A [DiscoveryStore] in memory, for tests and for builds that wire none.
 /// Instances that share one object stand in for two isolates.
-final class InMemoryDiscoveryStore implements DiscoveryStore {
+final class InMemoryDiscoveryStore implements DiscoveryAttemptStore {
   final Map<int, DiscoverySnapshot> _data = {};
+  final Map<int, DateTime> _attempts = {};
 
   @override
   Future<DiscoverySnapshot?> load(int accountId) async => _data[accountId];
@@ -122,7 +134,18 @@ final class InMemoryDiscoveryStore implements DiscoveryStore {
   }
 
   @override
-  Future<void> clear(int accountId) async => _data.remove(accountId);
+  Future<void> clear(int accountId) async {
+    _data.remove(accountId);
+    _attempts.remove(accountId);
+  }
+
+  @override
+  Future<DateTime?> lastAttempt(int accountId) async => _attempts[accountId];
+
+  @override
+  Future<void> markAttempt(int accountId, DateTime at) async {
+    _attempts[accountId] = at;
+  }
 
   @override
   String toString() => 'InMemoryDiscoveryStore(accounts: ${_data.length})';

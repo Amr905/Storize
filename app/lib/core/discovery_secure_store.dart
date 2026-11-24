@@ -12,7 +12,7 @@ import 'package:storize_model/storize_model.dart';
 /// store it must be created once per isolate. Reads never throw (an unreadable
 /// or foreign value is "nothing discovered"); nothing is logged and
 /// `toString` shows nothing but the type.
-final class SecureStorageDiscoveryStore implements DiscoveryStore {
+final class SecureStorageDiscoveryStore implements DiscoveryAttemptStore {
   /// Creates the store over the secure storage (the same instance type as
   /// the session store's).
   SecureStorageDiscoveryStore(this._storage);
@@ -20,7 +20,30 @@ final class SecureStorageDiscoveryStore implements DiscoveryStore {
   /// The storage key of [accountId].
   static String keyFor(int accountId) => 'storize.discovery.$accountId';
 
+  /// The storage key of the last refresh attempt of [accountId] (a time, not
+  /// secret).
+  static String attemptKeyFor(int accountId) =>
+      'storize.discovery.attempt.$accountId';
+
   final FlutterSecureStorage _storage;
+
+  @override
+  Future<DateTime?> lastAttempt(int accountId) async {
+    try {
+      final raw = await _storage.read(key: attemptKeyFor(accountId));
+      final ms = raw == null ? null : int.tryParse(raw);
+      if (ms == null || ms < 0 || ms > 86400000 * 100000000) return null;
+      return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+    } on Object {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> markAttempt(int accountId, DateTime at) => _storage.write(
+    key: attemptKeyFor(accountId),
+    value: '${at.toUtc().millisecondsSinceEpoch}',
+  );
 
   @override
   Future<DiscoverySnapshot?> load(int accountId) async {
