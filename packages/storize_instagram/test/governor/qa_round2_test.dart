@@ -60,7 +60,10 @@ final class _YieldingRepo implements GovernorLeaseRepo {
   }) => inner.renew(accountId: accountId, holder: holder, ttl: ttl);
 
   @override
-  Future<void> release({required int accountId, required String holder}) async {
+  Future<void> release({
+    required int accountId,
+    required String holder,
+  }) async {
     await _y();
     return inner.release(accountId: accountId, holder: holder);
   }

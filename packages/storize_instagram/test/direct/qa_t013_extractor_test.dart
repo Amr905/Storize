@@ -375,7 +375,9 @@ void main() {
         _photo('2', 200),
         _photo('3', 200),
       ]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(100)));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(100)),
+      );
       expect(r.valueOrNull!.map((p) => p.remoteId), ['1', '2', '3']);
     });
 
@@ -387,7 +389,9 @@ void main() {
         _photo('new-pin', 300, pinned: true),
         _photo('b', 250),
       ]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(100)));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(100)),
+      );
       final posts = r.valueOrNull!;
       expect(posts.map((p) => p.remoteId), ['new-pin', 'b']);
       expect(posts.first.extras['pinned'], true);
@@ -395,18 +399,29 @@ void main() {
 
     test('add-then-check: latestPostTime as watermark gives no duplicate, '
         'also when the newest post is pinned', () async {
-      final rig = _postsRig([_photo('p', 300, pinned: true), _photo('a', 250)]);
-      final latest = (await rig.run(rig.extractor.latestPostTime('ZZ_owner')))
-          .valueOrNull!;
+      final rig = _postsRig([
+        _photo('p', 300, pinned: true),
+        _photo('a', 250),
+      ]);
+      final latest = (await rig.run(
+        rig.extractor.latestPostTime('ZZ_owner'),
+      )).valueOrNull!;
       expect(latest, _t(300));
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', latest));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', latest),
+      );
       expect(r.valueOrNull, isEmpty);
     });
 
     test('a pinned post excluded from latestPostTime WOULD be a duplicate '
         '(why including pinned is right)', () async {
-      final rig = _postsRig([_photo('p', 300, pinned: true), _photo('a', 250)]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(250)));
+      final rig = _postsRig([
+        _photo('p', 300, pinned: true),
+        _photo('a', 250),
+      ]);
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(250)),
+      );
       expect(
         r.valueOrNull!.map((p) => p.remoteId),
         ['p'],
@@ -419,7 +434,9 @@ void main() {
     test('NOTE: a post published in the same second as the watermark post '
         'is missed (exclusive rule, rare)', () async {
       final rig = _postsRig([_photo('a', 300), _photo('b', 300)]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(300)));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(300)),
+      );
       expect(r.valueOrNull, isEmpty);
     });
 
@@ -429,7 +446,9 @@ void main() {
         _photo('y', 401, author: 'ZZ_other', coauthors: ['ZZ_third']),
         _photo('z', 402, author: 'ZZ_other', coauthors: ['ZZ_owner']),
       ]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(0)));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(0)),
+      );
       expect(r.valueOrNull!.map((p) => p.remoteId), ['z']);
       expect(r.valueOrNull!.single.extras['collab'], true);
       final latest = await rig.run(rig.extractor.latestPostTime('ZZ_owner'));
@@ -466,14 +485,19 @@ void main() {
       },
     );
 
-    test('QA-F3: an old post without taken_at must not fail the run', () async {
-      final rig = _postsRig([
-        _photo('old', 10)..remove('taken_at'),
-        _photo('new', 300),
-      ]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(100)));
-      expect(r.valueOrNull!.map((p) => p.remoteId), ['new']);
-    });
+    test(
+      'QA-F3: an old post without taken_at must not fail the run',
+      () async {
+        final rig = _postsRig([
+          _photo('old', 10)..remove('taken_at'),
+          _photo('new', 300),
+        ]);
+        final r = await rig.run(
+          rig.extractor.fetchNewPosts('ZZ_owner', _t(100)),
+        );
+        expect(r.valueOrNull!.map((p) => p.remoteId), ['new']);
+      },
+    );
 
     test(
       'QA-F3b: an old post with a mistyped coauthor_producers must not fail',
@@ -492,15 +516,21 @@ void main() {
     test('current behaviour pinned: the failure of QA-F3 is a clean '
         'SchemaChanged (page mode), not a crash', () async {
       final rig = _postsRig([_photo('old', 10)..remove('taken_at')]);
-      final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(100)));
+      final r = await rig.run(
+        rig.extractor.fetchNewPosts('ZZ_owner', _t(100)),
+      );
       expect(r.failureOrNull, isA<SchemaChanged>());
     });
 
     test(
       'QA-F8: a huge taken_at must be SchemaChanged, not an ArgumentError',
       () async {
-        final rig = _postsRig([_photo('new', 300)..['taken_at'] = (1 << 60)]);
-        final r = await rig.run(rig.extractor.fetchNewPosts('ZZ_owner', _t(0)));
+        final rig = _postsRig([
+          _photo('new', 300)..['taken_at'] = (1 << 60),
+        ]);
+        final r = await rig.run(
+          rig.extractor.fetchNewPosts('ZZ_owner', _t(0)),
+        );
         expect(r.failureOrNull, isA<SchemaChanged>());
       },
     );
@@ -526,20 +556,23 @@ void main() {
       expect(profileIdRequested(rig), 'ZZ_owner');
     });
 
-    test('QA-F2: one solo post of another account listed first must not decide '
-        'the owner (needs majority and a username check)', () async {
-      // A post of another account without coauthor_producers (for example
-      // a collab whose co-author list Instagram omitted). The first solo
-      // entry wins today.
-      final rig = _postsRig([
-        _photo('1', 10, author: 'ZZ_other'),
-        _photo('2', 11),
-        _photo('3', 12),
-        _photo('4', 13),
-      ]);
-      await rig.run(rig.extractor.resolveUser('ZZ_name'));
-      expect(profileIdRequested(rig), 'ZZ_owner');
-    });
+    test(
+      'QA-F2: one solo post of another account listed first must not decide '
+      'the owner (needs majority and a username check)',
+      () async {
+        // A post of another account without coauthor_producers (for example
+        // a collab whose co-author list Instagram omitted). The first solo
+        // entry wins today.
+        final rig = _postsRig([
+          _photo('1', 10, author: 'ZZ_other'),
+          _photo('2', 11),
+          _photo('3', 12),
+          _photo('4', 13),
+        ]);
+        await rig.run(rig.extractor.resolveUser('ZZ_name'));
+        expect(profileIdRequested(rig), 'ZZ_owner');
+      },
+    );
 
     test(
       'QA-F2b: the profile returned for the owner id must have the requested '
@@ -554,20 +587,23 @@ void main() {
   });
 
   group('verifySession', () {
-    test('logged-out answer (viewer user null) is not SchemaChanged', () async {
-      final body = jsonDecode(
-        jsonEncode(loadReal('profile', '004_graphql.json')),
-      ) as Map<String, Object?>;
-      ((body['data']! as Map<String, Object?>)['viewer']!
-              as Map<String, Object?>)['user'] =
-          null;
-      final rig = Rig(responder: (_) => jsonReply(body));
-      final r = await rig.run(rig.extractor.verifySession());
-      expect(
-        r.failureOrNull,
-        const SessionInvalid(SessionReason.loginRequired),
-      );
-    });
+    test(
+      'logged-out answer (viewer user null) is not SchemaChanged',
+      () async {
+        final body = jsonDecode(
+          jsonEncode(loadReal('profile', '004_graphql.json')),
+        ) as Map<String, Object?>;
+        ((body['data']! as Map<String, Object?>)['viewer']!
+                as Map<String, Object?>)['user'] =
+            null;
+        final rig = Rig(responder: (_) => jsonReply(body));
+        final r = await rig.run(rig.extractor.verifySession());
+        expect(
+          r.failureOrNull,
+          const SessionInvalid(SessionReason.loginRequired),
+        );
+      },
+    );
 
     test(
       'viewer id differs from ds_user_id: SessionInvalid, no profile leak',
@@ -685,14 +721,17 @@ void main() {
       );
     });
 
-    test('QA-F4: a redirect to /challenge/ is SessionInvalid(challenge)', () {
-      expect(
-        classifier.classify(
-          const IgReply(status: 302, redirectPath: '/challenge/'),
-        ),
-        const SessionInvalid(SessionReason.challenge),
-      );
-    });
+    test(
+      'QA-F4: a redirect to /challenge/ is SessionInvalid(challenge)',
+      () {
+        expect(
+          classifier.classify(
+            const IgReply(status: 302, redirectPath: '/challenge/'),
+          ),
+          const SessionInvalid(SessionReason.challenge),
+        );
+      },
+    );
 
     test('Retry-After and the hint: 429 passes the duration through', () {
       expect(
@@ -730,7 +769,10 @@ void main() {
         isEmpty,
         reason: 'nothing sent without a doc_id',
       );
-      expect((r.failureOrNull! as SchemaChanged).where, startsWith('doc_id:'));
+      expect(
+        (r.failureOrNull! as SchemaChanged).where,
+        startsWith('doc_id:'),
+      );
     });
   });
 }

@@ -207,7 +207,11 @@ void main() {
   });
 
   test('QA-1 variants: URL-encoded name inside a KEY and double-encoded', () {
-    final o = sanitizeHar(_har({'sessionid%3DZZFAKEkey1': 1}));
+    final o = sanitizeHar(
+      _har({
+        'sessionid%3DZZFAKEkey1': 1,
+      }),
+    );
     // QA-10: the unknown key is replaced by key_N, so nothing leaks.
     expect(o.ok, isTrue, reason: o.leaks.join());
     expect(o.files.values.join().toLowerCase(), isNot(contains('zzfake')));
@@ -319,9 +323,13 @@ void main() {
     noLeak('QA-2 JSON text inside string, doubly escaped', {
       'a': r'{\"sessionid\":\"' + _sid + r'\", \"x\": 1}',
     });
-    noLeak('QA-2 short value', {'a': '{"sessionid":"ZZFAKEjis1", "x": 1}'});
+    noLeak('QA-2 short value', {
+      'a': '{"sessionid":"ZZFAKEjis1", "x": 1}',
+    });
 
-    noLeak('QA-3 SessionID= uppercase', {'a': 'Cookie: SessionID=$_sid x'});
+    noLeak('QA-3 SessionID= uppercase', {
+      'a': 'Cookie: SessionID=$_sid x',
+    });
 
     for (final p in [
       '/api/v1/users/zzfakenm/usernameinfo/',

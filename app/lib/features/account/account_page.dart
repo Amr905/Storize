@@ -108,8 +108,9 @@ class _AccountBody extends ConsumerWidget {
                           if (a != null)
                             Text(
                               l10n.accConnected(
-                                MaterialLocalizations.of(context)
-                                    .formatMediumDate(a.connectedAt.toLocal()),
+                                MaterialLocalizations.of(
+                                  context,
+                                ).formatMediumDate(a.connectedAt.toLocal()),
                               ),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,

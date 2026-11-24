@@ -169,35 +169,39 @@ void main() {
       'duplicate insert with different slides leaves no stray media',
       () async {
         await repo.insertIfNew(content(targetId: t.id), [media()]);
-        await repo.insertIfNew(content(targetId: t.id), [
-          media(),
-          media(slideIndex: 1),
-          media(slideIndex: 2),
-        ]);
+        await repo.insertIfNew(
+          content(targetId: t.id),
+          [media(), media(slideIndex: 1), media(slideIndex: 2)],
+        );
         expect(await repo.pendingMedia(), hasLength(1));
       },
     );
 
     test('cascade removes media, pending queue and storage totals', () async {
-      await repo.insertIfNew(content(targetId: t.id), [
-        media(status: MediaFileStatus.done, sizeBytes: 10),
-      ]);
-      await repo.insertIfNew(content(targetId: t.id, remoteId: 'r2'), [
-        media(),
-      ]);
+      await repo.insertIfNew(
+        content(targetId: t.id),
+        [media(status: MediaFileStatus.done, sizeBytes: 10)],
+      );
+      await repo.insertIfNew(
+        content(targetId: t.id, remoteId: 'r2'),
+        [media()],
+      );
       await targets.delete(t.id);
       expect(await repo.pendingMedia(), isEmpty);
       expect(await repo.storageBytesByTarget(), isEmpty);
       expect(await repo.listByTarget(t.id), isEmpty);
     });
 
-    test("deleting a target does not touch another target's content", () async {
-      final other = await targets.insert(target(remoteUserId: '200'));
-      await repo.insertIfNew(content(targetId: t.id), [media()]);
-      await repo.insertIfNew(content(targetId: other.id), [media()]);
-      await targets.delete(t.id);
-      expect(await repo.listByTarget(other.id), hasLength(1));
-    });
+    test(
+      "deleting a target does not touch another target's content",
+      () async {
+        final other = await targets.insert(target(remoteUserId: '200'));
+        await repo.insertIfNew(content(targetId: t.id), [media()]);
+        await repo.insertIfNew(content(targetId: other.id), [media()]);
+        await targets.delete(t.id);
+        expect(await repo.listByTarget(other.id), hasLength(1));
+      },
+    );
 
     test(
       'pending order: story before post even when the post is older',
@@ -257,7 +261,9 @@ void main() {
 
     test('reels-only target is listed for posts, not for stories', () async {
       final repo = FakeTargetRepo();
-      await repo.insert(target(trackStories: false, trackPosts: false));
+      await repo.insert(
+        target(trackStories: false, trackPosts: false),
+      );
       expect(await repo.listActive(CheckScope.posts), hasLength(1));
       expect(await repo.listActive(CheckScope.stories), isEmpty);
     });
@@ -270,8 +276,9 @@ void main() {
       }
       for (final scope in CheckScope.values) {
         expect(
-          (await repo.listActive(scope))
-              .every((x) => x.status == TargetStatus.active),
+          (await repo.listActive(scope)).every(
+            (x) => x.status == TargetStatus.active,
+          ),
           isTrue,
         );
       }

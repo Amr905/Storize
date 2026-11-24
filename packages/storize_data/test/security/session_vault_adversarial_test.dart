@@ -333,31 +333,34 @@ void main() {
         SessionUnreadableReason.invalidShape,
       );
     });
-    test('capturedAt beyond DateTime range must not make load throw', () async {
-      for (final at in [
-        9000000000000000000,
-        8640000000000001,
-        -1,
-        -9000000000000000000,
-      ]) {
-        reports.clear();
-        backend.data['storize.session.1'] = _env(1, at: at);
-        Object? thrown;
-        SessionBlob? r;
-        try {
-          r = await store.load(1);
-        } on Object catch (e) {
-          thrown = e;
+    test(
+      'capturedAt beyond DateTime range must not make load throw',
+      () async {
+        for (final at in [
+          9000000000000000000,
+          8640000000000001,
+          -1,
+          -9000000000000000000,
+        ]) {
+          reports.clear();
+          backend.data['storize.session.1'] = _env(1, at: at);
+          Object? thrown;
+          SessionBlob? r;
+          try {
+            r = await store.load(1);
+          } on Object catch (e) {
+            thrown = e;
+          }
+          expect(thrown, isNull, reason: 'load threw for $at: $thrown');
+          expect(r, isNull);
+          expect(reports, [(1, 'invalid_shape')]);
         }
-        expect(thrown, isNull, reason: 'load threw for $at: $thrown');
-        expect(r, isNull);
-        expect(reports, [(1, 'invalid_shape')]);
-      }
-      backend.data['storize.session.1'] = _env(1, at: 8640000000000000);
-      expect(await store.load(1), isNotNull);
-      backend.data['storize.session.1'] = _env(1, at: 0);
-      expect(await store.load(1), isNotNull);
-    });
+        backend.data['storize.session.1'] = _env(1, at: 8640000000000000);
+        expect(await store.load(1), isNotNull);
+        backend.data['storize.session.1'] = _env(1, at: 0);
+        expect(await store.load(1), isNotNull);
+      },
+    );
     test('key naming is per account, no collisions 1 vs 11', () async {
       await store.save(1, _blob());
       await store.save(11, _blob(s1: 'ZZFAKE_other'));

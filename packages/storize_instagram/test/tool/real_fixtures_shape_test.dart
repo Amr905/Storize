@@ -198,7 +198,10 @@ void main() {
       ]);
       for (final n in nodes) {
         expect(n['media_type'], anyOf(1, 2, 8));
-        expect(n['product_type'], anyOf('feed', 'clips', 'carousel_container'));
+        expect(
+          n['product_type'],
+          anyOf('feed', 'clips', 'carousel_container'),
+        );
         _expectImageCandidates(n);
       }
     });
@@ -332,7 +335,9 @@ void main() {
 
   group('helper and leak guard (failure paths)', () {
     test('_at returns nothing for a removed path, so _expectAll fails', () {
-      final body = jsonDecode(jsonEncode(_load('story', '003_graphql.json')));
+      final body = jsonDecode(
+        jsonEncode(_load('story', '003_graphql.json')),
+      );
       (_at(body, '$_stories.reels_media[].items[]').first as Map).remove(
         'expiring_at',
       );

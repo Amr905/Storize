@@ -26,10 +26,11 @@ void main() {
   String contents() => file.current.readAsStringSync();
 
   test('writes timestamp, level, tag and message', () {
-    FileDiagnosticLog(
-      file: file,
-      clock: clock,
-    ).log(LogLevel.info, 'governor', 'run start scope=stories');
+    FileDiagnosticLog(file: file, clock: clock).log(
+      LogLevel.info,
+      'governor',
+      'run start scope=stories',
+    );
     expect(
       contents(),
       '2026-11-19T06:55:00.000Z INFO [governor] run start scope=stories\n',
@@ -73,11 +74,11 @@ void main() {
   });
 
   test('debug builds can log debug lines', () {
-    FileDiagnosticLog(
-      file: file,
-      clock: clock,
-      minLevel: LogLevel.debug,
-    ).log(LogLevel.debug, 't', 'detail');
+    FileDiagnosticLog(file: file, clock: clock, minLevel: LogLevel.debug).log(
+      LogLevel.debug,
+      't',
+      'detail',
+    );
     expect(contents(), contains('DEBUG [t] detail'));
   });
 
@@ -93,11 +94,11 @@ void main() {
     expect(echoed.single, isNot(contains(_secret)));
 
     final quiet = <String>[];
-    FileDiagnosticLog(
-      file: file,
-      clock: clock,
-      consoleSink: quiet.add,
-    ).log(LogLevel.warn, 't', 'm');
+    FileDiagnosticLog(file: file, clock: clock, consoleSink: quiet.add).log(
+      LogLevel.warn,
+      't',
+      'm',
+    );
     expect(quiet, isEmpty);
   });
 
@@ -105,10 +106,11 @@ void main() {
     final blocker = File('${tmp.path}/blocker')..writeAsStringSync('x');
     final bad = RotatingLogFile(Directory('${blocker.path}/logs'));
     expect(
-      () => FileDiagnosticLog(
-        file: bad,
-        clock: clock,
-      ).log(LogLevel.error, 't', 'm'),
+      () => FileDiagnosticLog(file: bad, clock: clock).log(
+        LogLevel.error,
+        't',
+        'm',
+      ),
       returnsNormally,
     );
   });

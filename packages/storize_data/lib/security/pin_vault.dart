@@ -205,8 +205,10 @@ final class PinVault implements PinStore {
   }
 
   @override
-  Future<void> markBiometric() =>
-      _storage.write(key: methodKey, value: 'biometric');
+  Future<void> markBiometric() => _storage.write(
+    key: methodKey,
+    value: 'biometric',
+  );
 
   @override
   Future<int?> pinLength() async {

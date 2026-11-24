@@ -258,8 +258,9 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   );
 
   @override
-  Future<Result<RemoteUser>> verifySession() async =>
-      _normalize(await _guarded(_direct.verifySession));
+  Future<Result<RemoteUser>> verifySession() async => _normalize(
+    await _guarded(_direct.verifySession),
+  );
 
   // --------------------------------------------------------------- content
 

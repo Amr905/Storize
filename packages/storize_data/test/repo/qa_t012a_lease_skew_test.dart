@@ -70,13 +70,22 @@ void main() {
   test('ttl mismatch: shorter-ttl taker treats a longer lease as expired '
       '(documents the behaviour)', () async {
     await take(h.leases, 'A', ttl: const Duration(minutes: 30));
-    expect(await take(h.leases, 'B'), isNotNull);
+    expect(
+      await take(
+        h.leases,
+        'B',
+      ),
+      isNotNull,
+    );
   });
 
   test(
     'ttl mismatch: longer-ttl taker still blocked by a shorter lease',
     () async {
-      await take(h.leases, 'A');
+      await take(
+        h.leases,
+        'A',
+      );
       expect(
         await take(h.leases, 'B', ttl: const Duration(minutes: 30)),
         isNull,

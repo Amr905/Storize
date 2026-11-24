@@ -780,8 +780,9 @@ final class DownloadPending {
   }
 
   _Step _failureStep(Failure f) => switch (f) {
-    SessionInvalid() ||
-    AccountRestricted() => const _Stop(DownloadStopReason.sessionProblem),
+    SessionInvalid() || AccountRestricted() => const _Stop(
+      DownloadStopReason.sessionProblem,
+    ),
     RateLimited() => const _Stop(DownloadStopReason.rateLimited),
     TargetNotFound() => const _Fail('refresh_target_not_found'),
     TargetNotVisible() => const _Fail('refresh_target_not_visible'),

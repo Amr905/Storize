@@ -13,7 +13,10 @@ void expectDbContract<T extends Enum>({
   for (final value in values) {
     expect(fromDb(dbValueOf(value)), value);
   }
-  expect(() => fromDb('NOT_A_REAL_VALUE'), throwsArgumentError);
+  expect(
+    () => fromDb('NOT_A_REAL_VALUE'),
+    throwsArgumentError,
+  );
   expect(() => fromDb(''), throwsArgumentError);
 }
 

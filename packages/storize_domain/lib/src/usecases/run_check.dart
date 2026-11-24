@@ -20,7 +20,10 @@ import 'package:storize_model/storize_model.dart';
 @immutable
 final class CheckRunResult {
   /// Creates the result.
-  const CheckRunResult({required this.run, required this.newContentIds});
+  const CheckRunResult({
+    required this.run,
+    required this.newContentIds,
+  });
 
   /// The finished `check_run` row.
   final CheckRun run;
@@ -128,7 +131,11 @@ final class RunCheck {
       errorCode: run.errorCode,
     );
     if (run.pageModeUses > 0) {
-      await _event(run, ActivityType.pageModeUsed, count: run.pageModeUses);
+      await _event(
+        run,
+        ActivityType.pageModeUsed,
+        count: run.pageModeUses,
+      );
     }
     if (result == CheckResult.ok || result == CheckResult.partial) {
       await _event(

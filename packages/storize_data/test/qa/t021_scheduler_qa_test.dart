@@ -169,13 +169,16 @@ void main() {
       const FormatException('x'),
       Exception('/storage/emulated/0/secret'),
     ]) {
-      test('any failure (${e.runtimeType}) maps to not found', () async {
-        final store = PluginGalleryStore(_ThrowingPlugin(e));
-        expect(
-          await store.findExisting(relativeDir: 'u', displayName: 'n.jpg'),
-          isNull,
-        );
-      });
+      test(
+        'any failure (${e.runtimeType}) maps to not found',
+        () async {
+          final store = PluginGalleryStore(_ThrowingPlugin(e));
+          expect(
+            await store.findExisting(relativeDir: 'u', displayName: 'n.jpg'),
+            isNull,
+          );
+        },
+      );
     }
   });
 }

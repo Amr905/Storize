@@ -322,10 +322,10 @@ void main() {
         ..queueMedia(bytes(2))
         ..queueMedia(bytes(2));
       await build().run();
-      expect(fakeGallery.files.map((f) => f.displayName), [
-        'alice_p_0.jpg',
-        'alice_p_1.mp4',
-      ]);
+      expect(
+        fakeGallery.files.map((f) => f.displayName),
+        ['alice_p_0.jpg', 'alice_p_1.mp4'],
+      );
     });
 
     test('an empty download is a failed attempt, not a saved file', () async {
@@ -352,7 +352,10 @@ void main() {
     test('refreshes once through the platform, then resumes', () async {
       final id = await seed(alice);
       platform
-        ..queueMediaError(const ExpiredMediaUrl(), bytesBeforeError: bytes(3))
+        ..queueMediaError(
+          const ExpiredMediaUrl(),
+          bytesBeforeError: bytes(3),
+        )
         ..queueMedia(bytes(10))
         ..fetchStoriesResults.addOk({
           alice.remoteUserId: [remoteStory('s1')],
@@ -729,7 +732,12 @@ void main() {
       );
       await seed(alice, remoteId: 'a1');
       await seed(alice, remoteId: 'a2');
-      await seed(alice, remoteId: 'ap', kind: ContentKind.post, slides: 3);
+      await seed(
+        alice,
+        remoteId: 'ap',
+        kind: ContentKind.post,
+        slides: 3,
+      );
       await seed(bob, remoteId: 'b1');
       for (var i = 0; i < 6; i++) {
         platform.queueMedia(bytes(2));
@@ -788,7 +796,10 @@ void main() {
       expect(files.single.status, MediaFileStatus.done);
       expect(files.single.sizeBytes, total);
       expect(await statusOf(id), ContentStatus.done);
-      expect(await content.listByTarget(alice.id), hasLength(1));
+      expect(
+        await content.listByTarget(alice.id),
+        hasLength(1),
+      );
       expect(fakeGallery.files, hasLength(1), reason: 'no duplicate gallery');
       expect(fakeGallery.files.single.uri, files.single.contentUri);
       expect(fakeGallery.saved, hasLength(savedCalls));
@@ -799,7 +810,10 @@ void main() {
     test('killed mid-stream: resumes from the partial bytes', () async {
       platform.queueMediaError(Crash(), bytesBeforeError: bytes(8));
       await expectLater(build().run(), throwsA(isA<Crash>()));
-      expect((await filesOf(id)).single.status, MediaFileStatus.downloading);
+      expect(
+        (await filesOf(id)).single.status,
+        MediaFileStatus.downloading,
+      );
       expect(cache.partBytes(fileId), hasLength(8));
       expect(fakeGallery.files, isEmpty);
 
@@ -1100,7 +1114,9 @@ void main() {
       final all = [
         r.toString(),
         r.failures.join(),
-        ...(await activity.watchRecent().first).map((e) => '$e${e.payload}'),
+        ...(await activity.watchRecent().first).map(
+          (e) => '$e${e.payload}',
+        ),
       ].join();
       expect(all, isNot(contains('example.invalid')));
     });

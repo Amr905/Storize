@@ -48,9 +48,10 @@ void runContentRepoContract(RepoHarness Function() create) {
     });
 
     test('ignores ids on the entities passed in', () async {
-      final result = await repo.insertIfNew(aContent(t1).copyWith(id: 500), [
-        aMedia().copyWith(id: 600, contentId: 700),
-      ]);
+      final result = await repo.insertIfNew(
+        aContent(t1).copyWith(id: 500),
+        [aMedia().copyWith(id: 600, contentId: 700)],
+      );
       expect(result.contentId, isNot(500));
       final read = (await repo.getById(result.contentId))!;
       expect(read.media.single.id, isNot(600));
@@ -151,16 +152,14 @@ void runContentRepoContract(RepoHarness Function() create) {
     );
 
     test('media come back ordered by slide index', () async {
-      final id = await add(aContent(t1, kind: ContentKind.post), [
-        aMedia(slideIndex: 2),
-        aMedia(),
-        aMedia(slideIndex: 1),
-      ]);
-      expect((await repo.getById(id))!.media.map((m) => m.slideIndex), [
-        0,
-        1,
-        2,
-      ]);
+      final id = await add(
+        aContent(t1, kind: ContentKind.post),
+        [aMedia(slideIndex: 2), aMedia(), aMedia(slideIndex: 1)],
+      );
+      expect(
+        (await repo.getById(id))!.media.map((m) => m.slideIndex),
+        [0, 1, 2],
+      );
     });
 
     test('existingRemoteIds is scoped to target and kind and returns only '
@@ -259,12 +258,15 @@ void runContentRepoContract(RepoHarness Function() create) {
   group('updates', () {
     test('resetInterruptedDownloads moves DOWNLOADING back to PENDING and '
         'counts them', () async {
-      final id = await add(aContent(t1, kind: ContentKind.post), [
-        aMedia(status: MediaFileStatus.downloading),
-        aMedia(slideIndex: 1, status: MediaFileStatus.downloading),
-        aMedia(slideIndex: 2, status: MediaFileStatus.done),
-        aMedia(slideIndex: 3, status: MediaFileStatus.failed),
-      ]);
+      final id = await add(
+        aContent(t1, kind: ContentKind.post),
+        [
+          aMedia(status: MediaFileStatus.downloading),
+          aMedia(slideIndex: 1, status: MediaFileStatus.downloading),
+          aMedia(slideIndex: 2, status: MediaFileStatus.done),
+          aMedia(slideIndex: 3, status: MediaFileStatus.failed),
+        ],
+      );
       expect(await repo.resetInterruptedDownloads(), 2);
       final statuses = (await repo.getById(id))!.media.map((m) => m.status);
       expect(statuses, [
@@ -388,9 +390,10 @@ void runContentRepoContract(RepoHarness Function() create) {
       await add(aContent(t1, remoteId: 'a'), [
         aMedia(status: MediaFileStatus.done, sizeBytes: 10),
       ]);
-      final keep = await add(aContent(t2, remoteId: 'b'), [
-        aMedia(status: MediaFileStatus.done, sizeBytes: 7),
-      ]);
+      final keep = await add(
+        aContent(t2, remoteId: 'b'),
+        [aMedia(status: MediaFileStatus.done, sizeBytes: 7)],
+      );
       await h.targets.delete(t1);
       expect(await repo.listByTarget(t1), isEmpty);
       expect(
@@ -487,9 +490,10 @@ void runContentRepoContract(RepoHarness Function() create) {
       late int postPhoto;
 
       setUp(() async {
-        storyA = await add(aContent(t1, remoteId: 'sa', postedAt: at(10)), [
-          aMedia(type: MediaType.video),
-        ]);
+        storyA = await add(
+          aContent(t1, remoteId: 'sa', postedAt: at(10)),
+          [aMedia(type: MediaType.video)],
+        );
         storyB = await add(
           aContent(
             t2,
@@ -564,15 +568,14 @@ void runContentRepoContract(RepoHarness Function() create) {
       });
 
       test('media type matches content with any file of that type', () async {
-        expect(await ids(ContentFilter(mediaType: MediaType.video)), [
-          postVideo,
-          storyA,
-        ]);
-        expect(await ids(ContentFilter(mediaType: MediaType.photo)), [
-          postPhoto,
-          postVideo,
-          storyB,
-        ]);
+        expect(
+          await ids(ContentFilter(mediaType: MediaType.video)),
+          [postVideo, storyA],
+        );
+        expect(
+          await ids(ContentFilter(mediaType: MediaType.photo)),
+          [postPhoto, postVideo, storyB],
+        );
       });
 
       test('a media-type filter still returns all media of a match', () async {
@@ -588,9 +591,10 @@ void runContentRepoContract(RepoHarness Function() create) {
       });
 
       test('statuses', () async {
-        expect(await ids(ContentFilter(statuses: const {ContentStatus.done})), [
-          storyB,
-        ]);
+        expect(
+          await ids(ContentFilter(statuses: const {ContentStatus.done})),
+          [storyB],
+        );
         expect(
           await ids(
             ContentFilter(

@@ -90,14 +90,15 @@ class _Rig {
   bool get pageRan => calls.any((c) => c.startsWith('page.'));
 
   /// Each method as a thunk, so a test can run one at a time.
-  Map<String, Future<Result<Object?>> Function()> methods(ExtractionPolicy p) =>
-      {
-        'resolveUser': () => platform.resolveUser('x'),
-        'refreshUser': () => platform.refreshUser('1', 'x'),
-        'fetchStories': () => platform.fetchStories(['1'], policy: p),
-        'fetchNewPosts': () => platform.fetchNewPosts('1', _wm, policy: p),
-        'latestPostTime': () => platform.latestPostTime('1'),
-      };
+  Map<String, Future<Result<Object?>> Function()> methods(
+    ExtractionPolicy p,
+  ) => {
+    'resolveUser': () => platform.resolveUser('x'),
+    'refreshUser': () => platform.refreshUser('1', 'x'),
+    'fetchStories': () => platform.fetchStories(['1'], policy: p),
+    'fetchNewPosts': () => platform.fetchNewPosts('1', _wm, policy: p),
+    'latestPostTime': () => platform.latestPostTime('1'),
+  };
 }
 
 void main() {
@@ -336,24 +337,27 @@ void main() {
   });
 
   group('stories loop (one page load per user)', () {
-    test('FIXED (QA-T015-F1): user 1 loads, user 2 is username_unknown -> the '
-        'platform reports the direct SchemaChanged, counts the page mode use '
-        'once (one page was loaded) and keeps what was loaded', () async {
-      final rig = _Rig()..directFails(_schema);
-      rig.page.stories = (ids) => ids.single == 'u1'
-          ? Ok({'u1': const <RemoteContent>[]})
-          : const Err(UnknownFailure(null, 'username_unknown'));
-      final r = await rig.platform.fetchStories([
-        'u1',
-        'u2',
-      ], policy: ExtractionPolicy.directThenPage);
-      expect(rig.calls.where((c) => c == 'page.fetchStories'), hasLength(2));
-      expect(rig.platform.takeSignals().pageModeUses, 1);
-      expect(r.failureOrNull, _schema);
-      final partial = rig.platform.takePartialStories()!;
-      expect(partial.loaded.keys, ['u1']);
-      expect(partial.skipped, 1);
-    });
+    test(
+      'FIXED (QA-T015-F1): user 1 loads, user 2 is username_unknown -> the '
+      'platform reports the direct SchemaChanged, counts the page mode use '
+      'once (one page was loaded) and keeps what was loaded',
+      () async {
+        final rig = _Rig()..directFails(_schema);
+        rig.page.stories = (ids) => ids.single == 'u1'
+            ? Ok({'u1': const <RemoteContent>[]})
+            : const Err(UnknownFailure(null, 'username_unknown'));
+        final r = await rig.platform.fetchStories([
+          'u1',
+          'u2',
+        ], policy: ExtractionPolicy.directThenPage);
+        expect(rig.calls.where((c) => c == 'page.fetchStories'), hasLength(2));
+        expect(rig.platform.takeSignals().pageModeUses, 1);
+        expect(r.failureOrNull, _schema);
+        final partial = rig.platform.takePartialStories()!;
+        expect(partial.loaded.keys, ['u1']);
+        expect(partial.skipped, 1);
+      },
+    );
 
     test('FIXED (QA-T015-F1): same for a breaker that trips (other isolate) '
         'between two users: page 1 loaded, the use is counted', () async {

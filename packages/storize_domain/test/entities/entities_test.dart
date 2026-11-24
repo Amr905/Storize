@@ -82,8 +82,10 @@ void main() {
     });
 
     test('copyWith keeps the identity key', () {
-      final c = content(targetId: 3)
-          .copyWith(status: ContentStatus.done, shortcode: 'abc');
+      final c = content(targetId: 3).copyWith(
+        status: ContentStatus.done,
+        shortcode: 'abc',
+      );
       expect(c.targetId, 3);
       expect(c.remoteId, 'r1');
       expect(c.status, ContentStatus.done);
@@ -259,8 +261,9 @@ void main() {
         isFalse,
       );
       expect(
-        ContentFilter(mediaType: MediaType.video)
-            .matches(c, [media(type: MediaType.video)]),
+        ContentFilter(
+          mediaType: MediaType.video,
+        ).matches(c, [media(type: MediaType.video)]),
         isTrue,
       );
       expect(

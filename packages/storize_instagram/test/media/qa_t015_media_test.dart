@@ -58,10 +58,13 @@ void main() {
         final data = List<int>.generate(100, (i) => i);
         for (final skip in [1, 10, 29, 30, 31, 59, 60, 99]) {
           final http = FakeCdnHttp(
-            (_, _) => _resp([
-              for (var i = 0; i < 100; i += 30)
-                data.sublist(i, min(i + 30, 100)),
-            ], length: 100),
+            (_, _) => _resp(
+              [
+                for (var i = 0; i < 100; i += 30)
+                  data.sublist(i, min(i + 30, 100)),
+              ],
+              length: 100,
+            ),
           );
           final (got, err) = await _collect(
             opener(http).open(_url, fromByte: skip),
@@ -73,14 +76,22 @@ void main() {
       },
     );
 
-    test('200 whose body is exactly fromByte long: file already complete, empty Ok', () async {
-      final http = FakeCdnHttp(
-        (_, _) => _resp([List<int>.filled(10, 1)], length: 10),
-      );
-      final (got, err) = await _collect(opener(http).open(_url, fromByte: 10));
-      expect(got, isEmpty);
-      expect(err, isNull);
-    });
+    test(
+      '200 whose body is exactly fromByte long: file already complete, empty Ok',
+      () async {
+        final http = FakeCdnHttp(
+          (_, _) => _resp(
+            [List<int>.filled(10, 1)],
+            length: 10,
+          ),
+        );
+        final (got, err) = await _collect(
+          opener(http).open(_url, fromByte: 10),
+        );
+        expect(got, isEmpty);
+        expect(err, isNull);
+      },
+    );
 
     test('truncated 200 during the skip phase is an error, never a short '
         'file', () async {
@@ -179,23 +190,30 @@ void main() {
       expect(got, isEmpty);
     });
 
-    test('FIXED (QA-T015-F4): a 206 without Content-Length that ends early is '
-        '`truncated` (the Content-Range total is used)', () async {
-      final http = FakeCdnHttp(
-        (_, _) => _resp(
-          [List<int>.filled(10, 9)],
-          status: 206,
-          range: 'bytes 50-149/150',
-        ),
-      );
-      final (got, err) = await _collect(opener(http).open(_url, fromByte: 50));
-      expect((err! as MediaStreamFailure).message, 'truncated');
-      expect(got, hasLength(10), reason: 'bytes before the end are valid');
-    });
+    test(
+      'FIXED (QA-T015-F4): a 206 without Content-Length that ends early is '
+      '`truncated` (the Content-Range total is used)',
+      () async {
+        final http = FakeCdnHttp(
+          (_, _) => _resp(
+            [List<int>.filled(10, 9)],
+            status: 206,
+            range: 'bytes 50-149/150',
+          ),
+        );
+        final (got, err) = await _collect(
+          opener(http).open(_url, fromByte: 50),
+        );
+        expect((err! as MediaStreamFailure).message, 'truncated');
+        expect(got, hasLength(10), reason: 'bytes before the end are valid');
+      },
+    );
 
     test('a 200 without Content-Length that ends early is undetectable but '
         'must not throw', () async {
-      final http = FakeCdnHttp((_, _) => _resp([List<int>.filled(10, 9)]));
+      final http = FakeCdnHttp(
+        (_, _) => _resp([List<int>.filled(10, 9)]),
+      );
       final (got, err) = await _collect(opener(http).open(_url));
       expect(err, isNull);
       expect(got, hasLength(10));
@@ -204,9 +222,10 @@ void main() {
     test('a connection reset in the middle keeps the bytes already sent '
         'valid and ends with a failure with a fixed reason', () async {
       final http = FakeCdnHttp(
-        (_, _) => _resp([
-          List<int>.filled(10, 1),
-        ], errorAfter: const SocketException('https://secret.example/ZZFAKE')),
+        (_, _) => _resp(
+          [List<int>.filled(10, 1)],
+          errorAfter: const SocketException('https://secret.example/ZZFAKE'),
+        ),
       );
       final (got, err) = await _collect(opener(http).open(_url));
       expect(got, hasLength(10));
@@ -396,8 +415,11 @@ void main() {
       }
 
       final http = FakeCdnHttp(
-        (_, _) =>
-            CdnResponse(status: 200, body: body(), contentLength: 1024 * 65536),
+        (_, _) => CdnResponse(
+          status: 200,
+          body: body(),
+          contentLength: 1024 * 65536,
+        ),
       );
       await for (final c in opener(http).open(_url)) {
         consumed++;

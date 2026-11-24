@@ -368,16 +368,19 @@ void main() {
       expect(await v.cooldownRemaining(), isNull);
     });
 
-    test('parallel verify calls are all counted (no lost update)', () async {
-      final v = vault();
-      await v.setPin('2468');
-      await Future.wait([for (var i = 0; i < 5; i++) v.verify('0000')]);
-      expect(
-        await v.verify('2468'),
-        isA<PinCoolingDown>(),
-        reason: '5 concurrent wrong guesses must trigger the cooldown',
-      );
-    });
+    test(
+      'parallel verify calls are all counted (no lost update)',
+      () async {
+        final v = vault();
+        await v.setPin('2468');
+        await Future.wait([for (var i = 0; i < 5; i++) v.verify('0000')]);
+        expect(
+          await v.verify('2468'),
+          isA<PinCoolingDown>(),
+          reason: '5 concurrent wrong guesses must trigger the cooldown',
+        );
+      },
+    );
   });
 
   test('no log or exception text contains the PIN or hash', () async {

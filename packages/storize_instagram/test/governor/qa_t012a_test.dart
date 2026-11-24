@@ -160,7 +160,9 @@ void main() {
       delay: (d) async {
         seen.add((await repo.read(1))?.holder);
         final lease = await repo.read(1);
-        seen.add(lease!.isHeldAt(time.clock.now()) ? 'held' : 'free');
+        seen.add(
+          lease!.isHeldAt(time.clock.now()) ? 'held' : 'free',
+        );
         await time.delay(d);
       },
       random: Random(1),

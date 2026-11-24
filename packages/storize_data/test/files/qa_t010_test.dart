@@ -29,22 +29,24 @@ void main() {
     // fixtures/jdk_hidden_codepoints.txt was generated with
     // Character.getType(cp) in {CONTROL, FORMAT, LINE_SEPARATOR,
     // PARAGRAPH_SEPARATOR}, the exact test InputValidation.kt applies.
-    final cps = File('test/files/fixtures/jdk_hidden_codepoints.txt')
-        .readAsLinesSync()
-        .where((l) => l.isNotEmpty)
-        .map(int.parse)
-        .toList();
+    final cps = File(
+      'test/files/fixtures/jdk_hidden_codepoints.txt',
+    ).readAsLinesSync().where((l) => l.isNotEmpty).map(int.parse).toList();
 
     test('fixture is non-empty', () => expect(cps.length, greaterThan(200)));
 
-    test('plugin_rules.dart rejects every code point the JDK hides', () {
-      final missed = [
-        for (final cp in cps)
-          if (pluginRejectsDisplayName('a${String.fromCharCode(cp)}b') == null)
-            cp.toRadixString(16),
-      ];
-      expect(missed, isEmpty, reason: 'mirror accepts: $missed');
-    });
+    test(
+      'plugin_rules.dart rejects every code point the JDK hides',
+      () {
+        final missed = [
+          for (final cp in cps)
+            if (pluginRejectsDisplayName('a${String.fromCharCode(cp)}b') ==
+                null)
+              cp.toRadixString(16),
+        ];
+        expect(missed, isEmpty, reason: 'mirror accepts: $missed');
+      },
+    );
 
     test('displayNameFor and relativeDirFor strip every hidden code point', () {
       final bad = <String>[];
@@ -158,10 +160,14 @@ void main() {
       expect(utf8.encode(d).length, greaterThan(255));
     });
 
-    test('DESIRED: name stays within 255 UTF-8 bytes', () {
-      final n = name('日' * 64, id: '本' * 64, slide: 1);
-      expect(utf8.encode(n).length, lessThanOrEqualTo(255));
-    }, skip: 'F-1 minor: displayNameFor caps characters, not bytes');
+    test(
+      'DESIRED: name stays within 255 UTF-8 bytes',
+      () {
+        final n = name('日' * 64, id: '本' * 64, slide: 1);
+        expect(utf8.encode(n).length, lessThanOrEqualTo(255));
+      },
+      skip: 'F-1 minor: displayNameFor caps characters, not bytes',
+    );
   });
 
   group('QA determinism and format', () {
@@ -176,7 +182,12 @@ void main() {
           remoteId: '1',
           ext: 'jpg',
         ),
-        displayNameFor(username: 'u', postedAt: utc, remoteId: '1', ext: 'jpg'),
+        displayNameFor(
+          username: 'u',
+          postedAt: utc,
+          remoteId: '1',
+          ext: 'jpg',
+        ),
       );
     });
 
@@ -204,9 +215,12 @@ void main() {
       expect(name('u', ext: 'tar.gz'), endsWith('.targz'));
     });
 
-    test('sanitising can map two usernames to one name (by design)', () {
-      expect(name('a/b'), name('a_b'));
-    });
+    test(
+      'sanitising can map two usernames to one name (by design)',
+      () {
+        expect(name('a/b'), name('a_b'));
+      },
+    );
   });
 
   group('QA FileMediaCache', () {
@@ -238,7 +252,9 @@ void main() {
       final top = root
           .listSync(recursive: true)
           .whereType<File>()
-          .map((f) => f.path);
+          .map(
+            (f) => f.path,
+          );
       for (final p in top) {
         expect(
           p.startsWith('${root.path}/cache/part/') ||
@@ -366,7 +382,10 @@ void main() {
         expect(p1, p2);
         expect(p2, '${root.path}/files/thumbs/8.webp');
         expect(File(p2).readAsBytesSync(), [2, 2]);
-        expect(Directory('${root.path}/files/thumbs').listSync().length, 1);
+        expect(
+          Directory('${root.path}/files/thumbs').listSync().length,
+          1,
+        );
       },
     );
   });

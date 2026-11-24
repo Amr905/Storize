@@ -16,7 +16,10 @@ String _har(Object? body, {String url = _u}) => jsonEncode({
         'request': {'method': 'GET', 'url': url, 'headers': <Object?>[]},
         'response': {
           'status': 200,
-          'content': {'mimeType': 'application/json', 'text': jsonEncode(body)},
+          'content': {
+            'mimeType': 'application/json',
+            'text': jsonEncode(body),
+          },
         },
       },
     ],
@@ -162,13 +165,16 @@ void main() {
   });
 
   group('2 request host', () {
-    test('username subdomain of instagram.com is copied verbatim (QA-25)', () {
-      final out = _out({
-        'status': 'ok',
-      }, url: 'https://zzfakenour.instagram.com/api/v1/x/');
-      expect(out, isNotNull);
-      expect(out!.toLowerCase(), isNot(contains('zzfake')));
-    });
+    test(
+      'username subdomain of instagram.com is copied verbatim (QA-25)',
+      () {
+        final out = _out({
+          'status': 'ok',
+        }, url: 'https://zzfakenour.instagram.com/api/v1/x/');
+        expect(out, isNotNull);
+        expect(out!.toLowerCase(), isNot(contains('zzfake')));
+      },
+    );
     test('userinfo and port are not copied', () {
       final out = _out({
         'status': 'ok',

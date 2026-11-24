@@ -137,10 +137,9 @@ void main() {
   test('thumbnail write is atomic: no temp file is left', () async {
     await cache.writeThumbnail(9, List.filled(1000, 1));
     await cache.writeThumbnail(9, [2]);
-    final names = Directory('${filesDir.path}/thumbs')
-        .listSync()
-        .map((e) => e.uri.pathSegments.last)
-        .toList();
+    final names = Directory(
+      '${filesDir.path}/thumbs',
+    ).listSync().map((e) => e.uri.pathSegments.last).toList();
     expect(names, ['9.webp']);
   });
 

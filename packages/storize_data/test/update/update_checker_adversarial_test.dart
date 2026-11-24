@@ -367,7 +367,9 @@ void main() {
       () async {
         // Only possible when min-supported > tag and tag <= current, i.e. a
         // release-notes typo. Nothing newer exists to install.
-        final r = await _run(_rel(tag: 'v0.1.0', body: 'min-supported: 0.9.0'));
+        final r = await _run(
+          _rel(tag: 'v0.1.0', body: 'min-supported: 0.9.0'),
+        );
         expect(r, same(UpdateState.none));
       },
     );

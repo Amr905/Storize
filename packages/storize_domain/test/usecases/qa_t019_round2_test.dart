@@ -158,7 +158,11 @@ void main() {
     });
 
     test('future-dated items do not bypass rules 1 and 3', () async {
-      await h.addContent(t, remoteId: 'ok', postedAt: now.subtract(day * 60));
+      await h.addContent(
+        t,
+        remoteId: 'ok',
+        postedAt: now.subtract(day * 60),
+      );
       final run = await h.checkRuns.start(
         scope: CheckScope.stories,
         trigger: CheckTrigger.periodic,
@@ -216,9 +220,10 @@ void main() {
       expect(r.targetRemoved, isFalse);
       expect(await h.content.getById(other), isNotNull);
       expect(await h.content.getById(bad), isNull);
-      expect((await h.content.listByTarget(t.id)).map((i) => i.content.id), [
-        other,
-      ]);
+      expect(
+        (await h.content.listByTarget(t.id)).map((i) => i.content.id),
+        [other],
+      );
       expect(h.gallery.files, hasLength(1));
     });
 

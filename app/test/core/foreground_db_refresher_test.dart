@@ -34,7 +34,9 @@ void main() {
 
   testWidgets('does nothing when not wired', (t) async {
     await t.pumpWidget(
-      const ProviderScope(child: ForegroundDbRefresher(child: SizedBox())),
+      const ProviderScope(
+        child: ForegroundDbRefresher(child: SizedBox()),
+      ),
     );
     await t.pump(const Duration(minutes: 1));
   });

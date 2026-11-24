@@ -94,15 +94,21 @@ void main() {
       'GAP (minor): doubly escaped JSON {\\\\"sessionid\\\\":...}',
       () => _gone(r'{\\"sessionid\\":\\"' + _s1 + r'\\"}'),
     );
-    test('GAP (minor): zero-width char inside key / fullwidth key', () {
-      _gone('sessionid\u200b=$_s1');
-      _gone('ｓｅｓｓｉｏｎｉｄ=$_s1');
-    });
-    test('DOCUMENTED LIMIT: base64 of a cookie cannot be recognised', () {
-      // base64('sessionid=ZZQASECRETONE9f8e7d')
-      const b64 = 'c2Vzc2lvbmlkPVpaUUFTRUNSRVRPTkU5ZjhlN2Q=';
-      expect(Redactor.redact('blob $b64'), contains(b64));
-    });
+    test(
+      'GAP (minor): zero-width char inside key / fullwidth key',
+      () {
+        _gone('sessionid\u200b=$_s1');
+        _gone('ｓｅｓｓｉｏｎｉｄ=$_s1');
+      },
+    );
+    test(
+      'DOCUMENTED LIMIT: base64 of a cookie cannot be recognised',
+      () {
+        // base64('sessionid=ZZQASECRETONE9f8e7d')
+        const b64 = 'c2Vzc2lvbmlkPVpaUUFTRUNSRVRPTkU5ZjhlN2Q=';
+        expect(Redactor.redact('blob $b64'), contains(b64));
+      },
+    );
   });
 
   group('CDN URLs', () {
@@ -252,17 +258,23 @@ void main() {
       expect(Redactor.redact('{"pin":1234}'), isNot(contains('1234')));
     });
     test('v1: hash', () => _gone('v1:$_s1:$_s2'));
-    test('GAP (minor): V1: uppercase prefix and key spellings pin-hash, pin_code, userPin, pincode', () {
-      _gone('V1:$_s1');
-      _gone('pin-hash: $_s1');
-      _gone('pin_code: $_s1');
-      _gone('userPin=$_s1');
-      _gone('pincode=$_s1');
-    });
-    test('GAP (minor): session_id / session-id / sessionId spellings', () {
-      _gone('session_id=$_s1');
-      _gone('session-id=$_s1');
-    });
+    test(
+      'GAP (minor): V1: uppercase prefix and key spellings pin-hash, pin_code, userPin, pincode',
+      () {
+        _gone('V1:$_s1');
+        _gone('pin-hash: $_s1');
+        _gone('pin_code: $_s1');
+        _gone('userPin=$_s1');
+        _gone('pincode=$_s1');
+      },
+    );
+    test(
+      'GAP (minor): session_id / session-id / sessionId spellings',
+      () {
+        _gone('session_id=$_s1');
+        _gone('session-id=$_s1');
+      },
+    );
     test(
       'GAP (minor): bare `sessionid <value>` with no separator',
       () => _gone('sessionid $_s1'),

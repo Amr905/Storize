@@ -194,7 +194,13 @@ void main() {
   });
 
   group('QA2-F1 no needed query is blocked', () {
-    const kinds = ['stories', 'profile', 'posts', 'timeline', 'media_info'];
+    const kinds = [
+      'stories',
+      'profile',
+      'posts',
+      'timeline',
+      'media_info',
+    ];
     const shapes = ['string', 'formdata', 'request_obj', 'xhr', 'typed_array'];
     test('reel, profile, posts, timeline, media/info in 5 shapes each', () {
       for (final k in kinds) {

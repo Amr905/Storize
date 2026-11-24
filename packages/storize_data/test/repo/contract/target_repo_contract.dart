@@ -58,7 +58,10 @@ void runTargetRepoContract(RepoHarness Function() create) {
 
     test('getByRemoteUserId finds the row or returns null', () async {
       final stored = await repo.insert(aTarget());
-      expect(await repo.getByRemoteUserId(PlatformId.instagram, 'u-1'), stored);
+      expect(
+        await repo.getByRemoteUserId(PlatformId.instagram, 'u-1'),
+        stored,
+      );
       expect(await repo.getByRemoteUserId(PlatformId.instagram, 'zz'), isNull);
     });
 
@@ -155,7 +158,9 @@ void runTargetRepoContract(RepoHarness Function() create) {
     );
 
     test('watchAll orders by username (case-insensitive), then id', () async {
-      final b = await repo.insert(aTarget(remoteUserId: '1', username: 'bob'));
+      final b = await repo.insert(
+        aTarget(remoteUserId: '1', username: 'bob'),
+      );
       final upperA = await repo.insert(
         aTarget(remoteUserId: '2', username: 'Alice'),
       );
@@ -203,13 +208,21 @@ void runTargetRepoContract(RepoHarness Function() create) {
         aTarget(remoteUserId: '1', username: 'a'),
       );
       final old = await repo.insert(
-        aTarget(remoteUserId: '2', username: 'b', lastStoriesCheckAt: at(5)),
+        aTarget(
+          remoteUserId: '2',
+          username: 'b',
+          lastStoriesCheckAt: at(5),
+        ),
       );
       final never1 = await repo.insert(
         aTarget(remoteUserId: '3', username: 'c'),
       );
       final recent = await repo.insert(
-        aTarget(remoteUserId: '4', username: 'd', lastStoriesCheckAt: at(9)),
+        aTarget(
+          remoteUserId: '4',
+          username: 'd',
+          lastStoriesCheckAt: at(9),
+        ),
       );
       await repo.insert(
         aTarget(
@@ -280,14 +293,14 @@ void runTargetRepoContract(RepoHarness Function() create) {
             lastPostsCheckAt: at(1),
           ),
         );
-        expect((await repo.listActive(CheckScope.stories)).map((t) => t.id), [
-          a.id,
-          b.id,
-        ]);
-        expect((await repo.listActive(CheckScope.posts)).map((t) => t.id), [
-          b.id,
-          a.id,
-        ]);
+        expect(
+          (await repo.listActive(CheckScope.stories)).map((t) => t.id),
+          [a.id, b.id],
+        );
+        expect(
+          (await repo.listActive(CheckScope.posts)).map((t) => t.id),
+          [b.id, a.id],
+        );
       },
     );
 
@@ -302,12 +315,15 @@ void runTargetRepoContract(RepoHarness Function() create) {
         ),
       );
       await repo.insert(
-        aTarget(remoteUserId: '3', status: TargetStatus.notVisible),
+        aTarget(
+          remoteUserId: '3',
+          status: TargetStatus.notVisible,
+        ),
       );
-      expect((await repo.listActive(CheckScope.all)).map((t) => t.id), [
-        a.id,
-        b.id,
-      ]);
+      expect(
+        (await repo.listActive(CheckScope.all)).map((t) => t.id),
+        [a.id, b.id],
+      );
     });
 
     test('empty repo gives an empty list', () async {

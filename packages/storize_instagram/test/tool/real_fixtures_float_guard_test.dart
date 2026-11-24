@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 const _root = 'test/fixtures/real';
 
 Iterable<File> _files(String ext) =>
-    Directory(_root)
+    Directory(
+          _root,
+        )
         .listSync(recursive: true)
         .whereType<File>()
         .where((f) => f.path.endsWith(ext));
@@ -57,9 +59,9 @@ void main() {
           expect(loc, isFalse, reason: 'float under location: ${f.path} $path');
         }
       });
-      locationObjects += RegExp('Location')
-          .allMatches(f.readAsStringSync())
-          .length;
+      locationObjects += RegExp(
+        'Location',
+      ).allMatches(f.readAsStringSync()).length;
     }
     expect(floats, greaterThan(0), reason: 'guard needs some floats to check');
     expect(

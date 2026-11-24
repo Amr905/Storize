@@ -16,7 +16,10 @@ String _har(Object? body, {String url = _u}) => jsonEncode({
         'request': {'method': 'GET', 'url': url, 'headers': <Object?>[]},
         'response': {
           'status': 200,
-          'content': {'mimeType': 'application/json', 'text': jsonEncode(body)},
+          'content': {
+            'mimeType': 'application/json',
+            'text': jsonEncode(body),
+          },
         },
       },
     ],
@@ -109,18 +112,25 @@ void main() {
           '$g?doc_id=ZZFAKEabcdefghijKLMNOPQRSTUVWXYZ0123456789'
           '&query_hash=sessionid%3Dzzfake5',
     );
-    keyNoLeak('cookie-like doc_id / query_hash', {
-      'a': 1,
-    }, url: '$g?doc_id=sessionid=zzfake6&query_hash=csrftoken%3Dzzfake7');
-    keyNoLeak('doc_id with an email', {
-      'a': 1,
-    }, url: '$g?doc_id=zzfake%40x.com');
-    test('QA-11 doc_id/query_hash must be digits or hex only', () {
-      final out = _out({
-        'a': 1,
-      }, url: '$g?doc_id=zzfakeuser&query_hash=zzfake2');
-      if (out != null) expect(out.toLowerCase(), isNot(contains('zzfake')));
-    });
+    keyNoLeak(
+      'cookie-like doc_id / query_hash',
+      {'a': 1},
+      url: '$g?doc_id=sessionid=zzfake6&query_hash=csrftoken%3Dzzfake7',
+    );
+    keyNoLeak(
+      'doc_id with an email',
+      {'a': 1},
+      url: '$g?doc_id=zzfake%40x.com',
+    );
+    test(
+      'QA-11 doc_id/query_hash must be digits or hex only',
+      () {
+        final out = _out({
+          'a': 1,
+        }, url: '$g?doc_id=zzfakeuser&query_hash=zzfake2');
+        if (out != null) expect(out.toLowerCase(), isNot(contains('zzfake')));
+      },
+    );
   });
 
   group('URL host placeholder cannot carry identity', () {

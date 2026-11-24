@@ -12,7 +12,11 @@ import 'package:storize_domain/storize_domain.dart';
 /// ([runGuarded], for the background dispatcher of T-021).
 final class CrashRecorder {
   /// Creates a recorder.
-  CrashRecorder({required this.log, required this.marker, required this.clock});
+  CrashRecorder({
+    required this.log,
+    required this.marker,
+    required this.clock,
+  });
 
   /// Where errors are logged (redacted by the implementation).
   final DiagnosticLog log;

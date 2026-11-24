@@ -337,7 +337,10 @@ void main() {
         err = x;
       }
       expect(err, isA<StateError>());
-      expect((await e.repo.read(1))!.isHeldAt(e.time.clock.now()), isFalse);
+      expect(
+        (await e.repo.read(1))!.isHeldAt(e.time.clock.now()),
+        isFalse,
+      );
     });
 
     test('(d) reportRateLimited in B while A runs a call', () async {
@@ -418,22 +421,25 @@ void main() {
       },
     );
 
-    test('(e) clock goes back 1 h after a call: waits stay bounded', () async {
-      final e = _Env();
-      final g = e.gov('A');
-      await e.time.drive(
-        g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
-      );
-      e.time.clock.advance(const Duration(minutes: -60));
-      final t0 = e.time.clock.now();
-      await e.time.drive(
-        g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
-      );
-      final waited = e.time.clock.now().difference(t0);
-      print('ATTACK e (back 1 h): next call waited $waited');
-      expect(waited.isNegative, isFalse);
-      expect(waited, lessThan(const Duration(minutes: 1)));
-    });
+    test(
+      '(e) clock goes back 1 h after a call: waits stay bounded',
+      () async {
+        final e = _Env();
+        final g = e.gov('A');
+        await e.time.drive(
+          g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
+        );
+        e.time.clock.advance(const Duration(minutes: -60));
+        final t0 = e.time.clock.now();
+        await e.time.drive(
+          g.run(accountId: 1, cost: RequestCost.api, call: () async => 1),
+        );
+        final waited = e.time.clock.now().difference(t0);
+        print('ATTACK e (back 1 h): next call waited $waited');
+        expect(waited.isNegative, isFalse);
+        expect(waited, lessThan(const Duration(minutes: 1)));
+      },
+    );
 
     test(
       '(e2) clock goes back 1 day, other isolate B (repo applies T-012a rule)',
@@ -510,7 +516,9 @@ void main() {
       );
       final until = await g.pausedUntil(1);
       final m = await g.effectiveIntervalMultiplier(1);
-      print('ATTACK f: pause=${until!.difference(e.time.clock.now())} mult=$m');
+      print(
+        'ATTACK f: pause=${until!.difference(e.time.clock.now())} mult=$m',
+      );
       expect(until.difference(e.time.clock.now()), const Duration(hours: 24));
     });
 
@@ -696,30 +704,33 @@ void main() {
       expect(f.retryAfter, lessThanOrEqualTo(const Duration(minutes: 5)));
     });
 
-    test('feeding a handled failure back is ignored (QA-F6)', () async {
-      // If an adapter catches GovernorPaused, maps it to Err(RateLimited) and
-      // that Err flows back through a SECOND run(), the pause is re-applied.
-      final e = _Env();
-      final g = e.gov('A');
-      await e.time.drive(
-        g.run<Result<int>>(
-          accountId: 1,
-          cost: RequestCost.api,
-          call: () async => const Err<int>(RateLimited(Duration(minutes: 5))),
-        ),
-      );
-      final until1 = await g.pausedUntil(1);
-      e.time.clock.advance(const Duration(minutes: 3));
-      // Misuse: report the mapped failure again.
-      await e.time.drive(
-        g.reportRateLimited(1, const RateLimited(Duration(minutes: 2))),
-      );
-      final until2 = await g.pausedUntil(1);
-      final mult = await g.effectiveIntervalMultiplier(1);
-      print('MISUSE: until1=$until1 until2=$until2 mult=$mult');
-      expect(mult, 2); // the double report is ignored (QA-F6)
-      expect(until2, until1);
-    });
+    test(
+      'feeding a handled failure back is ignored (QA-F6)',
+      () async {
+        // If an adapter catches GovernorPaused, maps it to Err(RateLimited) and
+        // that Err flows back through a SECOND run(), the pause is re-applied.
+        final e = _Env();
+        final g = e.gov('A');
+        await e.time.drive(
+          g.run<Result<int>>(
+            accountId: 1,
+            cost: RequestCost.api,
+            call: () async => const Err<int>(RateLimited(Duration(minutes: 5))),
+          ),
+        );
+        final until1 = await g.pausedUntil(1);
+        e.time.clock.advance(const Duration(minutes: 3));
+        // Misuse: report the mapped failure again.
+        await e.time.drive(
+          g.reportRateLimited(1, const RateLimited(Duration(minutes: 2))),
+        );
+        final until2 = await g.pausedUntil(1);
+        final mult = await g.effectiveIntervalMultiplier(1);
+        print('MISUSE: until1=$until1 until2=$until2 mult=$mult');
+        expect(mult, 2); // the double report is ignored (QA-F6)
+        expect(until2, until1);
+      },
+    );
 
     test('canAfford for carry-over', () async {
       final e = _Env();

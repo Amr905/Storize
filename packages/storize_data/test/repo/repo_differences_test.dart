@@ -108,7 +108,11 @@ void _differences(RepoHarness Function() create, {required bool isDrift}) {
       startedAt: at(1),
     );
     for (final r in [first, second]) {
-      await h.checkRuns.finish(r.id, finishedAt: at(2), result: CheckResult.ok);
+      await h.checkRuns.finish(
+        r.id,
+        finishedAt: at(2),
+        result: CheckResult.ok,
+      );
     }
     expect(
       (await h.checkRuns.lastFinished(CheckScope.stories))!.id,

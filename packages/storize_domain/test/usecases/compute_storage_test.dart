@@ -32,9 +32,10 @@ void main() {
   late Target t2;
 
   Future<void> addDone(Target t, String remoteId, int size) async {
-    await content.insertIfNew(s.content(targetId: t.id, remoteId: remoteId), [
-      s.media(status: MediaFileStatus.done, sizeBytes: size),
-    ]);
+    await content.insertIfNew(
+      s.content(targetId: t.id, remoteId: remoteId),
+      [s.media(status: MediaFileStatus.done, sizeBytes: size)],
+    );
   }
 
   setUp(() async {
@@ -59,9 +60,10 @@ void main() {
   });
 
   test('pending media and targets without files are not counted', () async {
-    await content.insertIfNew(s.content(targetId: t1.id, remoteId: 'p'), [
-      s.media(sizeBytes: 999),
-    ]);
+    await content.insertIfNew(
+      s.content(targetId: t1.id, remoteId: 'p'),
+      [s.media(sizeBytes: 999)],
+    );
     final report = await ComputeStorage(
       content: content,
       storage: FakeStorageInfo(),
@@ -136,6 +138,9 @@ void main() {
       content: content,
       storage: FakeStorageInfo(),
     ).call();
-    expect(() => report.bytesByTarget[1] = 1, throwsUnsupportedError);
+    expect(
+      () => report.bytesByTarget[1] = 1,
+      throwsUnsupportedError,
+    );
   });
 }

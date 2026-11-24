@@ -158,7 +158,9 @@ void main() {
 
     test('the exception carries one problem per broken rule', () async {
       final error = await repo
-          .update((c) => c.copyWith(storyIntervalMin: 10, retentionDays: -1))
+          .update(
+            (c) => c.copyWith(storyIntervalMin: 10, retentionDays: -1),
+          )
           .then<Object?>((_) => null)
           .catchError((Object e) => e);
 
@@ -172,7 +174,9 @@ void main() {
         await repo.update((c) => c.copyWith(wifiOnly: true));
 
         await expectLater(
-          repo.update((c) => c.copyWith(wifiOnly: false, storyIntervalMin: 10)),
+          repo.update(
+            (c) => c.copyWith(wifiOnly: false, storyIntervalMin: 10),
+          ),
           throwsA(isA<SettingsValidationException>()),
         );
 

@@ -81,7 +81,10 @@ void main() {
     test('through the extractor: SessionInvalid, nothing sent, no token '
         'spent, nothing logged, no echo', () async {
       final rig = Rig(responder: graphqlResponder(), withSession: false);
-      await rig.sessions.save(1, _blob(extra: {'ig_did': 'ZZFAKE_é_value'}));
+      await rig.sessions.save(
+        1,
+        _blob(extra: {'ig_did': 'ZZFAKE_é_value'}),
+      );
       final r = await rig.run(
         rig.extractor.fetchNewPosts('user_1', DateTime(2000)),
       );
@@ -118,7 +121,10 @@ void main() {
       expect(clampedRetryAfter(86401), const Duration(hours: 24));
       expect(clampedRetryAfter(10000000), const Duration(hours: 24));
       expect(clampedRetryAfter(18446744073769), const Duration(hours: 24));
-      expect(clampedRetryAfter(9223372036854775807), const Duration(hours: 24));
+      expect(
+        clampedRetryAfter(9223372036854775807),
+        const Duration(hours: 24),
+      );
       expect(clampedRetryAfter(-1), isNull);
       expect(clampedRetryAfter(-9223372036854775808), isNull);
     });

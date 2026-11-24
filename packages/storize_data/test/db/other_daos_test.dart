@@ -256,7 +256,10 @@ void main() {
       expect(last.newItems, 2);
       expect(last.errorCode, 'e1');
       expect(last.id, isNot(unfinished));
-      expect((await db.checkRunDao.lastFinished(CheckScope.posts))!.id, posts);
+      expect(
+        (await db.checkRunDao.lastFinished(CheckScope.posts))!.id,
+        posts,
+      );
       expect(
         await db.checkRunDao.finish(
           999,

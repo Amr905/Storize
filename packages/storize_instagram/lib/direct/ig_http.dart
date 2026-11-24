@@ -44,8 +44,11 @@ final class IgRequest {
     required String path,
     required Map<String, String> form,
     String host = 'www.instagram.com',
-  }) =>
-      IgRequest(method: IgMethod.post, uri: Uri.https(host, path), form: form);
+  }) => IgRequest(
+    method: IgMethod.post,
+    uri: Uri.https(host, path),
+    form: form,
+  );
 
   /// The verb.
   final IgMethod method;

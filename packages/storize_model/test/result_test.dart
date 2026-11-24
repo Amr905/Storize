@@ -29,7 +29,10 @@ void main() {
     });
 
     test('Ok is not equal to Err', () {
-      expect(const Ok<int>(1), isNot(const Err<int>(NetworkFailure())));
+      expect(
+        const Ok<int>(1),
+        isNot(const Err<int>(NetworkFailure())),
+      );
     });
   });
 
@@ -78,8 +81,10 @@ void main() {
     });
 
     test('when calls the matching branch', () {
-      String fold(Result<int> r) =>
-          r.when(ok: (v) => 'value $v', err: (f) => 'failure ${f.runtimeType}');
+      String fold(Result<int> r) => r.when(
+        ok: (v) => 'value $v',
+        err: (f) => 'failure ${f.runtimeType}',
+      );
 
       expect(fold(const Ok(3)), 'value 3');
       expect(fold(const Err(AccountRestricted())), 'failure AccountRestricted');

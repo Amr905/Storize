@@ -45,9 +45,10 @@ class TargetsDao extends DatabaseAccessor<StorizeDatabase>
 
   /// Writes every column of [target] (full replace by id). Returns rows
   /// changed.
-  Future<int> updateRow(TargetRow target) => (update(
-    targets,
-  )..where((t) => t.id.equals(target.id))).write(target.toCompanion(false));
+  Future<int> updateRow(TargetRow target) =>
+      (update(targets)..where((t) => t.id.equals(target.id))).write(
+        target.toCompanion(false),
+      );
 
   /// Writes only the present fields of [changes]. Use this for short updates
   /// such as the watermark or last-checked time. Returns rows changed.
