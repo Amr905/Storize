@@ -471,12 +471,15 @@ final class DirectExtractor {
   ) async {
     final session = await IgSession.load(_sessions, accountId, appId: appId);
     final Result<T> result;
+    final trace = _ReplyTrace();
     if (session == null) {
       result = const Err(SessionInvalid(SessionReason.loginRequired));
     } else {
       final headers = session.headers();
       try {
-        result = await body((request) => _governed(request, headers));
+        result = await body(
+          (request) => _governed(request, headers, name, trace),
+        );
       } on SchemaException catch (e) {
         _log?.log(LogLevel.warn, 'direct', 'op=$name schema_changed');
         return Err(e.toFailure());
@@ -491,7 +494,7 @@ final class DirectExtractor {
         return const Err(UnknownFailure(null, 'unexpected_error'));
       }
     }
-    _logResult(name, result);
+    _logResult(name, result, trace);
     return result;
   }
 
@@ -501,6 +504,8 @@ final class DirectExtractor {
   Future<Result<Map<String, Object?>>> _governed(
     IgRequest request,
     Map<String, String> headers,
+    String op,
+    _ReplyTrace trace,
   ) async {
     final authed = request.withHeaders(headers);
     try {
@@ -515,6 +520,23 @@ final class DirectExtractor {
             return const Err(NetworkFailure());
           }
           final failure = classifier.classify(reply);
+          trace.note(reply);
+          if (failure is RateLimited) {
+            // The governor starts a backoff from this result. Secret-free:
+            // op, transport, status and the cleaned reason only.
+            final reason = FailureClassifier.reasonOf(reply.json);
+            final after = failure.retryAfter;
+            final hint = reason.isEmpty ? '' : ' hint=$reason';
+            final retry = after == null
+                ? ''
+                : ' retry_after_s=${after.inSeconds}';
+            _log?.log(
+              LogLevel.info,
+              'direct',
+              'op=$op via=${transport.name} rate_limited '
+                  'status=${reply.status}$hint$retry',
+            );
+          }
           if (failure != null) return Err(failure);
           return Ok(reply.json! as Map<String, Object?>);
         },
@@ -535,16 +557,16 @@ final class DirectExtractor {
     }
   }
 
-  void _logResult<T>(String name, Result<T> result) {
+  void _logResult<T>(String name, Result<T> result, _ReplyTrace trace) {
     final failure = result.failureOrNull;
     if (failure == null) {
       _log?.log(LogLevel.info, 'direct', 'op=$name via=${transport.name} ok');
       return;
     }
     final detail = switch (failure) {
-      SchemaChanged(:final where) => ' where=$where',
+      SchemaChanged(:final where) => ' where=$where${trace.render()}',
       UnknownFailure(:final code, :final message) =>
-        ' code=$code message=$message',
+        ' code=$code message=$message${trace.render()}',
       _ => '',
     };
     _log?.log(
@@ -552,5 +574,34 @@ final class DirectExtractor {
       'direct',
       'op=$name via=${transport.name} failure=${failure.runtimeType}$detail',
     );
+  }
+}
+
+/// The status and top-level key names of the latest reply of one operation,
+/// for the log line of a `SchemaChanged` or `UnknownFailure`. Key names only
+/// (at most [maxKeys], lowercase letters and underscores): never a value, an
+/// id, a username or a URL.
+final class _ReplyTrace {
+  static const int maxKeys = 8;
+  static final RegExp _plainName = RegExp(r'^[a-z_]{1,32}$');
+
+  int? _status;
+  List<String> _keys = const [];
+
+  void note(IgReply reply) {
+    _status = reply.status;
+    final json = reply.json;
+    _keys = json is Map<String, Object?>
+        ? [
+            for (final k in json.keys)
+              if (_plainName.hasMatch(k)) k,
+          ].take(maxKeys).toList()
+        : const [];
+  }
+
+  String render() {
+    final status = _status;
+    if (status == null) return '';
+    return ' status=$status keys=[${_keys.join(',')}]';
   }
 }

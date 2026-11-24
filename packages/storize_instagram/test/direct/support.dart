@@ -187,3 +187,16 @@ final class Rig {
       '${log.entries.map((e) => '$e ${e.error ?? ''}').join('\n')}\n'
       '${governorLogs.join('\n')}';
 }
+
+/// Every op of `IgTransport`: what a probe that proved all REST candidates
+/// would allow (T-045 gates REST by op).
+const Set<String> allRestOps = {
+  'userByUsername',
+  'userById',
+  'storyReels',
+  'timeline',
+  'timelinePage',
+  'highlights',
+  'highlightItems',
+  'viewer',
+};

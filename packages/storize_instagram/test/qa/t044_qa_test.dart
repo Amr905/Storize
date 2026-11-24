@@ -12,6 +12,7 @@ Rig _r(Responder responder, {bool docId = false}) => Rig(
   transport: FallbackTransport(
     docIds: FakeDocIds(missing: docId ? const {} : GraphqlQuery.values.toSet()),
     tokens: FakeTokens(),
+    restOps: allRestOps,
   ),
   responder: responder,
 );

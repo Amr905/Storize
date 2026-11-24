@@ -53,3 +53,9 @@ abstract interface class PageTokenProvider {
   /// available. The values are secret: never log them.
   Future<Map<String, String>?> tokens();
 }
+
+/// A [DocIdResolver] that can drop a `doc_id` that proved stale.
+abstract interface class DocIdForgetter implements DocIdResolver {
+  /// Forgets the `doc_id` of [query] (memory and store).
+  Future<void> forget(GraphqlQuery query);
+}

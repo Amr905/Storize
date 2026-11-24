@@ -128,6 +128,7 @@ Rig _fallbackRig({
         missing: docId ? const {} : GraphqlQuery.values.toSet(),
       ),
       tokens: FakeTokens(available: tokens),
+      restOps: allRestOps,
     ),
     responder: responder ?? _rest,
   );

@@ -652,6 +652,13 @@ final class PageExtractor {
             _navigated(plan, event, finish, setPending);
           case HttpErrorEvent():
             final f = classifier.classify(IgReply(status: event.status));
+            if (f is RateLimited) {
+              _log?.log(
+                LogLevel.info,
+                'page',
+                'op=$op via=page rate_limited status=${event.status}',
+              );
+            }
             if (f != null) finish(Err(f));
           case LoadErrorEvent():
             finish(const Err(NetworkFailure()));

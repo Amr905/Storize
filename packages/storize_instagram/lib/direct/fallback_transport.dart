@@ -6,15 +6,20 @@ import 'package:storize_instagram/direct/rest_transport.dart';
 import 'package:storize_instagram/mapper/mapper.dart';
 import 'package:storize_model/storize_model.dart';
 
-/// Direct mode that uses GraphQL when it can and REST otherwise, per call
-/// (T-044, ADR-0003 amendment).
+/// Direct mode: GraphQL when it can run, REST only where a probe proved it
+/// (T-044, gated by T-045; ADR-0003 amendment).
 ///
 /// - GraphQL is tried first only when the `doc_id` of every query the op
-///   needs and the page tokens are available right now. Otherwise the op goes
-///   straight to REST (no wasted request).
-/// - A GraphQL `SchemaChanged` is retried **once** on REST.
-/// - What REST answers is returned as it is, so a `SchemaChanged` or
-///   `UnknownFailure` still lets the platform fall back to page mode.
+///   needs and the page tokens are available right now (they may come from
+///   the persisted `PageDiscovery`).
+/// - Without them, or when GraphQL answers `SchemaChanged`, REST is used
+///   **only** for ops in [restOps] (what a probe report proved). Otherwise
+///   the `SchemaChanged` is returned **without any request**, so the
+///   platform uses page mode in the foreground and skips cleanly in the
+///   background. The device showed an unproven REST route answering 404 and a
+///   "please wait" soft block, so unproven REST is never tried.
+/// - A GraphQL `SchemaChanged` drops the `doc_id`s of that op from the
+///   [docIds] store when it can forget them (a stale `doc_id`).
 /// - Every other failure (rate limit, session, private, not found, network)
 ///   is returned as it is, with no retry on the other transport.
 ///
@@ -27,6 +32,7 @@ final class FallbackTransport implements IgTransport {
     required this.tokens,
     GraphqlTransport? graphql,
     this.rest = const RestTransport(),
+    this.restOps = const {},
     this.log,
   }) : graphql = graphql ?? GraphqlTransport(docIds: docIds, tokens: tokens);
 
@@ -42,6 +48,10 @@ final class FallbackTransport implements IgTransport {
   /// The REST half.
   final RestTransport rest;
 
+  /// The ops (method names of [IgTransport]) whose REST route a probe proved.
+  /// Empty by default: REST is not used.
+  final Set<String> restOps;
+
   /// Where the fallback decisions are logged (types only), or null.
   final DiagnosticLog? log;
 
@@ -51,12 +61,25 @@ final class FallbackTransport implements IgTransport {
   @override
   String get name => _last;
 
-  Future<bool> _graphqlReady(List<GraphqlQuery> queries) async {
+  /// The `where` of the first missing piece, or null when GraphQL can run.
+  Future<String?> _missing(List<GraphqlQuery> queries) async {
     for (final q in queries) {
       final id = await docIds.docIdFor(q);
-      if (id == null || id.isEmpty) return false;
+      if (id == null || id.isEmpty) return 'doc_id:${q.friendlyName}';
     }
-    return await tokens.tokens() != null;
+    return await tokens.tokens() == null ? 'page_tokens' : null;
+  }
+
+  Future<void> _forget(List<GraphqlQuery> queries) async {
+    final resolver = docIds;
+    if (resolver is! DocIdForgetter) return;
+    for (final q in queries) {
+      try {
+        await resolver.forget(q);
+      } on Object {
+        // Only a clean-up.
+      }
+    }
   }
 
   Future<Result<T>> _run<T>(
@@ -64,23 +87,40 @@ final class FallbackTransport implements IgTransport {
     List<GraphqlQuery> queries,
     Future<Result<T>> Function(IgTransport t) body,
   ) async {
-    if (await _graphqlReady(queries)) {
+    final missing = await _missing(queries);
+    final restAllowed = restOps.contains(op);
+    if (missing == null) {
+      _last = graphql.name;
       final first = await body(graphql);
       if (first is! Err<T> || first.failure is! SchemaChanged) {
         _last = graphql.name;
         return first;
       }
+      final where = (first.failure as SchemaChanged).where;
+      if (!where.startsWith('doc_id:') && where != 'page_tokens') {
+        await _forget(queries);
+      }
       log?.log(
         LogLevel.info,
         'direct',
-        'op=$op via=graphql failure=SchemaChanged next=rest',
+        'op=$op via=graphql failure=SchemaChanged '
+            'next=${restAllowed ? 'rest' : 'none'}',
       );
+      if (!restAllowed) {
+        _last = graphql.name;
+        return first;
+      }
     } else {
       log?.log(
         LogLevel.info,
         'direct',
-        'op=$op via=graphql unavailable next=rest',
+        'op=$op via=graphql unavailable next=${restAllowed ? 'rest' : 'none'}',
       );
+      if (!restAllowed) {
+        // No request: the platform decides (page mode or a clean skip).
+        _last = graphql.name;
+        return Err<T>(SchemaChanged(missing));
+      }
     }
     _last = rest.name;
     return body(rest);
