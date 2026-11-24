@@ -249,3 +249,19 @@ Found on device (2026-11-24): `PageDiscovery` (`doc_id`s and page tokens) lives 
 The `seen` endpoints are never called. Logs carry the op, the transport and the failure type only.
 
 **Risks:** the post-page and tray shapes are unobserved; a wrong shape is `SchemaChanged` (page mode). `users/{id}/info` and `current_user` may answer 400 as `current_user` did.
+
+## v0.4 Persisted discovery, REST gated (T-045)
+
+Device evidence after T-044 (2026-11-24): `storyReels via=graphql unavailable next=rest`, then `fetchStories via=rest failure=SchemaChanged where=response`, `fetchNewPosts via=rest failure=TargetNotFound` (`feed/user/{id}` answered 404). Shortly after, adding an account showed "Instagram limit reached, try again in 15 min" (`GovernorConfig.defaultRetryAfter`): Instagram answers unproven web REST calls with 429 or a JSON "Please wait a few minutes" soft block. GraphQL through the real page is proven. So REST is demoted and discovery is shared.
+
+**Order per call (`FallbackTransport`) now:**
+1. GraphQL when the `doc_id` of every query the op needs and the page tokens are available, from memory or from the persisted discovery.
+2. Otherwise `SchemaChanged('doc_id:<name>')` or `SchemaChanged('page_tokens')` **with no request**: the platform runs page mode in the foreground and skips cleanly in the background (no token spent).
+3. REST only for ops that a probe report proved (`provenRestOps`: IG-1 `userByUsername`, IG-2 `storyReels` and `highlightItems`, IG-3 `userById`, IG-4 `viewer`, IG-5 `timeline` and `timelinePage`; the highlights tray has no candidate and is never proven). Exception: the `verifySession` bootstrap (`current_user`, then `web_form_data`) is unchanged.
+4. A GraphQL `SchemaChanged` (a stale `doc_id`) drops the `doc_id`s of that op from the store and is returned (REST only if the op is proven).
+
+**Persisted discovery (`DiscoveryStore`).** One snapshot per login account in secure storage (`storize.discovery.<accountId>`, the place of the session cookies; tokens are secret): `doc_id` by query and the page tokens, each with its capture time. `PageDiscovery` loads it when its memory has nothing fresh, and writes through on `record` (merged, newest wins). Lifetimes: `doc_id` 6 h; tokens 30 min in memory only, **12 h** with a store. The store is cleared with the session (logout, account removal, new login). `toString` shows counts only; nothing is logged.
+
+**Foreground refresh (`DiscoveryRefresher`).** At app open and on every resume (the foreground isolate only), for the active account whose snapshot is missing, without tokens or older than 6 h: one governed page-mode profile load (`InstagramPlatform.loadDiscovery`, page mode only) of a tracked target, else of the account's own profile. At most once per 6 h per account in the isolate (a failed load counts), skipped while the governor is paused, bounded wait of 8 s for the budget.
+
+**Diagnostics (INFO, secret-free).** A rate limit logs `op=<op> via=<rest|graphql|page> rate_limited status=<n> hint=<letters> [retry_after_s=<n>]` before the governor starts the backoff. A `SchemaChanged` or `UnknownFailure` from a reply adds `status=<n> keys=[<up to 8 top-level key names>]`; only names made of lowercase letters and underscores are listed, never a value, id, username or URL.

@@ -52,6 +52,7 @@ final class CompositionRig {
     DateTime? now,
     MediaCache Function(FakeMediaCache inner)? wrapCache,
     bool closeDbOnDispose = true,
+    DiscoveryStore? discoveryStore,
   }) : clock = FakeClock(now ?? t0) {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     db = StorizeDatabase.forTesting(NativeDatabase.memory());
@@ -61,6 +62,7 @@ final class CompositionRig {
       db: db,
       settings: settings,
       sessions: sessions,
+      discoveryStore: discoveryStore,
       gallery: FakeGalleryStore(cache: cache),
       cache: wrapCache?.call(cache) ?? cache,
       storage: FakeStorageInfo(),

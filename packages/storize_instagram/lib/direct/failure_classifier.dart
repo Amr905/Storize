@@ -106,6 +106,14 @@ final class FailureClassifier {
   /// `error_type`, or the `message` reduced to lowercase letters and
   /// underscores (no digits, ids or URLs survive), at most 40 characters.
   static String _hint(Map<String, Object?>? body) {
+    final reason = reasonOf(body);
+    return reason.isEmpty ? '' : ':$reason';
+  }
+
+  /// The secret-free reason of an error [json] body (see [_hint]) without a
+  /// leading colon; empty when there is none or [json] is not an object.
+  static String reasonOf(Object? json) {
+    final body = json is Map<String, Object?> ? json : null;
     final raw = body?['error_type'] ?? body?['message'];
     if (raw is! String) return '';
     final cleaned = raw
@@ -114,8 +122,7 @@ final class FailureClassifier {
         .trim()
         .replaceAll(RegExp(' +'), '_');
     if (cleaned.isEmpty) return '';
-    final short = cleaned.length > 40 ? cleaned.substring(0, 40) : cleaned;
-    return ':$short';
+    return cleaned.length > 40 ? cleaned.substring(0, 40) : cleaned;
   }
 
   Duration? _cappedHint(Duration? hint) {

@@ -110,7 +110,9 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
   ///   [transportPreference] is `restWhenProven` and [probe] says
   ///   `restProven` (see `selectTransport`).
   /// - **One `PageDiscovery`** is given to page mode (it fills it) and to the
-  ///   GraphQL transport (it reads `doc_id`s and tokens from it).
+  ///   GraphQL transport (it reads `doc_id`s and tokens from it). With a
+  ///   [discoveryStore] it is persisted per account, so every isolate sees
+  ///   what the foreground found (T-045; ignored when [discovery] is given).
   /// - **One `UsernameCache`**, by default the persistent
   ///   `TargetRepoUsernameCache`, shared by direct and page mode.
   /// - **One `SeenGuard`** for page mode and for this class.
@@ -137,6 +139,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     ProbeReport? probe,
     UsernameCache? usernames,
     PageDiscovery? discovery,
+    DiscoveryStore? discoveryStore,
     SeenGuard? seenGuard,
     WebViewLease webViewLease = const NoopWebViewLease(),
     bool runsInBackground = false,
@@ -147,7 +150,18 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     PlatformSignals? signals,
   }) {
     final sharedSignals = signals ?? PlatformSignals();
-    final sharedDiscovery = discovery ?? PageDiscovery(clock: clock);
+    final sharedDiscovery =
+        discovery ??
+        PageDiscovery(
+          clock: clock,
+          store: discoveryStore,
+          accountId: accountId,
+          onWriteError: (type) => log?.log(
+            LogLevel.warn,
+            'platform',
+            'discovery_store_failed $type',
+          ),
+        );
     final sharedNames = usernames ?? TargetRepoUsernameCache(targets);
     final guard = seenGuard ?? SeenGuard.shared;
     final classifier = FailureClassifier(
@@ -259,6 +273,13 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     () => _direct.refreshUser(remoteUserId, lastUsername),
     () => _page.refreshUser(remoteUserId, lastUsername),
   );
+
+  /// Loads the profile of [username] in **page mode only**, so the page's
+  /// `doc_id`s and tokens are recorded in the shared discovery (T-045). One
+  /// governed page load; the result is not used. Foreground only: a
+  /// background platform refuses page mode unless the setting allows it.
+  Future<Result<RemoteUser>> loadDiscovery(String username) =>
+      _guarded(() => _page.resolveUser(username));
 
   @override
   Future<Result<RemoteUser>> verifySession() async =>

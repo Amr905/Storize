@@ -2,6 +2,7 @@
 /// is in `webview.dart` and is not exported here.
 library;
 
+export 'discovery_store.dart';
 export 'dom_fallback.dart';
 export 'hook_config.dart';
 export 'hook_protocol.dart';

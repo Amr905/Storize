@@ -10,8 +10,17 @@ import 'package:material_ui/material_ui.dart';
 /// notify the UI's watch queries by themselves.
 final dbRefreshProvider = Provider<void Function()?>((ref) => null);
 
-/// Calls [dbRefreshProvider] when the app comes back to the foreground and
-/// every [interval] while it stays there, so background downloads appear.
+/// Refills the persisted page discovery of the logged-in account (T-045).
+/// Null when not wired (tests, background). The callee decides whether a load
+/// is due (at most once per 6 h per account, never while the governor is
+/// paused); calling it often is cheap.
+final discoveryRefreshProvider = Provider<Future<Object?> Function()?>(
+  (ref) => null,
+);
+
+/// Calls [dbRefreshProvider] (and asks for a discovery refresh) when the app
+/// comes back to the foreground and every [interval] while it stays there, so
+/// background downloads appear.
 class ForegroundDbRefresher extends ConsumerStatefulWidget {
   /// Wraps [child].
   const ForegroundDbRefresher({
@@ -40,6 +49,7 @@ class _ForegroundDbRefresherState extends ConsumerState<ForegroundDbRefresher>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _start();
+    _refreshDiscovery();
   }
 
   @override
@@ -57,6 +67,19 @@ class _ForegroundDbRefresherState extends ConsumerState<ForegroundDbRefresher>
     }
   }
 
+  /// Asks for a discovery refresh: at app open and on every resume. Never
+  /// awaited and never throws: a failed refresh waits for the next resume.
+  void _refreshDiscovery() {
+    try {
+      final refresh = ref.read(discoveryRefreshProvider);
+      if (refresh != null) {
+        unawaited(refresh().then<void>((_) {}, onError: (Object _) {}));
+      }
+    } on Object {
+      // Best effort.
+    }
+  }
+
   void _start() {
     _timer?.cancel();
     if (ref.read(dbRefreshProvider) == null) return;
@@ -67,6 +90,7 @@ class _ForegroundDbRefresherState extends ConsumerState<ForegroundDbRefresher>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _refresh();
+      _refreshDiscovery();
       _start();
     } else if (state == AppLifecycleState.paused) {
       _timer?.cancel();

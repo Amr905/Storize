@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/misc.dart';
 import 'package:storize_app/core/composition.dart';
+import 'package:storize_app/core/discovery_secure_store.dart';
 import 'package:storize_app/core/foreground_db_refresher.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
@@ -100,12 +101,21 @@ Future<AppComposition> composeProduction({
   );
   // Never throws; channels exist before the first notification.
   await notifications.initialize();
+  // Page discovery lives in secure storage like the cookies, and goes with
+  // the session on logout (T-045).
+  final discoveryStore = SecureStorageDiscoveryStore(
+    SecureStorageSessionStore.defaultStorage(),
+  );
   final parts = CompositionParts(
     db: db,
     settings: settings,
-    sessions: SecureStorageSessionStore(
-      SecureStorageSessionStore.defaultStorage(),
-      onUnreadable: markLoggedOutOnUnreadable(accounts),
+    discoveryStore: discoveryStore,
+    sessions: DiscoveryClearingSessionStore(
+      SecureStorageSessionStore(
+        SecureStorageSessionStore.defaultStorage(),
+        onUnreadable: markLoggedOutOnUnreadable(accounts),
+      ),
+      discoveryStore,
     ),
     gallery: gallery,
     findExisting: gallery.findExisting,
@@ -181,6 +191,8 @@ final class SchedulerCheckNowAction implements CheckNowAction {
 /// default (`false`), so the lock gate always applies.
 List<Override> appOverrides(AppComposition c) => [
   dbRefreshProvider.overrideWithValue(c.parts.db.refreshFromDisk),
+  if (c.discoveryRefresher case final refresher?)
+    discoveryRefreshProvider.overrideWithValue(refresher.refresh),
   targetRepoProvider.overrideWithValue(c.targets),
   contentRepoProvider.overrideWithValue(c.content),
   accountRepoProvider.overrideWithValue(c.accounts),
