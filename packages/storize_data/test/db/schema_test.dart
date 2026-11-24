@@ -10,13 +10,13 @@ void main() {
 
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  test('the current schema matches the committed v1 dump', () async {
-    final connection = await verifier.startAt(1);
+  test('the current schema matches the committed v2 dump', () async {
+    final connection = await verifier.startAt(2);
     final db = StorizeDatabase(connection);
     addTearDown(db.close);
     // Opens the database and compares every table, column and index with the
-    // dump in drift_schemas/drift_schema_v1.json.
-    await verifier.migrateAndValidate(db, 1);
+    // dump in drift_schemas/drift_schema_v2.json.
+    await verifier.migrateAndValidate(db, 2);
   });
 
   test('foreign keys are on after open (beforeOpen pragma)', () async {

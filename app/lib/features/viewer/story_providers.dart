@@ -42,14 +42,22 @@ final FutureProviderFamily<StoryViewerSet, int> storyViewerSetProvider =
     FutureProvider.family<StoryViewerSet, int>((ref, contentId) async {
       final repo = ref.watch(contentRepoProvider);
       final opened = await repo.getById(contentId);
-      if (opened == null || opened.content.kind != ContentKind.story) {
+      if (opened == null || opened.content.kind == ContentKind.post) {
         return StoryViewerSet.empty;
       }
       final targetId = opened.content.targetId;
       final all = await repo.listByTarget(targetId);
+      // A highlight opens with its own items; a story with the stories.
+      final openedHighlight = opened.content.kind == ContentKind.highlight
+          ? opened.content.extras[HighlightExtras.id]
+          : null;
       final stories = [
         for (final c in all)
-          if (c.content.kind == ContentKind.story) c,
+          if (openedHighlight != null
+              ? (c.content.kind == ContentKind.highlight &&
+                    c.content.extras[HighlightExtras.id] == openedHighlight)
+              : c.content.kind == ContentKind.story)
+            c,
       ];
       final target = await ref.watch(targetRepoProvider).getById(targetId);
       final index = stories.indexWhere((c) => c.content.id == contentId);

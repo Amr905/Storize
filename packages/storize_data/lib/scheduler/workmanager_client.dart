@@ -22,6 +22,7 @@ abstract interface class WorkmanagerClient {
     required ExistingWorkPolicy policy,
     Map<String, dynamic>? inputData,
     bool expedited = false,
+    Duration? initialDelay,
   });
 
   /// Cancels every task.
@@ -63,12 +64,14 @@ final class PluginWorkmanagerClient implements WorkmanagerClient {
     required ExistingWorkPolicy policy,
     Map<String, dynamic>? inputData,
     bool expedited = false,
+    Duration? initialDelay,
   }) => _plugin.registerOneOffTask(
     uniqueName,
     taskName,
     constraints: constraints,
     existingWorkPolicy: policy,
     inputData: inputData,
+    initialDelay: initialDelay,
     expedited: expedited,
     outOfQuotaPolicy: expedited
         ? OutOfQuotaPolicy.runAsNonExpeditedWorkRequest

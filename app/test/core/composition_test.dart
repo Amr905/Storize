@@ -491,6 +491,9 @@ final class _ThrowingScheduler implements Scheduler {
 
   @override
   Future<void> cancelAll() async {}
+
+  @override
+  Future<void> kickHistory() async {}
 }
 
 final class _ThrowingSessions implements SessionStore {

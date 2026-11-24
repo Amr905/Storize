@@ -62,6 +62,23 @@ class Targets extends Table {
       integer().nullable().map(const EpochMsConverter())();
   IntColumn get lastNewPostAt =>
       integer().nullable().map(const EpochMsConverter())();
+  // Added in schema v2 (T-040, TECH_SPEC §17).
+  TextColumn get historyRange => text()
+      .map(const HistoryRangeConverter())
+      .withDefault(const Constant('NONE'))();
+  IntColumn get historySince =>
+      integer().nullable().map(const EpochMsConverter())();
+  TextColumn get historyState => text()
+      .map(const HistoryStateConverter())
+      .withDefault(const Constant('IDLE'))();
+  TextColumn get historyCursor => text().nullable()();
+  IntColumn get historyFetched => integer().withDefault(const Constant(0))();
+  IntColumn get historyOldestSeenAt =>
+      integer().nullable().map(const EpochMsConverter())();
+  IntColumn get historyUpdatedAt =>
+      integer().nullable().map(const EpochMsConverter())();
+  BoolColumn get highlightsEnabled =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   List<Set<Column>> get uniqueKeys => [

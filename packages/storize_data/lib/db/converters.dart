@@ -179,3 +179,23 @@ class CheckRunScopeConverter extends TypeConverter<CheckScope, String> {
     return value.dbValue;
   }
 }
+
+class HistoryRangeConverter extends TypeConverter<HistoryRange, String> {
+  const HistoryRangeConverter();
+
+  @override
+  HistoryRange fromSql(String fromDb) => HistoryRange.fromDb(fromDb);
+
+  @override
+  String toSql(HistoryRange value) => value.dbValue;
+}
+
+class HistoryStateConverter extends TypeConverter<HistoryState, String> {
+  const HistoryStateConverter();
+
+  @override
+  HistoryState fromSql(String fromDb) => HistoryState.fromDb(fromDb);
+
+  @override
+  String toSql(HistoryState value) => value.dbValue;
+}

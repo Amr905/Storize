@@ -85,6 +85,13 @@ final class _Rig {
 final class _NoEnqueue implements DownloadEnqueuer {
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) async {}
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) async {}
 }
 
 void main() {

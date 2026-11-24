@@ -161,6 +161,13 @@ final class RecordingEnqueuer implements DownloadEnqueuer {
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) async =>
       calls.add(wifiOnly);
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) async {}
 }
 
 /// A cache whose thumbnail sweep fails; everything else is the inner cache.

@@ -45,6 +45,9 @@ abstract final class NotificationIds {
   /// Silent check progress.
   static const int checking = 5;
 
+  /// Summary of the highlight group.
+  static const int highlightsSummary = 6;
+
   /// First id of the per-target notifications.
   static const int targetBase = 1000;
 
@@ -52,8 +55,12 @@ abstract final class NotificationIds {
   /// kind, so a newer run replaces the older one).
   static int forTarget(int targetId, ContentKind kind) =>
       targetBase +
-      (targetId & 0x3fffffff) * 2 +
-      (kind == ContentKind.post ? 1 : 0);
+      (targetId & 0x3fffffff) * 3 +
+      switch (kind) {
+        ContentKind.story => 0,
+        ContentKind.post => 1,
+        ContentKind.highlight => 2,
+      };
 }
 
 /// The location a notification payload opens (for the router).
@@ -166,7 +173,7 @@ final class NotificationService implements TaskNotifier {
       final settings = await _settings.get();
       final wanted = [
         for (final c in counts)
-          if (c.kind == ContentKind.story
+          if (c.kind != ContentKind.post
               ? settings.notifyStories
               : settings.notifyPosts)
             c,
@@ -180,11 +187,17 @@ final class NotificationService implements TaskNotifier {
             if (c.kind == kind) c,
         ];
         if (group.isEmpty) continue;
-        final isStory = kind == ContentKind.story;
+        // A highlight uses the stories channel and texts, with its own group
+        // and ids.
+        final isStory = kind != ContentKind.post;
         final channel = isStory
             ? NotificationChannels.newStories
             : NotificationChannels.newPosts;
-        final groupKey = isStory ? 'stories' : 'posts';
+        final groupKey = switch (kind) {
+          ContentKind.story => 'stories',
+          ContentKind.post => 'posts',
+          ContentKind.highlight => 'highlights',
+        };
 
         for (final c in group) {
           final username = await _lookups.usernameOf(c.targetId);
@@ -216,9 +229,11 @@ final class NotificationService implements TaskNotifier {
             : _strings.ntfPostsSummary(total, accounts);
         await _port.show(
           NotificationRequest(
-            id: isStory
-                ? NotificationIds.storiesSummary
-                : NotificationIds.postsSummary,
+            id: switch (kind) {
+              ContentKind.story => NotificationIds.storiesSummary,
+              ContentKind.post => NotificationIds.postsSummary,
+              ContentKind.highlight => NotificationIds.highlightsSummary,
+            },
             channelId: channel,
             title: summary,
             payload: _libraryPayload(kind, null),

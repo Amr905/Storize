@@ -14,6 +14,10 @@ abstract interface class Scheduler {
   /// only that target is checked.
   Future<void> checkNow({CheckScope scope = CheckScope.all, int? targetId});
 
+  /// Enqueues the one-off `history` task now (post-history backfill). It
+  /// keeps an existing request, so calling it twice does not duplicate.
+  Future<void> kickHistory();
+
   /// Cancels every registered task.
   Future<void> cancelAll();
 }

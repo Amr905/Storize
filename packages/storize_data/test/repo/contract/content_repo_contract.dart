@@ -26,6 +26,37 @@ void runContentRepoContract(RepoHarness Function() create) {
   Future<int> add(Content c, [List<MediaFile>? media]) async =>
       (await repo.insertIfNew(c, media ?? [aMedia()])).contentId;
 
+  group('highlight kind (T-040)', () {
+    test('dedupes by (target, remoteId, kind) and keeps extras', () async {
+      final extras = {
+        HighlightExtras.id: 'h1',
+        HighlightExtras.title: 'Trip',
+        HighlightExtras.order: 2,
+      };
+      final first = await repo.insertIfNew(
+        aContent(t1, kind: ContentKind.highlight, extras: extras),
+        [aMedia()],
+      );
+      final again = await repo.insertIfNew(
+        aContent(t1, kind: ContentKind.highlight, extras: extras),
+        [aMedia()],
+      );
+      // A story with the same remote id is a different row.
+      final story = await repo.insertIfNew(aContent(t1), [aMedia()]);
+      expect(first.isNew, isTrue);
+      expect(again.isNew, isFalse);
+      expect(again.contentId, first.contentId);
+      expect(story.isNew, isTrue);
+      final read = (await repo.getById(first.contentId))!.content;
+      expect(read.kind, ContentKind.highlight);
+      expect(read.extras, extras);
+      expect(
+        await repo.existingRemoteIds(t1, ContentKind.highlight, ['r-1', 'x']),
+        {'r-1'},
+      );
+    });
+  });
+
   group('insertIfNew', () {
     test('stores content and media; ids are assigned and linked', () async {
       final result = await repo.insertIfNew(aFullContent(t1), [

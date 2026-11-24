@@ -77,7 +77,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
     final storageAsync = ref.watch(targetDetailStorageProvider(target.id));
     final items = contentAsync.value ?? const <ContentWithMedia>[];
     final storyCount = items
-        .where((i) => i.content.kind == ContentKind.story)
+        .where((i) => i.content.kind != ContentKind.post)
         .length;
     final postCount = items
         .where((i) => i.content.kind == ContentKind.post)
@@ -324,9 +324,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
     final isStories = _kind == LibraryKind.stories;
     final shown = [
       for (final item in contentAsync.requireValue)
-        if (item.content.kind ==
-            (isStories ? ContentKind.story : ContentKind.post))
-          item,
+        if ((item.content.kind != ContentKind.post) == isStories) item,
     ].take(_recentLimit).toList();
     if (shown.isEmpty) {
       return Padding(

@@ -29,6 +29,10 @@ final class Target {
     this.lastPostsCheckAt,
     this.lastNewStoryAt,
     this.lastNewPostAt,
+    this.historyRange = HistoryRange.none,
+    this.historySince,
+    this.historyProgress,
+    this.highlightsEnabled = false,
   }) : assert(
          trackStories || trackPosts || trackReels,
          'At least one track flag must be on (FR-65, FR-67)',
@@ -103,6 +107,18 @@ final class Target {
   /// When a new post was last found (UTC).
   final DateTime? lastNewPostAt;
 
+  /// How far back the post history reaches (FR-68).
+  final HistoryRange historyRange;
+
+  /// The start date when [historyRange] is [HistoryRange.since].
+  final DateTime? historySince;
+
+  /// Progress of the post-history backfill, or null if none was started.
+  final HistoryProgress? historyProgress;
+
+  /// Whether highlights are tracked (FR-71).
+  final bool highlightsEnabled;
+
   /// Returns a copy with the given fields replaced. Pass null to clear a
   /// nullable field. The identity fields (`platform`, `remoteUserId`) cannot
   /// change.
@@ -126,6 +142,10 @@ final class Target {
     Object? lastPostsCheckAt = unset,
     Object? lastNewStoryAt = unset,
     Object? lastNewPostAt = unset,
+    HistoryRange? historyRange,
+    Object? historySince = unset,
+    Object? historyProgress = unset,
+    bool? highlightsEnabled,
   }) => Target(
     id: id ?? this.id,
     platform: platform,
@@ -151,6 +171,13 @@ final class Target {
     lastPostsCheckAt: pick<DateTime>(lastPostsCheckAt, this.lastPostsCheckAt),
     lastNewStoryAt: pick<DateTime>(lastNewStoryAt, this.lastNewStoryAt),
     lastNewPostAt: pick<DateTime>(lastNewPostAt, this.lastNewPostAt),
+    historyRange: historyRange ?? this.historyRange,
+    historySince: pick<DateTime>(historySince, this.historySince),
+    historyProgress: pick<HistoryProgress>(
+      historyProgress,
+      this.historyProgress,
+    ),
+    highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
   );
 
   @override
@@ -177,7 +204,11 @@ final class Target {
           other.lastStoriesCheckAt == lastStoriesCheckAt &&
           other.lastPostsCheckAt == lastPostsCheckAt &&
           other.lastNewStoryAt == lastNewStoryAt &&
-          other.lastNewPostAt == lastNewPostAt);
+          other.lastNewPostAt == lastNewPostAt &&
+          other.historyRange == historyRange &&
+          other.historySince == historySince &&
+          other.historyProgress == historyProgress &&
+          other.highlightsEnabled == highlightsEnabled);
 
   @override
   int get hashCode => Object.hashAll([
@@ -202,6 +233,10 @@ final class Target {
     lastPostsCheckAt,
     lastNewStoryAt,
     lastNewPostAt,
+    historyRange,
+    historySince,
+    historyProgress,
+    highlightsEnabled,
   ]);
 
   /// Omits [note] and [displayName], which are personal content.

@@ -299,6 +299,26 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
     () => _page.latestPostTime(userId),
   );
 
+  // T-041 implements the three methods below.
+  @override
+  Future<Result<PostPage>> fetchPostPage(
+    String userId, {
+    required ExtractionPolicy policy,
+    String? cursor,
+  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(
+    String userId, {
+    required ExtractionPolicy policy,
+  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    required ExtractionPolicy policy,
+  }) async => const Err(UnknownFailure(null, 'not_implemented'));
+
   @override
   Stream<List<int>> openMedia(String url, {int fromByte = 0}) =>
       _media.open(url, fromByte: fromByte);

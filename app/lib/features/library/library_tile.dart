@@ -60,7 +60,7 @@ class LibraryTile extends StatelessWidget {
     final content = item.content;
     final first = item.media.isEmpty ? null : item.media.first;
     final broken = first?.status == MediaFileStatus.failed;
-    final isVideo = content.kind == ContentKind.story
+    final isVideo = content.kind != ContentKind.post
         ? first?.mediaType == MediaType.video
         : content.postType == PostType.video ||
               content.postType == PostType.reel;
@@ -71,7 +71,7 @@ class LibraryTile extends StatelessWidget {
     final carousel = content.slideCount > 1 ? content.slideCount : null;
 
     final type = switch (content.postType) {
-      _ when content.kind == ContentKind.story =>
+      _ when content.kind != ContentKind.post =>
         isVideo
             ? (duration == null
                   ? l10n.libTileVideo
@@ -101,7 +101,7 @@ class LibraryTile extends StatelessWidget {
       day,
       loc.formatTimeOfDay(TimeOfDay.fromDateTime(local)),
     );
-    final base = content.kind == ContentKind.story
+    final base = content.kind != ContentKind.post
         ? l10n.libTileStory(account, type, when)
         : l10n.libTilePost(account, type, when);
     final label = [

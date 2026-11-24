@@ -91,7 +91,24 @@ Target _toTarget(TargetRow r) => Target(
   lastPostsCheckAt: r.lastPostsCheckAt,
   lastNewStoryAt: r.lastNewStoryAt,
   lastNewPostAt: r.lastNewPostAt,
+  historyRange: r.historyRange,
+  historySince: r.historySince,
+  historyProgress: _progressOf(r),
+  highlightsEnabled: r.highlightsEnabled,
 );
+
+/// A never-started backfill (IDLE, never written) reads as no progress.
+HistoryProgress? _progressOf(TargetRow r) {
+  final at = r.historyUpdatedAt;
+  if (at == null) return null;
+  return HistoryProgress(
+    state: r.historyState,
+    cursor: r.historyCursor,
+    fetched: r.historyFetched,
+    oldestSeenAt: r.historyOldestSeenAt,
+    updatedAt: at,
+  );
+}
 
 /// Every column except `id`, which stays absent.
 TargetsCompanion _toCompanion(Target t) => TargetsCompanion(
@@ -115,4 +132,12 @@ TargetsCompanion _toCompanion(Target t) => TargetsCompanion(
   lastPostsCheckAt: Value(t.lastPostsCheckAt),
   lastNewStoryAt: Value(t.lastNewStoryAt),
   lastNewPostAt: Value(t.lastNewPostAt),
+  historyRange: Value(t.historyRange),
+  historySince: Value(t.historySince),
+  historyState: Value(t.historyProgress?.state ?? HistoryState.idle),
+  historyCursor: Value(t.historyProgress?.cursor),
+  historyFetched: Value(t.historyProgress?.fetched ?? 0),
+  historyOldestSeenAt: Value(t.historyProgress?.oldestSeenAt),
+  historyUpdatedAt: Value(t.historyProgress?.updatedAt),
+  highlightsEnabled: Value(t.highlightsEnabled),
 );

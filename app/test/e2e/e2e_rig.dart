@@ -261,4 +261,11 @@ class E2eRig {
 final class _NoEnqueuer implements DownloadEnqueuer {
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) async {}
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) async {}
 }

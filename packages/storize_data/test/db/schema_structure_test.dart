@@ -98,6 +98,15 @@ void main() {
         'last_posts_check_at': 'INTEGER',
         'last_new_story_at': 'INTEGER',
         'last_new_post_at': 'INTEGER',
+        // Schema v2 (TECH_SPEC §17).
+        'history_range': 'TEXT',
+        'history_since': 'INTEGER',
+        'history_state': 'TEXT',
+        'history_cursor': 'TEXT',
+        'history_fetched': 'INTEGER',
+        'history_oldest_seen_at': 'INTEGER',
+        'history_updated_at': 'INTEGER',
+        'highlights_enabled': 'INTEGER',
       },
       'content': {
         'id': 'INTEGER',

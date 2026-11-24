@@ -41,6 +41,31 @@ abstract interface class ContentPlatform {
   /// none. It sets the watermark when a target is added (FR-63).
   Future<Result<DateTime?>> latestPostTime(String userId);
 
+  /// Fetches one page of the posts of [userId], newest first (FR-68).
+  ///
+  /// [cursor] is the `nextCursor` of the previous page; null asks for the
+  /// first page.
+  Future<Result<PostPage>> fetchPostPage(
+    String userId, {
+    required ExtractionPolicy policy,
+    String? cursor,
+  });
+
+  /// Fetches the highlights tray of [userId] (FR-71).
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(
+    String userId, {
+    required ExtractionPolicy policy,
+  });
+
+  /// Fetches the items of the highlights [highlightIds], keyed by highlight
+  /// ID (FR-71). Items have [ContentKind.highlight] and carry the
+  /// [HighlightExtras] keys, except that the title and order may be filled in
+  /// by the caller.
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    required ExtractionPolicy policy,
+  });
+
   /// Checks that the stored session works and returns the logged-in user
   /// (IG-4).
   Future<Result<RemoteUser>> verifySession();

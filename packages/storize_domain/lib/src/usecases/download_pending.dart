@@ -523,7 +523,7 @@ final class DownloadPending {
     for (final e in s.tallies.entries) {
       final t = e.value;
       if (t.contents.isEmpty) continue;
-      final story = e.key.$2 == ContentKind.story;
+      final story = e.key.$2 != ContentKind.post;
       await _event(
         story ? ActivityType.downloadedStories : ActivityType.downloadedPosts,
         t.failed > 0 ? Severity.warn : Severity.info,
@@ -592,7 +592,7 @@ final class DownloadPending {
     var file = start;
     final photo = file.mediaType == MediaType.photo;
     final ext = photo ? 'jpg' : 'mp4';
-    final relativeDir = _relativeDir(target.username);
+    final relativeDir = _folderFor(target, content);
     final name = _displayName(
       username: target.username,
       postedAt: content.postedAt,
@@ -661,6 +661,16 @@ final class DownloadPending {
         return; // Cancels the source.
       }
     }
+  }
+
+  /// The gallery folder: `<username>`, or for a highlight item
+  /// `<username>/Highlights/<title>` (TECH_SPEC §17.5). The title goes through
+  /// the same segment sanitizer as the username.
+  String _folderFor(Target target, Content content) {
+    final base = _relativeDir(target.username);
+    if (content.kind != ContentKind.highlight) return base;
+    final title = content.extras[HighlightExtras.title];
+    return '$base/Highlights/${_relativeDir(title is String ? title : '')}';
   }
 
   Future<GalleryFile?> _adopt(
@@ -742,7 +752,17 @@ final class DownloadPending {
     ExtractionPolicy policy,
   ) async {
     final RemoteContent? item;
-    if (content.kind == ContentKind.story) {
+    if (content.kind == ContentKind.highlight) {
+      final hid = content.extras[HighlightExtras.id];
+      if (hid is! String) return const _Gone(wholeContent: true);
+      final r = await _platform.fetchHighlightItems([hid], policy: policy);
+      switch (r) {
+        case Err(:final failure):
+          return _failureStep(failure);
+        case Ok(:final value):
+          item = _find1(value[hid], content.remoteId);
+      }
+    } else if (content.kind == ContentKind.story) {
       final r = await _platform.fetchStories([
         target.remoteUserId,
       ], policy: policy);
