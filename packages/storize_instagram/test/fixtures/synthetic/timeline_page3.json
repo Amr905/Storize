@@ -1,0 +1,73 @@
+{
+  "data": {
+    "xdt_api__v1__feed__user_timeline_graphql_connection": {
+      "edges": [
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1006",
+            "id": "ZZFAKE_p_1006_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1006",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000400,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1006_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1007",
+            "id": "ZZFAKE_p_1007_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1007",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000300,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1007_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "page_info": {
+        "has_next_page": false,
+        "has_previous_page": false
+      }
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "ZZFAKE_viewer"
+      }
+    }
+  }
+}

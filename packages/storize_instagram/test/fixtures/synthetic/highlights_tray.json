@@ -1,0 +1,34 @@
+{
+  "data": {
+    "highlights": {
+      "edges": [
+        {
+          "node": {
+            "id": "highlight:ZZFAKE_hl_1",
+            "title": "ZZFAKE Title One",
+            "media_count": 2,
+            "latest_reel_media": 1800000200,
+            "cover_media": {
+              "cropped_image_version": {
+                "url": "https://cdn.example.test/ZZFAKE_cover_1.jpg"
+              }
+            }
+          }
+        },
+        {
+          "node": {
+            "id": "ZZFAKE_hl_2",
+            "title": "ZZFAKE Title Two",
+            "latest_reel_media": null,
+            "cover_media": null
+          }
+        },
+        {
+          "node": {
+            "title": "ZZFAKE no id"
+          }
+        }
+      ]
+    }
+  }
+}

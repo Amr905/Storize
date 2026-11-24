@@ -1,0 +1,104 @@
+{
+  "data": {
+    "xdt_api__v1__feed__reels_media": {
+      "reels_media": [
+        {
+          "id": "highlight:ZZFAKE_hl_1",
+          "reel_type": "highlight_reel",
+          "title": "ZZFAKE Title One",
+          "latest_reel_media": 1800000200,
+          "user": {
+            "pk": "ZZFAKE_user_a"
+          },
+          "items": [
+            {
+              "pk": "ZZFAKE_h_2",
+              "id": "ZZFAKE_h_2_ZZFAKE_user_a",
+              "media_type": 2,
+              "product_type": "story",
+              "taken_at": 1800000200,
+              "user": {
+                "pk": "ZZFAKE_user_a"
+              },
+              "audience": null,
+              "story_link_stickers": null,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_h_2_1080x1920.jpg",
+                    "width": 1080,
+                    "height": 1920
+                  }
+                ]
+              },
+              "video_versions": [
+                {
+                  "type": 101,
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_h_2.mp4"
+                }
+              ],
+              "video_duration": 4
+            },
+            {
+              "pk": "ZZFAKE_h_1",
+              "id": "ZZFAKE_h_1_ZZFAKE_user_a",
+              "media_type": 1,
+              "product_type": "story",
+              "taken_at": 1800000100,
+              "user": {
+                "pk": "ZZFAKE_user_a"
+              },
+              "audience": null,
+              "story_link_stickers": null,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_h_1_1080x1920.jpg",
+                    "width": 1080,
+                    "height": 1920
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "highlight:ZZFAKE_hl_other",
+          "reel_type": "highlight_reel",
+          "title": "ZZFAKE other",
+          "user": {
+            "pk": "ZZFAKE_user_a"
+          },
+          "items": [
+            {
+              "pk": "ZZFAKE_h_9",
+              "id": "ZZFAKE_h_9_ZZFAKE_user_a",
+              "media_type": 1,
+              "product_type": "story",
+              "taken_at": 1800000050,
+              "user": {
+                "pk": "ZZFAKE_user_a"
+              },
+              "audience": null,
+              "story_link_stickers": null,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_h_9_1080x1920.jpg",
+                    "width": 1080,
+                    "height": 1920
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "ZZFAKE_viewer"
+      }
+    }
+  }
+}

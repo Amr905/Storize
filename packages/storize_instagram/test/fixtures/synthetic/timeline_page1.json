@@ -1,0 +1,113 @@
+{
+  "data": {
+    "xdt_api__v1__feed__user_timeline_graphql_connection": {
+      "edges": [
+        {
+          "node": {
+            "pk": "ZZFAKE_p_pinned_old",
+            "id": "ZZFAKE_p_pinned_old_ZZFAKE_user_a",
+            "code": "ZZFAKE_c__old",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1799000000,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [
+              "ZZFAKE_user_a"
+            ],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_pinned_old_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1001",
+            "id": "ZZFAKE_p_1001_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1001",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000900,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1001_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1002",
+            "id": "ZZFAKE_p_1002_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1002",
+            "media_type": 2,
+            "product_type": "clips",
+            "taken_at": 1800000800,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1002_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            },
+            "video_versions": [
+              {
+                "type": 101,
+                "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1002.mp4",
+                "width": 720,
+                "height": 1280
+              }
+            ],
+            "has_audio": true
+          }
+        }
+      ],
+      "page_info": {
+        "has_next_page": true,
+        "has_previous_page": false,
+        "end_cursor": "ZZFAKE_cursor_2"
+      }
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "ZZFAKE_viewer"
+      }
+    }
+  }
+}

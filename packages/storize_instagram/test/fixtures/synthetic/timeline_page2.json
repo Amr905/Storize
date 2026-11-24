@@ -1,0 +1,102 @@
+{
+  "data": {
+    "xdt_api__v1__feed__user_timeline_graphql_connection": {
+      "edges": [
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1003",
+            "id": "ZZFAKE_p_1003_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1003",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000700,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1003_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1004",
+            "id": "ZZFAKE_p_1004_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1004",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000600,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1004_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        },
+        {
+          "node": {
+            "pk": "ZZFAKE_p_1005",
+            "id": "ZZFAKE_p_1005_ZZFAKE_user_a",
+            "code": "ZZFAKE_c_1005",
+            "media_type": 1,
+            "product_type": "feed",
+            "taken_at": 1800000500,
+            "user": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "owner_id": {
+              "pk": "ZZFAKE_user_a"
+            },
+            "caption": null,
+            "timeline_pinned_user_ids": [],
+            "coauthor_producers": [],
+            "image_versions2": {
+              "candidates": [
+                {
+                  "url": "https://cdn.example.test/ZZFAKE_ZZFAKE_p_1005_320x320.jpg",
+                  "width": 320,
+                  "height": 320
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "page_info": {
+        "has_next_page": true,
+        "has_previous_page": false,
+        "end_cursor": "ZZFAKE_cursor_3"
+      }
+    },
+    "xdt_viewer": {
+      "user": {
+        "id": "ZZFAKE_viewer"
+      }
+    }
+  }
+}
