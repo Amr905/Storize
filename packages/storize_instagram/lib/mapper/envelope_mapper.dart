@@ -148,9 +148,22 @@ final class EnvelopeMapper {
 
   /// `PolarisStoriesV3ReelPageStandaloneQuery`:
   /// `data.xdt_api__v1__feed__reels_media.reels_media[]`.
-  Map<String, StoryReel> graphqlStories(Node body) {
-    final root = body['data']['xdt_api__v1__feed__reels_media'];
-    return _reels(root['reels_media'].list);
+  ///
+  /// Tolerated (T-048): the same list as `data.reels_media[]` or directly
+  /// under `xdt_api__v1__feed__reels_media`.
+  Map<String, StoryReel> graphqlStories(Node body) =>
+      _reels(_graphqlReelList(body['data']));
+
+  /// The reel list of a stories reply, wherever the web app put it.
+  List<Node> _graphqlReelList(Node data) {
+    for (final key in const ['xdt_api__v1__feed__reels_media', 'reels_media']) {
+      if (!data.has(key)) continue;
+      final root = data[key];
+      if (root.value is List) return root.list;
+      if (root.has('reels_media')) return root['reels_media'].list;
+    }
+    // Neither is present: fail with the path of the documented one.
+    return data['xdt_api__v1__feed__reels_media']['reels_media'].list;
   }
 
   /// `PolarisProfilePostsQuery`:
@@ -177,7 +190,19 @@ final class EnvelopeMapper {
   /// without an `id` is skipped; the tray fails only when every node is
   /// malformed.
   List<RemoteHighlight> graphqlHighlights(Node body) {
-    final edges = body['data']['highlights']['edges'].list;
+    final data = body['data'];
+    // Tolerated (T-048): the connection may sit under another key that has
+    // "highlights" in its name.
+    var holder = data['highlights'];
+    if (!data.has('highlights')) {
+      for (final key in data.map.keys) {
+        if (key.contains('highlights') && data[key].has('edges')) {
+          holder = data[key];
+          break;
+        }
+      }
+    }
+    final edges = holder['edges'].list;
     final out = <RemoteHighlight>[];
     SchemaException? first;
     for (final edge in edges) {
@@ -211,8 +236,7 @@ final class EnvelopeMapper {
     Node body,
     List<String> requested,
   ) {
-    final root = body['data']['xdt_api__v1__feed__reels_media'];
-    return _highlightReels(root['reels_media'].list, requested);
+    return _highlightReels(_graphqlReelList(body['data']), requested);
   }
 
   Map<String, List<RemoteContent>> _highlightReels(

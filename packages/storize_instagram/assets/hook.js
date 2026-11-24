@@ -19,6 +19,18 @@
  *     blockedFriendlyNames: [...]    // see below
  *   };
  *
+ * IN-PAGE DISCOVERY (T-048, only with includeRequestSecrets). The first page
+ * of posts is server-preloaded, so watching traffic never sees its doc_id.
+ * Instead the hook reads, from the page's own module system (window.require,
+ * NO network request), for a fixed allowlist of operations: the doc_id
+ * (<Name>_instagramRelayOperation), the relay provided-variable values and
+ * the argument names (<Name>.graphql), plus the fb_dtsg / lsd tokens. It posts
+ * {type:'discovery', origin, ops:[{name, docId, provided, args}], tokens} once
+ * the page is ready (a few spaced tries, and before the first captured
+ * response) and again on a window message {storizeDiscover:true}. A failure
+ * posts an empty ops list and an error code, never a value. It never touches
+ * stories UI or the seen mutation.
+ *
  * SEEN-MUTATION BLOCKING (UD-3, BR-8) - FAILS CLOSED. Opening a story page
  * makes the page fire PolarisStoriesV3SeenMutation, which marks the story as
  * seen for its owner and cannot be undone. For every fetch / XHR / sendBeacon
@@ -125,11 +137,158 @@
       if (friendlyName) msg.friendlyName = friendlyName;
       if (includeBody) msg.body = text;
       if (requestInfo) msg.request = requestInfo;
+      if (!discoveryDone) runDiscovery(); // before the capture that may end the run
       post(msg);
     } catch (e) {
       /* never break the page */
     }
   }
+
+  // ------------------------------------------------- in-page discovery (T-048)
+  // Reads, from the page's own module system (window.require), the doc_id,
+  // the relay provided-variable values and the argument names of a FIXED
+  // allowlist of operations, plus the page tokens. It makes NO network
+  // request and touches no story UI. Only runs with includeRequestSecrets.
+  // Posts ONE message per success: {type:'discovery', origin, ops:[{name,
+  // docId, provided:{k:bool|num|string}, args:[...]}], tokens:{fb_dtsg, lsd}};
+  // on failure an empty ops list with an error code and no values.
+  var DISCOVERY_OPS = [
+    'PolarisProfilePostsQuery',
+    'PolarisProfilePostsTabContentQuery_connection',
+    'PolarisStoriesV3ReelPageStandaloneQuery',
+    'PolarisProfileStoryHighlightsTrayContentQuery',
+    'PolarisProfilePageContentQuery',
+    'PolarisStoriesV3HighlightsPageQuery',
+  ];
+  var PROVIDER_KEY = /^__relay_internal__pv__[A-Za-z0-9_]{1,100}$/;
+  var ARG_NAME = /^[a-z_]{1,64}$/;
+  var DOC_ID = /^\d{5,32}$/;
+  var MAX_ARGS = 40;
+  var MAX_PROVIDED = 40;
+  var MAX_DISCOVERY_POSTS = 6;
+  var discoveryPosts = 0;
+  var discoveryDone = false;
+  var requireErrors = 0;
+  var errorPosted = false;
+
+  function reqModule(name) {
+    try {
+      var r = window.require;
+      if (typeof r !== 'function') return undefined;
+      return r(name);
+    } catch (e) {
+      requireErrors++; // counted only; the error text is never read or sent
+      return undefined;
+    }
+  }
+
+  function scalar(v) {
+    var t = typeof v;
+    if (t === 'boolean') return v;
+    if (t === 'number') return isFinite(v) ? v : undefined;
+    if (t === 'string' && v.length <= 64) return v;
+    return undefined;
+  }
+
+  function readOp(name) {
+    var id = reqModule(name + '_instagramRelayOperation');
+    if (typeof id !== 'string' || !DOC_ID.test(id)) return null;
+    var provided = {};
+    var args = [];
+    try {
+      var g = reqModule(name + '.graphql');
+      var pv = g && g.params && g.params.providedVariables;
+      if (pv && typeof pv === 'object') {
+        Object.keys(pv).slice(0, MAX_PROVIDED).forEach(function (k) {
+          if (!PROVIDER_KEY.test(k)) return;
+          var p = pv[k];
+          var v = p && typeof p.get === 'function' ? scalar(p.get()) : undefined;
+          if (v !== undefined) provided[k] = v;
+        });
+      }
+      var defs = g && g.fragment && g.fragment.argumentDefinitions;
+      if (defs && typeof defs.length === 'number') {
+        for (var i = 0; i < defs.length && args.length < MAX_ARGS; i++) {
+          var a = defs[i] && defs[i].name;
+          if (typeof a === 'string' && ARG_NAME.test(a)) args.push(a);
+        }
+      }
+    } catch (e) {
+      /* the doc_id alone is still useful */
+    }
+    return { name: name, docId: id, provided: provided, args: args };
+  }
+
+  function tokenOf(moduleName) {
+    var m = reqModule(moduleName);
+    var t = m && m.token;
+    return typeof t === 'string' && t.length > 0 && t.length <= 4096 ? t : null;
+  }
+
+  function postDiscovery(ops, tokens, error) {
+    if (discoveryPosts >= MAX_DISCOVERY_POSTS) return;
+    discoveryPosts++;
+    var msg = { type: 'discovery', origin: location.origin, ops: ops, tokens: tokens || {} };
+    if (error) msg.error = error;
+    post(msg);
+  }
+
+  // Returns true when at least one op resolved (and was posted).
+  function runDiscovery() {
+    if (!includeRequestSecrets) return false;
+    try {
+      if (typeof window.require !== 'function') return false;
+      var ops = [];
+      DISCOVERY_OPS.forEach(function (name) {
+        try {
+          var op = readOp(name);
+          if (op) ops.push(op);
+        } catch (e) {}
+      });
+      var tokens = {};
+      var dtsg = tokenOf('DTSGInitialData');
+      var lsd = tokenOf('LSD');
+      if (dtsg) tokens.fb_dtsg = dtsg;
+      if (lsd) tokens.lsd = lsd;
+      if (ops.length === 0 && !dtsg && !lsd) {
+        if (requireErrors > 0 && !errorPosted) {
+          errorPosted = true;
+          postDiscovery([], {}, 'require_failed');
+        }
+        return false;
+      }
+      postDiscovery(ops, tokens, null);
+      discoveryDone = ops.length > 0;
+      return discoveryDone;
+    } catch (e) {
+      try { postDiscovery([], {}, 'discovery_failed'); } catch (e2) {}
+      return false;
+    }
+  }
+
+  // After the page is ready, a few spaced tries (modules appear as the page
+  // boots), and again on a message from the page or the app.
+  function scheduleDiscovery() {
+    if (!includeRequestSecrets) return;
+    try {
+      [0, 400, 1500, 4000, 9000].forEach(function (ms) {
+        setTimeout(function () {
+          if (!discoveryDone) runDiscovery();
+        }, ms);
+      });
+      if (typeof window.addEventListener === 'function') {
+        window.addEventListener('message', function (ev) {
+          try {
+            if (ev && ev.data && ev.data.storizeDiscover === true) runDiscovery();
+          } catch (e) {}
+        });
+        window.addEventListener('load', function () {
+          if (!discoveryDone) runDiscovery();
+        });
+      }
+    } catch (e) {}
+  }
+  window.__storizeRunDiscovery = runDiscovery;
 
   // -------------------------------------------------- reading the request
   function isThenable(x) {
@@ -507,4 +666,5 @@
       return proceed(result);
     };
   }
+  scheduleDiscovery();
 })();

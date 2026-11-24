@@ -62,3 +62,14 @@ Decision:
 - Rate limits are logged with op, transport, status and a letters-only hint, to find the offending call next time.
 
 Consequence: until a page load has happened (first run after install or after 6 h without opening the app), background checks skip without a request. Open the app once and background checks work (DEVICE_TESTS D5).
+
+### Amendment 2026-11-24 (3): discovery by in-page modules; REST is dead on www (T-048)
+Found on device (log 20:23): a profile load never sends the posts or stories queries (the first page of posts is server-preloaded), so watching traffic could not find their `doc_id`s; every direct check ended `unavailable` and a manual "Check now" was refused page mode in the background.
+
+Decision:
+- **Discovery reads the page's own module system, with no network request.** After the page is ready (and again on a message) `hook.js` reads, for a fixed allowlist of operations, the `doc_id` (`<Name>_instagramRelayOperation`), the relay provided-variable values and the argument names (`<Name>.graphql`), plus `fb_dtsg` and `lsd`, through `window.require`. It posts one `discovery` message, strictly parsed in Dart. Provider values and argument names are stored with the `doc_id` in the persisted discovery (not secret); tokens as before. Traffic watching stays as a second source.
+- **GraphQL requests are built from the discovered shape:** only the arguments in the discovered list, plus every discovered provider value, sent to `/api/graphql` with the form fields and headers the web app uses.
+- **REST is dead on www** (`feed/user`, `highlights_tray`, `web_profile_info` answer a 404 page, `feed/reels_media` answers 500). It stays gated off; nothing here re-enables it.
+- **A manual "Check now" may load pages** in the background isolate (a user-initiated run); scheduled checks still need `pageModeInBackground`.
+Details and the ground truth: INSTAGRAM_EXTRACTION.md "2026-11-24 ground truth (web)". Verified on device by DEVICE_TESTS D6.
+

@@ -71,6 +71,56 @@ final class HookBlocked extends HookMessage {
   String toString() => 'HookBlocked($friendlyName)';
 }
 
+/// One operation read from the page's module system (T-048). The doc_id is
+/// session-bound (never logged); the provider values and argument names are
+/// code constants of the web app (not secret).
+final class DiscoveredOp {
+  /// Creates an op.
+  const DiscoveredOp({
+    required this.name,
+    required this.docId,
+    this.provided = const {},
+    this.args = const [],
+  });
+
+  /// The operation name (for example `PolarisProfilePostsQuery`).
+  final String name;
+
+  /// The `doc_id`. Never log.
+  final String docId;
+
+  /// `__relay_internal__pv__X` to its current bool, number or short string.
+  final Map<String, Object> provided;
+
+  /// The argument names of the operation.
+  final List<String> args;
+
+  @override
+  String toString() => 'DiscoveredOp($name)';
+}
+
+/// What the hook read from the page's own modules, without any request.
+final class HookDiscovery extends HookMessage {
+  /// Creates a discovery.
+  const HookDiscovery({
+    this.ops = const [],
+    this.tokens = const {},
+    this.error,
+  });
+
+  /// The operations that resolved (empty on failure).
+  final List<DiscoveredOp> ops;
+
+  /// `fb_dtsg` and `lsd`, when present. Secret: never printed.
+  final Map<String, String> tokens;
+
+  /// The error code of a failed routine (letters and underscores).
+  final String? error;
+
+  @override
+  String toString() => 'HookDiscovery(ops: ${ops.length})';
+}
+
 /// A message that was dropped.
 final class HookDropped extends HookMessage {
   /// Creates a drop.
@@ -88,6 +138,11 @@ const int maxHookBodyLength = 8 * 1024 * 1024;
 
 final RegExp _nameShape = RegExp(r'^[A-Za-z0-9_]{1,120}$');
 final RegExp _docIdShape = RegExp(r'^\d{5,32}$');
+final RegExp _providerKeyShape = RegExp(
+  r'^__relay_internal__pv__[A-Za-z0-9_]{1,100}$',
+);
+final RegExp _argShape = RegExp(r'^[a-z_]{1,64}$');
+final RegExp _errorShape = RegExp(r'^[a-z_]{1,40}$');
 final RegExp _tokenKeyShape = RegExp(r'^[A-Za-z0-9_]{1,40}$');
 
 bool _isInstagramHost(String host) =>
@@ -124,8 +179,9 @@ HookMessage parseHookMessage(List<Object?> args, {required String pageOrigin}) {
         ? const HookDropped(HookDropReason.malformed)
         : HookBlocked(friendly);
   }
+  if (type == 'discovery') return _parseDiscovery(data);
   // A response message has no `type` (the T-002 format); only a blocked
-  // notice has one.
+  // notice and a discovery have one.
   if (type != null) return const HookDropped(HookDropReason.malformed);
 
   final url = data['url'];
@@ -172,6 +228,79 @@ HookMessage parseHookMessage(List<Object?> args, {required String pageOrigin}) {
     friendlyName: friendly,
     docId: docId,
     tokens: Map.unmodifiable(tokens),
+  );
+}
+
+/// Reads a `discovery` message with strict shapes (T-048). A malformed part
+/// is dropped; a malformed container drops the message.
+HookMessage _parseDiscovery(Map<Object?, Object?> data) {
+  const bad = HookDropped(HookDropReason.malformed);
+  final rawOps = data['ops'];
+  if (rawOps is! List || rawOps.length > 12) return bad;
+  final ops = <DiscoveredOp>[];
+  final seen = <String>{};
+  for (final raw in rawOps) {
+    if (raw is! Map) return bad;
+    final name = raw['name'];
+    final docId = raw['docId'];
+    if (name is! String || !_nameShape.hasMatch(name)) return bad;
+    if (docId is! String || !_docIdShape.hasMatch(docId)) return bad;
+    final provided = <String, Object>{};
+    final rawProvided = raw['provided'];
+    if (rawProvided != null) {
+      if (rawProvided is! Map || rawProvided.length > 40) return bad;
+      for (final e in rawProvided.entries) {
+        final k = e.key;
+        final v = e.value;
+        if (k is! String || !_providerKeyShape.hasMatch(k)) return bad;
+        final ok =
+            v is bool ||
+            (v is num && v.isFinite) ||
+            (v is String && v.length <= 64);
+        if (!ok) return bad;
+        provided[k] = v! as Object;
+      }
+    }
+    final args = <String>[];
+    final rawArgs = raw['args'];
+    if (rawArgs != null) {
+      if (rawArgs is! List || rawArgs.length > 40) return bad;
+      for (final a in rawArgs) {
+        if (a is! String || !_argShape.hasMatch(a)) return bad;
+        args.add(a);
+      }
+    }
+    if (!seen.add(name)) continue;
+    ops.add(
+      DiscoveredOp(
+        name: name,
+        docId: docId,
+        provided: Map.unmodifiable(provided),
+        args: List.unmodifiable(args),
+      ),
+    );
+  }
+  final tokens = <String, String>{};
+  final rawTokens = data['tokens'];
+  if (rawTokens != null) {
+    if (rawTokens is! Map) return bad;
+    for (final key in const ['fb_dtsg', 'lsd']) {
+      final v = rawTokens[key];
+      if (v == null) continue;
+      if (v is! String || v.isEmpty || v.length > 4096) return bad;
+      tokens[key] = v;
+    }
+  }
+  final error = data['error'];
+  String? code;
+  if (error != null) {
+    if (error is! String || !_errorShape.hasMatch(error)) return bad;
+    code = error;
+  }
+  return HookDiscovery(
+    ops: List.unmodifiable(ops),
+    tokens: Map.unmodifiable(tokens),
+    error: code,
   );
 }
 

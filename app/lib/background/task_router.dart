@@ -1,5 +1,6 @@
 import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_instagram/page/user_initiated.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// Shows the notifications of a finished task (T-022). Implemented by
@@ -167,7 +168,16 @@ final class TaskRouter {
     }
   }
 
-  Future<bool> _check(CheckScope scope, Map<String, dynamic>? input) async {
+  /// A manual "Check now" runs as a user-initiated run (T-048): page mode may
+  /// load pages in this background isolate, which a scheduled check may not.
+  Future<bool> _check(CheckScope scope, Map<String, dynamic>? input) {
+    if (input?[TaskNames.inputManual] == true) {
+      return runUserInitiated(() => _checkRun(scope, input));
+    }
+    return _checkRun(scope, input);
+  }
+
+  Future<bool> _checkRun(CheckScope scope, Map<String, dynamic>? input) async {
     final manual = input?[TaskNames.inputManual] == true;
     final rawTarget = input?[TaskNames.inputTargetId];
     final targetId = rawTarget is int ? rawTarget : null;
@@ -186,7 +196,10 @@ final class TaskRouter {
     }
     await _downloads(deadline, manual: manual, check: checked);
     await _notifySession(checked);
-    if (isPosts) await _kickHistory();
+    // A check that had failures made no progress worth a history kick: the
+    // history chain fails the same way and keeps its own (30 min) delay. Kicks
+    // after quick failures were one source of the check storm (T-048).
+    if (isPosts && checked.run.errorCode == null) await _kickHistory();
 
     final retry =
         checked.result == CheckResult.failed &&
