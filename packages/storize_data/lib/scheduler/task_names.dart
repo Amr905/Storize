@@ -15,6 +15,13 @@ abstract final class TaskNames {
   /// One-off download roll-over.
   static const String download = 'download';
 
+  /// One-off post-history step: one page per running backfill (T-040).
+  static const String history = 'history';
+
+  /// Unique name of the one-off `history` task that a check enqueues, so a
+  /// check never queues it twice (the task itself uses [history]).
+  static const String historyKick = 'history-kick';
+
   /// Periodic retention (24 h).
   static const String retention = 'retention';
 
@@ -26,6 +33,7 @@ abstract final class TaskNames {
     checkStories,
     checkPosts,
     download,
+    history,
     retention,
     updateCheck,
   };

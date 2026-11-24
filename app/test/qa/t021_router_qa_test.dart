@@ -13,6 +13,13 @@ final class _Enq implements DownloadEnqueuer {
   int calls = 0;
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) async => calls++;
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) async {}
 }
 
 DownloadPendingResult _dl(DownloadStopReason r, int remaining) =>
@@ -161,4 +168,11 @@ final class _ThrowingEnq implements DownloadEnqueuer {
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) =>
       throw Exception(_secret);
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) => throw Exception(_secret);
 }

@@ -42,11 +42,13 @@ final class _FakeClient implements WorkmanagerClient {
     required ExistingWorkPolicy policy,
     Map<String, dynamic>? inputData,
     bool expedited = false,
+    Duration? initialDelay,
   }) async => calls.add(
     _Call('oneoff', uniqueName, taskName, constraints, {
       'policy': policy,
       'input': inputData,
       'expedited': expedited,
+      'delay': initialDelay,
     }),
   );
 
@@ -240,6 +242,43 @@ void main() {
         client.calls.single.constraints!.networkType,
         NetworkType.unmetered,
       );
+    });
+  });
+
+  group('history tasks (T-040)', () {
+    test(
+      'a check kick keeps an existing request and delays the start',
+      () async {
+        await scheduler.enqueueHistory(
+          wifiOnly: false,
+          delay: const Duration(minutes: 1),
+        );
+        final call = client.calls.single;
+        expect(call.unique, TaskNames.historyKick);
+        expect(call.task, TaskNames.history);
+        expect(call.extra['policy'], ExistingWorkPolicy.keep);
+        expect(call.extra['delay'], const Duration(minutes: 1));
+        expect(call.constraints!.requiresStorageNotLow, isTrue);
+      },
+    );
+
+    test('the next link of a chain appends under the history name', () async {
+      await scheduler.enqueueHistory(
+        wifiOnly: true,
+        delay: const Duration(minutes: 15),
+        fromHistoryTask: true,
+      );
+      final call = client.calls.single;
+      expect(call.unique, TaskNames.history);
+      expect(call.task, TaskNames.history);
+      expect(call.extra['policy'], ExistingWorkPolicy.append);
+      expect(call.extra['delay'], const Duration(minutes: 15));
+      expect(call.constraints!.networkType, NetworkType.unmetered);
+    });
+
+    test('the dispatcher knows the history task name', () {
+      expect(TaskNames.all, contains(TaskNames.history));
+      expect(TaskNames.history, 'history');
     });
   });
 

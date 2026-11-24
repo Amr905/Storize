@@ -62,7 +62,7 @@ void main() {
       kind: ContentKind.highlight,
       postedAt: at,
       slides: const [],
-      extras: {
+      extras: const {
         HighlightExtras.id: 'h1',
         HighlightExtras.title: 'Trip',
         HighlightExtras.order: 0,

@@ -33,6 +33,22 @@ typedef DownloadRunner = Future<DownloadPendingResult> Function({
   ExtractionPolicy policy,
 });
 
+/// Runs [BackfillHistory.runDue]: one page for each running backfill.
+typedef HistoryRunner = Future<BackfillPassResult> Function({
+  ExtractionPolicy? policy,
+  DateTime? deadline,
+});
+
+/// Whether a backfill is running ([BackfillHistory.hasRunning]).
+typedef HistoryProbe = Future<bool> Function({Duration? staleFor});
+
+/// Runs [SyncHighlights.runDue].
+typedef HighlightsRunner = Future<HighlightsResult> Function({
+  int? targetId,
+  ExtractionPolicy? policy,
+  DateTime? deadline,
+});
+
 /// Routes a background task name to its use case (TECH_SPEC section 2,
 /// `callbackDispatcher`).
 ///
@@ -58,6 +74,9 @@ final class TaskRouter {
     required this._enqueuer,
     this._log,
     this._notifier,
+    this._history,
+    this._historyProbe,
+    this._highlights,
     this.budget = const Duration(minutes: 8),
   });
 
@@ -73,6 +92,19 @@ final class TaskRouter {
   final DownloadEnqueuer _enqueuer;
   final DiagnosticLog? _log;
   final TaskNotifier? _notifier;
+  final HistoryRunner? _history;
+  final HistoryProbe? _historyProbe;
+  final HighlightsRunner? _highlights;
+
+  /// The wait before the next `history` task while backfills run.
+  static const Duration historyDelay = Duration(minutes: 1);
+
+  /// The wait after a rate limit.
+  static const Duration historyRateLimitDelay = Duration(minutes: 15);
+
+  /// A running backfill whose progress is older than this has no live
+  /// `history` chain, so a check starts one.
+  static const Duration historyStale = Duration(minutes: 10);
 
   /// Runs the task [name] with [input] (the WorkManager input data).
   ///
@@ -87,6 +119,8 @@ final class TaskRouter {
           return await _check(CheckScope.posts, input);
         case TaskNames.download:
           return await _downloadTask();
+        case TaskNames.history:
+          return await _historyTask();
         case TaskNames.retention:
           await _retention();
           return true;
@@ -123,13 +157,101 @@ final class TaskRouter {
       targetId: targetId,
       deadline: deadline,
     );
+    final isPosts = scope == CheckScope.posts;
+    if (isPosts && checked.result != CheckResult.skippedSession) {
+      await _highlightsPass(deadline, manual: manual);
+    }
     await _downloads(deadline, manual: manual, check: checked);
     await _notifySession(checked);
+    if (isPosts) await _kickHistory();
 
     final retry =
         checked.result == CheckResult.failed &&
         checked.run.errorCode == 'network';
     return !retry;
+  }
+
+  /// Saves the highlights of the targets that have them on (FR-71). It runs
+  /// with the post check, so the downloads that follow pick the items up.
+  /// Never throws: a failure here must not lose the check's downloads.
+  Future<void> _highlightsPass(
+    DateTime deadline, {
+    required bool manual,
+  }) async {
+    final run = _highlights;
+    if (run == null) return;
+    try {
+      final settings = await _settings.get();
+      final policy = (manual || settings.pageModeInBackground)
+          ? ExtractionPolicy.directThenPage
+          : ExtractionPolicy.directOnly;
+      final r = await run(policy: policy, deadline: deadline);
+      await _notifyStatus(r.sessionStatus);
+    } on Object catch (error) {
+      _log?.log(
+        LogLevel.warn,
+        'background',
+        'highlights_failed type=${error.runtimeType}',
+      );
+    }
+  }
+
+  /// Starts a chain of `history` tasks when a backfill is running and no
+  /// chain keeps its progress fresh. Never throws.
+  Future<void> _kickHistory() async {
+    final probe = _historyProbe;
+    if (probe == null) return;
+    try {
+      if (!await probe(staleFor: historyStale)) return;
+      final settings = await _settings.get();
+      await _enqueuer.enqueueHistory(
+        wifiOnly: settings.wifiOnly,
+        delay: historyDelay,
+      );
+    } on Object catch (error) {
+      _log?.log(
+        LogLevel.warn,
+        'background',
+        'history_kick_failed type=${error.runtimeType}',
+      );
+    }
+  }
+
+  /// The `history` task: one page per running backfill, then the downloads.
+  /// While a backfill is still running it queues itself again (short delay,
+  /// longer after a rate limit). A lost session ends the chain: the next
+  /// check starts it again once the user has logged in.
+  Future<bool> _historyTask() async {
+    final run = _history;
+    if (run == null) return true;
+    final deadline = _clock.now().add(budget);
+    final settings = await _settings.get();
+    final policy = settings.pageModeInBackground
+        ? ExtractionPolicy.directThenPage
+        : ExtractionPolicy.directOnly;
+    final r = await run(policy: policy, deadline: deadline);
+    await _downloads(deadline, manual: false);
+    await _notifyStatus(r.sessionStatus);
+    if (r.network) return false; // WorkManager back-off retries this task.
+    final blocked = r.sessionStatus != null || r.sessionInactive;
+    if (r.running > 0 && !blocked) {
+      await _enqueuer.enqueueHistory(
+        wifiOnly: settings.wifiOnly,
+        delay: r.rateLimited ? historyRateLimitDelay : historyDelay,
+        fromHistoryTask: true,
+      );
+    }
+    return true;
+  }
+
+  Future<void> _notifyStatus(AccountStatus? status) async {
+    final notifier = _notifier;
+    if (notifier == null || status == null) return;
+    try {
+      await notifier.sessionChanged(status);
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+    }
   }
 
   Future<bool> _downloadTask() async {

@@ -166,7 +166,7 @@ final class NotificationService implements TaskNotifier {
       final settings = await _settings.get();
       final wanted = [
         for (final c in counts)
-          if (c.kind == ContentKind.story
+          if (c.kind != ContentKind.post
               ? settings.notifyStories
               : settings.notifyPosts)
             c,
@@ -174,10 +174,11 @@ final class NotificationService implements TaskNotifier {
       if (wanted.isEmpty || !await _port.areEnabled()) return;
 
       final items = await _lookups.itemsOf(check?.newContentIds ?? const []);
-      for (final kind in ContentKind.values) {
+      // A highlight is notified with the stories until T-042.
+      for (final kind in const [ContentKind.story, ContentKind.post]) {
         final group = [
           for (final c in wanted)
-            if (c.kind == kind) c,
+            if ((c.kind == ContentKind.post) == (kind == ContentKind.post)) c,
         ];
         if (group.isEmpty) continue;
         final isStory = kind == ContentKind.story;
@@ -190,7 +191,9 @@ final class NotificationService implements TaskNotifier {
           final username = await _lookups.usernameOf(c.targetId);
           if (username == null) continue;
           final first = items.where(
-            (i) => i.targetId == c.targetId && i.kind == kind,
+            (i) =>
+                i.targetId == c.targetId &&
+                (i.kind == ContentKind.post) == (kind == ContentKind.post),
           );
           final payload = first.isEmpty
               ? _libraryPayload(kind, c.targetId)

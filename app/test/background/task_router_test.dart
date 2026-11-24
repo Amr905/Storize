@@ -38,6 +38,20 @@ final class _Enqueuer implements DownloadEnqueuer {
   @override
   Future<void> enqueueDownload({required bool wifiOnly}) async =>
       calls.add(wifiOnly);
+
+  final List<({Duration delay, bool wifiOnly, bool fromHistoryTask})> history =
+      [];
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) async => history.add((
+    delay: delay,
+    wifiOnly: wifiOnly,
+    fromHistoryTask: fromHistoryTask,
+  ));
 }
 
 typedef _CheckCall = ({
@@ -101,6 +115,10 @@ final class _Rig {
     clock: clock,
     enqueuer: enqueuer,
     log: log,
+    history: ({policy, deadline}) async {
+      order.add('history');
+      return const BackfillPassResult(running: 0, newContentIds: []);
+    },
   );
 }
 

@@ -4,7 +4,9 @@ import 'package:storize_domain/storize_domain.dart';
 
 /// Builds the [TaskRouter] of [c]: each task name goes to its use case.
 ///
-/// `check-*` tasks use [RunCheck] then [DownloadPending]; `download` uses
+/// `check-*` tasks use [RunCheck] then [DownloadPending] (the posts check also
+/// runs [SyncHighlights] and starts the `history` chain); `history` uses
+/// [BackfillHistory] then [DownloadPending]; `download` uses
 /// [DownloadPending]; `retention` uses [ApplyRetention]; `update-check` uses
 /// the update checker and records the check time.
 TaskRouter routerFor(AppComposition c) => TaskRouter(
@@ -15,6 +17,9 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   settings: c.settings,
   clock: c.clock,
   enqueuer: c.parts.enqueuer,
+  history: c.backfillHistory.runDue,
+  historyProbe: c.backfillHistory.hasRunning,
+  highlights: c.syncHighlights.runDue,
   log: c.log,
   notifier: c.parts.notifications,
 );

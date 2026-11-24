@@ -205,7 +205,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     final id = item.content.id;
     unawaited(
       context.push(
-        item.content.kind == ContentKind.story
+        item.content.kind != ContentKind.post
             ? Routes.storyLocation(id)
             : Routes.postLocation(id),
       ),

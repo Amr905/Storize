@@ -135,13 +135,14 @@ LibraryView buildLibraryView({
   for (final item in all) {
     final c = item.content;
     if (!c.viewed) {
-      if (c.kind == ContentKind.story) {
+      // A highlight counts and shows like a story until T-042.
+      if (c.kind != ContentKind.post) {
         unviewedStories++;
       } else {
         unviewedPosts++;
       }
     }
-    if (c.kind != wanted) continue;
+    if ((c.kind == ContentKind.post) != (wanted == ContentKind.post)) continue;
     totalOfKind++;
     if (filter.matches(c, item.media) && filters.matchesShape(item, kind)) {
       shown.add(item);

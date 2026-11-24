@@ -188,6 +188,8 @@ final class AppComposition {
     required this.loginPlatform,
     required this.loginLease,
     required this.runCheck,
+    required this.backfillHistory,
+    required this.syncHighlights,
     required this.downloadPending,
     required this.applyRetention,
     required this.detectGaps,
@@ -306,6 +308,22 @@ final class AppComposition {
         settings: parts.settings,
         clock: clock,
       ),
+      backfillHistory: BackfillHistory(
+        platform: platform,
+        targets: targets,
+        content: content,
+        accounts: accounts,
+        settings: parts.settings,
+        clock: clock,
+      ),
+      syncHighlights: SyncHighlights(
+        platform: platform,
+        targets: targets,
+        content: content,
+        accounts: accounts,
+        settings: parts.settings,
+        clock: clock,
+      ),
       downloadPending: DownloadPending(
         content: content,
         targets: targets,
@@ -362,6 +380,12 @@ final class AppComposition {
 
   /// Checks stories or posts.
   final RunCheck runCheck;
+
+  /// Fetches the post history of a target, one page per step.
+  final BackfillHistory backfillHistory;
+
+  /// Saves the highlights of targets that have them on.
+  final SyncHighlights syncHighlights;
 
   /// Downloads pending media.
   final DownloadPending downloadPending;

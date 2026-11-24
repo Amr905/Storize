@@ -48,6 +48,7 @@ final class _Client implements WorkmanagerClient {
     required ExistingWorkPolicy policy,
     Map<String, dynamic>? inputData,
     bool expedited = false,
+    Duration? initialDelay,
   }) async => recs.add(
     _Rec(u, t, constraints, policy, null, null, expedited, inputData),
   );

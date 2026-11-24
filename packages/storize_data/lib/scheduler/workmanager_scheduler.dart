@@ -11,6 +11,17 @@ abstract interface class DownloadEnqueuer {
   /// Enqueues a one-off `download` task. A second call while one is queued or
   /// running appends, so a roll-over from inside a download task is not lost.
   Future<void> enqueueDownload({required bool wifiOnly});
+
+  /// Enqueues a one-off `history` task that starts after [delay] (T-040).
+  ///
+  /// With [fromHistoryTask] the task is the next link of a running chain: it
+  /// appends, so the task that is running now does not block it. Otherwise
+  /// (a check starting or restarting a chain) it keeps an existing request.
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  });
 }
 
 /// The [Scheduler] over WorkManager (`workmanager` plugin, ADR-4).
@@ -125,6 +136,24 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
         ),
         policy: ExistingWorkPolicy.append,
       );
+
+  @override
+  Future<void> enqueueHistory({
+    required bool wifiOnly,
+    required Duration delay,
+    bool fromHistoryTask = false,
+  }) => _client.registerOneOff(
+    fromHistoryTask ? TaskNames.history : TaskNames.historyKick,
+    TaskNames.history,
+    constraints: Constraints(
+      networkType: wifiOnly ? NetworkType.unmetered : NetworkType.connected,
+      requiresStorageNotLow: true,
+    ),
+    policy: fromHistoryTask
+        ? ExistingWorkPolicy.append
+        : ExistingWorkPolicy.keep,
+    initialDelay: delay,
+  );
 
   @override
   Future<void> cancelAll() => _client.cancelAll();

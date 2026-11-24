@@ -240,12 +240,7 @@ final class BackfillHistory {
     ExtractionPolicy? policy,
     DateTime? deadline,
   }) async {
-    final ids = [
-      for (final t in await _targets.listActive(CheckScope.all))
-        if (t.platform == _platform.id &&
-            t.historyProgress?.state == HistoryState.running)
-          t.id,
-    ];
+    final ids = [for (final t in await _runningTargets()) t.id];
     final fresh = <int>[];
     var rateLimited = false;
     var network = false;
@@ -269,13 +264,7 @@ final class BackfillHistory {
         break;
       }
     }
-    var running = 0;
-    for (final t in await _targets.listActive(CheckScope.all)) {
-      if (t.platform == _platform.id &&
-          t.historyProgress?.state == HistoryState.running) {
-        running++;
-      }
-    }
+    final running = await _runningTargets().then((l) => l.length);
     return BackfillPassResult(
       running: running,
       newContentIds: fresh,
@@ -284,6 +273,28 @@ final class BackfillHistory {
       sessionInactive: inactive,
       network: network,
     );
+  }
+
+  Future<List<Target>> _runningTargets() async => [
+    for (final t in await _targets.listActive(CheckScope.all))
+      if (t.platform == _platform.id &&
+          t.historyProgress?.state == HistoryState.running)
+        t,
+  ];
+
+  /// Whether a backfill is `running` and needs a background task. With
+  /// [staleFor] only backfills whose progress was last written more than
+  /// that long ago count: a chain of `history` tasks that is alive keeps
+  /// writing progress, so only a stalled one needs a new task.
+  Future<bool> hasRunning({Duration? staleFor}) async {
+    final now = _clock.now();
+    for (final t in await _runningTargets()) {
+      final at = t.historyProgress?.updatedAt;
+      if (staleFor == null || at == null || now.difference(at) >= staleFor) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Fetches one page for [targetId] and stores it. Never throws for expected
