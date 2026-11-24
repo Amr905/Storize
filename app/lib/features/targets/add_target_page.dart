@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/targets/history_range_picker.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/router/routes.dart';
@@ -312,6 +313,27 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 style: textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
+              ),
+              const SizedBox(height: StorizeSpacing.s16),
+              Text(l10n.tgtHistoryLabel, style: labelStyle),
+              const SizedBox(height: StorizeSpacing.s8),
+              HistoryRangePicker(
+                range: form.historyRange,
+                since: form.historySince,
+                enabled: !verifying,
+                onChanged: (range, since) =>
+                    notifier.setHistory(range, since: since),
+              ),
+              const SizedBox(height: StorizeSpacing.s8),
+              SwitchListTile(
+                contentPadding: const EdgeInsetsDirectional.only(
+                  start: StorizeSpacing.s16,
+                  end: StorizeSpacing.s8,
+                ),
+                title: Text(l10n.tgtHighlightsLabel),
+                subtitle: Text(l10n.tgtHighlightsHint),
+                value: form.highlights,
+                onChanged: verifying ? null : notifier.setHighlights,
               ),
               const SizedBox(height: StorizeSpacing.s16),
               Text(l10n.tgtNoteLabel, style: labelStyle),

@@ -1824,4 +1824,107 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Checking $_temp0…';
   }
+
+  @override
+  String get tgtHistoryLabel => 'Post history';
+
+  @override
+  String get tgtHistoryNone => 'None';
+
+  @override
+  String get tgtHistoryToday => 'Today';
+
+  @override
+  String get tgtHistory7Days => 'Last 7 days';
+
+  @override
+  String get tgtHistory30Days => 'Last 30 days';
+
+  @override
+  String get tgtHistorySince => 'Since a date…';
+
+  @override
+  String tgtHistorySinceDate(String date) {
+    return 'Since $date';
+  }
+
+  @override
+  String get tgtHistoryAll => 'All';
+
+  @override
+  String get tgtHistoryAllHint =>
+      'Large accounts can take many hours; downloads run slowly in the background';
+
+  @override
+  String get tgtHighlightsLabel => 'Highlights';
+
+  @override
+  String get tgtHighlightsHint =>
+      'Saves the highlights now and the new items added to them later.';
+
+  @override
+  String get tdtHistoryTitle => 'Post history';
+
+  @override
+  String tdtHistoryRange(String range) {
+    return 'Range: $range';
+  }
+
+  @override
+  String get tdtHistoryChange => 'Change';
+
+  @override
+  String tdtHistoryRunning(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts',
+      one: '1 post',
+    );
+    return 'Downloading history: $_temp0 so far · up to $date';
+  }
+
+  @override
+  String tdtHistoryRunningNoDate(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts',
+      one: '1 post',
+    );
+    return 'Downloading history: $_temp0 so far';
+  }
+
+  @override
+  String get tdtHistoryPaused => 'Paused';
+
+  @override
+  String get tdtHistoryDone => 'Done';
+
+  @override
+  String get tdtHistoryFailed => 'Failed. Resume to try again.';
+
+  @override
+  String get tdtHistoryPause => 'Pause';
+
+  @override
+  String get tdtHistoryResume => 'Resume';
+
+  @override
+  String get tdtHistoryCancel => 'Cancel';
+
+  @override
+  String get tdtHighlightsLabel => 'Highlights';
+
+  @override
+  String get tdtHighlightsHint =>
+      'Turning this on downloads the highlights now.';
+
+  @override
+  String get libHighlightsFilter => 'Highlights';
+
+  @override
+  String storyHighlightTitle(String title) {
+    return 'Highlight: $title';
+  }
 }

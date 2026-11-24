@@ -3040,6 +3040,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking {accounts, plural, one{1 account} other{{accounts} accounts}}…'**
   String ntfChecking(int accounts);
+
+  /// S-08 label for the post history picker (FR-68).
+  ///
+  /// In en, this message translates to:
+  /// **'Post history'**
+  String get tgtHistoryLabel;
+
+  /// S-08 and S-09 history range: no history (default).
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get tgtHistoryNone;
+
+  /// S-08 and S-09 history range: posts from today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get tgtHistoryToday;
+
+  /// S-08 and S-09 history range: the last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get tgtHistory7Days;
+
+  /// S-08 and S-09 history range: the last 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get tgtHistory30Days;
+
+  /// S-08 and S-09 history range: opens a date picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Since a date…'**
+  String get tgtHistorySince;
+
+  /// S-08 and S-09 history range once a date is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {date}'**
+  String tgtHistorySinceDate(String date);
+
+  /// S-08 and S-09 history range: every post.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get tgtHistoryAll;
+
+  /// S-08 hint shown when the history range is All.
+  ///
+  /// In en, this message translates to:
+  /// **'Large accounts can take many hours; downloads run slowly in the background'**
+  String get tgtHistoryAllHint;
+
+  /// S-08 switch label: download the account's highlights (FR-71).
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get tgtHighlightsLabel;
+
+  /// S-08 hint under the Highlights switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves the highlights now and the new items added to them later.'**
+  String get tgtHighlightsHint;
+
+  /// S-09 section title for post history (FR-68).
+  ///
+  /// In en, this message translates to:
+  /// **'Post history'**
+  String get tdtHistoryTitle;
+
+  /// S-09 line showing the history range.
+  ///
+  /// In en, this message translates to:
+  /// **'Range: {range}'**
+  String tdtHistoryRange(String range);
+
+  /// S-09 button that opens the history range picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get tdtHistoryChange;
+
+  /// S-09 progress while the history downloads (FR-69). date is the oldest post seen so far.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading history: {count, plural, =1{1 post} other{{count} posts}} so far · up to {date}'**
+  String tdtHistoryRunning(int count, String date);
+
+  /// S-09 progress before any post date is known.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading history: {count, plural, =1{1 post} other{{count} posts}} so far'**
+  String tdtHistoryRunningNoDate(int count);
+
+  /// S-09 history state: paused (FR-69).
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get tdtHistoryPaused;
+
+  /// S-09 history state: finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get tdtHistoryDone;
+
+  /// S-09 history state: stopped by an error; resume retries.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed. Resume to try again.'**
+  String get tdtHistoryFailed;
+
+  /// S-09 button: pause the history download.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get tdtHistoryPause;
+
+  /// S-09 button: resume the history download.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get tdtHistoryResume;
+
+  /// S-09 button: stop the history download for good; stored posts stay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get tdtHistoryCancel;
+
+  /// S-09 switch label: download the account's highlights (FR-71).
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get tdtHighlightsLabel;
+
+  /// S-09 hint under the Highlights switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this on downloads the highlights now.'**
+  String get tdtHighlightsHint;
+
+  /// S-05 filter chip: show only highlight items (FR-72).
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get libHighlightsFilter;
+
+  /// S-06 header line naming the highlight of a highlight item (FR-72).
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight: {title}'**
+  String storyHighlightTitle(String title);
 }
 
 class _AppLocalizationsDelegate
