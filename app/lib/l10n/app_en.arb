@@ -1289,6 +1289,8 @@
   "@tgtCheckNowDisabled": {"description": "Tooltip on the disabled Check now action (BR-7)."},
   "tgtCheckDone": "{count, plural, =0{Nothing new} =1{1 new item} other{{count} new items}}",
   "@tgtCheckDone": {"description": "Snackbar after Check now.", "placeholders": {"count": {"type": "int"}}},
+  "debugCheckNowUnmetered": "Check now (debug, no limit)",
+  "@debugCheckNowUnmetered": {"description": "Dev builds only: overflow menu item on S-07 that runs a check without the hourly request limit."},
   "tgtCheckFailed": "The check could not run.",
   "@tgtCheckFailed": {"description": "Snackbar when Check now fails."},
   "tgtRateLimitBar": "Instagram is limiting requests. Storize has slowed checks down.",

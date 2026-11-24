@@ -112,7 +112,7 @@ final class TaskRouter {
 
   /// The input-data key of the debug "Check now, no limit" (dev builds):
   /// `true` runs the check under `RequestGovernor.runUnmetered`.
-  static const String inputManualUnmetered = 'manualUnmetered';
+  static const String inputManualUnmetered = TaskNames.inputManualUnmetered;
 
   DateTime _deadline() => _clock.now().add(budget - startMargin);
 

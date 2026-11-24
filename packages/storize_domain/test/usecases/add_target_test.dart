@@ -30,6 +30,7 @@ class ThrowingScheduler implements Scheduler {
   Future<void> checkNow({
     CheckScope scope = CheckScope.all,
     int? targetId,
+    bool unmetered = false,
   }) async => throw StateError('secret-ish detail');
 
   @override

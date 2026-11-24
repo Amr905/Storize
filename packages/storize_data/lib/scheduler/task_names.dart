@@ -44,6 +44,10 @@ abstract final class TaskNames {
   /// Input-data key: `true` when the check was started by the user.
   static const String inputManual = 'manual';
 
+  /// Input-data key: `true` for the dev-only debug check that skips the
+  /// hourly request limit (T-050).
+  static const String inputManualUnmetered = 'manualUnmetered';
+
   /// The task name of a check for [scope]. [CheckScope.all] has none: it is
   /// two tasks.
   static String forScope(CheckScope scope) => switch (scope) {

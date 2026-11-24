@@ -216,6 +216,7 @@ List<Override> appOverrides(AppComposition c) => [
   governorLeaseRepoProvider.overrideWithValue(c.leases),
   contentPlatformProvider.overrideWithValue(c.platform),
   schedulerProvider.overrideWithValue(c.scheduler),
+  allowUnmeteredProvider.overrideWithValue(c.parts.allowUnmetered),
   backfillHistoryProvider.overrideWithValue(c.backfillHistory),
   syncHighlightsProvider.overrideWithValue(c.syncHighlights),
   clockProvider.overrideWithValue(c.clock),

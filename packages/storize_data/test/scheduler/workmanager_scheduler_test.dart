@@ -201,6 +201,15 @@ void main() {
       expect(call.extra['input'], {TaskNames.inputManual: true});
     });
 
+    test('unmetered adds the debug input flag (T-050)', () async {
+      await scheduler.checkNow(scope: CheckScope.stories, unmetered: true);
+
+      expect(client.calls.single.extra['input'], {
+        TaskNames.inputManual: true,
+        TaskNames.inputManualUnmetered: true,
+      });
+    });
+
     test('carries the target ID', () async {
       await scheduler.checkNow(scope: CheckScope.posts, targetId: 7);
 
