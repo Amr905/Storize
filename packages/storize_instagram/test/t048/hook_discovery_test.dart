@@ -40,9 +40,6 @@ Map<String, Object?> _msg({
 HookMessage _parse(Object? data, {String pageOrigin = _origin}) =>
     parseHookMessage([data], pageOrigin: pageOrigin);
 
-HookEvent _event(Map<String, Object?> data) =>
-    HookEvent(pageOrigin: _origin, args: [data]);
-
 NavigationEvent nav(String path) =>
     NavigationEvent(host: 'www.instagram.com', path: path);
 
@@ -124,7 +121,7 @@ void main() {
       expect(posts['docId'], '11111111111111111');
       expect(posts['provided'], isEmpty);
       expect(posts['args'], isEmpty);
-      expect((m['ops'] as List), hasLength(2));
+      expect(m['ops'] as List, hasLength(2));
     }, skip: noNode);
 
     test('require that always throws: empty ops, an error code, no values', () {
@@ -239,7 +236,7 @@ void main() {
           ),
         );
       }
-      dropped('ops not a list', _msg(ops: null)..['ops'] = 'x');
+      dropped('ops not a list', (_msg()..['ops'] = 'x'));
       dropped(
         'too many ops',
         _msg(ops: [for (var i = 0; i < 13; i++) _op('Q$i', _postsDoc)]),
@@ -268,19 +265,19 @@ void main() {
   });
 
   group('PageDiscovery.recordDiscovery', () {
-    final ops = [
+    const ops = [
       DiscoveredOp(
         name: 'PolarisProfilePostsQuery',
         docId: _postsDoc,
-        provided: const {_pvKey: true},
-        args: const ['username', 'data'],
+        provided: {_pvKey: true},
+        args: ['username', 'data'],
       ),
-      const DiscoveredOp(
+      DiscoveredOp(
         name: 'PolarisStoriesV3ReelPageStandaloneQuery',
         docId: _storiesDoc,
         args: ['reel_ids_arr', 'is_highlight'],
       ),
-      const DiscoveredOp(name: 'SomethingElseQuery', docId: '33333'),
+      DiscoveredOp(name: 'SomethingElseQuery', docId: '33333'),
     ];
 
     test('records doc id, shape and tokens; unknown ops are ignored', () async {
@@ -297,12 +294,11 @@ void main() {
     });
 
     test('only one token present: tokens are left alone', () async {
-      final d = PageDiscovery();
-      d.recordDiscovery(ops, {'fb_dtsg': _dtsg});
+      final d = PageDiscovery()..recordDiscovery(ops, {'fb_dtsg': _dtsg});
       expect(await d.tokens(), isNull);
     });
 
-    test('shapes and docIds persist through the store (provider values, not secret)', () async {
+    test('shapes and docIds persist through the store', () async {
       final store = InMemoryDiscoveryStore();
       final a = PageDiscovery(store: store, accountId: 7)
         ..recordDiscovery(ops, {'fb_dtsg': _dtsg, 'lsd': _lsd});
@@ -381,7 +377,8 @@ void main() {
         expect(
           line,
           contains(
-            'ops=PolarisProfilePostsQuery,PolarisStoriesV3ReelPageStandaloneQuery',
+            'ops=PolarisProfilePostsQuery,'
+            'PolarisStoriesV3ReelPageStandaloneQuery',
           ),
         );
         expect(line, contains('provided=2'));
@@ -464,7 +461,7 @@ void main() {
     });
 
     test('the allowance survives awaits and ends with the run', () async {
-      var seen = <bool>[];
+      final seen = <bool>[];
       await runUserInitiated(() async {
         await Future<void>.delayed(Duration.zero);
         seen.add(isUserInitiatedRun);

@@ -1,12 +1,12 @@
 // T-048: GraphQL requests built from the discovered argument names and
 // provider values. Synthetic values only; no network.
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/mapper/mapper.dart';
 import 'package:storize_instagram/page/page.dart';
-import 'package:storize_model/storize_model.dart';
 
 import '../direct/support.dart';
 
@@ -54,20 +54,22 @@ PageDiscovery _discovery({
     provided: provided,
     args: args,
   );
-  return PageDiscovery()..recordDiscovery(
-    [
-      op(GraphqlQuery.posts, postsArgs, _postsProviders),
-      if (paging) op(GraphqlQuery.postsPaging, pagingArgs, _postsProviders),
-      op(
-        GraphqlQuery.stories,
-        ['is_highlight', 'media_id', 'reel_ids_arr'],
-        _storiesProviders,
-      ),
-      op(GraphqlQuery.highlights, trayArgs),
-      op(GraphqlQuery.profile, ['enable_integrity_filters', 'id']),
-    ],
-    {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
-  );
+  final d = PageDiscovery()
+    ..recordDiscovery(
+      [
+        op(GraphqlQuery.posts, postsArgs, _postsProviders),
+        if (paging) op(GraphqlQuery.postsPaging, pagingArgs, _postsProviders),
+        op(
+          GraphqlQuery.stories,
+          ['is_highlight', 'media_id', 'reel_ids_arr'],
+          _storiesProviders,
+        ),
+        op(GraphqlQuery.highlights, trayArgs),
+        op(GraphqlQuery.profile, ['enable_integrity_filters', 'id']),
+      ],
+      {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
+    );
+  return d;
 }
 
 Rig _rig(PageDiscovery d, {UsernameCache? usernames}) => Rig(
@@ -76,8 +78,11 @@ Rig _rig(PageDiscovery d, {UsernameCache? usernames}) => Rig(
   usernames: usernames,
 );
 
-UsernameCache _names() =>
-    InMemoryUsernameCache()..remember('user_1', 'zzfake_user');
+UsernameCache _names() {
+  final cache = InMemoryUsernameCache();
+  unawaited(cache.remember('user_1', 'zzfake_user'));
+  return cache;
+}
 
 DateTime _t(int s) =>
     DateTime.fromMillisecondsSinceEpoch(s * 1000, isUtc: true);
@@ -367,5 +372,4 @@ String friendlyNameOf(Map<String, String> f) => f['fb_api_req_friendly_name']!;
 String _cursor() => PostCursor(
   igCursor: 'ZZFAKE_cursor',
   takenAt: DateTime.utc(2026),
-  boundaryPks: const {},
 ).encode();

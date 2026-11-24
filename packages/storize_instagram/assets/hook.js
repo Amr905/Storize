@@ -19,6 +19,18 @@
  *     blockedFriendlyNames: [...]    // see below
  *   };
  *
+ * IN-PAGE DISCOVERY (T-048, only with includeRequestSecrets). The first page
+ * of posts is server-preloaded, so watching traffic never sees its doc_id.
+ * Instead the hook reads, from the page's own module system (window.require,
+ * NO network request), for a fixed allowlist of operations: the doc_id
+ * (<Name>_instagramRelayOperation), the relay provided-variable values and
+ * the argument names (<Name>.graphql), plus the fb_dtsg / lsd tokens. It posts
+ * {type:'discovery', origin, ops:[{name, docId, provided, args}], tokens} once
+ * the page is ready (a few spaced tries, and before the first captured
+ * response) and again on a window message {storizeDiscover:true}. A failure
+ * posts an empty ops list and an error code, never a value. It never touches
+ * stories UI or the seen mutation.
+ *
  * SEEN-MUTATION BLOCKING (UD-3, BR-8) - FAILS CLOSED. Opening a story page
  * makes the page fire PolarisStoriesV3SeenMutation, which marks the story as
  * seen for its owner and cannot be undone. For every fetch / XHR / sendBeacon

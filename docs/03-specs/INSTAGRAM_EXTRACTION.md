@@ -284,3 +284,34 @@ An alias never replaces a `doc_id` found under the exact name. The hook also rea
 **Diagnostics (INFO, no secrets).** After each page load: `names=` (sanitized to `[A-Za-z0-9_]`, at most 60 characters, 12 names, deduped), `has_doc_id=N has_tokens=N`. After a refresh: `state doc_ids=<queries> missing=<queries> tokens=<bool>`. Query names are Instagram code identifiers; doc_id and token values are never logged.
 
 **History.** A missing `doc_id` (`SchemaChanged('doc_id:...')`), missing page tokens, or `page_mode_background_disabled` is "not now": the backfill stays `running` (`BackfillOutcome.deferred`) and retries on the next run. Only a real response-shape `SchemaChanged`, `TargetNotFound` or `TargetNotVisible` fails it.
+
+## 2026-11-24 ground truth (web)
+Inspected in a logged-in desktop browser session on 2026-11-24. Names and shapes only; no values.
+
+**Module system.** The page exposes it as `window.require`. With **no network**:
+- `require('<OperationName>_instagramRelayOperation')` returns the `doc_id` string (17 digits).
+- `require('<OperationName>.graphql').params.providedVariables` maps `__relay_internal__pv__X` to an object whose `.get()` returns the current value (bool).
+- `require('<OperationName>.graphql').fragment.argumentDefinitions[].name` gives the argument names.
+- Page tokens: `require('DTSGInitialData').token` (`fb_dtsg`) and `require('LSD').token` (`lsd`).
+- The JS bundles also hold `__d("<Name>_instagramRelayOperation",[],(function(t,n,r,o,a,i){a.exports="<digits>"}),null)`.
+
+**Operations, argument names and providers.**
+| Operation | Arguments | Providers |
+|---|---|---|
+| `PolarisProfilePostsQuery` | after, before, data, first, last, username | PolarisMultiCaptionCarouselEnabled=true, PolarisProductTagIndicatorEnabled=false, PolarisReelsRecoDebugOverlayEnabled=false, PolarisSEOIsCrawler=false, PolarisShortDramaEnabled=true, PolarisThreadsStyleCommentsEnabled=false |
+| `PolarisProfilePostsTabContentQuery_connection` (paging) | after (string cursor), before, data, first, include_multi_captions, last, username | the same providers |
+| `PolarisStoriesV3ReelPageStandaloneQuery` | is_highlight, media_id, reel_ids_arr | PolarisCommunityNoteStoriesLabelEnabled=true |
+| `PolarisProfileStoryHighlightsTrayContentQuery` | after, before, first, last, max_highlights_to_fetch_on_pagination, user_id | none |
+| `PolarisProfilePageContentQuery` | enable_integrity_filters, id | several |
+
+- Posts are **by `username`, not user id**. The real `data` is `{count, include_reel_media_seen_timestamp, include_relationship_info, latest_besties_reel_media, latest_reel_media}`. Response: `data.xdt_api__v1__feed__user_timeline_graphql_connection` `{edges[].node, page_info}`.
+- The web sends paging to `POST /api/graphql` with `fb_api_req_friendly_name`, `server_timestamps`, `variables`, `doc_id`, `fb_dtsg`, `lsd`, `jazoest`, `av`, `__user`, `__a`, `__comet_req`, `fb_api_caller_class` and the header `X-FB-Friendly-Name`.
+- Stories: `PolarisStoriesV3ReelPageStandaloneQuery` with `reel_ids_arr: [userId]`, `is_highlight: false`. Highlight items: `reel_ids_arr: ['highlight:<id>']`, `is_highlight: true`. (`PolarisStoriesV3HighlightsPageQuery` is read too when it resolves.)
+
+**REST is dead on www.** `/api/v1/feed/user/...`, `highlights_tray` and `web_profile_info` return a 404 HTML page; `feed/reels_media` returns 500. REST stays gated off.
+
+**What T-048 does with it.**
+- `hook.js` reads the allowlist through `window.require` (no request) and posts `{type:'discovery', ops:[{name, docId, provided, args}], tokens:{fb_dtsg, lsd}}`; `hook_protocol.dart` parses it strictly (doc_id `^\d{5,32}$`, provider keys `^__relay_internal__pv__[A-Za-z0-9_]{1,100}$`, values bool/number/short string, arguments `^[a-z_]{1,64}$`).
+- `GraphqlTransport` sends only the discovered arguments plus the provider values; the form carries `av` (the `ds_user_id` cookie), `__user=0`, `__a=1`, `__comet_req=7`, `fb_dtsg`, `lsd`, `jazoest` (`2` + sum of the `fb_dtsg` code units), `fb_api_caller_class=RelayModern`, `server_timestamps=true`; the headers add `X-FB-Friendly-Name` and `X-FB-LSD` to the session headers.
+- Mappers read `xdt_api__v1__feed__reels_media` or `reels_media` (list or `{reels_media: []}`), and the tray connection under `highlights` or another key with "highlights" in its name.
+
