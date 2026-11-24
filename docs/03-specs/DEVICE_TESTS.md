@@ -195,6 +195,10 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 | B5 | Full-size photo and owner scoping | | | |
 | B6 | Library timing | | | |
 | B7 | integration_test on a device | | | |
+| D1 | Post paging, direct: confirm `after`/`first` on `PolarisProfilePostsQuery` return the next page; record `page_info` shape (INSTAGRAM_EXTRACTION v0.3) | | | |
+| D2 | Post paging, page mode: scroll the profile in the headless WebView; which friendly name the extra pages carry; how many posts 30 steps reach; page-size cost | | | |
+| D3 | Highlights tray: real friendly name, variable name, response paths; update the matcher and fixtures | | | |
+| D4 | Highlight items: reel query with `highlight:<id>`; `/stories/highlights/<id>/` in page mode; confirm the seen mutation is blocked (0 leaks) and the highlight is not marked seen | | | |
 | C | 24 h soak (see SOAK.md) | | | |
 
 ## Open questions
