@@ -103,6 +103,7 @@ void main() {
           'NOT_VISIBLE',
           'UNAVAILABLE',
           'ERROR',
+          'PENDING_LOOKUP',
         ],
       );
     });

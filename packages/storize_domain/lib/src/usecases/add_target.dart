@@ -54,6 +54,30 @@ final class AddTargetAdded extends AddTargetResult {
       'firstCheckScheduled: $firstCheckScheduled)';
 }
 
+/// The target was saved as "waiting to look up" because Instagram asked us
+/// to slow down or the network failed (FR-73). It is looked up later by
+/// `ResolvePendingTargets`.
+final class AddTargetPending extends AddTargetResult {
+  /// Creates the result.
+  const AddTargetPending({
+    required this.target,
+    required this.overLimitWarning,
+    this.schedulerError,
+  });
+
+  /// The stored target (status pending lookup).
+  final Target target;
+
+  /// Same meaning as [AddTargetAdded.overLimitWarning].
+  final bool overLimitWarning;
+
+  /// The runtime type name of the scheduler error, or null.
+  final String? schedulerError;
+
+  @override
+  String toString() => 'AddTargetPending(id: ${target.id})';
+}
+
 /// The input is not a valid username or profile link (S-08).
 final class AddTargetInvalidUsername extends AddTargetResult {
   /// Creates the result.
@@ -162,11 +186,12 @@ final class AddTargetUnknown extends AddTargetResult {
 /// Adds a tracked account (FR-10…FR-16, FR-63, FR-65, FR-67, BR-1, BR-2,
 /// EC-16).
 ///
-/// Steps: validate the input locally (no network), resolve the user, check
-/// visibility and duplicates (by user ID), store with `posts_watermark_at` at
-/// the start of today (device local time), then enqueue a first check. A
-/// scheduler error never undoes the add. Posts from before today are not
-/// downloaded (FR-63).
+/// Steps: validate the input locally (no network), reject a known username,
+/// resolve the user (a rate limit or network failure saves a pending target
+/// instead, FR-73), check visibility and duplicates (by user ID), store with
+/// `posts_watermark_at` at the start of today (device local time), then
+/// enqueue a first check. A scheduler error never undoes the add. Posts from
+/// before today are not downloaded (FR-63).
 final class AddTarget {
   /// Creates the use case.
   AddTarget({
@@ -248,7 +273,15 @@ final class AddTarget {
     s.codeUnits.map((c) => c >= 0x41 && c <= 0x5A ? c + 0x20 : c),
   );
 
+  /// The placeholder `remoteUserId` of a pending target (FR-73). The column
+  /// is UNIQUE, so it carries the username; the real ID replaces it when the
+  /// lookup succeeds. Never sent to Instagram.
+  static String pendingRemoteUserId(String username) => 'pending:$username';
+
   /// Adds the account typed as [raw].
+  ///
+  /// [historyRange], [historySince] and [highlights] are kept on a pending
+  /// target only; a normal add leaves them to the caller (S-08).
   Future<AddTargetResult> call(
     String raw, {
     required TargetCategory? category,
@@ -256,6 +289,9 @@ final class AddTarget {
     bool trackPosts = true,
     bool trackReels = true,
     String? note,
+    HistoryRange historyRange = HistoryRange.none,
+    DateTime? historySince,
+    bool highlights = false,
   }) async {
     final username = normalizeUsername(raw);
     if (username == null) return const AddTargetInvalidUsername();
@@ -268,11 +304,52 @@ final class AddTarget {
       return const AddTargetNoteTooLong();
     }
 
+    final platformId = _platform.id;
+    final all = await _targets.watchAll().first;
+    for (final t in all) {
+      if (t.platform == platformId && _asciiLower(t.username) == username) {
+        return _duplicate(t);
+      }
+    }
+
+    // FR-73: the add never waits for Instagram. The watermark is the start
+    // of today in device local time (FR-63, D-17); no network call is needed
+    // (TECH_SPEC 17.4).
+    final now = _clock.now();
+    final local = now.toLocal();
+    final watermark = DateTime(local.year, local.month, local.day).toUtc();
+    final storedNote = (cleanNote == null || cleanNote.isEmpty)
+        ? null
+        : cleanNote;
+
     final resolved = await _platform.resolveUser(username);
     final RemoteUser user;
     switch (resolved) {
       case Ok(:final value):
         user = value;
+      case Err(failure: RateLimited() || NetworkFailure()):
+        return _addPending(
+          Target(
+            id: Target.unsavedId,
+            platform: platformId,
+            remoteUserId: pendingRemoteUserId(username),
+            username: username,
+            category: category,
+            note: storedNote,
+            status: TargetStatus.pendingLookup,
+            trackStories: trackStories,
+            trackPosts: trackPosts,
+            trackReels: trackReels,
+            postsWatermarkAt: watermark,
+            addedAt: now,
+            historyRange: historyRange,
+            historySince: historyRange == HistoryRange.since
+                ? historySince?.toUtc()
+                : null,
+            highlightsEnabled: highlights,
+          ),
+          count: all.length,
+        );
       case Err(:final failure):
         return _fromFailure(failure);
     }
@@ -284,22 +361,14 @@ final class AddTarget {
       return const AddTargetNotVisible(NotVisibleReason.privateNotFollowed);
     }
 
-    final platformId = _platform.id;
     final existing = await _targets.getByRemoteUserId(
       platformId,
       user.remoteUserId,
     );
     if (existing != null) return _duplicate(existing);
 
-    // FR-63 (D-17): the watermark is the start of today in device local
-    // time, so today's posts and live stories arrive with the first check.
-    // No network call is needed (TECH_SPEC 17.4).
-    final now = _clock.now();
-    final local = now.toLocal();
-    final watermark = DateTime(local.year, local.month, local.day).toUtc();
-
     // A-12: the warning counts targets before this one.
-    final count = (await _targets.watchAll().first).length;
+    final count = all.length;
 
     final Target stored;
     try {
@@ -311,7 +380,7 @@ final class AddTarget {
           username: user.username,
           displayName: user.displayName,
           category: category,
-          note: (cleanNote == null || cleanNote.isEmpty) ? null : cleanNote,
+          note: storedNote,
           isPrivate: user.isPrivate,
           trackStories: trackStories,
           trackPosts: trackPosts,
@@ -342,6 +411,36 @@ final class AddTarget {
       target: stored,
       overLimitWarning: count >= TargetLimits.recommendedMax,
       firstCheckScheduled: scheduled,
+      schedulerError: schedulerError,
+    );
+  }
+
+  /// Stores [pending] and asks for a soon lookup. A scheduler error never
+  /// undoes the add.
+  Future<AddTargetResult> _addPending(
+    Target pending, {
+    required int count,
+  }) async {
+    final Target stored;
+    try {
+      stored = await _targets.insert(pending);
+    } on DuplicateEntityException {
+      final winner = await _targets.getByRemoteUserId(
+        pending.platform,
+        pending.remoteUserId,
+      );
+      if (winner != null) return _duplicate(winner);
+      rethrow;
+    }
+    String? schedulerError;
+    try {
+      await _scheduler.checkNow(scope: CheckScope.posts, targetId: stored.id);
+    } on Object catch (e) {
+      schedulerError = e.runtimeType.toString();
+    }
+    return AddTargetPending(
+      target: stored,
+      overLimitWarning: count >= TargetLimits.recommendedMax,
       schedulerError: schedulerError,
     );
   }

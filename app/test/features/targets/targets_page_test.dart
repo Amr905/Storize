@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/targets/target_list_row.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
@@ -39,6 +40,23 @@ void main() {
     expect(find.text(l10n.tgtMetaLastNew('10:15 AM')), findsOneWidget);
     expect(find.text(l10n.tgtMetaChecked('10:42 AM')), findsOneWidget);
     expect(find.text(l10n.tgtMetaPausedByYou), findsOneWidget);
+  });
+
+  testWidgets('FR-73: a pending target shows the waiting chip, no swipe', (
+    t,
+  ) async {
+    final rig = TargetsRig();
+    await rig.addAccount();
+    await rig.addTarget('later_k', status: TargetStatus.pendingLookup);
+    await pumpTargets(t, rig: rig);
+    l10n = await loc(t);
+
+    expect(find.text(l10n.tgtStatusPending), findsOneWidget);
+    expect(find.text(l10n.statusActive), findsNothing);
+    expect(
+      t.widget<TargetListRow>(find.byType(TargetListRow)).swipeAction,
+      isNull,
+    );
   });
 
   testWidgets('AC1: Check now is disabled with a tooltip without a session', (

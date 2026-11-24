@@ -12,6 +12,7 @@ class TargetListRow extends StatelessWidget {
     required this.username,
     required this.category,
     required this.status,
+    this.statusLabel,
     this.note,
     this.checkedLine,
     this.onTap,
@@ -27,6 +28,9 @@ class TargetListRow extends StatelessWidget {
 
   /// Health.
   final StorizeStatus status;
+
+  /// Replaces the badge text, when set (a pending lookup, FR-73).
+  final String? statusLabel;
 
   /// Text next to the category tag.
   final String? note;
@@ -97,7 +101,7 @@ class TargetListRow extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: StorizeSpacing.s8),
-                          DotStatusBadge(status: status),
+                          DotStatusBadge(status: status, label: statusLabel),
                         ],
                       ),
                       const SizedBox(height: StorizeSpacing.s4),

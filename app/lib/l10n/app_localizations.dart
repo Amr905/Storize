@@ -2249,6 +2249,24 @@ abstract class AppLocalizations {
   /// **'Tracking {username}. First check running…'**
   String tgtAdded(String username);
 
+  /// S-08 snackbar when the account was saved as waiting because Instagram is limited or unreachable (FR-73).
+  ///
+  /// In en, this message translates to:
+  /// **'Added. Instagram asked us to slow down, so we\'ll look up @{username} in a few minutes.'**
+  String tgtAddedPending(String username);
+
+  /// S-07 row chip for a target that is saved but not looked up yet (FR-73).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to look up'**
+  String get tgtStatusPending;
+
+  /// S-09 chip and status card text for a target that is saved but not looked up yet (FR-73).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to look up'**
+  String get tdtStatusPending;
+
   /// S-15 type label: single photo post.
   ///
   /// In en, this message translates to:

@@ -90,7 +90,8 @@ class TargetActions {
   /// repository fails; the caller reports it.
   Future<void> setPaused(Target target, {required bool paused}) async {
     final current = await _targets.getById(target.id);
-    if (current == null) return;
+    // A pending lookup has no real account yet: it cannot be paused (FR-73).
+    if (current == null || current.status == TargetStatus.pendingLookup) return;
     await _targets.update(
       current.copyWith(
         status: paused ? TargetStatus.paused : TargetStatus.active,
@@ -341,13 +342,21 @@ class AddTargetFormController extends Notifier<AddTargetForm> {
           trackPosts: state.isOn(TrackKind.posts),
           trackReels: state.isOn(TrackKind.reels),
           note: state.note,
+          historyRange: state.historyRange,
+          historySince: state.historySince,
+          highlights: state.highlights,
         );
+    // A pending target keeps these options itself and applies them when the
+    // lookup succeeds (FR-73).
     if (result is AddTargetAdded) {
       await _applyExtras(result.target);
     }
     if (!ref.mounted) return result;
     state = switch (result) {
-      AddTargetAdded() => state.copyWith(verifying: false, clearFailure: true),
+      AddTargetAdded() || AddTargetPending() => state.copyWith(
+        verifying: false,
+        clearFailure: true,
+      ),
       _ => state.copyWith(verifying: false, failure: result),
     };
     return result;

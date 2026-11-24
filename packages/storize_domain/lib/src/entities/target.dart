@@ -120,10 +120,11 @@ final class Target {
   final bool highlightsEnabled;
 
   /// Returns a copy with the given fields replaced. Pass null to clear a
-  /// nullable field. The identity fields (`platform`, `remoteUserId`) cannot
-  /// change.
+  /// nullable field. `platform` cannot change; `remoteUserId` changes only
+  /// when a pending lookup resolves (FR-73).
   Target copyWith({
     int? id,
+    String? remoteUserId,
     String? username,
     Object? displayName = unset,
     Object? avatarPath = unset,
@@ -149,7 +150,7 @@ final class Target {
   }) => Target(
     id: id ?? this.id,
     platform: platform,
-    remoteUserId: remoteUserId,
+    remoteUserId: remoteUserId ?? this.remoteUserId,
     username: username ?? this.username,
     displayName: pick<String>(displayName, this.displayName),
     avatarPath: pick<String>(avatarPath, this.avatarPath),

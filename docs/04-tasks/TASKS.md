@@ -530,6 +530,14 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   4. Everything goes through the governor and lease.
   5. Sanitized synthetic fixtures; real captures to follow on device (DEVICE_TESTS).
 
+### T-046 — Queued add: add now, look up later (FR-73)
+- **Tier:** M · **Deps:** T-042 · TECH_SPEC §17.3a
+- **AC:**
+  1. `AddTarget` saves a pending target on `RateLimited` (incl. governor pause) or `NetworkFailure`, keeps the chosen options, rejects duplicates by username and still fails inline on not found, private and session errors.
+  2. `ResolvePendingTargets.run` activates, marks unavailable or not visible, merges duplicates by user ID, or stops and leaves the rest pending when limited.
+  3. It runs first in each story and post check task and on app resume; checks, history and highlights skip pending targets.
+  4. S-08 shows the "Added. Instagram asked us to slow down…" snackbar; S-07 and S-09 show a "Waiting to look up" chip.
+
 ### T-042 — UI: history picker, progress, highlights
 - **Tier:** M · **Deps:** T-040 · UX additions in §17
 - **AC:**

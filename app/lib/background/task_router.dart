@@ -61,6 +61,11 @@ typedef HighlightsRunner = Future<HighlightsResult> Function({
   DateTime? deadline,
 });
 
+/// Runs [ResolvePendingTargets.run] (FR-73).
+typedef PendingResolver = Future<ResolvePendingResult> Function({
+  DateTime? deadline,
+});
+
 /// Routes a background task name to its use case (TECH_SPEC section 2,
 /// `callbackDispatcher`).
 ///
@@ -90,6 +95,7 @@ final class TaskRouter {
     this._history,
     this._historyProbe,
     this._highlights,
+    this._resolvePending,
     this.budget = const Duration(minutes: 8),
   });
 
@@ -109,6 +115,7 @@ final class TaskRouter {
   final HistoryRunner? _history;
   final HistoryProbe? _historyProbe;
   final HighlightsRunner? _highlights;
+  final PendingResolver? _resolvePending;
 
   /// The wait before the next `history` task while backfills run.
   static const Duration historyDelay = Duration(minutes: 1);
@@ -165,6 +172,9 @@ final class TaskRouter {
         : (targetId == null ? CheckTrigger.manualAll : CheckTrigger.manualOne);
     final deadline = _clock.now().add(budget);
 
+    // FR-73: targets added while Instagram was limited are looked up first,
+    // so the check below already sees them as active.
+    await _resolvePendingTargets(deadline);
     final checked = await _checkWithNotice(scope, trigger, targetId, deadline);
     final isPosts = scope == CheckScope.posts;
     if (isPosts && checked.result != CheckResult.skippedSession) {
@@ -178,6 +188,22 @@ final class TaskRouter {
         checked.result == CheckResult.failed &&
         checked.run.errorCode == 'network';
     return !retry;
+  }
+
+  /// Looks up the pending targets. Never throws: a failure here must not
+  /// stop the check.
+  Future<void> _resolvePendingTargets(DateTime deadline) async {
+    final run = _resolvePending;
+    if (run == null) return;
+    try {
+      await run(deadline: deadline);
+    } on Object catch (error) {
+      _log?.log(
+        LogLevel.warn,
+        'background',
+        'resolve_pending_failed type=${error.runtimeType}',
+      );
+    }
   }
 
   /// Runs the check with the silent "Checking N accounts" notice, shown only

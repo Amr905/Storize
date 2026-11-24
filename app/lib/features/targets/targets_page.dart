@@ -205,6 +205,7 @@ class _TargetList extends ConsumerWidget {
       itemBuilder: (context, i) {
         final target = targets[i];
         final paused = target.status == TargetStatus.paused;
+        final pending = target.status == TargetStatus.pendingLookup;
         final l10n = AppLocalizations.of(context);
         return TargetListRow(
           username: target.username,
@@ -212,16 +213,20 @@ class _TargetList extends ConsumerWidget {
           status: checking && target.status == TargetStatus.active
               ? StorizeStatus.checking
               : _status(target.status),
+          statusLabel: pending ? l10n.tgtStatusPending : null,
           note: _note(context, target),
           checkedLine: _checkedLine(context, target, saved?[target.id]),
           onTap: () =>
               unawaited(context.push(Routes.targetDetailLocation(target.id))),
-          swipeAction: TargetRowSwipeAction(
-            label: paused ? l10n.tgtActionResume : l10n.tgtActionPause,
-            icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-            onTriggered: () =>
-                unawaited(_setPaused(context, ref, target, paused: !paused)),
-          ),
+          swipeAction: pending
+              ? null
+              : TargetRowSwipeAction(
+                  label: paused ? l10n.tgtActionResume : l10n.tgtActionPause,
+                  icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  onTriggered: () => unawaited(
+                    _setPaused(context, ref, target, paused: !paused),
+                  ),
+                ),
         );
       },
     );
@@ -251,6 +256,7 @@ class _TargetList extends ConsumerWidget {
 
   static StorizeStatus _status(TargetStatus s) => switch (s) {
     TargetStatus.active => StorizeStatus.active,
+    TargetStatus.pendingLookup => StorizeStatus.checking,
     TargetStatus.paused => StorizeStatus.paused,
     TargetStatus.notVisible => StorizeStatus.notVisible,
     TargetStatus.unavailable => StorizeStatus.unavailable,
@@ -271,6 +277,8 @@ class _TargetList extends ConsumerWidget {
         return l10n.tgtMetaPrivate;
       case TargetStatus.unavailable:
         return l10n.tgtMetaGone;
+      case TargetStatus.pendingLookup:
+        return null;
       case TargetStatus.active:
       case TargetStatus.error:
         final newAt = target.lastNewStoryAt;
