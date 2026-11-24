@@ -6,6 +6,7 @@ library;
 export 'src/enums.dart';
 export 'src/failure.dart';
 export 'src/gallery_file.dart';
+export 'src/history.dart';
 export 'src/remote_content.dart';
 export 'src/remote_user.dart';
 export 'src/result.dart';

@@ -8,12 +8,13 @@ import 'package:storize_data/db/daos/check_run_dao.dart';
 import 'package:storize_data/db/daos/content_dao.dart';
 import 'package:storize_data/db/daos/governor_lease_dao.dart';
 import 'package:storize_data/db/daos/targets_dao.dart';
+import 'package:storize_data/db/schema_versions.dart';
 import 'package:storize_data/db/tables.dart';
 import 'package:storize_model/storize_model.dart';
 
 part 'storize_database.g.dart';
 
-/// The Storize database (TECH_SPEC §3, schema v1).
+/// The Storize database (TECH_SPEC §3 and §17, schema v2).
 @DriftDatabase(
   tables: [
     LoginAccounts,
@@ -80,13 +81,27 @@ class StorizeDatabase extends _$StorizeDatabase {
   static const String databaseName = 'storize';
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
-    // Future versions: add `onUpgrade: stepByStep(...)` with the generated
-    // steps (`dart run drift_dev schema steps`) and a test per step.
+    // Each step is generated (`dart run drift_dev schema steps`) and has a
+    // test in test/db/migration_test.dart.
+    onUpgrade: stepByStep(
+      from1To2: (m, schema) async {
+        // v2 (T-040): post history and highlights on `target`.
+        final t = schema.target;
+        await m.addColumn(t, t.historyRange);
+        await m.addColumn(t, t.historySince);
+        await m.addColumn(t, t.historyState);
+        await m.addColumn(t, t.historyCursor);
+        await m.addColumn(t, t.historyFetched);
+        await m.addColumn(t, t.historyOldestSeenAt);
+        await m.addColumn(t, t.historyUpdatedAt);
+        await m.addColumn(t, t.highlightsEnabled);
+      },
+    ),
     beforeOpen: (details) async {
       // SQLite ignores FK actions unless this is on, per connection.
       await customStatement('PRAGMA foreign_keys = ON');

@@ -81,6 +81,27 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
       (await _current()).fetchNewPosts(userId, watermark, policy: policy);
 
   @override
+  Future<Result<PostPage>> fetchPostPage(
+    String userId, {
+    String? cursor,
+    required ExtractionPolicy policy,
+  }) async =>
+      (await _current()).fetchPostPage(userId, cursor: cursor, policy: policy);
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(
+    String userId, {
+    required ExtractionPolicy policy,
+  }) async => (await _current()).fetchHighlights(userId, policy: policy);
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    required ExtractionPolicy policy,
+  }) async =>
+      (await _current()).fetchHighlightItems(highlightIds, policy: policy);
+
+  @override
   Future<Result<DateTime?>> latestPostTime(String userId) async =>
       (await _current()).latestPostTime(userId);
 

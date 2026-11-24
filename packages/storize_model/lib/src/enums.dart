@@ -29,7 +29,11 @@ enum ContentKind implements DbEnum {
   story('STORY'),
 
   /// A feed post, reel or carousel.
-  post('POST');
+  post('POST'),
+
+  /// A story saved in a highlight (FR-71). Stored like a story, plus
+  /// `highlightId`, `highlightTitle` and `highlightOrder` in `extras`.
+  highlight('HIGHLIGHT');
 
   const ContentKind(this.dbValue);
 
@@ -38,6 +42,61 @@ enum ContentKind implements DbEnum {
 
   /// Maps a database value. Throws [ArgumentError] if unknown.
   static ContentKind fromDb(String value) => decodeDbEnum(values, value);
+}
+
+/// How far back the post history of a target reaches (FR-68).
+enum HistoryRange implements DbEnum {
+  /// No history: only new posts.
+  none('NONE'),
+
+  /// Posts since the start of today (device local time).
+  today('TODAY'),
+
+  /// Posts of the last 7 days.
+  days7('DAYS_7'),
+
+  /// Posts of the last 30 days.
+  days30('DAYS_30'),
+
+  /// Posts since a chosen date (`historySince`).
+  since('SINCE'),
+
+  /// Every post.
+  all('ALL');
+
+  const HistoryRange(this.dbValue);
+
+  @override
+  final String dbValue;
+
+  /// Maps a database value. Throws [ArgumentError] if unknown.
+  static HistoryRange fromDb(String value) => decodeDbEnum(values, value);
+}
+
+/// State of a post-history backfill (FR-69).
+enum HistoryState implements DbEnum {
+  /// Nothing to do.
+  idle('IDLE'),
+
+  /// Fetching pages, one per background run.
+  running('RUNNING'),
+
+  /// Paused by the user.
+  paused('PAUSED'),
+
+  /// The range was reached or the posts ran out.
+  done('DONE'),
+
+  /// Stopped for a reason that needs the user.
+  failed('FAILED');
+
+  const HistoryState(this.dbValue);
+
+  @override
+  final String dbValue;
+
+  /// Maps a database value. Throws [ArgumentError] if unknown.
+  static HistoryState fromDb(String value) => decodeDbEnum(values, value);
 }
 
 /// Post shapes, as Instagram reports them (`post_type` in the database).

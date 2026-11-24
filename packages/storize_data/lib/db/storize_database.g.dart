@@ -814,6 +814,91 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
         requiredDuringInsert: false,
       ).withConverter<DateTime?>($TargetsTable.$converterlastNewPostAtn);
   @override
+  late final GeneratedColumnWithTypeConverter<HistoryRange, String>
+  historyRange = GeneratedColumn<String>(
+    'history_range',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('NONE'),
+  ).withConverter<HistoryRange>($TargetsTable.$converterhistoryRange);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> historySince =
+      GeneratedColumn<int>(
+        'history_since',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($TargetsTable.$converterhistorySincen);
+  @override
+  late final GeneratedColumnWithTypeConverter<HistoryState, String>
+  historyState = GeneratedColumn<String>(
+    'history_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('IDLE'),
+  ).withConverter<HistoryState>($TargetsTable.$converterhistoryState);
+  static const VerificationMeta _historyCursorMeta = const VerificationMeta(
+    'historyCursor',
+  );
+  @override
+  late final GeneratedColumn<String> historyCursor = GeneratedColumn<String>(
+    'history_cursor',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _historyFetchedMeta = const VerificationMeta(
+    'historyFetched',
+  );
+  @override
+  late final GeneratedColumn<int> historyFetched = GeneratedColumn<int>(
+    'history_fetched',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int>
+  historyOldestSeenAt = GeneratedColumn<int>(
+    'history_oldest_seen_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  ).withConverter<DateTime?>($TargetsTable.$converterhistoryOldestSeenAtn);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> historyUpdatedAt =
+      GeneratedColumn<int>(
+        'history_updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($TargetsTable.$converterhistoryUpdatedAtn);
+  static const VerificationMeta _highlightsEnabledMeta = const VerificationMeta(
+    'highlightsEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> highlightsEnabled = GeneratedColumn<bool>(
+    'highlights_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("highlights_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     platform,
@@ -836,6 +921,14 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
     lastPostsCheckAt,
     lastNewStoryAt,
     lastNewPostAt,
+    historyRange,
+    historySince,
+    historyState,
+    historyCursor,
+    historyFetched,
+    historyOldestSeenAt,
+    historyUpdatedAt,
+    highlightsEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -934,6 +1027,33 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
         loginAccountId.isAcceptableOrUnknown(
           data['login_account_id']!,
           _loginAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('history_cursor')) {
+      context.handle(
+        _historyCursorMeta,
+        historyCursor.isAcceptableOrUnknown(
+          data['history_cursor']!,
+          _historyCursorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('history_fetched')) {
+      context.handle(
+        _historyFetchedMeta,
+        historyFetched.isAcceptableOrUnknown(
+          data['history_fetched']!,
+          _historyFetchedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('highlights_enabled')) {
+      context.handle(
+        _highlightsEnabledMeta,
+        highlightsEnabled.isAcceptableOrUnknown(
+          data['highlights_enabled']!,
+          _highlightsEnabledMeta,
         ),
       );
     }
@@ -1052,6 +1172,48 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
           data['${effectivePrefix}last_new_post_at'],
         ),
       ),
+      historyRange: $TargetsTable.$converterhistoryRange.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}history_range'],
+        )!,
+      ),
+      historySince: $TargetsTable.$converterhistorySincen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}history_since'],
+        ),
+      ),
+      historyState: $TargetsTable.$converterhistoryState.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}history_state'],
+        )!,
+      ),
+      historyCursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}history_cursor'],
+      ),
+      historyFetched: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}history_fetched'],
+      )!,
+      historyOldestSeenAt: $TargetsTable.$converterhistoryOldestSeenAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}history_oldest_seen_at'],
+        ),
+      ),
+      historyUpdatedAt: $TargetsTable.$converterhistoryUpdatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}history_updated_at'],
+        ),
+      ),
+      highlightsEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}highlights_enabled'],
+      )!,
     );
   }
 
@@ -1086,6 +1248,22 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
       const EpochMsConverter();
   static TypeConverter<DateTime?, int?> $converterlastNewPostAtn =
       NullAwareTypeConverter.wrap($converterlastNewPostAt);
+  static TypeConverter<HistoryRange, String> $converterhistoryRange =
+      const HistoryRangeConverter();
+  static TypeConverter<DateTime, int> $converterhistorySince =
+      const EpochMsConverter();
+  static TypeConverter<DateTime?, int?> $converterhistorySincen =
+      NullAwareTypeConverter.wrap($converterhistorySince);
+  static TypeConverter<HistoryState, String> $converterhistoryState =
+      const HistoryStateConverter();
+  static TypeConverter<DateTime, int> $converterhistoryOldestSeenAt =
+      const EpochMsConverter();
+  static TypeConverter<DateTime?, int?> $converterhistoryOldestSeenAtn =
+      NullAwareTypeConverter.wrap($converterhistoryOldestSeenAt);
+  static TypeConverter<DateTime, int> $converterhistoryUpdatedAt =
+      const EpochMsConverter();
+  static TypeConverter<DateTime?, int?> $converterhistoryUpdatedAtn =
+      NullAwareTypeConverter.wrap($converterhistoryUpdatedAt);
 }
 
 class TargetRow extends DataClass implements Insertable<TargetRow> {
@@ -1110,6 +1288,14 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
   final DateTime? lastPostsCheckAt;
   final DateTime? lastNewStoryAt;
   final DateTime? lastNewPostAt;
+  final HistoryRange historyRange;
+  final DateTime? historySince;
+  final HistoryState historyState;
+  final String? historyCursor;
+  final int historyFetched;
+  final DateTime? historyOldestSeenAt;
+  final DateTime? historyUpdatedAt;
+  final bool highlightsEnabled;
   const TargetRow({
     required this.id,
     required this.platform,
@@ -1132,6 +1318,14 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     this.lastPostsCheckAt,
     this.lastNewStoryAt,
     this.lastNewPostAt,
+    required this.historyRange,
+    this.historySince,
+    required this.historyState,
+    this.historyCursor,
+    required this.historyFetched,
+    this.historyOldestSeenAt,
+    this.historyUpdatedAt,
+    required this.highlightsEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1203,6 +1397,36 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
         $TargetsTable.$converterlastNewPostAtn.toSql(lastNewPostAt),
       );
     }
+    {
+      map['history_range'] = Variable<String>(
+        $TargetsTable.$converterhistoryRange.toSql(historyRange),
+      );
+    }
+    if (!nullToAbsent || historySince != null) {
+      map['history_since'] = Variable<int>(
+        $TargetsTable.$converterhistorySincen.toSql(historySince),
+      );
+    }
+    {
+      map['history_state'] = Variable<String>(
+        $TargetsTable.$converterhistoryState.toSql(historyState),
+      );
+    }
+    if (!nullToAbsent || historyCursor != null) {
+      map['history_cursor'] = Variable<String>(historyCursor);
+    }
+    map['history_fetched'] = Variable<int>(historyFetched);
+    if (!nullToAbsent || historyOldestSeenAt != null) {
+      map['history_oldest_seen_at'] = Variable<int>(
+        $TargetsTable.$converterhistoryOldestSeenAtn.toSql(historyOldestSeenAt),
+      );
+    }
+    if (!nullToAbsent || historyUpdatedAt != null) {
+      map['history_updated_at'] = Variable<int>(
+        $TargetsTable.$converterhistoryUpdatedAtn.toSql(historyUpdatedAt),
+      );
+    }
+    map['highlights_enabled'] = Variable<bool>(highlightsEnabled);
     return map;
   }
 
@@ -1245,6 +1469,22 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       lastNewPostAt: lastNewPostAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastNewPostAt),
+      historyRange: Value(historyRange),
+      historySince: historySince == null && nullToAbsent
+          ? const Value.absent()
+          : Value(historySince),
+      historyState: Value(historyState),
+      historyCursor: historyCursor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(historyCursor),
+      historyFetched: Value(historyFetched),
+      historyOldestSeenAt: historyOldestSeenAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(historyOldestSeenAt),
+      historyUpdatedAt: historyUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(historyUpdatedAt),
+      highlightsEnabled: Value(highlightsEnabled),
     );
   }
 
@@ -1279,6 +1519,18 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       ),
       lastNewStoryAt: serializer.fromJson<DateTime?>(json['lastNewStoryAt']),
       lastNewPostAt: serializer.fromJson<DateTime?>(json['lastNewPostAt']),
+      historyRange: serializer.fromJson<HistoryRange>(json['historyRange']),
+      historySince: serializer.fromJson<DateTime?>(json['historySince']),
+      historyState: serializer.fromJson<HistoryState>(json['historyState']),
+      historyCursor: serializer.fromJson<String?>(json['historyCursor']),
+      historyFetched: serializer.fromJson<int>(json['historyFetched']),
+      historyOldestSeenAt: serializer.fromJson<DateTime?>(
+        json['historyOldestSeenAt'],
+      ),
+      historyUpdatedAt: serializer.fromJson<DateTime?>(
+        json['historyUpdatedAt'],
+      ),
+      highlightsEnabled: serializer.fromJson<bool>(json['highlightsEnabled']),
     );
   }
   @override
@@ -1306,6 +1558,14 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       'lastPostsCheckAt': serializer.toJson<DateTime?>(lastPostsCheckAt),
       'lastNewStoryAt': serializer.toJson<DateTime?>(lastNewStoryAt),
       'lastNewPostAt': serializer.toJson<DateTime?>(lastNewPostAt),
+      'historyRange': serializer.toJson<HistoryRange>(historyRange),
+      'historySince': serializer.toJson<DateTime?>(historySince),
+      'historyState': serializer.toJson<HistoryState>(historyState),
+      'historyCursor': serializer.toJson<String?>(historyCursor),
+      'historyFetched': serializer.toJson<int>(historyFetched),
+      'historyOldestSeenAt': serializer.toJson<DateTime?>(historyOldestSeenAt),
+      'historyUpdatedAt': serializer.toJson<DateTime?>(historyUpdatedAt),
+      'highlightsEnabled': serializer.toJson<bool>(highlightsEnabled),
     };
   }
 
@@ -1331,6 +1591,14 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     Value<DateTime?> lastPostsCheckAt = const Value.absent(),
     Value<DateTime?> lastNewStoryAt = const Value.absent(),
     Value<DateTime?> lastNewPostAt = const Value.absent(),
+    HistoryRange? historyRange,
+    Value<DateTime?> historySince = const Value.absent(),
+    HistoryState? historyState,
+    Value<String?> historyCursor = const Value.absent(),
+    int? historyFetched,
+    Value<DateTime?> historyOldestSeenAt = const Value.absent(),
+    Value<DateTime?> historyUpdatedAt = const Value.absent(),
+    bool? highlightsEnabled,
   }) => TargetRow(
     id: id ?? this.id,
     platform: platform ?? this.platform,
@@ -1363,6 +1631,20 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     lastNewPostAt: lastNewPostAt.present
         ? lastNewPostAt.value
         : this.lastNewPostAt,
+    historyRange: historyRange ?? this.historyRange,
+    historySince: historySince.present ? historySince.value : this.historySince,
+    historyState: historyState ?? this.historyState,
+    historyCursor: historyCursor.present
+        ? historyCursor.value
+        : this.historyCursor,
+    historyFetched: historyFetched ?? this.historyFetched,
+    historyOldestSeenAt: historyOldestSeenAt.present
+        ? historyOldestSeenAt.value
+        : this.historyOldestSeenAt,
+    historyUpdatedAt: historyUpdatedAt.present
+        ? historyUpdatedAt.value
+        : this.historyUpdatedAt,
+    highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
   );
   TargetRow copyWithCompanion(TargetsCompanion data) {
     return TargetRow(
@@ -1413,6 +1695,30 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       lastNewPostAt: data.lastNewPostAt.present
           ? data.lastNewPostAt.value
           : this.lastNewPostAt,
+      historyRange: data.historyRange.present
+          ? data.historyRange.value
+          : this.historyRange,
+      historySince: data.historySince.present
+          ? data.historySince.value
+          : this.historySince,
+      historyState: data.historyState.present
+          ? data.historyState.value
+          : this.historyState,
+      historyCursor: data.historyCursor.present
+          ? data.historyCursor.value
+          : this.historyCursor,
+      historyFetched: data.historyFetched.present
+          ? data.historyFetched.value
+          : this.historyFetched,
+      historyOldestSeenAt: data.historyOldestSeenAt.present
+          ? data.historyOldestSeenAt.value
+          : this.historyOldestSeenAt,
+      historyUpdatedAt: data.historyUpdatedAt.present
+          ? data.historyUpdatedAt.value
+          : this.historyUpdatedAt,
+      highlightsEnabled: data.highlightsEnabled.present
+          ? data.highlightsEnabled.value
+          : this.highlightsEnabled,
     );
   }
 
@@ -1439,7 +1745,15 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
           ..write('lastStoriesCheckAt: $lastStoriesCheckAt, ')
           ..write('lastPostsCheckAt: $lastPostsCheckAt, ')
           ..write('lastNewStoryAt: $lastNewStoryAt, ')
-          ..write('lastNewPostAt: $lastNewPostAt')
+          ..write('lastNewPostAt: $lastNewPostAt, ')
+          ..write('historyRange: $historyRange, ')
+          ..write('historySince: $historySince, ')
+          ..write('historyState: $historyState, ')
+          ..write('historyCursor: $historyCursor, ')
+          ..write('historyFetched: $historyFetched, ')
+          ..write('historyOldestSeenAt: $historyOldestSeenAt, ')
+          ..write('historyUpdatedAt: $historyUpdatedAt, ')
+          ..write('highlightsEnabled: $highlightsEnabled')
           ..write(')'))
         .toString();
   }
@@ -1467,6 +1781,14 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     lastPostsCheckAt,
     lastNewStoryAt,
     lastNewPostAt,
+    historyRange,
+    historySince,
+    historyState,
+    historyCursor,
+    historyFetched,
+    historyOldestSeenAt,
+    historyUpdatedAt,
+    highlightsEnabled,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1492,7 +1814,15 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
           other.lastStoriesCheckAt == this.lastStoriesCheckAt &&
           other.lastPostsCheckAt == this.lastPostsCheckAt &&
           other.lastNewStoryAt == this.lastNewStoryAt &&
-          other.lastNewPostAt == this.lastNewPostAt);
+          other.lastNewPostAt == this.lastNewPostAt &&
+          other.historyRange == this.historyRange &&
+          other.historySince == this.historySince &&
+          other.historyState == this.historyState &&
+          other.historyCursor == this.historyCursor &&
+          other.historyFetched == this.historyFetched &&
+          other.historyOldestSeenAt == this.historyOldestSeenAt &&
+          other.historyUpdatedAt == this.historyUpdatedAt &&
+          other.highlightsEnabled == this.highlightsEnabled);
 }
 
 class TargetsCompanion extends UpdateCompanion<TargetRow> {
@@ -1517,6 +1847,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
   final Value<DateTime?> lastPostsCheckAt;
   final Value<DateTime?> lastNewStoryAt;
   final Value<DateTime?> lastNewPostAt;
+  final Value<HistoryRange> historyRange;
+  final Value<DateTime?> historySince;
+  final Value<HistoryState> historyState;
+  final Value<String?> historyCursor;
+  final Value<int> historyFetched;
+  final Value<DateTime?> historyOldestSeenAt;
+  final Value<DateTime?> historyUpdatedAt;
+  final Value<bool> highlightsEnabled;
   const TargetsCompanion({
     this.id = const Value.absent(),
     this.platform = const Value.absent(),
@@ -1539,6 +1877,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     this.lastPostsCheckAt = const Value.absent(),
     this.lastNewStoryAt = const Value.absent(),
     this.lastNewPostAt = const Value.absent(),
+    this.historyRange = const Value.absent(),
+    this.historySince = const Value.absent(),
+    this.historyState = const Value.absent(),
+    this.historyCursor = const Value.absent(),
+    this.historyFetched = const Value.absent(),
+    this.historyOldestSeenAt = const Value.absent(),
+    this.historyUpdatedAt = const Value.absent(),
+    this.highlightsEnabled = const Value.absent(),
   });
   TargetsCompanion.insert({
     this.id = const Value.absent(),
@@ -1562,6 +1908,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     this.lastPostsCheckAt = const Value.absent(),
     this.lastNewStoryAt = const Value.absent(),
     this.lastNewPostAt = const Value.absent(),
+    this.historyRange = const Value.absent(),
+    this.historySince = const Value.absent(),
+    this.historyState = const Value.absent(),
+    this.historyCursor = const Value.absent(),
+    this.historyFetched = const Value.absent(),
+    this.historyOldestSeenAt = const Value.absent(),
+    this.historyUpdatedAt = const Value.absent(),
+    this.highlightsEnabled = const Value.absent(),
   }) : platform = Value(platform),
        remoteUserId = Value(remoteUserId),
        username = Value(username),
@@ -1591,6 +1945,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     Expression<int>? lastPostsCheckAt,
     Expression<int>? lastNewStoryAt,
     Expression<int>? lastNewPostAt,
+    Expression<String>? historyRange,
+    Expression<int>? historySince,
+    Expression<String>? historyState,
+    Expression<String>? historyCursor,
+    Expression<int>? historyFetched,
+    Expression<int>? historyOldestSeenAt,
+    Expression<int>? historyUpdatedAt,
+    Expression<bool>? highlightsEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1615,6 +1977,15 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
       if (lastPostsCheckAt != null) 'last_posts_check_at': lastPostsCheckAt,
       if (lastNewStoryAt != null) 'last_new_story_at': lastNewStoryAt,
       if (lastNewPostAt != null) 'last_new_post_at': lastNewPostAt,
+      if (historyRange != null) 'history_range': historyRange,
+      if (historySince != null) 'history_since': historySince,
+      if (historyState != null) 'history_state': historyState,
+      if (historyCursor != null) 'history_cursor': historyCursor,
+      if (historyFetched != null) 'history_fetched': historyFetched,
+      if (historyOldestSeenAt != null)
+        'history_oldest_seen_at': historyOldestSeenAt,
+      if (historyUpdatedAt != null) 'history_updated_at': historyUpdatedAt,
+      if (highlightsEnabled != null) 'highlights_enabled': highlightsEnabled,
     });
   }
 
@@ -1640,6 +2011,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     Value<DateTime?>? lastPostsCheckAt,
     Value<DateTime?>? lastNewStoryAt,
     Value<DateTime?>? lastNewPostAt,
+    Value<HistoryRange>? historyRange,
+    Value<DateTime?>? historySince,
+    Value<HistoryState>? historyState,
+    Value<String?>? historyCursor,
+    Value<int>? historyFetched,
+    Value<DateTime?>? historyOldestSeenAt,
+    Value<DateTime?>? historyUpdatedAt,
+    Value<bool>? highlightsEnabled,
   }) {
     return TargetsCompanion(
       id: id ?? this.id,
@@ -1663,6 +2042,14 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
       lastPostsCheckAt: lastPostsCheckAt ?? this.lastPostsCheckAt,
       lastNewStoryAt: lastNewStoryAt ?? this.lastNewStoryAt,
       lastNewPostAt: lastNewPostAt ?? this.lastNewPostAt,
+      historyRange: historyRange ?? this.historyRange,
+      historySince: historySince ?? this.historySince,
+      historyState: historyState ?? this.historyState,
+      historyCursor: historyCursor ?? this.historyCursor,
+      historyFetched: historyFetched ?? this.historyFetched,
+      historyOldestSeenAt: historyOldestSeenAt ?? this.historyOldestSeenAt,
+      historyUpdatedAt: historyUpdatedAt ?? this.historyUpdatedAt,
+      highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
     );
   }
 
@@ -1752,6 +2139,42 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
         $TargetsTable.$converterlastNewPostAtn.toSql(lastNewPostAt.value),
       );
     }
+    if (historyRange.present) {
+      map['history_range'] = Variable<String>(
+        $TargetsTable.$converterhistoryRange.toSql(historyRange.value),
+      );
+    }
+    if (historySince.present) {
+      map['history_since'] = Variable<int>(
+        $TargetsTable.$converterhistorySincen.toSql(historySince.value),
+      );
+    }
+    if (historyState.present) {
+      map['history_state'] = Variable<String>(
+        $TargetsTable.$converterhistoryState.toSql(historyState.value),
+      );
+    }
+    if (historyCursor.present) {
+      map['history_cursor'] = Variable<String>(historyCursor.value);
+    }
+    if (historyFetched.present) {
+      map['history_fetched'] = Variable<int>(historyFetched.value);
+    }
+    if (historyOldestSeenAt.present) {
+      map['history_oldest_seen_at'] = Variable<int>(
+        $TargetsTable.$converterhistoryOldestSeenAtn.toSql(
+          historyOldestSeenAt.value,
+        ),
+      );
+    }
+    if (historyUpdatedAt.present) {
+      map['history_updated_at'] = Variable<int>(
+        $TargetsTable.$converterhistoryUpdatedAtn.toSql(historyUpdatedAt.value),
+      );
+    }
+    if (highlightsEnabled.present) {
+      map['highlights_enabled'] = Variable<bool>(highlightsEnabled.value);
+    }
     return map;
   }
 
@@ -1778,7 +2201,15 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
           ..write('lastStoriesCheckAt: $lastStoriesCheckAt, ')
           ..write('lastPostsCheckAt: $lastPostsCheckAt, ')
           ..write('lastNewStoryAt: $lastNewStoryAt, ')
-          ..write('lastNewPostAt: $lastNewPostAt')
+          ..write('lastNewPostAt: $lastNewPostAt, ')
+          ..write('historyRange: $historyRange, ')
+          ..write('historySince: $historySince, ')
+          ..write('historyState: $historyState, ')
+          ..write('historyCursor: $historyCursor, ')
+          ..write('historyFetched: $historyFetched, ')
+          ..write('historyOldestSeenAt: $historyOldestSeenAt, ')
+          ..write('historyUpdatedAt: $historyUpdatedAt, ')
+          ..write('highlightsEnabled: $highlightsEnabled')
           ..write(')'))
         .toString();
   }
@@ -5677,6 +6108,14 @@ typedef $$TargetsTableCreateCompanionBuilder = TargetsCompanion Function({
   Value<DateTime?> lastPostsCheckAt,
   Value<DateTime?> lastNewStoryAt,
   Value<DateTime?> lastNewPostAt,
+  Value<HistoryRange> historyRange,
+  Value<DateTime?> historySince,
+  Value<HistoryState> historyState,
+  Value<String?> historyCursor,
+  Value<int> historyFetched,
+  Value<DateTime?> historyOldestSeenAt,
+  Value<DateTime?> historyUpdatedAt,
+  Value<bool> highlightsEnabled,
 });
 typedef $$TargetsTableUpdateCompanionBuilder = TargetsCompanion Function({
   Value<int> id,
@@ -5700,6 +6139,14 @@ typedef $$TargetsTableUpdateCompanionBuilder = TargetsCompanion Function({
   Value<DateTime?> lastPostsCheckAt,
   Value<DateTime?> lastNewStoryAt,
   Value<DateTime?> lastNewPostAt,
+  Value<HistoryRange> historyRange,
+  Value<DateTime?> historySince,
+  Value<HistoryState> historyState,
+  Value<String?> historyCursor,
+  Value<int> historyFetched,
+  Value<DateTime?> historyOldestSeenAt,
+  Value<DateTime?> historyUpdatedAt,
+  Value<bool> highlightsEnabled,
 });
 
 final class $$TargetsTableReferences
@@ -5879,6 +6326,51 @@ class $$TargetsTableFilterComposer
         column: $table.lastNewPostAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnWithTypeConverterFilters<HistoryRange, HistoryRange, String>
+  get historyRange => $composableBuilder(
+    column: $table.historyRange,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int> get historySince =>
+      $composableBuilder(
+        column: $table.historySince,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<HistoryState, HistoryState, String>
+  get historyState => $composableBuilder(
+    column: $table.historyState,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get historyCursor => $composableBuilder(
+    column: $table.historyCursor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get historyFetched => $composableBuilder(
+    column: $table.historyFetched,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int>
+  get historyOldestSeenAt => $composableBuilder(
+    column: $table.historyOldestSeenAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int>
+  get historyUpdatedAt => $composableBuilder(
+    column: $table.historyUpdatedAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<bool> get highlightsEnabled => $composableBuilder(
+    column: $table.highlightsEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$LoginAccountsTableFilterComposer get loginAccountId {
     final $$LoginAccountsTableFilterComposer composer = $composerBuilder(
@@ -6063,6 +6555,46 @@ class $$TargetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get historyRange => $composableBuilder(
+    column: $table.historyRange,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get historySince => $composableBuilder(
+    column: $table.historySince,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get historyState => $composableBuilder(
+    column: $table.historyState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get historyCursor => $composableBuilder(
+    column: $table.historyCursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get historyFetched => $composableBuilder(
+    column: $table.historyFetched,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get historyOldestSeenAt => $composableBuilder(
+    column: $table.historyOldestSeenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get historyUpdatedAt => $composableBuilder(
+    column: $table.historyUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get highlightsEnabled => $composableBuilder(
+    column: $table.highlightsEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$LoginAccountsTableOrderingComposer get loginAccountId {
     final $$LoginAccountsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6184,6 +6716,51 @@ class $$TargetsTableAnnotationComposer
         column: $table.lastNewPostAt,
         builder: (column) => column,
       );
+
+  GeneratedColumnWithTypeConverter<HistoryRange, String> get historyRange =>
+      $composableBuilder(
+        column: $table.historyRange,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime?, int> get historySince =>
+      $composableBuilder(
+        column: $table.historySince,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<HistoryState, String> get historyState =>
+      $composableBuilder(
+        column: $table.historyState,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get historyCursor => $composableBuilder(
+    column: $table.historyCursor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get historyFetched => $composableBuilder(
+    column: $table.historyFetched,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime?, int> get historyOldestSeenAt =>
+      $composableBuilder(
+        column: $table.historyOldestSeenAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime?, int> get historyUpdatedAt =>
+      $composableBuilder(
+        column: $table.historyUpdatedAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<bool> get highlightsEnabled => $composableBuilder(
+    column: $table.highlightsEnabled,
+    builder: (column) => column,
+  );
 
   $$LoginAccountsTableAnnotationComposer get loginAccountId {
     final $$LoginAccountsTableAnnotationComposer composer = $composerBuilder(
@@ -6312,6 +6889,14 @@ class $$TargetsTableTableManager
                 Value<DateTime?> lastPostsCheckAt = const Value.absent(),
                 Value<DateTime?> lastNewStoryAt = const Value.absent(),
                 Value<DateTime?> lastNewPostAt = const Value.absent(),
+                Value<HistoryRange> historyRange = const Value.absent(),
+                Value<DateTime?> historySince = const Value.absent(),
+                Value<HistoryState> historyState = const Value.absent(),
+                Value<String?> historyCursor = const Value.absent(),
+                Value<int> historyFetched = const Value.absent(),
+                Value<DateTime?> historyOldestSeenAt = const Value.absent(),
+                Value<DateTime?> historyUpdatedAt = const Value.absent(),
+                Value<bool> highlightsEnabled = const Value.absent(),
               }) => TargetsCompanion(
                 id: id,
                 platform: platform,
@@ -6334,6 +6919,14 @@ class $$TargetsTableTableManager
                 lastPostsCheckAt: lastPostsCheckAt,
                 lastNewStoryAt: lastNewStoryAt,
                 lastNewPostAt: lastNewPostAt,
+                historyRange: historyRange,
+                historySince: historySince,
+                historyState: historyState,
+                historyCursor: historyCursor,
+                historyFetched: historyFetched,
+                historyOldestSeenAt: historyOldestSeenAt,
+                historyUpdatedAt: historyUpdatedAt,
+                highlightsEnabled: highlightsEnabled,
               ),
           createCompanionCallback:
               ({
@@ -6358,6 +6951,14 @@ class $$TargetsTableTableManager
                 Value<DateTime?> lastPostsCheckAt = const Value.absent(),
                 Value<DateTime?> lastNewStoryAt = const Value.absent(),
                 Value<DateTime?> lastNewPostAt = const Value.absent(),
+                Value<HistoryRange> historyRange = const Value.absent(),
+                Value<DateTime?> historySince = const Value.absent(),
+                Value<HistoryState> historyState = const Value.absent(),
+                Value<String?> historyCursor = const Value.absent(),
+                Value<int> historyFetched = const Value.absent(),
+                Value<DateTime?> historyOldestSeenAt = const Value.absent(),
+                Value<DateTime?> historyUpdatedAt = const Value.absent(),
+                Value<bool> highlightsEnabled = const Value.absent(),
               }) => TargetsCompanion.insert(
                 id: id,
                 platform: platform,
@@ -6380,6 +6981,14 @@ class $$TargetsTableTableManager
                 lastPostsCheckAt: lastPostsCheckAt,
                 lastNewStoryAt: lastNewStoryAt,
                 lastNewPostAt: lastNewPostAt,
+                historyRange: historyRange,
+                historySince: historySince,
+                historyState: historyState,
+                historyCursor: historyCursor,
+                historyFetched: historyFetched,
+                historyOldestSeenAt: historyOldestSeenAt,
+                historyUpdatedAt: historyUpdatedAt,
+                highlightsEnabled: highlightsEnabled,
               ),
           withReferenceMapper: (p0) => p0
               .map(

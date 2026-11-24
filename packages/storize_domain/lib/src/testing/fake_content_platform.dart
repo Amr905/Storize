@@ -87,6 +87,17 @@ final class FakeContentPlatform implements ContentPlatform {
   /// Scripted results of `latestPostTime`.
   final ScriptedResults<DateTime?> latestPostTimeResults = ScriptedResults();
 
+  /// Scripted results of `fetchPostPage`.
+  final ScriptedResults<PostPage> fetchPostPageResults = ScriptedResults();
+
+  /// Scripted results of `fetchHighlights`.
+  final ScriptedResults<List<RemoteHighlight>> fetchHighlightsResults =
+      ScriptedResults();
+
+  /// Scripted results of `fetchHighlightItems`.
+  final ScriptedResults<Map<String, List<RemoteContent>>>
+  fetchHighlightItemsResults = ScriptedResults();
+
   /// Scripted results of `verifySession`.
   final ScriptedResults<RemoteUser> verifySessionResults = ScriptedResults();
 
@@ -155,6 +166,39 @@ final class FakeContentPlatform implements ContentPlatform {
   Future<Result<DateTime?>> latestPostTime(String userId) async {
     _calls.add(PlatformCall('latestPostTime', [userId]));
     return latestPostTimeResults.take('latestPostTime');
+  }
+
+  @override
+  Future<Result<PostPage>> fetchPostPage(
+    String userId, {
+    String? cursor,
+    required ExtractionPolicy policy,
+  }) async {
+    _calls.add(PlatformCall('fetchPostPage', [userId, cursor, policy]));
+    return fetchPostPageResults.take('fetchPostPage');
+  }
+
+  @override
+  Future<Result<List<RemoteHighlight>>> fetchHighlights(
+    String userId, {
+    required ExtractionPolicy policy,
+  }) async {
+    _calls.add(PlatformCall('fetchHighlights', [userId, policy]));
+    return fetchHighlightsResults.take('fetchHighlights');
+  }
+
+  @override
+  Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(
+    List<String> highlightIds, {
+    required ExtractionPolicy policy,
+  }) async {
+    _calls.add(
+      PlatformCall('fetchHighlightItems', [
+        List<String>.of(highlightIds),
+        policy,
+      ]),
+    );
+    return fetchHighlightItemsResults.take('fetchHighlightItems');
   }
 
   @override
