@@ -13,7 +13,13 @@ import 'package:storize_model/storize_model.dart';
 final _t0 = DateTime.utc(2026, 11, 24, 8);
 
 final class _Rig {
-  _Rig({this.storyAge = const Duration(hours: 2), this.trackStories = true}) {
+  _Rig({
+    this.storyAge = const Duration(hours: 2),
+    this.trackStories = true,
+    this.profileFails = false,
+    this.pauseDuringProfile = false,
+    this.storiesFail = false,
+  }) {
     governor = RequestGovernor(
       leases: FakeGovernorLeaseRepo(clock),
       clock: clock,
@@ -40,6 +46,13 @@ final class _Rig {
             tokens: const {'fb_dtsg': 'ZZFAKE_dtsg_secret'},
           );
         await d.flush();
+        if (profileFails) return const Err(NetworkFailure());
+        if (pauseDuringProfile) {
+          await governor.reportRateLimited(
+            id,
+            const RateLimited(Duration(hours: 1)),
+          );
+        }
         return const Ok(
           RemoteUser(
             remoteUserId: '200',
@@ -53,6 +66,7 @@ final class _Rig {
           storyAge == null ? null : clock.now().subtract(storyAge!),
       loadStories: (id, target) async {
         storyLoads.add(target.remoteUserId);
+        if (storiesFail) return const Err(RateLimited(null));
         return const Ok(null);
       },
     );
@@ -85,6 +99,9 @@ final class _Rig {
 
   final Duration? storyAge;
   final bool trackStories;
+  final bool profileFails;
+  final bool pauseDuringProfile;
+  final bool storiesFail;
   final FakeClock clock = FakeClock(_t0);
   final FakeAccountRepo accounts = FakeAccountRepo();
   final FakeTargetRepo targets = FakeTargetRepo();
@@ -168,5 +185,29 @@ void main() {
     expect(text, contains('tokens=true'));
     expect(text, isNot(contains('1234567')));
     expect(text, isNot(contains('ZZFAKE')));
+  });
+
+  test('QA: a failed profile load makes no extra stories load', () async {
+    final r = _Rig(profileFails: true);
+    await r.ready;
+    await r.refresher.refresh();
+    expect(r.storyLoads, isEmpty);
+  });
+
+  test('QA: a paused governor makes no extra stories load', () async {
+    final r = _Rig(pauseDuringProfile: true);
+    await r.ready;
+    await r.refresher.refresh();
+    expect(r.loads, hasLength(1));
+    expect(r.storyLoads, isEmpty);
+  });
+
+  test('QA: a failing stories load is logged by type only', () async {
+    final r = _Rig(storiesFail: true);
+    await r.ready;
+    await r.refresher.refresh();
+    expect(r.storyLoads, ['200']);
+    final text = r.log.entries.map((e) => e.message).join('\n');
+    expect(text, contains('stories_load failure=RateLimited'));
   });
 }

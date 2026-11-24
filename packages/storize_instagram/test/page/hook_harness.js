@@ -183,5 +183,20 @@ async function scenario(name, config, fn) {
     return { handled: handled.map((h) => h.msg) };
   });
 
+  await scenario('fetch_header_name_malformed', secrets, async ({ ctx, handled }) => {
+    const mk = () => { const p = new URLSearchParams(); p.set('doc_id', '1234567890'); p.set('variables', '{}'); p.set('lsd', 'ZZFAKE_lsd'); return p.toString(); };
+    const heads = [
+      'A'.repeat(5000),
+      'Bad Name?doc_id=1',
+      'Name\nInjected: x',
+      '',
+    ];
+    for (const h of heads) {
+      await ctx.fetch(GQL, { method: 'POST', headers: { 'X-FB-Friendly-Name': h }, body: mk() });
+    }
+    await wait(30);
+    return { names: handled.map((x) => x.msg.friendlyName === undefined ? null : x.msg.friendlyName) };
+  });
+
   console.log(JSON.stringify(results));
 })();

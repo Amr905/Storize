@@ -93,6 +93,19 @@ void main() {
     expect((msg['request'] as Map)['docId'], isNotEmpty);
   }, skip: noNode);
 
+  test('QA T-047: a malformed or oversized X-FB-Friendly-Name gives no '
+      'unsafe name and does not break the request', () {
+    final names = (s('fetch_header_name_malformed')['names'] as List)
+        .cast<String?>();
+    expect(names, hasLength(4));
+    expect(names[0], isNull); // oversized
+    expect(names[1], isNull); // spaces and a query string
+    final safe = RegExp(r'^[A-Za-z0-9_]{1,120}$');
+    for (final n in names.whereType<String>()) {
+      expect(safe.hasMatch(n), isTrue, reason: n);
+    }
+  }, skip: noNode);
+
   test('request secrets and the body are sent only when configured', () {
     final msg =
         (s('fetch_no_secrets_when_not_configured')['handled'] as List).single

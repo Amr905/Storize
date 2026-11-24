@@ -424,6 +424,31 @@ void main() {
       },
     );
 
+    test('QA T-047: deferred keeps cursor and fetched; runDue is one call '
+        'per target and not a failure', () async {
+      await h.backfill.start(t.id, HistoryRange.all);
+      h.platform.fetchPostPageResults.addOk(
+        PostPage(items: [post('1', daysAgo(1))], nextCursor: 'c1'),
+      );
+      await h.backfill.step(t.id);
+      final before = (await h.get(t.id)).historyProgress!;
+      h.platform.fetchPostPageResults.addFailure(
+        const SchemaChanged('page_tokens'),
+      );
+      final pass = await h.backfill.runDue();
+      final after = (await h.get(t.id)).historyProgress!;
+      expect(after.state, HistoryState.running);
+      expect(after.cursor, before.cursor);
+      expect(after.fetched, before.fetched);
+      expect(pass.running, 1);
+      expect(pass.network, isFalse);
+      expect(pass.rateLimited, isFalse);
+      expect(
+        h.platform.calls.where((c) => c.method == 'fetchPostPage'),
+        hasLength(2),
+      );
+    });
+
     test('not_implemented and other hard failures end as failed', () async {
       await h.backfill.start(t.id, HistoryRange.all);
       h.platform.fetchPostPageResults.addFailure(
