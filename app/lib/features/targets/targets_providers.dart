@@ -99,6 +99,73 @@ class TargetActions {
   }
 }
 
+/// The post-history use case (FR-68, FR-69). Wired by the composition root.
+final backfillHistoryProvider = Provider<BackfillHistory>(
+  (ref) => throw UnimplementedError('backfillHistoryProvider is not wired'),
+);
+
+/// The highlights use case (FR-71). Wired by the composition root.
+final syncHighlightsProvider = Provider<SyncHighlights>(
+  (ref) => throw UnimplementedError('syncHighlightsProvider is not wired'),
+);
+
+/// Post-history and highlights changes made on S-09 (FR-68 to FR-71).
+final targetHistoryActionsProvider = Provider<TargetHistoryActions>(
+  TargetHistoryActions.new,
+);
+
+/// Starts, pauses, resumes and cancels a target's history, and turns its
+/// highlights on or off. Each change goes through the use cases.
+class TargetHistoryActions {
+  /// Creates the actions over [_ref].
+  const TargetHistoryActions(this._ref);
+
+  final Ref _ref;
+
+  /// Sets the range (None cancels). Non-None ranges kick the history task.
+  Future<void> setRange(
+    int targetId,
+    HistoryRange range, {
+    DateTime? since,
+  }) async {
+    await _ref
+        .read(backfillHistoryProvider)
+        .start(targetId, range, since: since);
+    if (range != HistoryRange.none) {
+      await _ref.read(schedulerProvider).kickHistory();
+    }
+  }
+
+  /// Pauses a running backfill.
+  Future<void> pause(int targetId) =>
+      _ref.read(backfillHistoryProvider).pause(targetId);
+
+  /// Resumes a paused or failed backfill and kicks the history task.
+  Future<void> resume(int targetId) async {
+    await _ref.read(backfillHistoryProvider).resume(targetId);
+    await _ref.read(schedulerProvider).kickHistory();
+  }
+
+  /// Stops the backfill for good.
+  Future<void> cancel(int targetId) =>
+      _ref.read(backfillHistoryProvider).cancel(targetId);
+
+  /// Saves the highlights flag. Turning it on queues a background posts check
+  /// for this target, which syncs its highlights and downloads them (FR-71).
+  /// Nothing waits on Instagram here, so the switch never hangs.
+  Future<void> setHighlights(int targetId, {required bool on}) async {
+    final targets = _ref.read(targetRepoProvider);
+    final current = await targets.getById(targetId);
+    if (current == null) return;
+    await targets.update(current.copyWith(highlightsEnabled: on));
+    if (on) {
+      await _ref
+          .read(schedulerProvider)
+          .checkNow(scope: CheckScope.posts, targetId: targetId);
+    }
+  }
+}
+
 /// The add use case (FR-10 to FR-16, BR-1, BR-2).
 final addTargetUseCaseProvider = Provider<AddTarget>(
   (ref) => AddTarget(
@@ -125,6 +192,9 @@ class AddTargetForm {
     this.trackRejected = false,
     this.verifying = false,
     this.failure,
+    this.historyRange = HistoryRange.none,
+    this.historySince,
+    this.highlights = false,
   });
 
   /// The text in the username field.
@@ -150,6 +220,15 @@ class AddTargetForm {
 
   /// The last failed result to show inline or as a snackbar, or null.
   final AddTargetResult? failure;
+
+  /// The post-history range (FR-68). None by default.
+  final HistoryRange historyRange;
+
+  /// The start date when [historyRange] is [HistoryRange.since].
+  final DateTime? historySince;
+
+  /// Whether highlights are downloaded (FR-71). Off by default.
+  final bool highlights;
 
   /// The username normalized the way [AddTarget] does, or null if invalid.
   String? get normalized => AddTarget.normalizeUsername(username);
@@ -179,6 +258,10 @@ class AddTargetForm {
     bool? verifying,
     AddTargetResult? failure,
     bool clearFailure = false,
+    HistoryRange? historyRange,
+    DateTime? historySince,
+    bool clearHistorySince = false,
+    bool? highlights,
   }) => AddTargetForm(
     username: username ?? this.username,
     note: note ?? this.note,
@@ -188,6 +271,11 @@ class AddTargetForm {
     trackRejected: trackRejected ?? this.trackRejected,
     verifying: verifying ?? this.verifying,
     failure: clearFailure ? null : (failure ?? this.failure),
+    historyRange: historyRange ?? this.historyRange,
+    historySince: clearHistorySince
+        ? null
+        : (historySince ?? this.historySince),
+    highlights: highlights ?? this.highlights,
   );
 }
 
@@ -213,6 +301,18 @@ class AddTargetFormController extends Notifier<AddTargetForm> {
   /// Chooses a category.
   void selectCategory(TargetCategory category) =>
       state = state.copyWith(category: category, clearFailure: true);
+
+  /// Chooses the post-history range. [since] is kept only for
+  /// [HistoryRange.since].
+  void setHistory(HistoryRange range, {DateTime? since}) =>
+      state = state.copyWith(
+        historyRange: range,
+        historySince: since,
+        clearHistorySince: range != HistoryRange.since,
+      );
+
+  /// Turns highlights on or off (FR-71).
+  void setHighlights(bool on) => state = state.copyWith(highlights: on);
 
   /// Turns [kind] on or off. The last track cannot be turned off (F-1).
   void toggleTrack(TrackKind kind) {
@@ -242,12 +342,35 @@ class AddTargetFormController extends Notifier<AddTargetForm> {
           trackReels: state.isOn(TrackKind.reels),
           note: state.note,
         );
+    if (result is AddTargetAdded) {
+      await _applyExtras(result.target);
+    }
     if (!ref.mounted) return result;
     state = switch (result) {
       AddTargetAdded() => state.copyWith(verifying: false, clearFailure: true),
       _ => state.copyWith(verifying: false, failure: result),
     };
     return result;
+  }
+
+  /// Saves highlights, then starts the post history and kicks its background
+  /// task (AC S-08). Highlights are saved first: the history start re-reads the
+  /// target, and an older copy must not overwrite its progress.
+  Future<void> _applyExtras(Target added) async {
+    final range = state.historyRange;
+    final since = state.historySince;
+    final highlights = state.highlights;
+    if (highlights) {
+      await ref
+          .read(targetRepoProvider)
+          .update(added.copyWith(highlightsEnabled: true));
+    }
+    if (range != HistoryRange.none) {
+      await ref
+          .read(backfillHistoryProvider)
+          .start(added.id, range, since: since);
+      await ref.read(schedulerProvider).kickHistory();
+    }
   }
 }
 

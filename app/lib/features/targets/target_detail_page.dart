@@ -9,6 +9,7 @@ import 'package:storize_app/features/library/library_tile.dart';
 import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/targets/remove_target_dialog.dart';
 import 'package:storize_app/features/targets/target_detail_providers.dart';
+import 'package:storize_app/features/targets/target_history_section.dart';
 import 'package:storize_app/features/targets/target_list_row.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -177,6 +178,7 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             ),
             divider: false,
           ),
+          TargetHistorySection(target: target),
           const SizedBox(height: StorizeSpacing.s16),
           Row(
             children: [

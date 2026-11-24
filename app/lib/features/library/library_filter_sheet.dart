@@ -179,10 +179,23 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
                   ChoiceChip(
                     key: ValueKey('filter-kind-${k.name}'),
                     label: Text(label),
-                    selected: _kind == k,
+                    selected: _kind == k && !_filters.highlightsOnly,
                     showCheckmark: true,
-                    onSelected: (_) => setState(() => _kind = k),
+                    onSelected: (_) => setState(() {
+                      _kind = k;
+                      _filters = _filters.copyWith(highlightsOnly: false);
+                    }),
                   ),
+                ChoiceChip(
+                  key: const ValueKey('filter-kind-highlights'),
+                  label: Text(l10n.libHighlightsFilter),
+                  selected: _filters.highlightsOnly,
+                  showCheckmark: true,
+                  onSelected: (on) => setState(() {
+                    _filters = _filters.copyWith(highlightsOnly: on);
+                    if (on) _kind = LibraryKind.stories;
+                  }),
+                ),
               ],
             ),
           ),

@@ -240,13 +240,20 @@ void main() {
       expect(find.text(l10n.tdtEmptyPosts), findsNothing);
       expect(find.text(l10n.tdtEmptyStories), findsNothing);
 
-      await tester.tap(
-        find.descendant(
-          of: find.byType(ChoiceChip),
-          matching: find.text(l10n.libPostsTab),
-        ),
+      // The history section pushes Recent down: scroll it into view.
+      final postsChip = find.descendant(
+        of: find.byType(ChoiceChip),
+        matching: find.text(l10n.libPostsTab),
       );
+      await tester.ensureVisible(postsChip);
       await tester.pumpAndSettle();
+      await tester.tap(postsChip);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text(l10n.tdtEmptyPosts),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text(l10n.tdtEmptyPosts), findsOneWidget);
     });
 
