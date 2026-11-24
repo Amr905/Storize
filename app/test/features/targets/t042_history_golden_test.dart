@@ -1,8 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
-import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_model/storize_model.dart';
 
 import '../../ui/golden_helpers.dart';
