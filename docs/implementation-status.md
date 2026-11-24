@@ -6,7 +6,7 @@
 
 ## Current state
 - **Phase 5 running.** Toolchain is ready in the Claude workspace: Flutter 3.50.0 / Dart 3.14.0, melos 8.10.1, Android SDK 36. The repo `Amr905/Storize` is connected (push).
-- **Progress: 45 / 49 tasks done (92%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a, T-037a) + v0.3 T-039, T-040 done; T-041, T-042 in progress. (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN. Remaining (both need the user): **T-036** (P-5 keystore) and **T-037** device checklist + 24 h soak (P-4 phones).
+- **Progress: 47 / 49 tasks done (96%)** — original plan 35 / 37 (95%) + follow-ups (T-010a, T-012a, T-015a, T-019a, T-024a, T-024b, T-029a, T-037a) + v0.3 T-039…T-042 all done. Remaining (need the user): **T-036** (P-5 keystore), **T-037** device checklist + soak (incl. v0.3 checks D1–D4). (+1 Could, T-035, not counted) · Checkpoints 1–8 GREEN. Remaining (both need the user): **T-036** (P-5 keystore) and **T-037** device checklist + 24 h soak (P-4 phones).
 
 ## Blockers
 | ID | Blocker | Impact | Unblocks when |
@@ -28,8 +28,6 @@
 ## Active file locks
 | Task | Agent | Files / globs locked | Since |
 |------|-------|----------------------|-------|
-| T-041 | Backend Developer (sonnet) | `packages/storize_instagram/**`, `docs/03-specs/INSTAGRAM_EXTRACTION.md`, `docs/03-specs/DEVICE_TESTS.md` | 2026-11-24 |
-| T-042 | Frontend Developer (haiku) | `app/lib/features/{targets,library}/**`, `app/lib/features/viewer/story_*`, ARB, their tests/goldens | 2026-11-24 |
 | (Lead) | — | `packages/storize_data/lib/storize_data.dart` barrel, all `pubspec.yaml` dependency changes, `pubspec.lock` | — |
 
 ## Task board
@@ -187,3 +185,5 @@
 - 2026-11-22 05:20 — **T-037a done** (43/45, 96%): dev-only tools (`flutter run --flavor dev -t lib/main_dev_tools.dart`): run check now, page-mode story load, cookie count, probe, Library seed/clear, log tail. Lead review (reuses governor, lease and seen hook); CI green after a transient Maven re-run; merged. Waiting on the user for T-036 and T-037 device runs.
 - 2026-11-24 00:50 — **T-039 done** (44/49): add never hangs (governor `maxWait` 8 s → inline rate-limit message), today's posts/stories on add. CI green, merged 717d78a. Requirements v0.3 approved (history, highlights); T-039…T-042 added.
 - 2026-11-24 01:15 — **T-040 done** (45/49, 92%): history + highlights core (model, ports, drift v2, BackfillHistory, SyncHighlights, background task). QA PASS (13 tests, `05-reviews/T-040.md`; low findings: no onDowngrade guard, empty highlights re-fetched, raw title in extras — safe). CI 45302093166 green; merged 688b186. T-041 (sonnet) and T-042 (haiku) running in worktrees.
+- 2026-11-24 02:10 — **T-042 done** (46/49): S-08 history picker + Highlights switch, S-09 history progress (Pause/Resume/Stop history), Library Highlights chip, highlight title in S-06. Lead review: wired `backfillHistoryProvider`/`syncHighlightsProvider` in production; Highlights switch now queues a background posts check (no foreground Instagram wait); clearer labels/hints; goldens regenerated (TZ=UTC). CI 45306381029 green; merged 766e97c.
+- 2026-11-24 02:30 — **T-041 done** (47/49, 96%): direct + page-mode post pages, highlights tray and items (seen stays blocked; scroll bounded 30 steps/60 s). QA PASS with F1 Medium (page cursor dropped same-second posts) → fixed with (time, pk) cursor; F2 prefix, F3 bound fixed. Unverified shapes → DEVICE_TESTS D1–D4. CI 45307490026 green; merged. **Checkpoint 9 due** (5 done since CP-8: T-029a/T-038 counted earlier → T-037a, T-039, T-040, T-041, T-042).
