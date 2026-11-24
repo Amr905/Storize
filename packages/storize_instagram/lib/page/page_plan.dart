@@ -100,7 +100,9 @@ abstract final class PagePlans {
   /// `/<username>/`, waiting for the posts query.
   static PagePlan<Timeline> posts(String username) => PagePlan(
     url: _https('/$username/'),
-    matches: (c) => GraphqlQuery.posts.matchesName(c.friendlyName),
+    matches: (c) =>
+        GraphqlQuery.posts.matchesName(c.friendlyName) ||
+        GraphqlQuery.postsPaging.matchesName(c.friendlyName),
     parse: (body) => Ok(
       const EnvelopeMapper().graphqlTimeline(body, usernameUsed: username),
     ),
@@ -182,6 +184,7 @@ abstract final class PagePlans {
       url: _https('/$username/'),
       matches: (c) =>
           GraphqlQuery.posts.matchesName(c.friendlyName) ||
+          GraphqlQuery.postsPaging.matchesName(c.friendlyName) ||
           _hasConnection(c.json),
       parse: (body) {
         if (!_hasConnection(body.value)) return null;

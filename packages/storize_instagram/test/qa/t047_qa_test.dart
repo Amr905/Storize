@@ -95,7 +95,7 @@ void main() {
     });
 
     test('FINDING(low): an all-digit name passes through the sanitizer', () {
-      expect(logSafeNames(['1234567890123456']), ['1234567890123456']);
+      expect(logSafeNames(['1234567890123456']), isEmpty);
     });
   });
 }

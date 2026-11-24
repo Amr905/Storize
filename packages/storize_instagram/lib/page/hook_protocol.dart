@@ -185,7 +185,7 @@ List<String> logSafeNames(Iterable<String?> names) {
     if (raw == null) continue;
     var n = raw.replaceAll(RegExp('[^A-Za-z0-9_]'), '');
     if (n.length > 60) n = n.substring(0, 60);
-    if (n.isEmpty || out.contains(n)) continue;
+    if (n.isEmpty || RegExp(r'^\d+$').hasMatch(n) || out.contains(n)) continue;
     out.add(n);
     if (out.length >= 12) break;
   }

@@ -229,6 +229,10 @@ final class DiscoveryRefresher {
       }
     }
     if (target == null) return;
+    // The stories doc_id is already known and fresh: nothing to learn.
+    final snap = await store.load(id);
+    final known = snap?.docIds[GraphqlQuery.stories.name];
+    if (known != null && now.difference(known.at) < interval) return;
     if (await governor.isPaused(id)) return;
     final r = await RequestGovernor.withMaxWait(
       maxWait,

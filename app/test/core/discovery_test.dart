@@ -348,5 +348,21 @@ void main() {
         expect(bg.composition.discoveryRefresher, isNull);
       },
     );
+
+    test('T-047: the foreground refresher has the stories wiring, the '
+        'background has no refresher', () async {
+      final store = InMemoryDiscoveryStore();
+      final fg = CompositionRig(discoveryStore: store);
+      final bg = CompositionRig(background: true, discoveryStore: store);
+      addTearDown(fg.dispose);
+      addTearDown(bg.dispose);
+      final r = fg.composition.discoveryRefresher;
+      expect(r, isNotNull);
+      expect(r!.loadStories, isNotNull);
+      expect(r.profileStoryTime, isNotNull);
+      // Nothing was loaded yet, so no story time is known.
+      expect(r.profileStoryTime!(1, '200'), isNull);
+      expect(bg.composition.discoveryRefresher, isNull);
+    });
   });
 }

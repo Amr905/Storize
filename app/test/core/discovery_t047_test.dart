@@ -41,7 +41,7 @@ final class _Rig {
         // The page records into a PageDiscovery of this account id.
         final d = PageDiscovery(clock: clock, store: store, accountId: id)
           ..record(
-            friendlyName: 'PolarisProfilePostsTabContentQuery_connection',
+            friendlyName: 'PolarisProfilePostsTabContentQuery',
             docId: '1234567',
             tokens: const {'fb_dtsg': 'ZZFAKE_dtsg_secret'},
           );
@@ -166,6 +166,23 @@ void main() {
     await old.refresher.refresh();
     expect(old.storyLoads, isEmpty);
   });
+
+  test(
+    'no extra stories load when the stories doc_id is already fresh',
+    () async {
+      final r = _Rig();
+      await r.ready;
+      await r.store.save(
+        r.accountId,
+        DiscoverySnapshot(
+          docIds: {'stories': (docId: 'ZZFAKE_doc', at: _t0)},
+        ),
+      );
+      await r.refresher.refresh();
+      expect(r.loads, hasLength(1));
+      expect(r.storyLoads, isEmpty);
+    },
+  );
 
   test('no extra stories load when stories are not tracked', () async {
     final r = _Rig(trackStories: false);

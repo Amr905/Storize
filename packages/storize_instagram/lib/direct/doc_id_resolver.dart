@@ -9,6 +9,10 @@ enum GraphqlQuery {
   /// The posts of a user by username.
   posts('PolarisProfilePostsQuery'),
 
+  /// The paging variant of the posts query (`..._connection`), used only
+  /// for pages after the first (it takes `first` and `after`).
+  postsPaging('PolarisProfilePostsTabContentQuery_connection'),
+
   /// The highlights tray of a profile. **The name is an assumption** (the
   /// T-002 capture saw the query but did not record its name): see
   /// INSTAGRAM_EXTRACTION.md v0.3.
@@ -32,17 +36,20 @@ enum GraphqlQuery {
 
   // The known aliases, in ONE place. A name that is only an alias is recorded
   // but never replaces a `doc_id` found under the exact name.
-  //  - posts: `PolarisProfilePosts...`, including the paging variant
-  //    `...TabContentQuery_connection`: its variables are `username`, `data`,
-  //    `first` and `after`, which is what the timeline request builds, so its
-  //    doc_id is compatible.
+  //  - posts: `PolarisProfilePosts...` without `_connection` (first page).
+  //  - postsPaging: `PolarisProfilePosts...` with `_connection`: its doc_id
+  //    is used only for `timelinePage`, never for the first-page timeline.
   //  - stories: any `...StoriesV3Reel...` / `...ReelPageStandalone...` query
   //    except the tray and the seen mutation (other variables, or blocked).
   //  - profile: `PolarisProfilePageContentQuery...` with a suffix.
   bool _aliasMatch(String name) {
     switch (this) {
       case GraphqlQuery.posts:
-        return name.startsWith('PolarisProfilePosts');
+        return name.startsWith('PolarisProfilePosts') &&
+            !name.contains('_connection');
+      case GraphqlQuery.postsPaging:
+        return name.startsWith('PolarisProfilePosts') &&
+            name.contains('_connection');
       case GraphqlQuery.stories:
         if (name.contains('Tray') || name.contains('Seen')) return false;
         return name.contains('StoriesV3Reel') ||

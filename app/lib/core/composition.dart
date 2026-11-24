@@ -21,6 +21,7 @@ import 'package:storize_instagram/instagram_platform.dart';
 import 'package:storize_instagram/media/media.dart';
 import 'package:storize_instagram/page/page.dart';
 import 'package:storize_instagram/platform/platform.dart';
+import 'package:storize_model/storize_model.dart';
 
 /// How long an interactive foreground op may wait for the request budget.
 const Duration interactiveMaxWait = Duration(seconds: 8);
@@ -302,6 +303,7 @@ final class AppComposition {
     // foreground fills the persisted discovery that both isolates read.
     final discoveryStore = parts.discoveryStore;
     final refresherPlatforms = <int, Future<InstagramPlatform>>{};
+    final refresherBuilt = <int, InstagramPlatform>{};
     final discoveryRefresher = background || discoveryStore == null
         ? null
         : DiscoveryRefresher(
@@ -316,7 +318,22 @@ final class AppComposition {
                 accountId,
                 () => build(accountId),
               );
+              refresherBuilt[accountId] = p;
               return p.loadDiscovery(username);
+            },
+            // What the profile just loaded showed (no request), then one
+            // governed page-mode stories load through the platform's
+            // fetchStories (SeenGuard and the seen block apply).
+            profileStoryTime: (accountId, userId) =>
+                refresherBuilt[accountId]?.profileStoryTime(userId),
+            loadStories: (accountId, target) async {
+              final p = await refresherPlatforms.putIfAbsent(
+                accountId,
+                () => build(accountId),
+              );
+              return p.fetchStories([
+                target.remoteUserId,
+              ], policy: ExtractionPolicy.directThenPage);
             },
           );
 

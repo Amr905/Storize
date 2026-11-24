@@ -441,6 +441,7 @@ void main() {
       expect(after.cursor, before.cursor);
       expect(after.fetched, before.fetched);
       expect(pass.running, 1);
+      expect(pass.deferred, isTrue);
       expect(pass.network, isFalse);
       expect(pass.rateLimited, isFalse);
       expect(

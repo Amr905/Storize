@@ -90,6 +90,7 @@ final class BackfillPassResult {
     this.sessionStatus,
     this.sessionInactive = false,
     this.network = false,
+    this.deferred = false,
   });
 
   /// How many targets are still `running` after the pass.
@@ -109,6 +110,10 @@ final class BackfillPassResult {
 
   /// A step hit a network problem.
   final bool network;
+
+  /// A step was deferred (no doc_id, no tokens or page mode off): retrying
+  /// soon cannot help, so the caller should wait much longer (T-047).
+  final bool deferred;
 
   @override
   String toString() =>
@@ -251,12 +256,14 @@ final class BackfillHistory {
     var rateLimited = false;
     var network = false;
     var inactive = false;
+    var deferred = false;
     AccountStatus? session;
     for (final id in ids) {
       if (deadline != null && !_clock.now().isBefore(deadline)) break;
       final r = await step(id, policy: policy);
       fresh.addAll(r.newContentIds);
       if (r.outcome == BackfillOutcome.network) network = true;
+      if (r.outcome == BackfillOutcome.deferred) deferred = true;
       if (r.outcome == BackfillOutcome.rateLimited) {
         rateLimited = true;
         break;
@@ -278,6 +285,7 @@ final class BackfillHistory {
       sessionStatus: session,
       sessionInactive: inactive,
       network: network,
+      deferred: deferred,
     );
   }
 

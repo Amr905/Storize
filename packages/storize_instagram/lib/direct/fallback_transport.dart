@@ -73,7 +73,12 @@ final class FallbackTransport implements IgTransport {
   Future<void> _forget(List<GraphqlQuery> queries) async {
     final resolver = docIds;
     if (resolver is! DocIdForgetter) return;
-    for (final q in queries) {
+    final all = [
+      ...queries,
+      // The paging doc_id goes with the posts one when a timeline fails.
+      if (queries.contains(GraphqlQuery.posts)) GraphqlQuery.postsPaging,
+    ];
+    for (final q in all) {
       try {
         await resolver.forget(q);
       } on Object {
