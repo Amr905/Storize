@@ -1,6 +1,11 @@
 # Storize — Requirements
 
-> Status: **v0.2 — Approved** · Owner: requirements-analyst · Date: 2026-11-19 · Approved by: user, 2026-11-19 (v0.1 approved 2026-11-18)
+> Status: **v0.3 — Draft (awaiting approval)** · Owner: Lead · Date: 2026-11-24 · v0.2 approved 2026-11-19
+>
+> **Change log v0.3 (2026-11-24, user feedback after the first phone test):**
+> 1. **Today's posts and stories** are downloaded when an account is added (D-17): FR-63 changed.
+> 2. **Post history** can be downloaded per account, by range (Today, 7 days, 30 days, from a date, All), slowly in the background (D-18): FR-68…FR-70.
+> 3. **Highlights** (pinned stories) are downloaded per account: all of them once, then new items (D-19): FR-71…FR-72. A-16 and §12 changed.
 >
 > **Change log v0.2 (2026-11-19, user feedback on the tech spec):**
 > 1. **New posts are tracked as well as stories** (D-11): new §6.3b, FR-60…FR-66, BR-9, EC-20…EC-22.
@@ -36,6 +41,9 @@ The MVP supports Instagram only. Facebook, TikTok and Snapchat are planned later
 | D-14 | The source code lives in the public GitHub repo https://github.com/Amr905/Storize | v0.2 feedback |
 | D-15 | Reels are a separate per-account option: the user decides whether new reels are downloaded | v0.2 approval |
 | D-16 | Older posts are not downloaded by default; a backfill option may come in a later version | v0.2 approval |
+| D-17 | When an account is added, its posts and stories from **today** are downloaded too (not only content published after it was added) | v0.3 feedback |
+| D-18 | Post history is a **per-account** option with ranges Today / last 7 days / last 30 days / from a date / All; it runs in the background within the request budget | v0.3 feedback |
+| D-19 | **Highlights** are a per-account option: when on, all current highlights are downloaded once, then items added later | v0.3 feedback |
 
 ## 3. Business goals
 - **G-1** Never lose a story from a tracked account because it expired before anyone saved it.
@@ -117,10 +125,15 @@ Priority: **M** = Must, **S** = Should, **C** = Could.
 | FR-60 | Each check detects **new posts** by each tracked account and downloads all of their media at the best available quality: photo, video, carousel. New **reels** are downloaded only if the account's Reels option is on (D-15, FR-67) | M |
 | FR-61 | A carousel is saved as all its slides, kept together as one post (in order) | M |
 | FR-62 | The app saves post metadata: caption, post link, posted time, type, slide count | M |
-| FR-63 | Only posts published **after** the account was added are downloaded; there's no backfill of older posts **[A-18]** | M |
+| FR-63 | When an account is added, posts published **since the start of today** (device time) are downloaded, and so are its live stories; older posts follow the account's history option (FR-68) (D-17) | M |
+| FR-68 | Each tracked account has a **post history** option, set on Add account and editable on Account detail: **None** (default), **Today**, **Last 7 days**, **Last 30 days**, **Since a date**, **All** (D-18) | M |
+| FR-69 | History is fetched page by page in the **background** (workmanager), within the same request budget as checks and below them in priority; progress ("312 of ~1,200 posts") is shown on Account detail; it can be paused, resumed or cancelled, and survives app restarts | M |
+| FR-70 | History respects the account's Posts/Reels toggles and never downloads a post twice (same dedupe as FR-60); a stop by rate limit or login problem resumes later from where it stopped | M |
 | FR-64 | Posts are checked on their own interval, by default every 3 hours, configurable from 1 h to 24 h, to limit request volume and ban risk **[A-19]** | M |
 | FR-65 | Each tracked account has toggles for **Stories**, **Posts** and **Reels** (all on by default); at least one must stay on | S |
 | FR-67 | Each tracked account has a **Reels** toggle next to Stories and Posts (default **on**). When it's off, reels are skipped even though they appear on the profile grid (D-15) | M |
+| FR-71 | Each tracked account has a **Highlights** toggle (default off). When turned on, every current highlight is downloaded once (in the background, like FR-69), then each check of that account's posts also picks up items newly added to its highlights (D-19) | S |
+| FR-72 | Highlight items are saved in the account's gallery folder under `Highlights/<highlight title>/`, appear in the Library under their own filter, and keep their highlight title and order | S |
 | FR-66 | New-post notifications follow FR-40 ("2 new posts from @x") and can be turned off separately (FR-42) | M |
 
 ### 6.4 Library
@@ -233,8 +246,8 @@ There are no backend, cloud or payment integrations in the MVP.
 - iOS, web app, desktop app
 - Server, cloud backup, or syncing between team members' phones
 - Facebook, TikTok and Snapchat (post-MVP, D-7)
-- Highlights, live videos, DMs and comments **[A-16]**
-- Backfilling posts published before an account was added (A-18) — **planned as a later option (D-16)**
+- Live videos, DMs and comments **[A-16]** (highlights moved in scope by D-19)
+- ~~Backfilling older posts~~ — now in scope as the history option (D-18)
 - iOS (Flutter keeps it possible later; D-13)
 - Re-importing gallery files after a reinstall (EC-19)
 - Posting, reposting, or scheduling content to any platform
