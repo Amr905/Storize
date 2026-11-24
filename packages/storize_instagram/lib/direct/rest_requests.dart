@@ -37,4 +37,26 @@ abstract final class RestRequests {
     path: '/api/v1/feed/user/${Uri.encodeComponent(userId)}/',
     query: [('count', '$count')],
   );
+
+  /// One page of posts: the first page has no [maxId].
+  static IgRequest userFeedPage(
+    String userId, {
+    String? maxId,
+    int count = 12,
+  }) => IgRequest.get(
+    path: '/api/v1/feed/user/${Uri.encodeComponent(userId)}/',
+    query: [('count', '$count'), if (maxId != null) ('max_id', maxId)],
+  );
+
+  /// The highlights tray of a user.
+  static IgRequest highlightsTray(String userId) => IgRequest.get(
+    path: '/api/v1/highlights/${Uri.encodeComponent(userId)}/highlights_tray/',
+  );
+
+  /// The items of highlights (read-only GET; never the `seen` endpoint).
+  /// [highlightIds] are plain ids.
+  static IgRequest highlightReels(List<String> highlightIds) => IgRequest.get(
+    path: '/api/v1/feed/reels_media/',
+    query: [for (final id in highlightIds) ('reel_ids', 'highlight:$id')],
+  );
 }

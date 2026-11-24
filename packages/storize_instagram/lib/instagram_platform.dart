@@ -105,7 +105,8 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
 
   /// Builds the platform and wires the shared parts (T-013/T-014 follow-ups):
   ///
-  /// - **GraphQL is the default transport.** REST only when
+  /// - **GraphQL with a per-call REST fallback is the default transport.**
+  ///   REST alone only when
   ///   [transportPreference] is `restWhenProven` and [probe] says
   ///   `restProven` (see `selectTransport`).
   /// - **One `PageDiscovery`** is given to page mode (it fills it) and to the
@@ -158,6 +159,7 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
         tokens: sharedDiscovery,
         preference: transportPreference,
         probe: probe,
+        log: log,
       ),
       sharedSignals,
     );

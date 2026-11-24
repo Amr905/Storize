@@ -5,9 +5,9 @@ import 'package:storize_model/storize_model.dart';
 
 /// Direct mode over the REST candidates of TECH_SPEC 4.1 (IG-1 to IG-5).
 ///
-/// **None of these was seen in the capture.** The shapes follow the candidate
-/// table. Use this transport only where the live probe proved the calls
-/// (`IgProbe`); otherwise use `GraphqlTransport`.
+/// The shapes follow the candidate table plus the web client's v1 endpoints
+/// (feed/user paging, highlights tray, reels_media for highlights); device
+/// verification is D5. `FallbackTransport` uses it when GraphQL cannot run.
 final class RestTransport implements IgTransport {
   /// Creates the transport.
   const RestTransport({
@@ -57,27 +57,37 @@ final class RestTransport implements IgTransport {
     mapper.restFeed,
   );
 
-  // The REST candidates for paging and highlights were never observed, so
-  // they are not guessed: the run goes to page mode.
   @override
   Future<Result<Timeline>> timelinePage(
     String userId,
     IgCall call, {
     String? cursor,
     String? usernameHint,
-  }) async => const Err(SchemaChanged('rest_unsupported:timelinePage'));
+  }) => callAndParse(
+    call,
+    RestRequests.userFeedPage(userId, maxId: cursor, count: postCount),
+    mapper.restFeed,
+  );
 
   @override
   Future<Result<List<RemoteHighlight>>> highlights(
     String userId,
     IgCall call,
-  ) async => const Err(SchemaChanged('rest_unsupported:highlights'));
+  ) => callAndParse(
+    call,
+    RestRequests.highlightsTray(userId),
+    mapper.restHighlights,
+  );
 
   @override
   Future<Result<Map<String, List<RemoteContent>>>> highlightItems(
     List<String> highlightIds,
     IgCall call,
-  ) async => const Err(SchemaChanged('rest_unsupported:highlightItems'));
+  ) => callAndParse(
+    call,
+    RestRequests.highlightReels(highlightIds),
+    (body) => mapper.restHighlightItems(body, highlightIds),
+  );
 
   @override
   Future<Result<Viewer>> viewer(String ownUserId, IgCall call) =>

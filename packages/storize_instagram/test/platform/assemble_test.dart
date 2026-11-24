@@ -71,7 +71,9 @@ class _Rig {
       (id, name) => unawaited(targetRepo.insert(_target(id, name))),
     );
     http = d.FakeIgHttp(
-      responder ?? (_) => throw StateError('no responder for this test'),
+      // No doc_id and no tokens: direct mode goes to REST (T-044); an empty
+      // object is a REST answer of the wrong shape (SchemaChanged).
+      responder ?? (_) => d.jsonReply({'status': 'ok'}),
     );
     driver = p.FakePageDriver(onLoad ?? (_, _) {}, openGate: openGate);
     discovery = PageDiscovery(clock: time.clock);
@@ -261,15 +263,26 @@ void main() {
       final rig = _Rig(onLoad: p.emitting(_pagePosts()));
       final r = await rig.posts();
       expect(r.valueOrNull, isNotEmpty);
-      expect(rig.http.requests, isEmpty, reason: 'direct never got a doc_id');
+      expect(
+        rig.http.requests.map((r) => r.uri.path.split('/')[3]),
+        ['feed'],
+        reason: 'no doc_id: one REST call (T-044), no GraphQL',
+      );
       expect(rig.driver.sessions, hasLength(1));
       expect(rig.driver.sessions.single.loads.single.path, '/${p.fakeUser}/');
-      expect(await rig.governor.remainingTokens(1), 3, reason: '6 - pageLoad');
+      expect(
+        await rig.governor.remainingTokens(1),
+        2,
+        reason: '6 - one REST call - pageLoad',
+      );
       expect(
         rig.governorLogs.where((l) => l.contains('cost=pageLoad')),
         hasLength(1),
       );
-      expect(rig.governorLogs.where((l) => l.contains('cost=api')), isEmpty);
+      expect(
+        rig.governorLogs.where((l) => l.contains('cost=api')),
+        hasLength(1),
+      );
       expect(
         rig.log.entries.map((e) => e.message),
         contains('PAGE_MODE_USED op=fetchNewPosts'),
@@ -282,9 +295,9 @@ void main() {
       final rig = _Rig(onLoad: p.emitting(_pagePosts()));
       final r = await rig.posts(policy: ExtractionPolicy.directOnly);
       expect(r.failureOrNull, isA<SchemaChanged>());
-      expect((r.failureOrNull! as SchemaChanged).where, startsWith('doc_id:'));
+      expect((r.failureOrNull! as SchemaChanged).where, startsWith('response'));
       expect(rig.driver.sessions, isEmpty);
-      expect(await rig.governor.remainingTokens(1), 6);
+      expect(await rig.governor.remainingTokens(1), 5, reason: 'one REST call');
     });
 
     final directFailures = <String, IgReply>{
@@ -380,18 +393,22 @@ void main() {
   group('T-013 follow-up: shared PageDiscovery and the GraphQL default', () {
     test('a page load teaches the GraphQL transport the doc_id and the '
         'tokens; the next call is direct and uses them', () async {
+      final graphql = _directPosts();
       final rig = _Rig(
-        responder: _directPosts(),
+        responder: (r) => r.uri.path == '/api/graphql'
+            ? graphql(r)
+            : d.jsonReply({'status': 'ok'}),
         onLoad: p.emitting(_pagePosts()),
       );
       expect((await rig.posts()).isOk, isTrue);
-      expect(rig.http.requests, isEmpty);
+      expect(rig.http.requests, hasLength(1), reason: 'REST before the load');
       expect(await rig.discovery.docIdFor(GraphqlQuery.posts), p.fakeDocId);
 
       final again = await rig.posts();
       expect(again.isOk, isTrue);
       expect(rig.driver.sessions, hasLength(1), reason: 'no second page load');
-      final request = rig.http.requests.single;
+      final request = rig.http.requests.last;
+      expect(rig.http.requests, hasLength(2));
       expect(request.uri.path, '/api/graphql');
       expect(request.form!['doc_id'], p.fakeDocId);
       expect(request.form!['fb_dtsg'], d.fakeDtsg);
@@ -451,9 +468,9 @@ void main() {
         onLoad: p.emitting(_pagePosts()),
       );
       final r = await rig.posts();
-      expect((r.failureOrNull! as SchemaChanged).where, startsWith('doc_id:'));
+      expect(r.failureOrNull, isA<SchemaChanged>());
       expect(rig.driver.log, isEmpty);
-      expect(await rig.governor.remainingTokens(1), 6);
+      expect(await rig.governor.remainingTokens(1), 5, reason: 'one REST call');
       expect(rig.platform.takeSignals().pageModeUses, 0);
       expect(rig.logs, isNot(contains('PAGE_MODE_USED')));
     });
@@ -753,7 +770,7 @@ void main() {
         ),
       );
       await rig.stories();
-      expect(await rig.governor.remainingTokens(1), 3);
+      expect(await rig.governor.remainingTokens(1), 2, reason: 'REST + page');
     });
   });
 

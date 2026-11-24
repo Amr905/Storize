@@ -224,3 +224,28 @@ Everything in this section is an **assumption** written from the T-040/T-041 des
 | Highlight items | The stories reel query with `reel_ids_arr` = `["highlight:<id>"]` answers reels with `id` `highlight:<id>`, `reel_type` `highlight_reel`, optional `title`, story-shaped `items[]` without a required `expiring_at`. | `SchemaChanged`. |
 | Highlight page | `/stories/highlights/<id>/` fires the reel query for the highlight and (probably) `PolarisStoriesV3SeenMutation`. The mutation stays blocked by name in the hook; a reply to it trips the `SeenGuard`. | `seen_block_leak`, guard tripped. |
 | REST | No REST paging or highlight call is guessed; `RestTransport` answers `SchemaChanged` (page mode). | n/a |
+
+## v0.3 REST fallback (device-verify)
+
+Found on device (2026-11-24): `PageDiscovery` (`doc_id`s and page tokens) lives in memory per isolate and only a page-mode run fills it. Page mode is off in the background, so background checks, today's content on add, history and highlights got `SchemaChanged` on every GraphQL call. A REST call on `www.instagram.com` with the session cookies, `X-IG-App-ID` and `X-Requested-With: XMLHttpRequest` worked (`accounts/edit/web_form_data/`). `current_user` gave 400.
+
+**Order per call (`FallbackTransport`, the default in `selectTransport`):**
+1. GraphQL only if the `doc_id` of every query the op needs and the page tokens are available now; otherwise REST straight away (no wasted request).
+2. GraphQL `SchemaChanged`: REST once.
+3. REST `SchemaChanged` or `UnknownFailure`: returned, so the platform still falls back to page mode where allowed.
+4. Rate limit, session, private, not found, network: returned as they are, never retried on the other transport.
+
+**REST endpoints (all read-only GET through `RequestGovernor`; the headers are the session headers `verifySession` uses). Shapes are assumptions until D5 passes:**
+
+| Op | Request | Mapping |
+|----|---------|---------|
+| Stories | `feed/reels_media/?reel_ids=<userId>` | `reels{}` or `reels_media[]`, story mapper |
+| First posts | `feed/user/{id}/?count=12` | `items[]` |
+| Post page | `feed/user/{id}/?count=12&max_id=<cursor>` | `items[]`, `more_available` is `hasNextPage`, `next_max_id` is the cursor (absent at the end) |
+| Highlights tray | `highlights/{userId}/highlights_tray/` | `tray[]`: `id` (`highlight:<n>`, prefix stripped), `title`, `latest_reel_media`, `cover_media.cropped_image_version.url` |
+| Highlight items | `feed/reels_media/?reel_ids=highlight:<id>` (one `reel_ids` per id, at most 20) | `reels{}` items, story mapper, kind highlight, extras `highlightId`, `highlightTitle`, `highlightOrder` |
+| Users | `users/web_profile_info/?username=`, `i.instagram.com/api/v1/users/{id}/info/` | unchanged |
+
+The `seen` endpoints are never called. Logs carry the op, the transport and the failure type only.
+
+**Risks:** the post-page and tray shapes are unobserved; a wrong shape is `SchemaChanged` (page mode). `users/{id}/info` and `current_user` may answer 400 as `current_user` did.
