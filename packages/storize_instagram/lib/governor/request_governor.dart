@@ -25,6 +25,10 @@ final Object _runningKey = Object();
 /// [RequestGovernor.withMaxWait]).
 final Object _maxWaitKey = Object();
 
+/// Zone key: the default [RequestPriority] of every `run` started in this
+/// zone (see [RequestGovernor.withPriority]).
+final Object _priorityKey = Object();
+
 /// Attempts to record a rate limit before giving up (N2).
 const int _limitRecordAttempts = 3;
 
@@ -107,9 +111,18 @@ class RequestGovernor {
     required RequestCost cost,
     required Future<T> Function() call,
     Duration? maxWait,
+    RequestPriority? priority,
   }) {
     maxWait ??= Zone.current[_maxWaitKey] as Duration?;
+    priority ??=
+        Zone.current[_priorityKey] as RequestPriority? ??
+        RequestPriority.interactive;
     final weight = _config.weightOf(cost);
+    // A background call keeps tokens for interactive work (T-050), as far as
+    // the burst allows.
+    final reserve = priority == RequestPriority.background
+        ? max(0, min(_config.interactiveReserve, _config.burst - weight))
+        : 0;
     if (weight > _config.burst) {
       throw ArgumentError.value(
         cost,
@@ -127,7 +140,7 @@ class RequestGovernor {
     }
     return _exclusive(accountId, (state) async {
       final queuedAt = _clock.now();
-      await _prepare(accountId, state, weight, maxWait);
+      await _prepare(accountId, state, weight, maxWait, reserve);
       final waited = _clock.now().difference(queuedAt);
       T result;
       try {
@@ -159,6 +172,14 @@ class RequestGovernor {
       return result;
     });
   }
+
+  /// Runs [body] so that every `run` started inside it (and not given its own
+  /// `priority`) uses [priority]. Background isolates wrap their work in it
+  /// with [RequestPriority.background].
+  static Future<T> withPriority<T>(
+    RequestPriority priority,
+    Future<T> Function() body,
+  ) => runZoned(body, zoneValues: {_priorityKey: priority});
 
   /// Runs [body] so that every `run` started inside it (and not given its own
   /// `maxWait`) uses [maxWait]. For interactive paths: the user must not
@@ -264,6 +285,7 @@ class RequestGovernor {
     _AccountState state,
     int weight,
     Duration? maxWait,
+    int reserve,
   ) async {
     final startedAt = _clock.now();
     final gap = _drawGap();
@@ -325,7 +347,7 @@ class RequestGovernor {
       final jitter = ready.difference(now);
       final wait = _maxDuration(
         jitter.isNegative ? Duration.zero : jitter,
-        _tokenWait(bucket, weight),
+        _tokenWait(bucket, weight + reserve),
       );
       if (maxWait != null && wait > Duration.zero) {
         final left = maxWait - now.difference(startedAt);
