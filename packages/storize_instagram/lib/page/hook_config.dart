@@ -46,7 +46,12 @@ final class PageHookConfig {
 
   /// The JS that sets `window.__STORIZE_HOOK_CONFIG` before the hook runs.
   String prelude() =>
-      'window.__STORIZE_HOOK_CONFIG = ${jsonEncode({'handler': handlerName, 'includeBody': true, 'includeRequestSecrets': true, 'blockedFriendlyNames': blockedFriendlyNames})};';
+      'window.__STORIZE_HOOK_CONFIG = ${jsonEncode({
+        'handler': handlerName,
+        'includeBody': true,
+        'includeRequestSecrets': true,
+        'blockedFriendlyNames': blockedFriendlyNames,
+      })};';
 
   /// The full user script for [hookSource] (the content of `hook.js`).
   String compose(String hookSource) => '${prelude()}\n$hookSource';
