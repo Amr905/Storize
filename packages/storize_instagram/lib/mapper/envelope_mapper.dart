@@ -212,8 +212,15 @@ final class EnvelopeMapper {
     List<String> requested,
   ) {
     final root = body['data']['xdt_api__v1__feed__reels_media'];
+    return _highlightReels(root['reels_media'].list, requested);
+  }
+
+  Map<String, List<RemoteContent>> _highlightReels(
+    List<Node> reels,
+    List<String> requested,
+  ) {
     final out = <String, List<RemoteContent>>{};
-    for (final reel in root['reels_media'].list) {
+    for (final reel in reels) {
       final id = stripHighlightPrefix(reel['id'].string);
       final order = requested.indexOf(id);
       if (order < 0) continue;
@@ -259,8 +266,66 @@ final class EnvelopeMapper {
     return _reels(body['reels_media'].list);
   }
 
-  /// IG-5 `feed/user/{id}`: `items[]`.
-  Timeline restFeed(Node body) => _timeline(body['items'].list);
+  /// IG-5 `feed/user/{id}`: `items[]`, with `more_available` and
+  /// `next_max_id` as the page info (a missing `next_max_id` is the end).
+  Timeline restFeed(Node body) {
+    final next = body['next_max_id'].stringOrNull;
+    final more = body['more_available'].boolOrNull;
+    final cursor = next == null || next.isEmpty ? null : next;
+    return _timeline(
+      body['items'].list,
+      endCursor: cursor,
+      hasNextPage: more ?? (cursor != null ? true : null),
+    );
+  }
+
+  /// `highlights/{id}/highlights_tray/`: `tray[]` with `id`
+  /// (`highlight:<n>`), `title`, `latest_reel_media`, `cover_media`. Tray
+  /// order is kept; a tray item without an `id` is skipped, and the tray
+  /// fails only when every item is malformed.
+  List<RemoteHighlight> restHighlights(Node body) {
+    final out = <RemoteHighlight>[];
+    SchemaException? first;
+    for (final node in body['tray'].list) {
+      try {
+        final id = stripHighlightPrefix(node['id'].string);
+        if (id.isEmpty) throw SchemaException(node['id'].path);
+        out.add(
+          RemoteHighlight(
+            id: id,
+            title: node['title'].stringOrNull ?? '',
+            coverUrl:
+                node['cover_media']['cropped_image_version']['url']
+                    .stringOrNull ??
+                node['cover_media']['thumbnail_src'].stringOrNull,
+            itemCount: node['media_count'].intOrNull,
+            latestItemAt: node['latest_reel_media'].unixTimeOrNull,
+          ),
+        );
+      } on SchemaException catch (e) {
+        first ??= e;
+      }
+    }
+    if (out.isEmpty && first != null) throw first;
+    return out;
+  }
+
+  /// `feed/reels_media/?reel_ids=highlight:<id>`: `reels` (object keyed by
+  /// `highlight:<id>`) or `reels_media[]`. Same result as
+  /// [graphqlHighlightItems].
+  Map<String, List<RemoteContent>> restHighlightItems(
+    Node body,
+    List<String> requested,
+  ) {
+    final reels = body['reels'];
+    if (!reels.isNull) {
+      final map = reels.map;
+      return _highlightReels([
+        for (final key in map.keys) Node(map[key], '${reels.path}.<id>'),
+      ], requested);
+    }
+    return _highlightReels(body['reels_media'].list, requested);
+  }
 
   // -------------------------------------------------------------- shared
 

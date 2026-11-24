@@ -199,7 +199,15 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 | D2 | Post paging, page mode: scroll the profile in the headless WebView; which friendly name the extra pages carry; how many posts 30 steps reach; page-size cost | | | |
 | D3 | Highlights tray: real friendly name, variable name, response paths; update the matcher and fixtures | | | |
 | D4 | Highlight items: reel query with `highlight:<id>`; `/stories/highlights/<id>/` in page mode; confirm the seen mutation is blocked (0 leaks) and the highlight is not marked seen | | | |
+| D5 | Background check with no page mode (T-044): a story and a post are downloaded over REST | | | |
 | C | 24 h soak (see SOAK.md) | | | |
+
+## D5. Background check downloads a story and a post with no page mode (T-044)
+**Needs:** Phone A, test account, a fresh process (no page-mode run since the app started), `pageModeInBackground` off (default), a tracked account with an active story and a new post.
+1. Force-stop the app, then run "run check now" (or wait for the scheduled check).
+2. **Expected:** the diagnostics show `op=fetchStories via=rest ok` and `op=fetchNewPosts via=rest ok` (or `via=graphql` if a page load had taught the `doc_id`s); no `page_mode_background_disabled`; the story and the post are in `Pictures/Storize/<username>/`.
+3. Add a tracked account: today's content, history and highlights load (the `fetchPostPage`, `fetchHighlights`, `fetchHighlightItems` lines say `via=rest ok`).
+4. **FAIL if:** any REST line shows `SchemaChanged` or HTTP 4xx. Write the op and the failure type only (no ids, no URLs) and stop; do not retry more than once. 429, checkpoint or login redirect: write it and stop.
 
 ## Open questions
 - The debug actions named above ("page-mode story load", "run check now", "run the probe", cookie count, Library seed) belong to the app wiring. Any that do not exist yet make their tests "blocked"; the Lead decides whether to add them before the soak.

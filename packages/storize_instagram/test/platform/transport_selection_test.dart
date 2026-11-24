@@ -1,5 +1,5 @@
-// T-013 follow-up: GraphQL is the default transport; REST only when a probe
-// report says restProven.
+// T-013 follow-up, T-044: the GraphQL-then-REST fallback is the default; REST
+// alone only when a probe report says restProven.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_instagram/direct/direct.dart';
 import 'package:storize_instagram/platform/platform.dart';
@@ -36,17 +36,20 @@ void main() {
     expect(_report(proven: false).restProven, isFalse);
   });
 
-  test('the default preference is GraphQL', () {
-    expect(_select().name, 'graphql');
+  test('the default is the GraphQL-then-REST fallback', () {
+    expect(_select().name, 'fallback');
     expect(
       selectTransport(docIds: FakeDocIds(), tokens: FakeTokens()).name,
-      'graphql',
+      'fallback',
     );
   });
 
-  test('GraphQL stays even with a proven probe unless REST is asked for', () {
-    expect(_select(probe: _report(proven: true)).name, 'graphql');
-  });
+  test(
+    'the fallback stays even with a proven probe unless REST is asked for',
+    () {
+      expect(_select(probe: _report(proven: true)).name, 'fallback');
+    },
+  );
 
   test('restWhenProven + proven probe: REST', () {
     expect(
@@ -59,7 +62,7 @@ void main() {
   });
 
   test('restWhenProven without a probe, with a failed one or an empty one: '
-      'GraphQL', () {
+      'the fallback', () {
     for (final probe in [
       null,
       _report(proven: false),
@@ -70,7 +73,7 @@ void main() {
           preference: TransportPreference.restWhenProven,
           probe: probe,
         ).name,
-        'graphql',
+        'fallback',
       );
     }
   });
