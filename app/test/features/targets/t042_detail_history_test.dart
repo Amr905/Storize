@@ -195,26 +195,19 @@ void main() {
     expect(rig.scheduler.kickHistoryCalls, 1);
   });
 
-  testWidgets('AC2: turning Highlights on saves the flag and runs a sync', (
-    t,
-  ) async {
+  testWidgets('AC2: turning Highlights on saves the flag and queues a '
+      'background posts check for this target', (t) async {
     final rig = DetailRig();
-    rig.platform.fetchHighlightsResults.fallback =
-        const Ok<List<RemoteHighlight>>(
-          [],
-        );
     final target = await seed(rig, range: HistoryRange.none, state: null);
     await pumpDetail(t, rig: rig, targetId: target.id);
-    l10n = AppLocalizations.of(t.element(find.byType(Scaffold).first));
 
     await tapFinder(t, find.byType(SwitchListTile));
     expect((await stored(t, rig, target.id)).highlightsEnabled, isTrue);
-    await t.runAsync(() async {
-      for (var i = 0; i < 20; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      }
-    });
-    expect(rig.platform.callsTo('fetchHighlights'), hasLength(1));
+    expect(rig.scheduler.checkNowCalls, [
+      (scope: CheckScope.posts, targetId: target.id),
+    ]);
+    // Nothing waits on Instagram in the foreground.
+    expect(rig.platform.callsTo('fetchHighlights'), isEmpty);
   });
 
   testWidgets('AC2: turning Highlights off saves the flag and does not sync', (
@@ -232,5 +225,6 @@ void main() {
     await tapFinder(t, find.byType(SwitchListTile));
     expect((await stored(t, rig, target.id)).highlightsEnabled, isFalse);
     expect(rig.platform.callsTo('fetchHighlights'), isEmpty);
+    expect(rig.scheduler.checkNowCalls, isEmpty);
   });
 }

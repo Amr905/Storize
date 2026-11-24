@@ -2162,7 +2162,7 @@ abstract class AppLocalizations {
   /// S-08 hint under the track chips (FR-63, A-18).
   ///
   /// In en, this message translates to:
-  /// **'New posts are saved from now on — older posts aren\'t downloaded.'**
+  /// **'Today\'s posts and stories are saved now. Pick a post history below for older posts.'**
   String get tgtTrackHint;
 
   /// S-08 note field label.
@@ -3152,25 +3152,25 @@ abstract class AppLocalizations {
   /// S-09 history state: stopped by an error; resume retries.
   ///
   /// In en, this message translates to:
-  /// **'Failed. Resume to try again.'**
+  /// **'Stopped by an error. Resume history to try again.'**
   String get tdtHistoryFailed;
 
   /// S-09 button: pause the history download.
   ///
   /// In en, this message translates to:
-  /// **'Pause'**
+  /// **'Pause history'**
   String get tdtHistoryPause;
 
   /// S-09 button: resume the history download.
   ///
   /// In en, this message translates to:
-  /// **'Resume'**
+  /// **'Resume history'**
   String get tdtHistoryResume;
 
   /// S-09 button: stop the history download for good; stored posts stay.
   ///
   /// In en, this message translates to:
-  /// **'Cancel'**
+  /// **'Stop history'**
   String get tdtHistoryCancel;
 
   /// S-09 switch label: download the account's highlights (FR-71).
@@ -3182,7 +3182,7 @@ abstract class AppLocalizations {
   /// S-09 hint under the Highlights switch.
   ///
   /// In en, this message translates to:
-  /// **'Turning this on downloads the highlights now.'**
+  /// **'Saves all pinned stories in the background, then new ones.'**
   String get tdtHighlightsHint;
 
   /// S-05 filter chip: show only highlight items (FR-72).

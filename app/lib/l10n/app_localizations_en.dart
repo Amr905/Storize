@@ -1236,7 +1236,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tgtTrackHint =>
-      'New posts are saved from now on — older posts aren\'t downloaded.';
+      'Today\'s posts and stories are saved now. Pick a post history below for older posts.';
 
   @override
   String get tgtNoteLabel => 'Note (optional)';
@@ -1902,23 +1902,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tdtHistoryDone => 'Done';
 
   @override
-  String get tdtHistoryFailed => 'Failed. Resume to try again.';
+  String get tdtHistoryFailed =>
+      'Stopped by an error. Resume history to try again.';
 
   @override
-  String get tdtHistoryPause => 'Pause';
+  String get tdtHistoryPause => 'Pause history';
 
   @override
-  String get tdtHistoryResume => 'Resume';
+  String get tdtHistoryResume => 'Resume history';
 
   @override
-  String get tdtHistoryCancel => 'Cancel';
+  String get tdtHistoryCancel => 'Stop history';
 
   @override
   String get tdtHighlightsLabel => 'Highlights';
 
   @override
   String get tdtHighlightsHint =>
-      'Turning this on downloads the highlights now.';
+      'Saves all pinned stories in the background, then new ones.';
 
   @override
   String get libHighlightsFilter => 'Highlights';

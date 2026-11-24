@@ -11,6 +11,7 @@ import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
+import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
 import 'package:storize_app/notifications/flutter_local_notifications_port.dart';
 import 'package:storize_app/notifications/notification_lookups.dart';
@@ -180,6 +181,8 @@ List<Override> appOverrides(AppComposition c) => [
   governorLeaseRepoProvider.overrideWithValue(c.leases),
   contentPlatformProvider.overrideWithValue(c.platform),
   schedulerProvider.overrideWithValue(c.scheduler),
+  backfillHistoryProvider.overrideWithValue(c.backfillHistory),
+  syncHighlightsProvider.overrideWithValue(c.syncHighlights),
   clockProvider.overrideWithValue(c.clock),
   galleryStoreProvider.overrideWithValue(c.parts.gallery),
   mediaCacheProvider.overrideWithValue(c.parts.cache),

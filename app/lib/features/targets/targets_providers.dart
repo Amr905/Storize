@@ -150,13 +150,19 @@ class TargetHistoryActions {
   Future<void> cancel(int targetId) =>
       _ref.read(backfillHistoryProvider).cancel(targetId);
 
-  /// Saves the highlights flag. Turning it on runs a highlights sync.
+  /// Saves the highlights flag. Turning it on queues a background posts check
+  /// for this target, which syncs its highlights and downloads them (FR-71).
+  /// Nothing waits on Instagram here, so the switch never hangs.
   Future<void> setHighlights(int targetId, {required bool on}) async {
     final targets = _ref.read(targetRepoProvider);
     final current = await targets.getById(targetId);
     if (current == null) return;
     await targets.update(current.copyWith(highlightsEnabled: on));
-    if (on) await _ref.read(syncHighlightsProvider).run(targetId);
+    if (on) {
+      await _ref
+          .read(schedulerProvider)
+          .checkNow(scope: CheckScope.posts, targetId: targetId);
+    }
   }
 }
 
