@@ -475,7 +475,10 @@ final class BackfillHistory {
 
   static const _pageModeOff = 'page_mode_background_disabled';
 
-  /// A missing `doc_id` or page tokens is "not yet", not a broken response.
+  /// A missing `doc_id`, page tokens or provider values is "not yet", not a
+  /// broken response.
   static bool _isNotNow(String where) =>
-      where.startsWith('doc_id:') || where == 'page_tokens';
+      where.startsWith('doc_id:') ||
+      where == 'page_tokens' ||
+      where == 'providers';
 }

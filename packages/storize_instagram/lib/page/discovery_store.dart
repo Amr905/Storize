@@ -5,7 +5,11 @@ import 'dart:convert';
 /// are code constants of the web app, not secret.
 final class QueryShape {
   /// Creates a shape.
-  const QueryShape({this.provided = const {}, this.args = const []});
+  const QueryShape({
+    this.provided = const {},
+    this.args = const [],
+    this.loaded = false,
+  });
 
   /// `__relay_internal__pv__X` to its current bool, number or short string.
   final Map<String, Object> provided;
@@ -13,8 +17,20 @@ final class QueryShape {
   /// The argument names the query takes.
   final List<String> args;
 
+  /// The query's `.graphql` module was read, so an empty [provided] is real.
+  final bool loaded;
+
+  /// Whether the provider values are settled: some were found, or the module
+  /// (or a captured request) shows there are none. An unknown shape must not
+  /// be sent (Instagram answers `missing_required_variable_value`).
+  bool get isKnown => provided.isNotEmpty || args.isNotEmpty || loaded;
+
   /// The JSON map kept in a snapshot.
-  Map<String, Object?> toJson() => {'p': provided, 'a': args};
+  Map<String, Object?> toJson() => {
+    'p': provided,
+    'a': args,
+    if (loaded) 'l': true,
+  };
 
   /// Reads [toJson]; null when [raw] is not a shape.
   static QueryShape? fromJson(Object? raw) {
@@ -33,13 +49,14 @@ final class QueryShape {
         for (final x in a)
           if (x is String) x,
       ],
+      loaded: raw['l'] == true,
     );
   }
 
   @override
   String toString() =>
       'QueryShape(provided: ${provided.length}, '
-      'args: ${args.length})';
+      'args: ${args.length}, loaded: $loaded)';
 }
 
 /// What page mode discovered for one login account: `doc_id`s by query and

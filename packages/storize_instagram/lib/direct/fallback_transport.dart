@@ -67,7 +67,15 @@ final class FallbackTransport implements IgTransport {
       final id = await docIds.docIdFor(q);
       if (id == null || id.isEmpty) return 'doc_id:${q.friendlyName}';
     }
-    return await tokens.tokens() == null ? 'page_tokens' : null;
+    if (!pageTokensComplete(await tokens.tokens())) return 'page_tokens';
+    final resolver = docIds;
+    if (resolver is QueryShapeProvider) {
+      for (final q in queries) {
+        final shape = await resolver.shapeFor(q);
+        if (shape == null || !shape.isKnown) return 'providers';
+      }
+    }
+    return null;
   }
 
   Future<void> _forget(List<GraphqlQuery> queries) async {
@@ -102,7 +110,9 @@ final class FallbackTransport implements IgTransport {
         return first;
       }
       final where = (first.failure as SchemaChanged).where;
-      if (!where.startsWith('doc_id:') && where != 'page_tokens') {
+      if (!where.startsWith('doc_id:') &&
+          where != 'page_tokens' &&
+          where != 'providers') {
         await _forget(queries);
       }
       log?.log(

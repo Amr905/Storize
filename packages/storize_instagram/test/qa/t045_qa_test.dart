@@ -48,6 +48,7 @@ PageDiscovery _d(DiscoveryStore s, FakeClock c, [int id = 1]) =>
     PageDiscovery(clock: c, store: s, accountId: id);
 
 void _rec(PageDiscovery d, GraphqlQuery q, {bool tokens = true}) => d.record(
+  variablesSeen: true,
   friendlyName: q.friendlyName,
   docId: 'ZZFAKE_doc_${q.name}',
   tokens: tokens ? {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd} : const {},
@@ -89,6 +90,7 @@ void main() {
       await a.flush();
       clock.advance(const Duration(hours: 1));
       b.record(
+        variablesSeen: true,
         friendlyName: GraphqlQuery.stories.friendlyName,
         docId: 'ZZFAKE_doc_newer',
         tokens: const {},
@@ -192,6 +194,7 @@ void main() {
       expect(await b.docIdFor(GraphqlQuery.stories), isNull);
       expect(await b.tokens(), isNull);
       b.record(
+        variablesSeen: true,
         friendlyName: GraphqlQuery.stories.friendlyName,
         docId: 'ZZFAKE_b',
         tokens: const {'lsd': 'ZZFAKE_b_lsd'},

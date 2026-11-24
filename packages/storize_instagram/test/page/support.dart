@@ -85,6 +85,7 @@ HookEvent hookResponse(
       'body': jsonEncode(body),
       'request': {
         'docId': docId,
+        'vars': true,
         'tokens': tokens ?? {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
       },
     },

@@ -315,3 +315,20 @@ Inspected in a logged-in desktop browser session on 2026-11-24. Names and shapes
 - `GraphqlTransport` sends only the discovered arguments plus the provider values; the form carries `av` (the `ds_user_id` cookie), `__user=0`, `__a=1`, `__comet_req=7`, `fb_dtsg`, `lsd`, `jazoest` (`2` + sum of the `fb_dtsg` code units), `fb_api_caller_class=RelayModern`, `server_timestamps=true`; the headers add `X-FB-Friendly-Name` and `X-FB-LSD` to the session headers.
 - Mappers read `xdt_api__v1__feed__reels_media` or `reels_media` (list or `{reels_media: []}`), and the tray connection under `highlights` or another key with "highlights" in its name.
 
+
+## 2026-11-24 mobile page: late modules, captured variables, error bodies (T-049)
+Device log of the T-048 build: doc_ids found, but **no providers and no tokens**, so every direct call failed. Confirmed on the real web with the same request: with providers and `fb_dtsg` the answer is `data.xdt_api__v1__feed__user_timeline_graphql_connection` (posts) and `data.xdt_api__v1__feed__reels_media.reels_media[0].items` (stories); the CDN files download without cookies.
+
+**Failure bodies (names and codes only).**
+- No `fb_dtsg`: HTTP 200, body `for (;;);{"__ar":1,"error":<code>,"errorSummary":...}`. The code is read and logged as `fb_error=<code>` (never the body). `1357001` is the login error: `SessionInvalid(loginRequired)`. Any other code (for example `1357004`, a stale or missing token) is `SchemaChanged('page_tokens')` and the tokens are dropped. The set is deliberately narrow: a wrong `SessionInvalid` would send the user to log in for nothing.
+- No providers: HTTP 200, `{"errors":[{"message":"... missing_required_variable_value ..."}]}` with no `data`: `SchemaChanged('providers')`, and the providers of that query are dropped (the doc_id stays).
+
+**Why discovery failed.**
+- `discoveryDone` was set when the first op resolved. The lazily loaded `<Name>.graphql` modules and `DTSGInitialData` / `LSD` often do not exist yet on the mobile page. Discovery is now complete only when every found op has its providers (module loaded, or taken from a captured request) **and** `fb_dtsg` and `lsd` are known. Until then it retries at 0, 0.4, 1.5, 4, 9, 15 s, on `load`, on a window message and on each capture; results are merged, posted only when new (cap 10), and a missing `.graphql` module is requested once with `window.requireLazy([name + '.graphql'], cb)` (static JS, no API call).
+- Tokens are also read from `DTSGInitData`, from the `fb_dtsg` / `lsd` fields of captured request forms and from the `X-FB-LSD` header. Dart merges tokens key by key and never replaces a good value with an empty one.
+- A captured request of an allowlisted op gives its `__relay_internal__pv__*` scalars, its argument names and a `vars` flag (variables were present) as a fallback for the providers.
+- **`has_doc_id=0`:** the hook joined the request pieces with a newline, so the last form field carried a trailing `\n`. On the web `doc_id` is the **last** field, so it arrived as `"<digits>\n"` and failed the `^\d{5,32}$` check, while the other fields (tokens) were fine. Bodies are now trimmed, and multipart FormData, JSON bodies and a `doc_id` in the URL query are read too. The log shows `doc_id_rejected=<n>` for any capture whose doc_id is still refused.
+
+**Direct mode sends nothing without** both tokens and a known shape for the query (providers found, or the module/capture shows none): it returns `SchemaChanged('page_tokens')` / `SchemaChanged('providers')` first. Backfill history defers on both.
+
+**Discovery log.** `provided=<Query>:<n>,...` and `tokens=dtsg:yes|no(module|capture),lsd:yes|no(module|capture)`; counts and sources only.

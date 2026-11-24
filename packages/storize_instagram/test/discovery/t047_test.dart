@@ -60,6 +60,7 @@ void main() {
     test('a _connection name fills postsPaging, never posts', () async {
       final d = PageDiscovery(clock: FakeClock())
         ..record(
+          variablesSeen: true,
           friendlyName: 'PolarisProfilePostsTabContentQuery_connection',
           docId: '1111111',
           tokens: const {},
@@ -71,6 +72,7 @@ void main() {
     test('a suffixed posts alias fills posts and not postsPaging', () async {
       final d = PageDiscovery(clock: FakeClock())
         ..record(
+          variablesSeen: true,
           friendlyName: 'PolarisProfilePostsQuery_v2',
           docId: '2222222',
           tokens: const {},
@@ -83,11 +85,13 @@ void main() {
     test('an alias does not replace an exact doc_id', () async {
       final d = PageDiscovery(clock: FakeClock())
         ..record(
+          variablesSeen: true,
           friendlyName: 'PolarisProfilePostsQuery',
           docId: '2222222',
           tokens: const {},
         )
         ..record(
+          variablesSeen: true,
           friendlyName: 'PolarisProfilePostsQuery_v2',
           docId: '3333333',
           tokens: const {},
@@ -196,5 +200,8 @@ final class _MapIds implements DocIdResolver {
 
 final class _Tok implements PageTokenProvider {
   @override
-  Future<Map<String, String>?> tokens() async => {'lsd': 'ZZFAKE_lsd'};
+  Future<Map<String, String>?> tokens() async => {
+    'fb_dtsg': 'ZZFAKE_dtsg',
+    'lsd': 'ZZFAKE_lsd',
+  };
 }

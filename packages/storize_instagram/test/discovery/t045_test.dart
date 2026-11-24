@@ -21,6 +21,7 @@ PageDiscovery _discovery(
 Future<void> _learn(PageDiscovery d, {bool allQueries = true}) async {
   for (final q in allQueries ? GraphqlQuery.values : [GraphqlQuery.stories]) {
     d.record(
+      variablesSeen: true,
       friendlyName: q.friendlyName,
       docId: 'ZZFAKE_doc_${q.name}',
       tokens: {'fb_dtsg': fakeDtsg, 'lsd': fakeLsd},
@@ -79,12 +80,14 @@ void main() {
       final a = _discovery(store, clock);
       final b = _discovery(store, clock);
       a.record(
+        variablesSeen: true,
         friendlyName: GraphqlQuery.stories.friendlyName,
         docId: 'ZZFAKE_doc_s',
         tokens: const {},
       );
       await a.flush();
       b.record(
+        variablesSeen: true,
         friendlyName: GraphqlQuery.posts.friendlyName,
         docId: 'ZZFAKE_doc_p',
         tokens: const {},

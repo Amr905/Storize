@@ -102,11 +102,24 @@ final class DartIoHttp implements IgHttp {
     final first = body.isEmpty ? 0 : body.first;
     // `{` or `[`: JSON whatever the content type says (GraphQL answers can
     // come as text/javascript).
+    var shielded = false;
     if (first == 0x7B || first == 0x5B) {
       try {
         json = jsonDecode(utf8.decode(body));
       } on FormatException {
         json = null;
+      }
+    } else if (first == 0x66 && body.length > _guard.length) {
+      // `for (;;);{...}`: the JSON error body of the web app (T-049).
+      final text = utf8.decode(body, allowMalformed: true);
+      if (text.startsWith('for (;;);')) {
+        try {
+          json = jsonDecode(text.substring(_guard.length));
+          shielded = json is Map<String, Object?>;
+          if (!shielded) json = null;
+        } on FormatException {
+          json = null;
+        }
       }
     }
     final retryAfter = _parseRetryAfter(response.headers.value('retry-after'));
@@ -117,8 +130,11 @@ final class DartIoHttp implements IgHttp {
       retryAfter: retryAfter,
       redirectPath: location == null ? null : Uri.tryParse(location)?.path,
       contentType: contentType,
+      shielded: shielded,
     );
   }
+
+  static const String _guard = 'for (;;);';
 
   /// `Retry-After` as whole seconds or as an HTTP-date. Null when missing,
   /// unreadable, negative or already past. Whole seconds are clamped before
