@@ -71,6 +71,15 @@ Future<AppComposition> composeProduction({
   required StorizeDiagnostics diagnostics,
 }) async {
   final db = StorizeDatabase.open();
+  // Open it now, so a failed open or migration (e.g. `DatabaseTooNew`, a
+  // database from a newer build) reaches the start-up error screen instead of
+  // failing later inside an unawaited step.
+  try {
+    await db.customSelect('SELECT 1').get();
+  } on Object {
+    await db.close();
+    rethrow;
+  }
   final plugin = StorizePlatformAndroid();
   final updateChecker = UpdateChecker();
   final scheduler = WorkmanagerScheduler(
