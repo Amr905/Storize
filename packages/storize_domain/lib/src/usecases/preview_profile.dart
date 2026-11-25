@@ -52,7 +52,7 @@ typedef PreviewResult = Result<ProfilePreview>;
 ///
 /// The calls are user-initiated: they use [ExtractionPolicy.directThenPage]
 /// (the policy of manual checks) and the platform runs them in one in-page
-/// session. [onFinished] runs at the end of every run, also after an error:
+/// session. `onFinished` runs at the end of every run, also after an error:
 /// the composition closes the session there (`closeInPage`).
 ///
 /// Logs `[preview]` lines: counts and failure types only, never names, URLs
@@ -129,7 +129,7 @@ final class PreviewProfile {
     }
 
     final page = await _step(
-      () => _platform.fetchPostPage(id, cursor: null, policy: policy),
+      () => _platform.fetchPostPage(id, policy: policy),
     );
     var postItems = const <RemoteContent>[];
     Failure? postsFailure;

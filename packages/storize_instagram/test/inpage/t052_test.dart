@@ -2,7 +2,6 @@
 // background reserve, and every query logs a start and an end line.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storize_instagram/governor/governor.dart';
-import 'package:storize_instagram/page/page.dart';
 import 'package:storize_model/storize_model.dart';
 
 import '../page/support.dart' as p;

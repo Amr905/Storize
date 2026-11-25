@@ -6,6 +6,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_providers.dart';
 import 'package:storize_app/features/library/library_tile.dart';
+import 'package:storize_app/features/preview/preview_page.dart';
+import 'package:storize_app/features/preview/preview_providers.dart';
 import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/targets/remove_target_dialog.dart';
 import 'package:storize_app/features/targets/target_detail_providers.dart';
@@ -266,6 +268,25 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: StorizeSpacing.s12),
+          // FR-74: load the first page and the current stories now, and save
+          // by hand.
+          TonalButton(
+            label: l10n.prvPreviewAction,
+            icon: Icons.visibility_outlined,
+            expand: true,
+            onPressed: sessionActive && !pending
+                ? () => unawaited(
+                    PreviewPage.open(
+                      context,
+                      PreviewArgs(
+                        username: target.username,
+                        targetId: target.id,
+                      ),
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(height: StorizeSpacing.s24),
           Row(

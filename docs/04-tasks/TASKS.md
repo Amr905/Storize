@@ -545,3 +545,13 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   2. S-09 shows history progress with Pause/Resume/Cancel, plus the range and Highlights toggle editors.
   3. The Library gets a Highlights filter, and S-06 shows the highlight title.
   4. Goldens are made under TZ=UTC.
+
+### T-052 — Profile preview and manual save (FR-74)
+- **Tier:** L · **Deps:** T-050 · TECH_SPEC §17.4b
+- **Scope:** `PreviewProfile`, `SavePreviewItems`, `DownloadPending(onlyContentIds)`, preview screen (S-08 "Preview", S-09 "Preview & save"), in-page query logs and the background-reserve stall fix.
+- **AC:**
+  1. The preview loads profile, current stories and the first posts page in one in-page session, which is closed at the end; a failure in one part keeps the other.
+  2. The user can select items, "Save selected (n)" or "Save all"; files go to `Pictures/Storize/<user>/` only through `GalleryStore`; saved items show a check badge; repeats are "already saved".
+  3. Saving from an untracked account creates a paused preview-only target; nothing downloads automatically. "Track this account automatically" opens the add form with the username, or activates that target.
+  4. Every in-page query logs `start` and an end line with ms; no values in logs.
+  5. Goldens (light and dark) under TZ=UTC.

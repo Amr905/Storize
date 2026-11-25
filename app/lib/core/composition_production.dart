@@ -12,6 +12,7 @@ import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
+import 'package:storize_app/features/preview/preview_providers.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/features/viewer/story_providers.dart';
@@ -219,6 +220,8 @@ List<Override> appOverrides(AppComposition c) => [
   allowUnmeteredProvider.overrideWithValue(c.parts.allowUnmetered),
   backfillHistoryProvider.overrideWithValue(c.backfillHistory),
   syncHighlightsProvider.overrideWithValue(c.syncHighlights),
+  previewProfileProvider.overrideWithValue(c.previewProfile),
+  savePreviewItemsProvider.overrideWithValue(c.savePreviewItems),
   clockProvider.overrideWithValue(c.clock),
   galleryStoreProvider.overrideWithValue(c.parts.gallery),
   mediaCacheProvider.overrideWithValue(c.parts.cache),

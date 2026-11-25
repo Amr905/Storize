@@ -143,7 +143,7 @@ final class SavePreviewItems {
   /// Saves [items] of [user].
   ///
   /// [targetId] is the tracked target when the preview was opened from one;
-  /// otherwise the target is looked up by [user.remoteUserId] and created if
+  /// otherwise the target is looked up by `user.remoteUserId` and created if
   /// it is missing. [category] is used only when a target is created.
   Future<PreviewSaveResult> call({
     required RemoteUser user,

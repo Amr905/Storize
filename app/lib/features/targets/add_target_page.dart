@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/preview/preview_page.dart';
+import 'package:storize_app/features/preview/preview_providers.dart';
 import 'package:storize_app/features/targets/history_range_picker.dart';
 import 'package:storize_app/features/targets/targets_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -15,16 +17,37 @@ import 'package:storize_model/storize_model.dart';
 /// S-08: adds a tracked account with its category and tracks (FR-10, FR-16,
 /// FR-63, FR-65, FR-67, BR-1, BR-2).
 class AddTargetPage extends ConsumerStatefulWidget {
-  /// Creates the page.
-  const AddTargetPage({super.key});
+  /// Creates the page. [initialUsername] fills the username field (the
+  /// profile preview's "Track this account automatically").
+  const AddTargetPage({this.initialUsername, super.key});
+
+  /// The username to start with, or null for an empty form.
+  final String? initialUsername;
 
   @override
   ConsumerState<AddTargetPage> createState() => _AddTargetPageState();
 }
 
 class _AddTargetPageState extends ConsumerState<AddTargetPage> {
-  final _username = TextEditingController();
+  late final TextEditingController _username = TextEditingController(
+    text: widget.initialUsername,
+  );
   final _note = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialUsername;
+    if (initial != null && initial.isNotEmpty) {
+      // The provider is auto-disposed: write after the first frame so the
+      // form state follows the field.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(addTargetFormProvider.notifier).setUsername(initial);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -380,13 +403,40 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                     tone: StorizeColors.of(context).error,
                   ),
                 ),
-              PrimaryButton(
-                label: verifying ? l10n.tgtVerifying : l10n.tgtAddAndVerify,
-                loading: verifying,
-                expand: true,
-                onPressed: sessionActive && !verifying
-                    ? () => unawaited(_submit())
-                    : null,
+              Row(
+                children: [
+                  // FR-74: look at the account before adding it.
+                  Expanded(
+                    child: TonalButton(
+                      label: l10n.prvPreviewButton,
+                      icon: Icons.visibility_outlined,
+                      expand: true,
+                      onPressed:
+                          sessionActive && !verifying && form.normalized != null
+                          ? () => unawaited(
+                              PreviewPage.open(
+                                context,
+                                PreviewArgs(username: form.normalized!),
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: StorizeSpacing.s12),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryButton(
+                      label: verifying
+                          ? l10n.tgtVerifying
+                          : l10n.tgtAddAndVerify,
+                      loading: verifying,
+                      expand: true,
+                      onPressed: sessionActive && !verifying
+                          ? () => unawaited(_submit())
+                          : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
