@@ -44,37 +44,44 @@ class _IntervalSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // Scrolls when the options do not fit (device log 2026-11-25: the sheet
+    // overflowed by 39 px on a phone with large text).
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(
-              StorizeSpacing.s16,
-              0,
-              StorizeSpacing.s16,
-              StorizeSpacing.s8,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                StorizeSpacing.s16,
+                0,
+                StorizeSpacing.s16,
+                StorizeSpacing.s8,
+              ),
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
-            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-          ),
-          RadioGroup<int>(
-            groupValue: current,
-            onChanged: (value) => Navigator.of(context).pop(value),
-            child: Column(
-              children: [
-                for (final minutes in options)
-                  RadioListTile<int>(
-                    value: minutes,
-                    title: Text(intervalLabel(l10n, minutes)),
-                    subtitle: oneHourHint && minutes == 60
-                        ? Text(l10n.setPostOneHourWarning)
-                        : null,
-                  ),
-              ],
+            RadioGroup<int>(
+              groupValue: current,
+              onChanged: (value) => Navigator.of(context).pop(value),
+              child: Column(
+                children: [
+                  for (final minutes in options)
+                    RadioListTile<int>(
+                      value: minutes,
+                      title: Text(intervalLabel(l10n, minutes)),
+                      subtitle: oneHourHint && minutes == 60
+                          ? Text(l10n.setPostOneHourWarning)
+                          : null,
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

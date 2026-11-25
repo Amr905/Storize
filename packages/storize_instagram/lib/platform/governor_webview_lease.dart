@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_instagram/page/inpage_script.dart';
 import 'package:storize_instagram/page/page_driver.dart';
 import 'package:storize_instagram/page/webview_lease.dart';
 
@@ -159,20 +160,17 @@ final class GovernorWebViewLease implements WebViewLease {
       // The answer may still arrive. If it is a lease and nobody here holds
       // the row by then, give it back (R2-F3).
       unawaited(
-        attempt.then<void>(
-          (late) async {
-            // Only the newest attempt may give the row back: an older late
-            // answer must not release what a newer attempt just won (F5).
-            if (late != null &&
-                generation == _generation &&
-                !_acquiring &&
-                _owners.isEmpty &&
-                _liveHolds == 0) {
-              await _releaseRow();
-            }
-          },
-          onError: (Object _) {},
-        ),
+        attempt.then<void>((late) async {
+          // Only the newest attempt may give the row back: an older late
+          // answer must not release what a newer attempt just won (F5).
+          if (late != null &&
+              generation == _generation &&
+              !_acquiring &&
+              _owners.isEmpty &&
+              _liveHolds == 0) {
+            await _releaseRow();
+          }
+        }, onError: (Object _) {}),
       );
       _log?.log(LogLevel.warn, 'webview_lease', 'acquire_timeout');
       _lastFailure = 'acquire_timeout';
@@ -355,7 +353,7 @@ final class LeaseHoldingPageDriver implements PageDriver {
   }
 }
 
-final class _HoldingSession implements PageSession {
+final class _HoldingSession implements PageSession, InPageScriptRunner {
   _HoldingSession(this._inner, this._hold);
 
   final PageSession _inner;
@@ -375,6 +373,20 @@ final class _HoldingSession implements PageSession {
 
   @override
   Future<void> clearData() => _inner.clearData();
+
+  /// Passes in-page scripts through to the real session (T-050). Without
+  /// this the wrapper hid the runner and in-page fetching was never used.
+  @override
+  Future<Object?> callAsync(
+    String functionBody,
+    Map<String, Object?> arguments,
+  ) {
+    final inner = _inner;
+    if (inner is InPageScriptRunner) {
+      return (inner as InPageScriptRunner).callAsync(functionBody, arguments);
+    }
+    throw UnsupportedError('no_script_runner');
+  }
 
   @override
   Future<void> dispose() async {
