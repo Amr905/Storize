@@ -288,6 +288,9 @@ class RequestGovernor {
     final state = _states.putIfAbsent(accountId, _AccountState.new);
     state.pending++;
     final previous = state.tail;
+    // Another call of this account is ahead: say so, so a silent wait is
+    // visible in the log (T-052).
+    if (state.pending > 1) _logLine(accountId, null, Duration.zero, 'queued');
     final gate = Completer<void>();
     state.tail = gate.future;
     try {
@@ -400,6 +403,7 @@ class RequestGovernor {
       }
       if (wait > Duration.zero) {
         // Do not hold the lease while sleeping: another isolate may call.
+        _logLine(accountId, null, wait, 'wait');
         await _releaseLease(accountId, state);
         await _delay(wait);
         continue;
