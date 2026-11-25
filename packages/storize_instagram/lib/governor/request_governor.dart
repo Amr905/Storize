@@ -144,9 +144,14 @@ class RequestGovernor {
     }
     // A background call keeps tokens for interactive work (T-050), as far as
     // the burst allows.
-    final reserve = !unmetered && priority == RequestPriority.background
-        ? max(0, min(_config.interactiveReserve, _config.burst - weight))
-        : 0;
+    final reserveTokens = switch (priority) {
+      RequestPriority.interactive => 0,
+      RequestPriority.background => _config.interactiveReserve,
+      RequestPriority.sessionBackground => min(1, _config.interactiveReserve),
+    };
+    final reserve = unmetered
+        ? 0
+        : max(0, min(reserveTokens, _config.burst - weight));
     if (!unmetered && weight > _config.burst) {
       throw ArgumentError.value(
         cost,
@@ -205,6 +210,11 @@ class RequestGovernor {
   /// governor without `allowUnmetered` (production) this is just [body].
   static Future<T> runUnmetered<T>(Future<T> Function() body) =>
       runZoned(body, zoneValues: {_unmeteredKey: _UnmeteredScope()});
+
+  /// The default priority of `run` calls made in the current zone.
+  static RequestPriority get currentPriority =>
+      Zone.current[_priorityKey] as RequestPriority? ??
+      RequestPriority.interactive;
 
   /// Runs [body] so that every `run` started inside it (and not given its own
   /// `priority`) uses [priority]. Background isolates wrap their work in it

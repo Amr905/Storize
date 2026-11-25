@@ -42,12 +42,17 @@ class InPageOps implements ExtractionOps, HistoryOps {
     if (open is Err<bool>) return Err<T>(open.failure);
     client.takeUnavailable();
     // The session is open: the page load (3 tokens) was already charged with
-    // the background reserve. A background query would need weight + reserve
-    // = 4 tokens while only 3 are left, so it waited about a minute for a
-    // refill, silently, after `session_open` (T-052 device log). Queries of an
-    // open session therefore run with interactive priority.
+    // the background reserve of 3, which left exactly 3, so a plain
+    // background query (weight 1 + reserve 3) waited about a minute,
+    // silently, after `session_open` (T-052 device log). Background queries
+    // of an open session use `sessionBackground` (reserve 1): they proceed
+    // while one token stays for the user. Interactive runs stay interactive.
+    final inBackground =
+        RequestGovernor.currentPriority != RequestPriority.interactive;
     final r = await RequestGovernor.withPriority(
-      RequestPriority.interactive,
+      inBackground
+          ? RequestPriority.sessionBackground
+          : RequestPriority.interactive,
       body,
     );
     if (client.takeUnavailable()) {

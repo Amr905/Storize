@@ -55,7 +55,6 @@ void main() {
 
   test(
     'a background session leaves the reserve for an interactive add',
-    skip: 'QA finding F-1 (T-052): reserve is consumed by in-session queries',
     () async {
       final rig = InPageRig(handler: _answer, runsInBackground: true);
       // Background session with three queries (all fit before any wait).
@@ -66,7 +65,7 @@ void main() {
           await rig.platform.fetchStories(['user_1'], policy: _policy);
         }),
       );
-      // Reserve intent (T-050): 3 tokens stay for a real interactive add.
+      // Session queries keep 1 token for a real interactive add.
       expect(
         await _interactiveWait(rig),
         Duration.zero,

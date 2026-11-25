@@ -116,4 +116,22 @@ void main() {
       expect(lines.join('\n'), isNot(contains(secret)), reason: secret);
     }
   });
+
+  test(
+    'a background session keeps one token: two queries, then it waits',
+    () async {
+      final rig = InPageRig(handler: _answer, runsInBackground: true);
+      await rig.run(
+        RequestGovernor.withPriority(RequestPriority.background, () async {
+          await rig.platform.fetchStories(['user_1'], policy: _policy);
+          await rig.platform.fetchStories(['user_1'], policy: _policy);
+        }),
+      );
+      expect(await rig.governor.remainingTokens(1), closeTo(1, 0.01));
+      expect(
+        rig.governorLogs.where((l) => l.contains('outcome=wait')),
+        isEmpty,
+      );
+    },
+  );
 }
