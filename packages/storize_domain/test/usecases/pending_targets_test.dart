@@ -204,10 +204,7 @@ void main() {
       final r = await resolve.run();
       expect(r.stop, ResolveStop.rateLimited);
       expect(r.remaining, 2);
-      expect(
-        platform.calls.length - base,
-        1,
-      );
+      expect(platform.calls.length - base, 1);
       expect((await targets.getById(a.id))!.status, TargetStatus.pendingLookup);
       expect((await targets.getById(b.id))!.status, TargetStatus.pendingLookup);
     });

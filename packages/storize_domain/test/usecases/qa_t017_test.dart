@@ -127,10 +127,7 @@ void main() {
           (await h.targets.getById(t.id))!.postsWatermarkAt,
           t.postsWatermarkAt,
         );
-        h.platform.fetchNewPostsResults.addOk([
-          post('a', 10),
-          post('b', 20),
-        ]);
+        h.platform.fetchNewPostsResults.addOk([post('a', 10), post('b', 20)]);
         await h.go(CheckScope.posts);
         expect(await stored(t), 2);
         expect(

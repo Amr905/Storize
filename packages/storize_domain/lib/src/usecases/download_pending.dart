@@ -209,10 +209,11 @@ class _Tally {
 }
 
 class _RunState {
-  _RunState(this.deadline, this.policy);
+  _RunState(this.deadline, this.policy, this.onlyContentIds);
 
   final DateTime deadline;
   final ExtractionPolicy policy;
+  final Set<int>? onlyContentIds;
   final Set<int> touched = {};
   final Map<(int, ContentKind), _Tally> tallies = {};
   final List<DownloadFailure> failures = [];
@@ -349,9 +350,14 @@ final class DownloadPending {
   /// Runs until [deadline] (default: now + [budget]).
   ///
   /// [policy] is the extraction policy used when a URL must be refreshed.
+  ///
+  /// With [onlyContentIds] only the pending files of those content rows are
+  /// tried (T-052: "Save" in the profile preview); every other pending file
+  /// is left alone.
   Future<DownloadPendingResult> run({
     DateTime? deadline,
     ExtractionPolicy policy = ExtractionPolicy.directOnly,
+    Set<int>? onlyContentIds,
   }) async {
     if (_running) {
       return DownloadPendingResult(
@@ -382,7 +388,11 @@ final class DownloadPending {
       }
       try {
         return await _run(
-          _RunState(deadline ?? _clock.now().add(budget), policy),
+          _RunState(
+            deadline ?? _clock.now().add(budget),
+            policy,
+            onlyContentIds,
+          ),
         );
       } finally {
         await _leases.release(accountId: leaseKey, holder: _holder);
@@ -464,7 +474,9 @@ final class DownloadPending {
   }
 
   Future<PendingMedia?> _nextPending(_RunState s) async {
+    final only = s.onlyContentIds;
     for (final p in await _content.pendingMedia()) {
+      if (only != null && !only.contains(p.content.id)) continue;
       if (!s.touched.contains(p.file.id)) return p;
     }
     return null;
@@ -800,9 +812,8 @@ final class DownloadPending {
   }
 
   _Step _failureStep(Failure f) => switch (f) {
-    SessionInvalid() || AccountRestricted() => const _Stop(
-      DownloadStopReason.sessionProblem,
-    ),
+    SessionInvalid() ||
+    AccountRestricted() => const _Stop(DownloadStopReason.sessionProblem),
     RateLimited() => const _Stop(DownloadStopReason.rateLimited),
     TargetNotFound() => const _Fail('refresh_target_not_found'),
     TargetNotVisible() => const _Fail('refresh_target_not_visible'),

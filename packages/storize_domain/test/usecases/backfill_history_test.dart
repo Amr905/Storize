@@ -144,10 +144,7 @@ void main() {
       expect(r.historyProgress?.state, HistoryState.idle);
       expect(r.historyProgress?.cursor, isNull);
       expect(await h.stored(t.id), 1);
-      expect(
-        (await h.backfill.step(t.id)).outcome,
-        BackfillOutcome.skipped,
-      );
+      expect((await h.backfill.step(t.id)).outcome, BackfillOutcome.skipped);
     });
 
     test('start with none cancels', () async {
@@ -325,9 +322,7 @@ void main() {
     test('a rate limit keeps running and resumes at the same cursor', () async {
       await h.backfill.start(t.id, HistoryRange.all);
       h.platform.fetchPostPageResults
-        ..addOk(
-          PostPage(items: [post('1', daysAgo(1))], nextCursor: 'c1'),
-        )
+        ..addOk(PostPage(items: [post('1', daysAgo(1))], nextCursor: 'c1'))
         ..addFailure(const RateLimited(Duration(minutes: 5)))
         ..addOk(PostPage(items: [post('2', daysAgo(2))]));
       await h.backfill.step(t.id);

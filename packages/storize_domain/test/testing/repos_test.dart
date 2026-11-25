@@ -15,10 +15,7 @@ void main() {
       final b = await repo.insert(target(remoteUserId: '2', username: 'bob'));
       expect(a.id, isNot(b.id));
       expect(await repo.getById(a.id), a);
-      expect(
-        await repo.getByRemoteUserId(PlatformId.instagram, '2'),
-        b,
-      );
+      expect(await repo.getByRemoteUserId(PlatformId.instagram, '2'), b);
       expect(await repo.getByRemoteUserId(PlatformId.instagram, '3'), isNull);
     });
 
@@ -77,14 +74,14 @@ void main() {
         target(remoteUserId: '3', trackStories: false, trackPosts: false),
       );
       await repo.insert(target(remoteUserId: '4', status: TargetStatus.paused));
-      expect(
-        (await repo.listActive(CheckScope.stories)).map((t) => t.id),
-        [both.id, storiesOnly.id],
-      );
-      expect(
-        (await repo.listActive(CheckScope.posts)).map((t) => t.id),
-        [both.id, reelsOnly.id],
-      );
+      expect((await repo.listActive(CheckScope.stories)).map((t) => t.id), [
+        both.id,
+        storiesOnly.id,
+      ]);
+      expect((await repo.listActive(CheckScope.posts)).map((t) => t.id), [
+        both.id,
+        reelsOnly.id,
+      ]);
       expect(await repo.listActive(CheckScope.all), hasLength(3));
     });
 
@@ -99,10 +96,11 @@ void main() {
           lastStoriesCheckAt: t0.subtract(const Duration(hours: 1)),
         ),
       );
-      expect(
-        (await repo.listActive(CheckScope.stories)).map((t) => t.id),
-        [never.id, early.id, late.id],
-      );
+      expect((await repo.listActive(CheckScope.stories)).map((t) => t.id), [
+        never.id,
+        early.id,
+        late.id,
+      ]);
     });
   });
 
@@ -118,10 +116,9 @@ void main() {
     });
 
     test('insertIfNew stores content with media and reports new', () async {
-      final r = await repo.insertIfNew(
-        content(targetId: targetId),
-        [media(sizeBytes: 5)],
-      );
+      final r = await repo.insertIfNew(content(targetId: targetId), [
+        media(sizeBytes: 5),
+      ]);
       expect(r.isNew, isTrue);
       final stored = (await repo.getById(r.contentId))!;
       expect(stored.content.id, r.contentId);
@@ -132,14 +129,13 @@ void main() {
     test(
       'UNIQUE duplicate insert reports not new and writes nothing',
       () async {
-        final first = await repo.insertIfNew(
-          content(targetId: targetId),
-          [media()],
-        );
-        final again = await repo.insertIfNew(
-          content(targetId: targetId),
-          [media(), media(slideIndex: 1)],
-        );
+        final first = await repo.insertIfNew(content(targetId: targetId), [
+          media(),
+        ]);
+        final again = await repo.insertIfNew(content(targetId: targetId), [
+          media(),
+          media(slideIndex: 1),
+        ]);
         expect(again.isNew, isFalse);
         expect(again.contentId, first.contentId);
         expect((await repo.getById(first.contentId))!.media, hasLength(1));
@@ -194,9 +190,7 @@ void main() {
         final events = <List<bool>>[];
         final sub = repo
             .watchLibrary(ContentFilter())
-            .listen(
-              (l) => events.add(l.map((c) => c.content.viewed).toList()),
-            );
+            .listen((l) => events.add(l.map((c) => c.content.viewed).toList()));
         await pumpEventQueue();
         final r = await repo.insertIfNew(content(targetId: targetId), [
           media(),
@@ -393,10 +387,9 @@ void main() {
           media(slideIndex: 2, sizeBytes: 100),
         ],
       );
-      await repo.insertIfNew(
-        content(targetId: other),
-        [media(status: MediaFileStatus.done, sizeBytes: 7)],
-      );
+      await repo.insertIfNew(content(targetId: other), [
+        media(status: MediaFileStatus.done, sizeBytes: 7),
+      ]);
       expect(await repo.storageBytesByTarget(), {targetId: 15, other: 7});
     });
 
@@ -418,10 +411,10 @@ void main() {
         [media()],
       );
       expect((await repo.getByIds([a.contentId, 77])).length, 1);
-      expect(
-        (await repo.listByTarget(targetId)).map((c) => c.content.id),
-        [b.contentId, a.contentId],
-      );
+      expect((await repo.listByTarget(targetId)).map((c) => c.content.id), [
+        b.contentId,
+        a.contentId,
+      ]);
     });
   });
 

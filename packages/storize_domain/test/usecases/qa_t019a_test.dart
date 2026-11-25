@@ -56,9 +56,7 @@ void main() {
     'thumbnails of a missing-file slide and a deleted slide both go',
     () async {
       final id = await h.addContent(t, remoteId: 'a', slides: 2);
-      final ids = [
-        for (final m in (await h.content.getById(id))!.media) m.id,
-      ];
+      final ids = [for (final m in (await h.content.getById(id))!.media) m.id];
       for (final m in ids) {
         await h.cache.writeThumbnail(m, [m]);
       }
