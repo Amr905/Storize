@@ -74,10 +74,7 @@ final class RemoveTarget {
   }) async {
     final target = await _targets.getById(targetId);
     if (target == null) {
-      return const RemoveTargetResult(
-        targetFound: false,
-        targetRemoved: false,
-      );
+      return const RemoveTargetResult(targetFound: false, targetRemoved: false);
     }
     if (!deleteMedia) {
       await _targets.delete(targetId);

@@ -217,6 +217,8 @@ final class AppComposition {
     required this.syncHighlights,
     required this.resolvePendingTargets,
     required this.downloadPending,
+    required this.previewProfile,
+    required this.savePreviewItems,
     required this.applyRetention,
     required this.detectGaps,
     required this.deleteContent,
@@ -378,6 +380,21 @@ final class AppComposition {
       settings: parts.settings,
       clock: clock,
     );
+    final downloadPending = DownloadPending(
+      content: content,
+      targets: targets,
+      activity: activity,
+      platform: platform,
+      cache: parts.cache,
+      gallery: parts.gallery,
+      storage: parts.storage,
+      clock: clock,
+      leases: leases,
+      holder: '$holderId-dl',
+      displayName: displayNameFor,
+      relativeDir: relativeDirFor,
+      findExisting: parts.findExisting,
+    );
     return AppComposition._(
       background: background,
       holder: holderId,
@@ -421,20 +438,20 @@ final class AppComposition {
         settings: parts.settings,
         clock: clock,
       ),
-      downloadPending: DownloadPending(
-        content: content,
-        targets: targets,
-        activity: activity,
+      downloadPending: downloadPending,
+      previewProfile: PreviewProfile(
         platform: platform,
-        cache: parts.cache,
-        gallery: parts.gallery,
-        storage: parts.storage,
+        log: log,
+        // One in-page session for the three calls; closed at the end (T-052).
+        onFinished: platform.closeInPage,
+      ),
+      savePreviewItems: SavePreviewItems(
+        targets: targets,
+        content: content,
+        downloads: downloadPending,
+        platform: platform,
         clock: clock,
-        leases: leases,
-        holder: '$holderId-dl',
-        displayName: displayNameFor,
-        relativeDir: relativeDirFor,
-        findExisting: parts.findExisting,
+        log: log,
       ),
       applyRetention: ApplyRetention(
         settings: parts.settings,
@@ -489,6 +506,12 @@ final class AppComposition {
 
   /// Downloads pending media.
   final DownloadPending downloadPending;
+
+  /// Loads the profile preview (FR-74).
+  final PreviewProfile previewProfile;
+
+  /// Saves items picked in the preview (FR-74).
+  final SavePreviewItems savePreviewItems;
 
   /// Deletes content older than the retention window.
   final ApplyRetention applyRetention;

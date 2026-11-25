@@ -281,6 +281,11 @@ void main() {
       await pumpDetail(tester, rig: rig, targetId: target.id);
       final l10n = await _l10n(tester);
 
+      await tester.scrollUntilVisible(
+        find.text(l10n.tdtEmptyStories),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text(l10n.tdtEmptyStories), findsOneWidget);
     });
   });

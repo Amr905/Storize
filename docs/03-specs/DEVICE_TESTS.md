@@ -202,6 +202,7 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 | D5 | Background check with no page mode (T-045): after the app was opened once, a story and a post are downloaded over GraphQL from the persisted discovery; with no discovery the check skips with no request | | | |
 | D6 | First open: in-page discovery (ops >= 3 in the log) and "Check now" downloads (T-048) | | | |
 | D7 | In-page fetch (T-050): Check now downloads today's story and post; adding an account resolves at once | | | |
+| D8 | Profile preview (T-052): preview shows stories and posts; Save all puts the files in `Pictures/Storize/<user>/` | | | |
 | C | 24 h soak (see SOAK.md) | | | |
 
 ## D5. Background check works after opening the app once (T-045, replaces T-044)
@@ -228,6 +229,15 @@ On 401, 403, 429 or a checkpoint: write the status, stop, do not retry.
 3. Force-stop, run a scheduled or background check. **Expected:** the same `[inpage]` lines, no `task_stopped reason=timeout`, and the task ends before about 9 min.
 4. While a background check runs, add an account in the app. **Expected:** it is not starved (3 tokens are kept for the foreground).
 5. **FAIL if:** `[inpage] ... error=unavailable:...` repeats (copy the code: names only; direct HTTP then runs as a fallback), a `rate_limited` line appears, or a checkpoint or login redirect appears. Stop and do not retry more than once.
+
+## D8. Profile preview (T-052)
+**Needs:** Phone A, test account, a public account with an active story and posts.
+1. Add account (S-08), type the username, tap **Preview**. **Expected in the diagnostics:** `[preview] start`, `resolve ok`, `stories n=<n>`, `posts n=<n>`, and for each query `[inpage] op=... start` then `status=200 items=<n> ms=<n>`, then `session_close`. The screen shows the header, the stories row and up to 12 posts (video items show a placeholder).
+2. Tick two items, tap **Save selected (2)**. **Expected:** `[preview] save n=2 saved=2 failed=0`, check badges, the files in `Pictures/Storize/<username>/`.
+3. Tap **Save all**. **Expected:** the rest is saved; items saved before are not downloaded twice.
+4. The account is listed as paused (preview only) and no check visits it. Tap **Track this account automatically**: it becomes active.
+5. Open S-09 of a tracked account, tap **Preview & save**. **Expected:** the same screen; saved items already show the check.
+6. **FAIL if:** a query logs `start` and no end line within 30 s (copy the last `[governor]` line), or `[preview] ... failure=` repeats.
 
 ## Open questions
 - The debug actions named above ("page-mode story load", "run check now", "run the probe", cookie count, Library seed) belong to the app wiring. Any that do not exist yet make their tests "blocked"; the Lead decides whether to add them before the soak.

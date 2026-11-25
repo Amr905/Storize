@@ -3220,6 +3220,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Highlight: {title}'**
   String storyHighlightTitle(String title);
+
+  /// Preview screen title (FR-74).
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get prvTitle;
+
+  /// S-08 button next to Add: opens the profile preview (FR-74).
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get prvPreviewButton;
+
+  /// S-09 action that opens the profile preview of this account (FR-74).
+  ///
+  /// In en, this message translates to:
+  /// **'Preview & save'**
+  String get prvPreviewAction;
+
+  /// Badge on the preview header of a private account.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get prvPrivateBadge;
+
+  /// Preview section title: the stories live now.
+  ///
+  /// In en, this message translates to:
+  /// **'Current stories'**
+  String get prvCurrentStories;
+
+  /// Preview section title: the first page of posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent posts'**
+  String get prvRecentPosts;
+
+  /// Preview: the account has no current story.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories right now.'**
+  String get prvNoStories;
+
+  /// Preview: the account has no posts on its first page.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts to show.'**
+  String get prvNoPosts;
+
+  /// Preview: semantic label of the select checkbox of one thumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Select item'**
+  String get prvSelectItem;
+
+  /// Preview: semantic label of the check badge on a saved item.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get prvSavedBadge;
+
+  /// Preview bottom bar: save the selected items.
+  ///
+  /// In en, this message translates to:
+  /// **'Save selected ({count})'**
+  String prvSaveSelected(int count);
+
+  /// Preview bottom bar: save every item that is not saved yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all'**
+  String get prvSaveAll;
+
+  /// Preview bottom bar label while the files are downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get prvSaving;
+
+  /// Preview: opens the add form with the username filled in, to track the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Track this account automatically'**
+  String get prvTrack;
+
+  /// Preview: shown instead of the Track button once the account is tracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking is on for this account.'**
+  String get prvTracking;
+
+  /// Preview snackbar after a save.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Saved 1 item to your gallery} other{Saved {count} items to your gallery}}'**
+  String prvSaveDone(int count);
+
+  /// Preview snackbar when some items could not be saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved}, {failed} failed'**
+  String prvSavePartial(int saved, int failed);
+
+  /// Preview snackbar when every chosen item was saved before.
+  ///
+  /// In en, this message translates to:
+  /// **'Already saved.'**
+  String get prvSaveAlready;
+
+  /// Preview snackbar when nothing could be saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {reason}'**
+  String prvSaveFailed(String reason);
+
+  /// Preview: save failure reason, used inside the sentence of prvSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'another download is running, try again in a moment'**
+  String get prvReasonBusy;
+
+  /// Preview: save failure reason, used inside the sentence of prvSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'the phone is low on space'**
+  String get prvReasonStorage;
+
+  /// Preview: save failure reason, used inside the sentence of prvSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize can\'t write to the gallery'**
+  String get prvReasonPermission;
+
+  /// Preview: save failure reason, used inside the sentence of prvSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'log in again'**
+  String get prvReasonSession;
+
+  /// Preview: save failure reason, used inside the sentence of prvSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'the download failed'**
+  String get prvReasonGeneric;
+
+  /// Preview: the account cannot be shown.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is private or can\'t be seen from the logged-in account.'**
+  String get prvNotVisible;
 }
 
 class _AppLocalizationsDelegate

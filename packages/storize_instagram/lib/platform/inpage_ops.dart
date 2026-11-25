@@ -1,5 +1,6 @@
 import 'package:storize_instagram/direct/direct_extractor.dart';
 import 'package:storize_instagram/direct/username_cache.dart';
+import 'package:storize_instagram/governor/governor.dart';
 import 'package:storize_instagram/page/inpage_client.dart';
 import 'package:storize_instagram/page/page_plan.dart';
 import 'package:storize_instagram/platform/extraction_ops.dart';
@@ -40,7 +41,20 @@ class InPageOps implements ExtractionOps, HistoryOps {
     final open = await client.ensureOpen();
     if (open is Err<bool>) return Err<T>(open.failure);
     client.takeUnavailable();
-    final r = await body();
+    // The session is open: the page load (3 tokens) was already charged with
+    // the background reserve of 3, which left exactly 3, so a plain
+    // background query (weight 1 + reserve 3) waited about a minute,
+    // silently, after `session_open` (T-052 device log). Background queries
+    // of an open session use `sessionBackground` (reserve 1): they proceed
+    // while one token stays for the user. Interactive runs stay interactive.
+    final inBackground =
+        RequestGovernor.currentPriority != RequestPriority.interactive;
+    final r = await RequestGovernor.withPriority(
+      inBackground
+          ? RequestPriority.sessionBackground
+          : RequestPriority.interactive,
+      body,
+    );
     if (client.takeUnavailable()) {
       await client.close();
       return _unavailable;

@@ -1942,4 +1942,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String storyHighlightTitle(String title) {
     return 'Highlight: $title';
   }
+
+  @override
+  String get prvTitle => 'Preview';
+
+  @override
+  String get prvPreviewButton => 'Preview';
+
+  @override
+  String get prvPreviewAction => 'Preview & save';
+
+  @override
+  String get prvPrivateBadge => 'Private';
+
+  @override
+  String get prvCurrentStories => 'Current stories';
+
+  @override
+  String get prvRecentPosts => 'Recent posts';
+
+  @override
+  String get prvNoStories => 'No stories right now.';
+
+  @override
+  String get prvNoPosts => 'No posts to show.';
+
+  @override
+  String get prvSelectItem => 'Select item';
+
+  @override
+  String get prvSavedBadge => 'Saved';
+
+  @override
+  String prvSaveSelected(int count) {
+    return 'Save selected ($count)';
+  }
+
+  @override
+  String get prvSaveAll => 'Save all';
+
+  @override
+  String get prvSaving => 'Saving…';
+
+  @override
+  String get prvTrack => 'Track this account automatically';
+
+  @override
+  String get prvTracking => 'Tracking is on for this account.';
+
+  @override
+  String prvSaveDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saved $count items to your gallery',
+      one: 'Saved 1 item to your gallery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String prvSavePartial(int saved, int failed) {
+    return 'Saved $saved, $failed failed';
+  }
+
+  @override
+  String get prvSaveAlready => 'Already saved.';
+
+  @override
+  String prvSaveFailed(String reason) {
+    return 'Couldn\'t save: $reason';
+  }
+
+  @override
+  String get prvReasonBusy =>
+      'another download is running, try again in a moment';
+
+  @override
+  String get prvReasonStorage => 'the phone is low on space';
+
+  @override
+  String get prvReasonPermission => 'Storize can\'t write to the gallery';
+
+  @override
+  String get prvReasonSession => 'log in again';
+
+  @override
+  String get prvReasonGeneric => 'the download failed';
+
+  @override
+  String get prvNotVisible =>
+      'This account is private or can\'t be seen from the logged-in account.';
 }

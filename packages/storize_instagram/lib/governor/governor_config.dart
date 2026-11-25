@@ -12,6 +12,11 @@ enum RequestPriority {
 
   /// A scheduled or background call.
   background,
+
+  /// A background call inside an open in-page session (T-052): the page load
+  /// was already charged with the full reserve, so its queries keep only one
+  /// token for interactive work instead of [GovernorConfig.interactiveReserve].
+  sessionBackground,
 }
 
 enum RequestCost {

@@ -201,6 +201,7 @@ final class InPageClient {
     if (ig == null) {
       return const Err(SessionInvalid(SessionReason.loginRequired));
     }
+    _log?.log(LogLevel.info, 'inpage', 'session_open start');
     try {
       return await _governor.run<Result<bool>>(
         accountId: accountId,
@@ -236,6 +237,7 @@ final class InPageClient {
 
     try {
       var leased = false;
+      _log?.log(LogLevel.info, 'inpage', 'lease acquire');
       try {
         leased = await _lease.tryAcquire(_leaseOwner).timeout(cleanupTimeout);
       } on Object {
@@ -397,8 +399,11 @@ final class InPageClient {
     if (failure != null) return _replyOf(failure);
     _inflight++;
     _idle?.cancel();
+    final startedAt = _clock.now();
+    int elapsedMs() => _clock.now().difference(startedAt).inMilliseconds;
     try {
       _queries++;
+      _log?.log(LogLevel.info, 'inpage', 'op=$name start');
       final Object? raw;
       try {
         raw = await runner
@@ -407,28 +412,39 @@ final class InPageClient {
               'varsJson': varsJson,
             })
             .timeout(queryTimeout);
+      } on TimeoutException {
+        _log?.log(
+          LogLevel.warn,
+          'inpage',
+          'op=$name error=timeout ms=${elapsedMs()}',
+        );
+        throw const TransportException('call_failed');
       } on Object {
-        _log?.log(LogLevel.warn, 'inpage', 'op=$name error=call_failed');
+        _log?.log(
+          LogLevel.warn,
+          'inpage',
+          'op=$name error=call_failed ms=${elapsedMs()}',
+        );
         throw const TransportException('call_failed');
       }
       if (_failure != null) return _replyOf(_failure!);
-      return _replyFromScript(name, raw);
+      return _replyFromScript(name, raw, elapsedMs());
     } finally {
       _inflight--;
       _touch();
     }
   }
 
-  IgReply _replyFromScript(String name, Object? raw) {
+  IgReply _replyFromScript(String name, Object? raw, int ms) {
     if (raw is! Map) {
-      _log?.log(LogLevel.warn, 'inpage', 'op=$name error=bad_result');
+      _log?.log(LogLevel.warn, 'inpage', 'op=$name error=bad_result ms=$ms');
       throw const TransportException('bad_result');
     }
     final error = raw['error'];
     final status = raw['status'];
     if (error is String && status is! int) {
       final code = error.replaceAll(RegExp('[^A-Za-z0-9_:]'), '');
-      _log?.log(LogLevel.warn, 'inpage', 'op=$name error=$code');
+      _log?.log(LogLevel.warn, 'inpage', 'op=$name error=$code ms=$ms');
       if (code.startsWith('unavailable')) {
         _unavailable = true;
         return const IgReply(status: inPageUnavailableStatus);
@@ -438,7 +454,11 @@ final class InPageClient {
     }
     final s = status is int ? status : 0;
     if (error is String) {
-      _log?.log(LogLevel.warn, 'inpage', 'op=$name error=bad_json status=$s');
+      _log?.log(
+        LogLevel.warn,
+        'inpage',
+        'op=$name error=bad_json status=$s ms=$ms',
+      );
       return IgReply(status: s);
     }
     final shielded = raw['shielded'] == true;
@@ -448,8 +468,8 @@ final class InPageClient {
       LogLevel.info,
       'inpage',
       shielded
-          ? 'op=$name status=$s error=shielded'
-          : 'op=$name status=$s items=$count',
+          ? 'op=$name status=$s error=shielded ms=$ms'
+          : 'op=$name status=$s items=$count ms=$ms',
     );
     return IgReply(status: s, json: json, shielded: shielded);
   }
