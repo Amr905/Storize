@@ -39,7 +39,19 @@ void main() {
         'riskAcknowledgedAt': 'storize.riskAcknowledgedAt',
         'pageModeInBackground': 'storize.pageModeInBackground',
         'lastUpdateCheckAt': 'storize.lastUpdateCheckAt',
+        'themeMode': 'storize.themeMode',
       });
+    });
+  });
+
+  group('themeMode', () {
+    test('defaults to system, persists, ignores unknown values', () async {
+      expect((await repo.get()).themeMode, AppThemeMode.system);
+      await repo.update((s) => s.copyWith(themeMode: AppThemeMode.dark));
+      expect(await prefs.getString('storize.themeMode'), 'dark');
+      expect((await repo.get()).themeMode, AppThemeMode.dark);
+      await prefs.setString('storize.themeMode', 'sepia');
+      expect((await repo.get()).themeMode, AppThemeMode.system);
     });
   });
 

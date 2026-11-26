@@ -21,6 +21,7 @@ class StoryThumb extends StatelessWidget {
     this.broken = false,
     this.onTap,
     this.onLongPress,
+    this.highlightLabel,
     super.key,
   });
 
@@ -54,6 +55,9 @@ class StoryThumb extends StatelessWidget {
   /// Long press (starts selection).
   final VoidCallback? onLongPress;
 
+  /// Shows the saffron "Highlight" badge with this text (null = hidden).
+  final String? highlightLabel;
+
   @override
   Widget build(BuildContext context) {
     return ThumbFrame(
@@ -66,6 +70,7 @@ class StoryThumb extends StatelessWidget {
       broken: broken,
       onTap: onTap,
       onLongPress: onLongPress,
+      highlightLabel: highlightLabel,
       bottomStart: isVideo
           ? MediaBadge(
               icon: Icons.play_arrow_rounded,

@@ -128,6 +128,9 @@ class LibraryTile extends StatelessWidget {
               broken: broken,
               onTap: () => onTap(item, broken),
               onLongPress: () => onLongPress(item),
+              highlightLabel: content.kind == ContentKind.highlight
+                  ? l10n.libHighlightBadge
+                  : null,
             )
           : PostThumb(
               semanticLabel: label,

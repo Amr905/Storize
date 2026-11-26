@@ -110,7 +110,7 @@ abstract class AppLocalizations {
   /// Bottom navigation label.
   ///
   /// In en, this message translates to:
-  /// **'Targets'**
+  /// **'Accounts'**
   String get navTargets;
 
   /// Bottom navigation label.
@@ -3370,6 +3370,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This account is private or can\'t be seen from the logged-in account.'**
   String get prvNotVisible;
+
+  /// Saffron badge on a library segment: how many items are new.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new'**
+  String kindSwitchNewBadge(int count);
+
+  /// Library kind switch: highlights segment.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get libHighlightsTab;
+
+  /// Saffron badge on a highlight thumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get libHighlightBadge;
+
+  /// S-12 section header for the theme choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get setSectionAppearance;
+
+  /// S-12 appearance segment: follow the phone setting.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get setThemeSystem;
+
+  /// S-12 appearance segment: always light.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get setThemeLight;
+
+  /// S-12 appearance segment: always dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get setThemeDark;
+
+  /// S-12 hint under the appearance control.
+  ///
+  /// In en, this message translates to:
+  /// **'System follows your phone\'s light or dark setting.'**
+  String get setThemeHint;
+
+  /// Screen reader label of the appearance segmented control.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get setThemeSemantics;
 }
 
 class _AppLocalizationsDelegate

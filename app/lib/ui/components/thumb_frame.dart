@@ -18,6 +18,7 @@ class ThumbFrame extends StatelessWidget {
     this.onLongPress,
     this.topEnd,
     this.bottomStart,
+    this.highlightLabel,
     super.key,
   });
 
@@ -31,13 +32,16 @@ class ThumbFrame extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Saffron "Highlight" badge text at the top start corner (null = none).
+  final String? highlightLabel;
+
   /// Badge placed at the top end corner (e.g. carousel count).
   final Widget? topEnd;
 
   /// Badge placed at the bottom start corner (e.g. duration).
   final Widget? bottomStart;
 
-  static const double _ring = 3;
+  static const double _ring = 2;
   static const double _gap = 2;
 
   @override
@@ -86,6 +90,30 @@ class ThumbFrame extends StatelessWidget {
               end: StorizeSpacing.s8,
               top: StorizeSpacing.s8,
               child: topEnd!,
+            ),
+          if (highlightLabel != null && !broken && !selectionMode)
+            PositionedDirectional(
+              start: StorizeSpacing.s8,
+              top: StorizeSpacing.s8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.accent.container,
+                  borderRadius: StorizeRadii.fullRadius,
+                ),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    highlightLabel!,
+                    style: textTheme.labelSmall?.copyWith(
+                      color: colors.accent.color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ),
           if (selectionMode)
             PositionedDirectional(
@@ -161,12 +189,12 @@ class MediaBadge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.mediaScrim,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
+        borderRadius: StorizeRadii.fullRadius,
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: StorizeSpacing.s8,
-          vertical: StorizeSpacing.s4,
+          horizontal: 6,
+          vertical: 2,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

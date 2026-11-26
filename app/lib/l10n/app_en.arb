@@ -8,7 +8,7 @@
   "@navLibrary": {
     "description": "Bottom navigation label."
   },
-  "navTargets": "Targets",
+  "navTargets": "Accounts",
   "@navTargets": {
     "description": "Bottom navigation label."
   },
@@ -1811,5 +1811,23 @@
   "prvReasonGeneric": "the download failed",
   "@prvReasonGeneric": {"description": "Preview: save failure reason, used inside the sentence of prvSaveFailed."},
   "prvNotVisible": "This account is private or can't be seen from the logged-in account.",
-  "@prvNotVisible": {"description": "Preview: the account cannot be shown."}
+  "@prvNotVisible": {"description": "Preview: the account cannot be shown."},
+  "kindSwitchNewBadge": "{count} new",
+  "@kindSwitchNewBadge": {"description": "Saffron badge on a library segment: how many items are new.", "placeholders": {"count": {"type": "int"}}},
+  "libHighlightsTab": "Highlights",
+  "@libHighlightsTab": {"description": "Library kind switch: highlights segment."},
+  "libHighlightBadge": "Highlight",
+  "@libHighlightBadge": {"description": "Saffron badge on a highlight thumbnail."},
+  "setSectionAppearance": "Appearance",
+  "@setSectionAppearance": {"description": "S-12 section header for the theme choice."},
+  "setThemeSystem": "System",
+  "@setThemeSystem": {"description": "S-12 appearance segment: follow the phone setting."},
+  "setThemeLight": "Light",
+  "@setThemeLight": {"description": "S-12 appearance segment: always light."},
+  "setThemeDark": "Dark",
+  "@setThemeDark": {"description": "S-12 appearance segment: always dark."},
+  "setThemeHint": "System follows your phone's light or dark setting.",
+  "@setThemeHint": {"description": "S-12 hint under the appearance control."},
+  "setThemeSemantics": "Appearance",
+  "@setThemeSemantics": {"description": "Screen reader label of the appearance segmented control."}
 }

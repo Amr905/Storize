@@ -18,7 +18,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navLibrary => 'Library';
 
   @override
-  String get navTargets => 'Targets';
+  String get navTargets => 'Accounts';
 
   @override
   String get navActivity => 'Activity';
@@ -2033,4 +2033,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get prvNotVisible =>
       'This account is private or can\'t be seen from the logged-in account.';
+
+  @override
+  String kindSwitchNewBadge(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get libHighlightsTab => 'Highlights';
+
+  @override
+  String get libHighlightBadge => 'Highlight';
+
+  @override
+  String get setSectionAppearance => 'Appearance';
+
+  @override
+  String get setThemeSystem => 'System';
+
+  @override
+  String get setThemeLight => 'Light';
+
+  @override
+  String get setThemeDark => 'Dark';
+
+  @override
+  String get setThemeHint =>
+      'System follows your phone\'s light or dark setting.';
+
+  @override
+  String get setThemeSemantics => 'Appearance';
 }

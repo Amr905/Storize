@@ -3,9 +3,11 @@ import 'package:material_ui/material_ui.dart';
 /// The Storize type scale (UX §5.2). No font family is set, so the platform
 /// default (Roboto on Android) is used and no font is bundled.
 ///
-/// Mapping onto Material roles:
-/// - Display 28/36 Medium -> `displaySmall`
-/// - Title 20/28 Medium -> `titleLarge`
+/// Brand v2 scale (`docs/02-design/v2/brand/tokens.json`). Mapping onto
+/// Material roles:
+/// - Display 28/36 Semibold -> `displaySmall`
+/// - Headline 22/28 Semibold -> `headlineMedium` (app bar titles)
+/// - Title 17/24 Medium -> `titleLarge`, `headlineSmall`
 /// - Body 15/22 Regular -> `bodyLarge`, `bodyMedium`
 /// - Label 13/18 Medium -> `labelLarge`, `labelMedium`
 /// - Caption 12/16 Regular -> `bodySmall`, `labelSmall`
@@ -19,14 +21,17 @@ abstract final class StorizeTypography {
     );
   }
 
-  /// Display 28/36 Medium.
-  static final TextStyle display = _style(28, 36, FontWeight.w500);
+  /// Display 28/36 Semibold.
+  static final TextStyle display = _style(28, 36, FontWeight.w600);
 
-  /// Large page title (app bar of top-level screens) 24/32 Medium.
-  static final TextStyle pageTitle = _style(24, 32, FontWeight.w500);
+  /// Headline 22/28 Semibold (top app bar titles).
+  static final TextStyle headline = _style(22, 28, FontWeight.w600);
 
-  /// Title 20/28 Medium.
-  static final TextStyle title = _style(20, 28, FontWeight.w500);
+  /// Title 17/24 Medium (section headers, card titles, usernames).
+  static final TextStyle title = _style(17, 24, FontWeight.w500);
+
+  /// Numeral 24/28 Semibold (stat tiles).
+  static final TextStyle numeral = _style(24, 28, FontWeight.w600);
 
   /// Body 15/22 Regular.
   static final TextStyle body = _style(15, 22, FontWeight.w400);
@@ -40,7 +45,8 @@ abstract final class StorizeTypography {
   /// The text theme (colours are applied by the theme).
   static TextTheme get textTheme => TextTheme(
     displaySmall: display,
-    headlineMedium: pageTitle,
+    headlineMedium: headline,
+    headlineLarge: numeral,
     headlineSmall: title,
     titleLarge: title,
     titleMedium: _style(15, 22, FontWeight.w500),

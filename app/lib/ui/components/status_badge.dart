@@ -14,8 +14,9 @@ enum StorizeStatus {
   restricted,
 }
 
-/// A pill with an icon and a text label. Status is never shown by colour
-/// alone: every variant has its own icon and text.
+/// A pill (surface-container-high, ink text) with an icon and a label.
+/// Status is never shown by colour alone: every variant has its own icon
+/// and text.
 class StatusBadge extends StatelessWidget {
   /// Creates a badge. [label] overrides the built-in text.
   const StatusBadge({required this.status, this.label, super.key});
@@ -70,7 +71,7 @@ class StatusBadge extends StatelessWidget {
       child: ExcludeSemantics(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: tone.container,
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: StorizeRadii.fullRadius,
           ),
           child: Padding(
@@ -88,8 +89,9 @@ class StatusBadge extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    style: Theme.of(context).textTheme.labelMedium
-                        ?.copyWith(color: tone.onContainer),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ],

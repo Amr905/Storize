@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
+import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_data/update/update.dart';
 import 'package:storize_domain/storize_domain.dart';
@@ -10,6 +11,17 @@ final StreamProvider<AppSettings> settingsStreamProvider =
     StreamProvider<AppSettings>(
       (ref) => ref.watch(settingsRepoProvider).watch(),
     );
+
+/// The appearance as a Flutter [ThemeMode]. [ThemeMode.system] until the
+/// stored setting loads, so the first frame follows the phone.
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final mode = ref.watch(settingsStreamProvider).value?.themeMode;
+  return switch (mode) {
+    AppThemeMode.light => ThemeMode.light,
+    AppThemeMode.dark => ThemeMode.dark,
+    AppThemeMode.system || null => ThemeMode.system,
+  };
+});
 
 /// All targets, for the per-account storage list. One repo subscription.
 final settingsTargetsProvider = StreamProvider<List<Target>>(
@@ -131,6 +143,10 @@ class SettingsActions {
   /// Notification for login problems.
   Future<void> setNotifyLogin({required bool on}) =>
       _settings.update((s) => s.copyWith(notifyLogin: on));
+
+  /// Appearance: system, light or dark. Takes effect live.
+  Future<void> setThemeMode(AppThemeMode mode) =>
+      _settings.update((s) => s.copyWith(themeMode: mode));
 
   /// Keep everything.
   Future<void> keepForever() =>

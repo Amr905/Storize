@@ -364,9 +364,28 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         ),
                         child: KindSwitch(
                           selected: kind,
-                          onChanged: ref
-                              .read(libraryKindProvider.notifier)
-                              .select,
+                          onChanged: (k) {
+                            ref.read(libraryKindProvider.notifier).select(k);
+                            if (filters.highlightsOnly) {
+                              ref
+                                  .read(libraryFiltersProvider.notifier)
+                                  .replace(
+                                    filters.copyWith(highlightsOnly: false),
+                                  );
+                            }
+                          },
+                          highlightsLabel: l10n.libHighlightsTab,
+                          highlightsSelected: filters.highlightsOnly,
+                          onHighlights: () {
+                            ref
+                                .read(libraryKindProvider.notifier)
+                                .select(LibraryKind.stories);
+                            ref
+                                .read(libraryFiltersProvider.notifier)
+                                .replace(
+                                  filters.copyWith(highlightsOnly: true),
+                                );
+                          },
                           storiesLabel: l10n.libStoriesTab,
                           postsLabel: l10n.libPostsTab,
                           storiesCount: _countOrNull(view?.unviewedStories),
@@ -754,7 +773,7 @@ class _AccountHeader extends StatelessWidget {
           if (row.newCount > 0)
             DecoratedBox(
               decoration: BoxDecoration(
-                color: scheme.primary,
+                color: StorizeColors.of(context).accent.container,
                 borderRadius: StorizeRadii.fullRadius,
               ),
               child: Padding(
@@ -765,7 +784,8 @@ class _AccountHeader extends StatelessWidget {
                 child: Text(
                   l10n.libAccountNew(row.newCount),
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.onPrimary,
+                    color: StorizeColors.of(context).accent.color,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

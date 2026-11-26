@@ -26,12 +26,12 @@ class StatTile extends StatelessWidget {
           borderRadius: StorizeRadii.cardRadius,
         ),
         child: Padding(
-          padding: const EdgeInsetsDirectional.all(StorizeSpacing.cardPadding),
+          padding: const EdgeInsetsDirectional.all(StorizeSpacing.s12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: theme.textTheme.displaySmall),
+              Text(value, style: theme.textTheme.headlineLarge),
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(

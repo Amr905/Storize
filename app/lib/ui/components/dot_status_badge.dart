@@ -3,8 +3,8 @@ import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/components/status_badge.dart';
 import 'package:storize_app/ui/theme/theme.dart';
 
-/// Pill with a coloured dot and a text label (design mockups S-07, S-12,
-/// S-13). Same states and colours as [StatusBadge]; the text still carries
+/// Pill with a coloured dot and ink text on surface-container-high (brand v2
+/// mockups). Same states as [StatusBadge]; the text still carries
 /// the meaning, so status is never colour alone.
 class DotStatusBadge extends StatelessWidget {
   /// Creates a badge. [label] overrides the built-in text.
@@ -27,7 +27,7 @@ class DotStatusBadge extends StatelessWidget {
       child: ExcludeSemantics(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: tone.container,
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: StorizeRadii.fullRadius,
           ),
           child: Padding(
@@ -49,8 +49,9 @@ class DotStatusBadge extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    style: Theme.of(context).textTheme.labelMedium
-                        ?.copyWith(color: tone.onContainer),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ],

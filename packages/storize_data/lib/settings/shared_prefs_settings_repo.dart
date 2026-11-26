@@ -50,6 +50,9 @@ abstract final class SettingsKeys {
   /// When the update check last ran, epoch milliseconds UTC (int).
   static const String lastUpdateCheckAt = 'storize.lastUpdateCheckAt';
 
+  /// The appearance: `system`, `light` or `dark` (string).
+  static const String themeMode = 'storize.themeMode';
+
   /// The key of every [AppSettings] field, keyed by the field name.
   static const Map<String, String> byField = {
     'storyIntervalMin': storyIntervalMin,
@@ -64,6 +67,7 @@ abstract final class SettingsKeys {
     'riskAcknowledgedAt': riskAcknowledgedAt,
     'pageModeInBackground': pageModeInBackground,
     'lastUpdateCheckAt': lastUpdateCheckAt,
+    'themeMode': themeMode,
   };
 }
 
@@ -199,6 +203,7 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
         defaults.pageModeInBackground,
       ),
       lastUpdateCheckAt: _instant(stored[SettingsKeys.lastUpdateCheckAt]),
+      themeMode: _themeMode(stored[SettingsKeys.themeMode]),
     );
   }
 
@@ -252,6 +257,9 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
         to.lastUpdateCheckAt,
       );
     }
+    if (from.themeMode != to.themeMode) {
+      await _prefs.setString(SettingsKeys.themeMode, to.themeMode.name);
+    }
   }
 
   Future<void> _setOrRemoveInt(String key, int? value) =>
@@ -278,6 +286,14 @@ int _validInt(
 int? _validRetention(Object? raw) {
   if (raw is int && AppSettings(retentionDays: raw).isValid) return raw;
   return null;
+}
+
+/// The stored appearance, or [AppThemeMode.system] when absent or unknown.
+AppThemeMode _themeMode(Object? raw) {
+  for (final mode in AppThemeMode.values) {
+    if (raw == mode.name) return mode;
+  }
+  return AppThemeMode.system;
 }
 
 bool _bool(Object? raw, bool fallback) => raw is bool ? raw : fallback;
