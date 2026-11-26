@@ -528,9 +528,9 @@ void main() {
 
   goldenBoth(
     'storize_mark',
-    (_) => Row(
+    (_) => const Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: const [
+      children: <Widget>[
         StorizeMark(dark: false, size: 96),
         StorizeMark(dark: true, size: 96),
         StorizeMark(size: 48),

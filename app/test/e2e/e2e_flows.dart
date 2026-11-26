@@ -26,6 +26,8 @@ void registerE2eFlows() {
         expect(_path(app), Routes.welcomePath);
 
         // S-01: Continue stays off until the risk box is ticked.
+        // The brand welcome page is taller than the test screen: scroll to it.
+        await t.ensureVisible(find.byKey(const ValueKey('onb-risk-checkbox')));
         await t.tap(find.byKey(const ValueKey('onb-risk-checkbox')));
         await t.pump();
         await t.tap(find.byKey(const ValueKey('onb-continue')));
@@ -260,6 +262,7 @@ void registerE2eFlows() {
       final l10n = AppLocalizations.of(t.element(find.byType(Navigator).first));
 
       // Onboarding.
+      await t.ensureVisible(find.byKey(const ValueKey('onb-risk-checkbox')));
       await t.tap(find.byKey(const ValueKey('onb-risk-checkbox')));
       await t.pump();
       await t.tap(find.byKey(const ValueKey('onb-continue')));

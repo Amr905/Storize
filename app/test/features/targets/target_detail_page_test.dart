@@ -195,7 +195,7 @@ void main() {
       await pumpDetail(tester, rig: rig, targetId: target.id);
       final l10n = await _l10n(tester);
 
-      await tester.tap(find.widgetWithText(TonalButton, l10n.tgtCheckNow));
+      await tester.tap(find.widgetWithText(OutlinedButton, l10n.tgtCheckNow));
       await tester.pumpAndSettle();
 
       expect(rig.checkNow.calls, 1);
@@ -212,8 +212,8 @@ void main() {
       await pumpDetail(tester, rig: rig, targetId: target.id);
       final l10n = await _l10n(tester);
 
-      final button = tester.widget<TonalButton>(
-        find.widgetWithText(TonalButton, l10n.tgtCheckNow),
+      final button = tester.widget<OutlinedButton>(
+        find.widgetWithText(OutlinedButton, l10n.tgtCheckNow),
       );
       expect(button.onPressed, isNull);
       expect(find.byTooltip(l10n.tgtCheckNowDisabled), findsOneWidget);

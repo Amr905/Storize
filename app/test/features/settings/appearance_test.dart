@@ -35,7 +35,6 @@ void main() {
         isInMutuallyExclusiveGroup: true,
         hasTapAction: true,
         hasSelectedState: true,
-        hasEnabledState: false,
       ),
     );
   });

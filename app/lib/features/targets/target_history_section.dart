@@ -88,11 +88,11 @@ class TargetHistorySection extends ConsumerWidget {
       _ => null,
     };
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        borderRadius: StorizeRadii.cardRadius,
-      ),
+    // A Material, not a DecoratedBox: the Highlights switch tile paints its
+    // ink on the nearest Material.
+    return Material(
+      color: scheme.surfaceContainer,
+      borderRadius: StorizeRadii.cardRadius,
       child: Padding(
         padding: const EdgeInsetsDirectional.symmetric(
           horizontal: StorizeSpacing.s16,
@@ -167,7 +167,10 @@ class TargetHistorySection extends ConsumerWidget {
               ),
             ),
           ),
-        if (hasRange && state != HistoryState.idle)
+        // The mockup bar needs a known total, which the history job does not
+        // have, and an indeterminate bar would animate forever. So the bar only
+        // marks a finished history.
+        if (hasRange && state == HistoryState.done)
           Padding(
             padding: const EdgeInsetsDirectional.only(
               bottom: StorizeSpacing.s12,
@@ -175,12 +178,9 @@ class TargetHistorySection extends ConsumerWidget {
             child: ClipRRect(
               borderRadius: StorizeRadii.fullRadius,
               child: LinearProgressIndicator(
+                key: const ValueKey('history-progress-bar'),
                 minHeight: 6,
-                value: state == HistoryState.running
-                    ? null
-                    : state == HistoryState.done
-                    ? 1
-                    : 0,
+                value: 1,
                 color: scheme.primary,
                 backgroundColor: scheme.surfaceContainerHigh,
               ),
