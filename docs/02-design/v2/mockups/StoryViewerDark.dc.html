@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>S-06 Story viewer (dark)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:var(--brand)}a:hover{color:var(--brand-pressed)}
+.t{--brand:#FF8A5C;--on-brand:#3A0E00;--brand-pressed:#FFB08F;--brand-container:#5A1D07;--on-brand-container:#FFE3D8;--accent:#F2B95A;--accent-container:#3D2A06;--surface:#121214;--surface-container:#1E1E21;--surface-container-high:#2A2A2E;--ink:#ECE6E1;--ink-muted:#A69E97;--outline:#3A3836;--outline-strong:#6E6863;--media-scrim:#000000B3;--success:#5BD69A;--warning:#FFB74D;--error:#FF8A80;--neutral-status:#9A938D}
+</style>
+</helmet>
+<div class="t" style="position:relative;width:390px;height:844px;overflow:hidden;background:#000;font-family:Roboto,system-ui,sans-serif;color:var(--ink)">
+<div style="position:absolute;inset:0;background:#000"></div>
+<div style="position:absolute;left:0;right:0;top:60px;bottom:96px;background:#C98B6B;border-radius:16px;margin:0 4px;overflow:hidden"><div style="position:absolute;left:20%;top:30%;width:60%;height:30%;border-radius:999px;background:rgba(255,255,255,.18)"></div></div>
+<div style="position:absolute;left:12px;right:12px;top:36px;display:flex;gap:4px"><div style="flex:1;height:3px;border-radius:999px;background:#fff"></div><div style="flex:1;height:3px;border-radius:999px;background:rgba(255,255,255,.4)"></div><div style="flex:1;height:3px;border-radius:999px;background:rgba(255,255,255,.4)"></div></div>
+<div style="position:absolute;left:16px;right:8px;top:72px;display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:999px;background:#C9714E;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none;">N</div><div style="flex:1;color:#fff"><div style="font-size:14px;font-weight:600">@nour_k</div><div style="font-size:12px;opacity:.85">Today 10:15 · saved</div></div><button aria-label="Close" style="border:0;background:transparent;padding:8px;display:flex"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:#fff"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div style="position:absolute;left:16px;right:16px;bottom:118px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--media-scrim);color:#fff;font-size:12px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:#fff"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>In your gallery · Pictures/Storize/nour_k</div>
+<div style="position:absolute;left:0;right:0;bottom:0;height:96px;display:flex;justify-content:space-around;align-items:center"><button style="border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;font:500 12px Roboto"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:#fff"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>Share</button><button style="border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;font:500 12px Roboto"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:#fff"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>Info</button><button style="border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;font:500 12px Roboto"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:#fff"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>Delete</button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -164,7 +164,7 @@ class TargetListRow extends StatelessWidget {
             ),
           ),
         ),
-        child: ColoredBox(color: scheme.surface, child: row),
+        child: ColoredBox(color: scheme.surfaceContainer, child: row),
       );
     }
     return row;

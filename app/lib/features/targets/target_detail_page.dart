@@ -137,6 +137,33 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             statusLabel: pending ? l10n.tdtStatusPending : null,
           ),
           const SizedBox(height: StorizeSpacing.s16),
+          Row(
+            children: [
+              Expanded(
+                child: StatTile(
+                  value: loaded ? '$storyCount' : '—',
+                  label: l10n.tdtStatStories,
+                ),
+              ),
+              const SizedBox(width: StorizeSpacing.s8),
+              Expanded(
+                child: StatTile(
+                  value: loaded ? '$postCount' : '—',
+                  label: l10n.tdtStatPosts,
+                ),
+              ),
+              const SizedBox(width: StorizeSpacing.s8),
+              Expanded(
+                child: StatTile(
+                  value: storageAsync.hasValue
+                      ? formatBytes(l10n, storageAsync.value!)
+                      : '—',
+                  label: l10n.tdtStatSpace,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: StorizeSpacing.s16),
           if (_explanation(context, target) case final text?)
             _StatusCard(status: status, text: text),
           _EditRow(
@@ -185,34 +212,9 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
             ),
             divider: false,
           ),
+          const SizedBox(height: StorizeSpacing.s12),
           TargetHistorySection(target: target),
           const SizedBox(height: StorizeSpacing.s16),
-          Row(
-            children: [
-              Expanded(
-                child: StatTile(
-                  value: loaded ? '$storyCount' : '—',
-                  label: l10n.tdtStatStories,
-                ),
-              ),
-              const SizedBox(width: StorizeSpacing.s8),
-              Expanded(
-                child: StatTile(
-                  value: loaded ? '$postCount' : '—',
-                  label: l10n.tdtStatPosts,
-                ),
-              ),
-              const SizedBox(width: StorizeSpacing.s8),
-              Expanded(
-                child: StatTile(
-                  value: storageAsync.hasValue
-                      ? formatBytes(l10n, storageAsync.value!)
-                      : '—',
-                  label: l10n.tdtStatSpace,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: StorizeSpacing.s12),
           Text(
             _metaLine(context, target),
@@ -224,71 +226,73 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
           Row(
             children: [
               Expanded(
+                // FR-74: load the first page and the current stories now, and
+                // save by hand.
+                child: TonalButton(
+                  label: l10n.prvPreviewAction,
+                  icon: Icons.visibility_outlined,
+                  expand: true,
+                  onPressed: sessionActive && !pending
+                      ? () => unawaited(
+                          PreviewPage.open(
+                            context,
+                            PreviewArgs(
+                              username: target.username,
+                              targetId: target.id,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: StorizeSpacing.s8),
+              Expanded(
                 child: sessionActive || checking
-                    ? TonalButton(
-                        label: l10n.tgtCheckNow,
-                        icon: Icons.sync_rounded,
-                        loading: checking,
-                        expand: true,
+                    ? OutlinedButton.icon(
+                        icon: checking
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.sync_rounded, size: 18),
+                        label: Text(l10n.tgtCheckNow),
+                        style: _outlinedStyle(context),
                         onPressed: sessionActive && !checking
                             ? () => unawaited(_checkNow())
                             : null,
                       )
                     : Tooltip(
                         message: l10n.tgtCheckNowDisabled,
-                        child: TonalButton(
-                          label: l10n.tgtCheckNow,
-                          icon: Icons.sync_rounded,
-                          expand: true,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.sync_rounded, size: 18),
+                          label: Text(l10n.tgtCheckNow),
+                          style: _outlinedStyle(context),
                           onPressed: null,
                         ),
                       ),
               ),
-              const SizedBox(width: StorizeSpacing.s16),
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: Icon(
-                    paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                  ),
-                  label: Text(
-                    paused ? l10n.tgtActionResume : l10n.tgtActionPause,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    shape: const StadiumBorder(),
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                    textStyle: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  onPressed: pending
-                      ? null
-                      : () => unawaited(_setPaused(target, !paused)),
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: StorizeSpacing.s12),
-          // FR-74: load the first page and the current stories now, and save
-          // by hand.
-          TonalButton(
-            label: l10n.prvPreviewAction,
-            icon: Icons.visibility_outlined,
-            expand: true,
-            onPressed: sessionActive && !pending
-                ? () => unawaited(
-                    PreviewPage.open(
-                      context,
-                      PreviewArgs(
-                        username: target.username,
-                        targetId: target.id,
-                      ),
-                    ),
-                  )
-                : null,
+          const SizedBox(height: StorizeSpacing.s8),
+          OutlinedButton.icon(
+            icon: Icon(
+              paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+              size: 18,
+            ),
+            label: Text(paused ? l10n.tgtActionResume : l10n.tgtActionPause),
+            style: _outlinedStyle(context),
+            onPressed: pending
+                ? null
+                : () => unawaited(_setPaused(target, !paused)),
           ),
           const SizedBox(height: StorizeSpacing.s24),
+          Text(
+            l10n.tdtSavedTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: StorizeSpacing.s8),
           Row(
             children: [
               Expanded(
@@ -403,6 +407,15 @@ class _TargetDetailPageState extends ConsumerState<TargetDetailPage> {
   }
 
   static const int _recentLimit = 9;
+
+  static ButtonStyle _outlinedStyle(BuildContext context) =>
+      OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        shape: const StadiumBorder(),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        textStyle: Theme.of(context).textTheme.labelLarge,
+      );
 
   // ---- Actions -----------------------------------------------------------
 

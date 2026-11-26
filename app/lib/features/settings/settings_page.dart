@@ -8,6 +8,7 @@ import 'package:storize_app/core/ui_state_view.dart';
 import 'package:storize_app/features/account/account_health.dart';
 import 'package:storize_app/features/account/account_providers.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
+import 'package:storize_app/features/settings/appearance_control.dart';
 import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/features/settings/settings_sheets.dart';
@@ -95,47 +96,59 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return ListView(
       controller: _scroll,
       children: [
+        _SectionHeader(l10n.setSectionAppearance, first: true),
+        const AppearanceControl(),
         _SectionHeader(l10n.setSectionInstagram),
-        const _AccountRow(),
+        const _SectionCard(children: [_AccountRow()]),
         _SectionHeader(l10n.setSectionChecking),
-        _ValueRow(
-          title: l10n.setStoryInterval,
-          value: intervalLabel(l10n, s.storyIntervalMin),
-          onTap: () => unawaited(_pickStoryInterval(s)),
-        ),
-        _ValueRow(
-          title: l10n.setPostInterval,
-          value: intervalLabel(l10n, s.postIntervalMin),
-          subtitle: s.postIntervalMin == 60 ? l10n.setPostOneHourWarning : null,
-          onTap: () => unawaited(_pickPostInterval(s)),
-        ),
-        SettingRow.toggle(
-          title: l10n.setWifiOnly,
-          subtitle: l10n.setWifiOnlyHint,
-          switchValue: s.wifiOnly,
-          onChanged: (on) => unawaited(actions.setWifiOnly(on: on)),
-        ),
-        SettingRow.navigation(
-          title: l10n.setKeepRunning,
-          subtitle: l10n.setKeepRunningHint,
-          onTap: () => unawaited(context.push(Routes.setupPath)),
+        _SectionCard(
+          children: [
+            _ValueRow(
+              title: l10n.setStoryInterval,
+              value: intervalLabel(l10n, s.storyIntervalMin),
+              onTap: () => unawaited(_pickStoryInterval(s)),
+            ),
+            _ValueRow(
+              title: l10n.setPostInterval,
+              value: intervalLabel(l10n, s.postIntervalMin),
+              subtitle: s.postIntervalMin == 60
+                  ? l10n.setPostOneHourWarning
+                  : null,
+              onTap: () => unawaited(_pickPostInterval(s)),
+            ),
+            SettingRow.toggle(
+              title: l10n.setWifiOnly,
+              subtitle: l10n.setWifiOnlyHint,
+              switchValue: s.wifiOnly,
+              onChanged: (on) => unawaited(actions.setWifiOnly(on: on)),
+            ),
+            SettingRow.navigation(
+              title: l10n.setKeepRunning,
+              subtitle: l10n.setKeepRunningHint,
+              onTap: () => unawaited(context.push(Routes.setupPath)),
+            ),
+          ],
         ),
         _SectionHeader(l10n.setSectionNotifications),
-        SettingRow.toggle(
-          title: l10n.setNotifyStories,
-          switchValue: s.notifyStories,
-          onChanged: (on) => unawaited(actions.setNotifyStories(on: on)),
-        ),
-        SettingRow.toggle(
-          title: l10n.setNotifyPosts,
-          switchValue: s.notifyPosts,
-          onChanged: (on) => unawaited(actions.setNotifyPosts(on: on)),
-        ),
-        SettingRow.toggle(
-          title: l10n.setNotifyLogin,
-          subtitle: s.notifyLogin ? null : l10n.setNotifyLoginOffWarning,
-          switchValue: s.notifyLogin,
-          onChanged: (on) => unawaited(actions.setNotifyLogin(on: on)),
+        _SectionCard(
+          children: [
+            SettingRow.toggle(
+              title: l10n.setNotifyStories,
+              switchValue: s.notifyStories,
+              onChanged: (on) => unawaited(actions.setNotifyStories(on: on)),
+            ),
+            SettingRow.toggle(
+              title: l10n.setNotifyPosts,
+              switchValue: s.notifyPosts,
+              onChanged: (on) => unawaited(actions.setNotifyPosts(on: on)),
+            ),
+            SettingRow.toggle(
+              title: l10n.setNotifyLogin,
+              subtitle: s.notifyLogin ? null : l10n.setNotifyLoginOffWarning,
+              switchValue: s.notifyLogin,
+              onChanged: (on) => unawaited(actions.setNotifyLogin(on: on)),
+            ),
+          ],
         ),
         KeyedSubtree(
           key: _storageKey,
@@ -143,30 +156,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SectionHeader(l10n.setSectionStorage),
-              SettingRow.info(
-                title: l10n.setStorageLocation,
-                leadingIcon: Icons.folder_outlined,
-              ),
-              SettingRow.navigation(
-                title: _usageText(l10n, storage),
-                leadingIcon: Icons.pie_chart_outline_rounded,
-                onTap: () => unawaited(_showStorage()),
-              ),
-              _ValueRow(
-                title: l10n.setKeepDownloads,
-                value: s.retentionDays == null
-                    ? l10n.setKeepForever
-                    : l10n.setKeepAfterDays(s.retentionDays!),
-                onTap: () => unawaited(_editRetention(s)),
+              _SectionCard(
+                children: [
+                  SettingRow.info(
+                    title: l10n.setStorageLocation,
+                    leadingIcon: Icons.folder_outlined,
+                  ),
+                  SettingRow.navigation(
+                    title: _usageText(l10n, storage),
+                    leadingIcon: Icons.pie_chart_outline_rounded,
+                    onTap: () => unawaited(_showStorage()),
+                  ),
+                  _ValueRow(
+                    title: l10n.setKeepDownloads,
+                    value: s.retentionDays == null
+                        ? l10n.setKeepForever
+                        : l10n.setKeepAfterDays(s.retentionDays!),
+                    onTap: () => unawaited(_editRetention(s)),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         _SectionHeader(l10n.setSectionSecurity),
-        const AppLockRow(),
+        const _SectionCard(children: [AppLockRow()]),
         _SectionHeader(l10n.setSectionAbout),
-        SettingRow.info(title: l10n.setVersion(version)),
-        ?updateRow,
+        _SectionCard(
+          children: [
+            SettingRow.info(title: l10n.setVersion(version)),
+            ?updateRow,
+          ],
+        ),
         const SizedBox(height: StorizeSpacing.s24),
       ],
     );
@@ -223,10 +244,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   );
 }
 
+/// A tonal card (surface-container, radius 20) that groups setting rows.
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.symmetric(
+        horizontal: StorizeSpacing.s12,
+      ),
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: StorizeRadii.cardRadius,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+  const _SectionHeader(this.title, {this.first = false});
 
   final String title;
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
@@ -234,17 +281,18 @@ class _SectionHeader extends StatelessWidget {
     return Semantics(
       header: true,
       child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(
-          StorizeSpacing.s16,
-          StorizeSpacing.s24,
+        padding: EdgeInsetsDirectional.fromSTEB(
+          StorizeSpacing.s20,
+          first ? StorizeSpacing.s8 : StorizeSpacing.s24,
           StorizeSpacing.s16,
           StorizeSpacing.s8,
         ),
         child: Text(
           title.toUpperCase(),
-          style: theme.textTheme.titleSmall?.copyWith(
+          style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.primary,
-            letterSpacing: 0.8,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.6,
           ),
         ),
       ),

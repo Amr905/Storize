@@ -8,7 +8,7 @@
   "@navLibrary": {
     "description": "Bottom navigation label."
   },
-  "navTargets": "Targets",
+  "navTargets": "Accounts",
   "@navTargets": {
     "description": "Bottom navigation label."
   },
@@ -44,7 +44,7 @@
   "@screenPostViewer": {
     "description": "Screen title."
   },
-  "screenTargets": "Targets",
+  "screenTargets": "Accounts",
   "@screenTargets": {
     "description": "Screen title."
   },
@@ -863,9 +863,9 @@
   "@storyInfoItemId": {"description": "Info sheet row: Instagram item ID."},
   "storyInfoFolder": "Gallery folder",
   "@storyInfoFolder": {"description": "Info sheet row: gallery folder of the saved file."},
-  "onbWelcomeTagline": "Save stories automatically, before they disappear.",
+  "onbWelcomeTagline": "Storize saves the stories and posts of the accounts you choose, straight to your gallery, in the background.",
   "@onbWelcomeTagline": {
-    "description": "S-01 headline."
+    "description": "S-01 supporting line under the headline."
   },
   "onbRiskTitle": "Before you continue",
   "@onbRiskTitle": {
@@ -1811,5 +1811,41 @@
   "prvReasonGeneric": "the download failed",
   "@prvReasonGeneric": {"description": "Preview: save failure reason, used inside the sentence of prvSaveFailed."},
   "prvNotVisible": "This account is private or can't be seen from the logged-in account.",
-  "@prvNotVisible": {"description": "Preview: the account cannot be shown."}
+  "@prvNotVisible": {"description": "Preview: the account cannot be shown."},
+  "kindSwitchNewBadge": "{count} new",
+  "@kindSwitchNewBadge": {"description": "Saffron badge on a library segment: how many items are new.", "placeholders": {"count": {"type": "int"}}},
+  "libHighlightsTab": "Highlights",
+  "@libHighlightsTab": {"description": "Library kind switch: highlights segment."},
+  "libHighlightBadge": "Highlight",
+  "@libHighlightBadge": {"description": "Saffron badge on a highlight thumbnail."},
+  "setSectionAppearance": "Appearance",
+  "@setSectionAppearance": {"description": "S-12 section header for the theme choice."},
+  "setThemeSystem": "System",
+  "@setThemeSystem": {"description": "S-12 appearance segment: follow the phone setting."},
+  "setThemeLight": "Light",
+  "@setThemeLight": {"description": "S-12 appearance segment: always light."},
+  "setThemeDark": "Dark",
+  "@setThemeDark": {"description": "S-12 appearance segment: always dark."},
+  "setThemeHint": "System follows your phone's light or dark setting.",
+  "@setThemeHint": {"description": "S-12 hint under the appearance control."},
+  "setThemeSemantics": "Appearance",
+  "@setThemeSemantics": {"description": "Screen reader label of the appearance segmented control."},
+  "onbWelcomeHeadline": "Stories disappear.\nYours don't have to.",
+  "@onbWelcomeHeadline": {"description": "S-01 headline."},
+  "onbPromiseAutoTitle": "Automatic",
+  "@onbPromiseAutoTitle": {"description": "S-01 promise row title."},
+  "onbPromiseAutoBody": "New stories and posts are saved as they appear.",
+  "@onbPromiseAutoBody": {"description": "S-01 promise row text."},
+  "onbPromiseChooseTitle": "Only who you choose",
+  "@onbPromiseChooseTitle": {"description": "S-01 promise row title."},
+  "onbPromiseChooseBody": "Storize saves the accounts you add, nothing else.",
+  "@onbPromiseChooseBody": {"description": "S-01 promise row text."},
+  "onbPromisePrivateTitle": "Stays on your phone",
+  "@onbPromisePrivateTitle": {"description": "S-01 promise row title."},
+  "onbPromisePrivateBody": "No servers. Your login never leaves the device.",
+  "@onbPromisePrivateBody": {"description": "S-01 promise row text."},
+  "tdtSavedTitle": "Saved",
+  "@tdtSavedTitle": {"description": "S-09 heading above the saved stories and posts grid."},
+  "storyInGallery": "In your gallery · Pictures/Storize/{username}",
+  "@storyInGallery": {"description": "S-06 chip over the media: the saved file's gallery folder.", "placeholders": {"username": {"type": "String"}}}
 }

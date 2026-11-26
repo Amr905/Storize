@@ -162,12 +162,26 @@ class _Chip extends StatelessWidget {
                   horizontal: StorizeSpacing.s16,
                   vertical: 7,
                 ),
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                    color: selected ? scheme.primary : scheme.onSurface,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (selected) ...[
+                      Icon(
+                        Icons.check_rounded,
+                        size: 16,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: StorizeSpacing.s4),
+                    ],
+                    Text(
+                      label,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: selected
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

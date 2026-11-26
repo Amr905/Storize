@@ -5,7 +5,9 @@ import 'package:storize_app/ui/theme/storize_typography.dart';
 
 /// Builds the Storize light and dark [ThemeData] (UX §5.2).
 abstract final class StorizeTheme {
-  /// UX §5.2 tokens, light column. Roles the table does not define
+  /// Brand v2 tokens, light column (`brand/tokens.json`). `outline` is the
+  /// token outline-strong (control borders), `outlineVariant` the token
+  /// outline (dividers, card borders). Roles the table does not define
   /// (secondary*, extra surface containers, errorContainer) are derived.
   static const ColorScheme lightScheme = ColorScheme(
     brightness: Brightness.light,
@@ -27,9 +29,9 @@ abstract final class StorizeTheme {
     surfaceContainerLowest: Color(0xFFFFFFFF),
     surfaceContainerLow: Color(0xFFF6F2EE),
     surfaceContainer: Color(0xFFF1ECE7),
-    surfaceContainerHigh: Color(0xFFEAE4DE),
+    surfaceContainerHigh: Color(0xFFE8E1DA),
     surfaceContainerHighest: Color(0xFFE3DCD5),
-    outline: Color(0xFFD8D0C8),
+    outline: Color(0xFF8F867E),
     outlineVariant: Color(0xFFD8D0C8),
     shadow: Color(0xFF000000),
     scrim: Color(0xFF000000),
@@ -38,7 +40,7 @@ abstract final class StorizeTheme {
     inversePrimary: Color(0xFFFF8A5C),
   );
 
-  /// UX §5.2 tokens, dark column.
+  /// Brand v2 tokens, dark column (see [lightScheme]).
   static const ColorScheme darkScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: Color(0xFFFF8A5C),
@@ -59,9 +61,9 @@ abstract final class StorizeTheme {
     surfaceContainerLowest: Color(0xFF0D0D0F),
     surfaceContainerLow: Color(0xFF19191B),
     surfaceContainer: Color(0xFF1E1E21),
-    surfaceContainerHigh: Color(0xFF262629),
+    surfaceContainerHigh: Color(0xFF2A2A2E),
     surfaceContainerHighest: Color(0xFF2E2E32),
-    outline: Color(0xFF3A3836),
+    outline: Color(0xFF6E6863),
     outlineVariant: Color(0xFF3A3836),
     shadow: Color(0xFF000000),
     scrim: Color(0xFF000000),
@@ -98,7 +100,7 @@ abstract final class StorizeTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       canvasColor: scheme.surface,
-      dividerColor: scheme.outline,
+      dividerColor: scheme.outlineVariant,
       textTheme: textTheme,
       extensions: [extra],
       splashFactory: InkRipple.splashFactory,
@@ -143,16 +145,27 @@ abstract final class StorizeTheme {
           borderRadius: StorizeRadii.sheetRadius,
         ),
       ),
-      dividerTheme: DividerThemeData(color: scheme.outline, space: 1),
+      dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: minSize,
-          shape: stadium,
-          textStyle: textTheme.labelLarge,
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: StorizeSpacing.s24,
-          ),
-        ),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: minSize,
+              shape: stadium,
+              textStyle: textTheme.labelLarge,
+              padding: const EdgeInsetsDirectional.symmetric(
+                horizontal: StorizeSpacing.s24,
+              ),
+            ).copyWith(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return scheme.onSurface.withValues(alpha: 0.12);
+                }
+                return states.contains(WidgetState.pressed) ||
+                        states.contains(WidgetState.hovered)
+                    ? extra.brandPressed
+                    : scheme.primary;
+              }),
+            ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -184,17 +197,58 @@ abstract final class StorizeTheme {
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? scheme.onPrimary
-              : scheme.onSurfaceVariant,
+              : scheme.outline,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? scheme.primary
-              : scheme.surfaceContainerHighest,
+              : scheme.surfaceContainerHigh,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? scheme.primary
               : scheme.outline,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: const RoundedRectangleBorder(
+          borderRadius: StorizeRadii.chipRadius,
+        ),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? BorderSide.none
+              : BorderSide(color: scheme.outline),
+        ),
+        backgroundColor: Colors.transparent,
+        selectedColor: scheme.primaryContainer,
+        checkmarkColor: scheme.onPrimaryContainer,
+        labelStyle: textTheme.labelLarge?.copyWith(color: scheme.onSurface),
+        secondaryLabelStyle: textTheme.labelLarge?.copyWith(
+          color: scheme.onSurface,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: scheme.surfaceContainerHigh,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.error, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.error, width: 2),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -205,7 +259,7 @@ abstract final class StorizeTheme {
         height: 80,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            size: 26,
+            size: 22,
             color: states.contains(WidgetState.selected)
                 ? scheme.onPrimaryContainer
                 : scheme.onSurfaceVariant,
@@ -214,7 +268,7 @@ abstract final class StorizeTheme {
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: scheme.onSurface,
                 )
               : textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant),

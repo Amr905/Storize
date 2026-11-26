@@ -216,7 +216,7 @@ void main() {
     );
     await tester.tap(find.text('Posts'));
     expect(kinds, [LibraryKind.posts]);
-    expect(find.text('12'), findsOneWidget);
+    expect(find.text('12 new'), findsOneWidget);
   });
 
   testWidgets('Buttons ignore taps while loading and show a spinner', (

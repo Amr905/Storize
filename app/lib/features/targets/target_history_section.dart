@@ -88,13 +88,50 @@ class TargetHistorySection extends ConsumerWidget {
       _ => null,
     };
 
+    // A Material, not a DecoratedBox: the Highlights switch tile paints its
+    // ink on the nearest Material.
+    return Material(
+      color: scheme.surfaceContainer,
+      borderRadius: StorizeRadii.cardRadius,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: StorizeSpacing.s16,
+          vertical: StorizeSpacing.s12,
+        ),
+        child: _content(
+          context,
+          ref,
+          l10n: l10n,
+          scheme: scheme,
+          textTheme: textTheme,
+          locale: locale,
+          state: state,
+          hasRange: hasRange,
+          range: range,
+          statusText: statusText,
+          actions: actions,
+        ),
+      ),
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref, {
+    required AppLocalizations l10n,
+    required ColorScheme scheme,
+    required TextTheme textTheme,
+    required String locale,
+    required HistoryState state,
+    required bool hasRange,
+    required HistoryRange range,
+    required String? statusText,
+    required TargetHistoryActions actions,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s8),
-          child: Text(l10n.tdtHistoryTitle, style: textTheme.titleMedium),
-        ),
+        Text(l10n.tdtHistoryTitle, style: textTheme.titleMedium),
         Row(
           children: [
             Expanded(
@@ -127,6 +164,25 @@ class TargetHistorySection extends ConsumerWidget {
                 color: state == HistoryState.failed
                     ? scheme.error
                     : scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        // The mockup bar needs a known total, which the history job does not
+        // have, and an indeterminate bar would animate forever. So the bar only
+        // marks a finished history.
+        if (hasRange && state == HistoryState.done)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              bottom: StorizeSpacing.s12,
+            ),
+            child: ClipRRect(
+              borderRadius: StorizeRadii.fullRadius,
+              child: LinearProgressIndicator(
+                key: const ValueKey('history-progress-bar'),
+                minHeight: 6,
+                value: 1,
+                color: scheme.primary,
+                backgroundColor: scheme.surfaceContainerHigh,
               ),
             ),
           ),

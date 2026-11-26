@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand v2: Ember launcher field and the page colour behind the splash. -->
+    <color name="ic_launcher_background">#C93F17</color>
+    <color name="launch_surface">#FBF8F5</color>
+</resources>

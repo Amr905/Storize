@@ -41,17 +41,17 @@ abstract final class StorizeSpacing {
 
 /// Corner radii (UX §5.2).
 abstract final class StorizeRadii {
-  /// Cards: 16.
-  static const double card = 16;
+  /// Cards: 20.
+  static const double card = 20;
 
-  /// Chips: 8.
-  static const double chip = 8;
+  /// Chips, inputs, badges: 10.
+  static const double chip = 10;
 
-  /// Thumbnails: 10.
-  static const double thumb = 10;
+  /// Thumbnails: 12.
+  static const double thumb = 12;
 
-  /// Bottom sheets (top corners): 24.
-  static const double sheet = 24;
+  /// Bottom sheets (top corners): 20.
+  static const double sheet = 20;
 
   /// Fully rounded (buttons, pills).
   static const double full = 999;

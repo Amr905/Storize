@@ -80,15 +80,26 @@ class PrimaryButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final bg = destructive ? scheme.error : scheme.primary;
     final fg = destructive ? scheme.onError : scheme.onPrimary;
+    final pressed = StorizeColors.of(context).brandPressed;
     return _maybeExpand(
       FilledButton(
         onPressed: loading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: bg,
-          foregroundColor: fg,
-          disabledBackgroundColor: loading ? bg.withValues(alpha: 0.7) : null,
-          disabledForegroundColor: loading ? fg : null,
-        ),
+        style:
+            FilledButton.styleFrom(
+              foregroundColor: fg,
+              disabledForegroundColor: loading ? fg : null,
+            ).copyWith(
+              // Pressed and hovered brand buttons use brand-pressed.
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return loading ? bg.withValues(alpha: 0.7) : null;
+                }
+                final active =
+                    states.contains(WidgetState.pressed) ||
+                    states.contains(WidgetState.hovered);
+                return active && !destructive ? pressed : bg;
+              }),
+            ),
         child: _content(
           label: label,
           icon: icon,

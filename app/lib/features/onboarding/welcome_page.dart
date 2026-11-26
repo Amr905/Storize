@@ -56,56 +56,67 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: StorizeSpacing.s24),
-                    ExcludeSemantics(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: scheme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: SizedBox.square(
-                          dimension: 52,
-                          child: Icon(
-                            Icons.download_rounded,
-                            color: scheme.onPrimary,
+                    Row(
+                      children: [
+                        const StorizeMark(size: 56),
+                        const SizedBox(width: StorizeSpacing.s12),
+                        Text(
+                          l10n.appTitle,
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontSize: 36,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -1,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: StorizeSpacing.s24),
                     Semantics(
                       header: true,
                       child: Text(
-                        l10n.appTitle,
+                        l10n.onbWelcomeHeadline,
                         style: theme.textTheme.displaySmall?.copyWith(
-                          fontSize: 44,
-                          height: 1.1,
+                          fontSize: 34,
+                          height: 40 / 34,
                           fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ),
-                    const SizedBox(height: StorizeSpacing.s8),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 260),
-                      child: Text(
-                        l10n.onbWelcomeTagline,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    const SizedBox(height: StorizeSpacing.s12),
+                    Text(
+                      l10n.onbWelcomeTagline,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: StorizeSpacing.s24),
+                    _Promise(
+                      icon: Icons.download_rounded,
+                      title: l10n.onbPromiseAutoTitle,
+                      body: l10n.onbPromiseAutoBody,
+                    ),
+                    _Promise(
+                      icon: Icons.person_search_rounded,
+                      title: l10n.onbPromiseChooseTitle,
+                      body: l10n.onbPromiseChooseBody,
+                    ),
+                    _Promise(
+                      icon: Icons.lock_outline_rounded,
+                      title: l10n.onbPromisePrivateTitle,
+                      body: l10n.onbPromisePrivateBody,
+                    ),
+                    const SizedBox(height: StorizeSpacing.s8),
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: warning.container,
+                        color: scheme.surfaceContainer,
                         borderRadius: StorizeRadii.cardRadius,
-                        border: Border.all(
-                          color: warning.color.withValues(alpha: 0.3),
-                        ),
                       ),
                       child: Padding(
-                        padding: const EdgeInsetsDirectional.all(
-                          StorizeSpacing.cardPadding,
+                        padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: StorizeSpacing.s16,
+                          vertical: 14,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,12 +127,13 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                   Icons.warning_amber_rounded,
                                   color: warning.color,
                                 ),
-                                const SizedBox(width: StorizeSpacing.s8),
+                                const SizedBox(width: StorizeSpacing.s12),
                                 Expanded(
                                   child: Text(
                                     l10n.onbRiskTitle,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(color: scheme.onSurface),
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: scheme.onSurface,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -214,6 +226,46 @@ class _RiskText extends StatelessWidget {
                   ? const TextStyle(fontWeight: FontWeight.w700)
                   : null,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One promise row: a brand icon, a title and a muted line.
+class _Promise extends StatelessWidget {
+  const _Promise({required this.icon, required this.title, required this.body});
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(bottom: StorizeSpacing.s12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(child: Icon(icon, size: 22, color: scheme.primary)),
+          const SizedBox(width: StorizeSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.titleMedium),
+                Text(
+                  body,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

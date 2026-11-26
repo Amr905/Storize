@@ -1,6 +1,19 @@
 import 'package:meta/meta.dart';
 import 'package:storize_domain/src/entities/internal.dart';
 
+/// Which theme the app shows (Settings -> Appearance). [system] follows the
+/// phone's light or dark setting.
+enum AppThemeMode {
+  /// Follow the phone setting. The default.
+  system,
+
+  /// Always light.
+  light,
+
+  /// Always dark.
+  dark,
+}
+
 /// The user settings (TECH_SPEC §3 "Settings", stored in shared_preferences).
 @immutable
 final class AppSettings {
@@ -18,6 +31,7 @@ final class AppSettings {
     this.riskAcknowledgedAt,
     this.pageModeInBackground = false,
     this.lastUpdateCheckAt,
+    this.themeMode = AppThemeMode.system,
   });
 
   /// Allowed story check intervals in minutes (BR-5).
@@ -71,6 +85,9 @@ final class AppSettings {
   /// When the update check last ran (UTC), or null.
   final DateTime? lastUpdateCheckAt;
 
+  /// The appearance: follow the phone, or force light or dark.
+  final AppThemeMode themeMode;
+
   /// The rule violations of these settings, one message each. Empty when the
   /// settings are valid. `SettingsRepo` implementations reject invalid
   /// settings with these messages.
@@ -101,6 +118,7 @@ final class AppSettings {
     Object? riskAcknowledgedAt = unset,
     bool? pageModeInBackground,
     Object? lastUpdateCheckAt = unset,
+    AppThemeMode? themeMode,
   }) => AppSettings(
     storyIntervalMin: storyIntervalMin ?? this.storyIntervalMin,
     postIntervalMin: postIntervalMin ?? this.postIntervalMin,
@@ -120,6 +138,7 @@ final class AppSettings {
       lastUpdateCheckAt,
       this.lastUpdateCheckAt,
     ),
+    themeMode: themeMode ?? this.themeMode,
   );
 
   @override
@@ -137,7 +156,8 @@ final class AppSettings {
           other.onboardingDone == onboardingDone &&
           other.riskAcknowledgedAt == riskAcknowledgedAt &&
           other.pageModeInBackground == pageModeInBackground &&
-          other.lastUpdateCheckAt == lastUpdateCheckAt);
+          other.lastUpdateCheckAt == lastUpdateCheckAt &&
+          other.themeMode == themeMode);
 
   @override
   int get hashCode => Object.hash(
@@ -153,6 +173,7 @@ final class AppSettings {
     riskAcknowledgedAt,
     pageModeInBackground,
     lastUpdateCheckAt,
+    themeMode,
   );
 
   @override

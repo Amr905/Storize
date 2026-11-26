@@ -18,7 +18,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navLibrary => 'Library';
 
   @override
-  String get navTargets => 'Targets';
+  String get navTargets => 'Accounts';
 
   @override
   String get navActivity => 'Activity';
@@ -45,7 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get screenPostViewer => 'Post';
 
   @override
-  String get screenTargets => 'Targets';
+  String get screenTargets => 'Accounts';
 
   @override
   String get screenAddTarget => 'Add target';
@@ -728,7 +728,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onbWelcomeTagline =>
-      'Save stories automatically, before they disappear.';
+      'Storize saves the stories and posts of the accounts you choose, straight to your gallery, in the background.';
 
   @override
   String get onbRiskTitle => 'Before you continue';
@@ -2033,4 +2033,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get prvNotVisible =>
       'This account is private or can\'t be seen from the logged-in account.';
+
+  @override
+  String kindSwitchNewBadge(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get libHighlightsTab => 'Highlights';
+
+  @override
+  String get libHighlightBadge => 'Highlight';
+
+  @override
+  String get setSectionAppearance => 'Appearance';
+
+  @override
+  String get setThemeSystem => 'System';
+
+  @override
+  String get setThemeLight => 'Light';
+
+  @override
+  String get setThemeDark => 'Dark';
+
+  @override
+  String get setThemeHint =>
+      'System follows your phone\'s light or dark setting.';
+
+  @override
+  String get setThemeSemantics => 'Appearance';
+
+  @override
+  String get onbWelcomeHeadline => 'Stories disappear.\nYours don\'t have to.';
+
+  @override
+  String get onbPromiseAutoTitle => 'Automatic';
+
+  @override
+  String get onbPromiseAutoBody =>
+      'New stories and posts are saved as they appear.';
+
+  @override
+  String get onbPromiseChooseTitle => 'Only who you choose';
+
+  @override
+  String get onbPromiseChooseBody =>
+      'Storize saves the accounts you add, nothing else.';
+
+  @override
+  String get onbPromisePrivateTitle => 'Stays on your phone';
+
+  @override
+  String get onbPromisePrivateBody =>
+      'No servers. Your login never leaves the device.';
+
+  @override
+  String get tdtSavedTitle => 'Saved';
+
+  @override
+  String storyInGallery(String username) {
+    return 'In your gallery · Pictures/Storize/$username';
+  }
 }

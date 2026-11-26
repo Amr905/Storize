@@ -41,6 +41,8 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
     required this.error,
     required this.neutralStatus,
     required this.info,
+    required this.accent,
+    required this.brandPressed,
     required this.tagOwn,
     required this.tagConsented,
     required this.tagPublic,
@@ -67,7 +69,7 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       onContainer: Color(0xFF8C1B1B),
     ),
     neutralStatus: StorizeTone(
-      color: Color(0xFF8A847E),
+      color: Color(0xFF6F6963),
       container: Color(0xFFE9E4DF),
       onContainer: Color(0xFF5E5852),
     ),
@@ -91,7 +93,13 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       container: Color(0xFFE5F3F1),
       onContainer: Color(0xFF1E6E66),
     ),
-    mediaScrim: Color(0xB3000000),
+    accent: StorizeTone(
+      color: Color(0xFF8A5200),
+      container: Color(0xFFFFF0D6),
+      onContainer: Color(0xFF8A5200),
+    ),
+    brandPressed: Color(0xFFA8320F),
+    mediaScrim: Color(0xA6000000),
     onMediaScrim: Color(0xFFFFFFFF),
   );
 
@@ -114,7 +122,7 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       onContainer: Color(0xFFFFC9C4),
     ),
     neutralStatus: StorizeTone(
-      color: Color(0xFF8A847E),
+      color: Color(0xFF9A938D),
       container: Color(0xFF2A2927),
       onContainer: Color(0xFFC2BBB4),
     ),
@@ -138,6 +146,12 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       container: Color(0xFF12332F),
       onContainer: Color(0xFFA6E0D8),
     ),
+    accent: StorizeTone(
+      color: Color(0xFFF2B95A),
+      container: Color(0xFF3D2A06),
+      onContainer: Color(0xFFF2B95A),
+    ),
+    brandPressed: Color(0xFFFFB08F),
     mediaScrim: Color(0xB3000000),
     onMediaScrim: Color(0xFFFFFFFF),
   );
@@ -156,6 +170,13 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
 
   /// Checking / informational (ember).
   final StorizeTone info;
+
+  /// Saffron: the "new" counts and the Highlight badge (never for buttons).
+  /// `color` is the accent text/dot colour, `container` the badge background.
+  final StorizeTone accent;
+
+  /// Pressed / hovered brand buttons.
+  final Color brandPressed;
 
   /// Category tag: own / client (blue, matches mockup S-07).
   final StorizeTone tagOwn;
@@ -183,6 +204,8 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
     StorizeTone? error,
     StorizeTone? neutralStatus,
     StorizeTone? info,
+    StorizeTone? accent,
+    Color? brandPressed,
     StorizeTone? tagOwn,
     StorizeTone? tagConsented,
     StorizeTone? tagPublic,
@@ -195,6 +218,8 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       error: error ?? this.error,
       neutralStatus: neutralStatus ?? this.neutralStatus,
       info: info ?? this.info,
+      accent: accent ?? this.accent,
+      brandPressed: brandPressed ?? this.brandPressed,
       tagOwn: tagOwn ?? this.tagOwn,
       tagConsented: tagConsented ?? this.tagConsented,
       tagPublic: tagPublic ?? this.tagPublic,
@@ -212,6 +237,8 @@ class StorizeColors extends ThemeExtension<StorizeColors> {
       error: StorizeTone.lerp(error, other.error, t),
       neutralStatus: StorizeTone.lerp(neutralStatus, other.neutralStatus, t),
       info: StorizeTone.lerp(info, other.info, t),
+      accent: StorizeTone.lerp(accent, other.accent, t),
+      brandPressed: Color.lerp(brandPressed, other.brandPressed, t)!,
       tagOwn: StorizeTone.lerp(tagOwn, other.tagOwn, t),
       tagConsented: StorizeTone.lerp(tagConsented, other.tagConsented, t),
       tagPublic: StorizeTone.lerp(tagPublic, other.tagPublic, t),
