@@ -19,6 +19,7 @@ export 'package:storize_app/ui/components/skeleton.dart';
 export 'package:storize_app/ui/components/stat_tile.dart';
 export 'package:storize_app/ui/components/status_badge.dart';
 export 'package:storize_app/ui/components/step_card.dart';
+export 'package:storize_app/ui/components/storize_mark.dart';
 export 'package:storize_app/ui/components/story_thumb.dart';
 export 'package:storize_app/ui/components/target_row.dart';
 export 'package:storize_app/ui/theme/theme.dart';

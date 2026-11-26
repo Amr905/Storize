@@ -210,6 +210,23 @@ abstract final class StorizeTheme {
               : scheme.outline,
         ),
       ),
+      chipTheme: ChipThemeData(
+        shape: const RoundedRectangleBorder(
+          borderRadius: StorizeRadii.chipRadius,
+        ),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? BorderSide.none
+              : BorderSide(color: scheme.outline),
+        ),
+        backgroundColor: Colors.transparent,
+        selectedColor: scheme.primaryContainer,
+        checkmarkColor: scheme.onPrimaryContainer,
+        labelStyle: textTheme.labelLarge?.copyWith(color: scheme.onSurface),
+        secondaryLabelStyle: textTheme.labelLarge?.copyWith(
+          color: scheme.onSurface,
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHigh,

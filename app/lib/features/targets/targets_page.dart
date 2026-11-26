@@ -213,14 +213,21 @@ class _TargetList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final saved = ref.watch(savedCountsProvider).value;
     return ListView.builder(
-      padding: const EdgeInsetsDirectional.only(bottom: 88),
+      padding: const EdgeInsetsDirectional.only(
+        start: StorizeSpacing.s12,
+        end: StorizeSpacing.s12,
+        bottom: 88,
+      ),
       itemCount: targets.length,
       itemBuilder: (context, i) {
         final target = targets[i];
         final paused = target.status == TargetStatus.paused;
         final pending = target.status == TargetStatus.pendingLookup;
         final l10n = AppLocalizations.of(context);
-        return TargetListRow(
+        // One grouped card: only the first and last rows round their outer
+        // corners.
+        const radius = Radius.circular(StorizeRadii.card);
+        final row = TargetListRow(
           username: target.username,
           category: _categoryKind(target.category),
           status: checking && target.status == TargetStatus.active
@@ -240,6 +247,13 @@ class _TargetList extends ConsumerWidget {
                     _setPaused(context, ref, target, paused: !paused),
                   ),
                 ),
+        );
+        return ClipRRect(
+          borderRadius: BorderRadiusDirectional.vertical(
+            top: i == 0 ? radius : Radius.zero,
+            bottom: i == targets.length - 1 ? radius : Radius.zero,
+          ),
+          child: row,
         );
       },
     );

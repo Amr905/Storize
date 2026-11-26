@@ -88,13 +88,50 @@ class TargetHistorySection extends ConsumerWidget {
       _ => null,
     };
 
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: StorizeRadii.cardRadius,
+      ),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: StorizeSpacing.s16,
+          vertical: StorizeSpacing.s12,
+        ),
+        child: _content(
+          context,
+          ref,
+          l10n: l10n,
+          scheme: scheme,
+          textTheme: textTheme,
+          locale: locale,
+          state: state,
+          hasRange: hasRange,
+          range: range,
+          statusText: statusText,
+          actions: actions,
+        ),
+      ),
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref, {
+    required AppLocalizations l10n,
+    required ColorScheme scheme,
+    required TextTheme textTheme,
+    required String locale,
+    required HistoryState state,
+    required bool hasRange,
+    required HistoryRange range,
+    required String? statusText,
+    required TargetHistoryActions actions,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s8),
-          child: Text(l10n.tdtHistoryTitle, style: textTheme.titleMedium),
-        ),
+        Text(l10n.tdtHistoryTitle, style: textTheme.titleMedium),
         Row(
           children: [
             Expanded(
@@ -127,6 +164,25 @@ class TargetHistorySection extends ConsumerWidget {
                 color: state == HistoryState.failed
                     ? scheme.error
                     : scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (hasRange && state != HistoryState.idle)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              bottom: StorizeSpacing.s12,
+            ),
+            child: ClipRRect(
+              borderRadius: StorizeRadii.fullRadius,
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: state == HistoryState.running
+                    ? null
+                    : state == HistoryState.done
+                    ? 1
+                    : 0,
+                color: scheme.primary,
+                backgroundColor: scheme.surfaceContainerHigh,
               ),
             ),
           ),

@@ -211,7 +211,7 @@ class _Header extends StatelessWidget {
       children: [
         StorizeAvatar(
           initial: username.isEmpty ? '?' : username[0],
-          size: 72,
+          size: 60,
           child: avatar == null
               ? null
               : PreviewImage(url: avatar, cacheWidth: 216),
@@ -275,7 +275,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     header: true,
-    child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+    child: Text(text, style: Theme.of(context).textTheme.titleLarge),
   );
 }
 
@@ -324,13 +324,13 @@ class _SavedBadge extends StatelessWidget {
     final tone = StorizeColors.of(context).success;
     return PositionedDirectional(
       end: StorizeSpacing.s8,
-      top: StorizeSpacing.s8,
+      bottom: StorizeSpacing.s8,
       child: Semantics(
         label: l10n.prvSavedBadge,
         child: DecoratedBox(
           decoration: BoxDecoration(color: tone.color, shape: BoxShape.circle),
-          child: const Padding(
-            padding: EdgeInsetsDirectional.all(StorizeSpacing.s4),
+          child: const SizedBox.square(
+            dimension: 22,
             child: Icon(
               Icons.check_rounded,
               size: 16,
@@ -528,6 +528,7 @@ class _BottomBar extends StatelessWidget {
     final canSave = !state.loading && !state.saving;
     return Material(
       color: scheme.surfaceContainer,
+      shape: Border(top: BorderSide(color: scheme.outlineVariant)),
       child: SafeArea(
         top: false,
         child: Padding(
@@ -541,8 +542,9 @@ class _BottomBar extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: TonalButton(
+                    child: PrimaryButton(
                       label: l10n.prvSaveSelected(selected),
+                      icon: Icons.download_rounded,
                       expand: true,
                       onPressed: canSave && selected > 0
                           ? onSaveSelected
@@ -551,7 +553,7 @@ class _BottomBar extends StatelessWidget {
                   ),
                   const SizedBox(width: StorizeSpacing.s12),
                   Expanded(
-                    child: PrimaryButton(
+                    child: TonalButton(
                       label: state.saving ? l10n.prvSaving : l10n.prvSaveAll,
                       loading: state.saving,
                       expand: true,

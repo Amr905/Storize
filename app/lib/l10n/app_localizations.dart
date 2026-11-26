@@ -164,7 +164,7 @@ abstract class AppLocalizations {
   /// Screen title.
   ///
   /// In en, this message translates to:
-  /// **'Targets'**
+  /// **'Accounts'**
   String get screenTargets;
 
   /// Screen title.
@@ -1295,10 +1295,10 @@ abstract class AppLocalizations {
   /// **'Gallery folder'**
   String get storyInfoFolder;
 
-  /// S-01 headline.
+  /// S-01 supporting line under the headline.
   ///
   /// In en, this message translates to:
-  /// **'Save stories automatically, before they disappear.'**
+  /// **'Storize saves the stories and posts of the accounts you choose, straight to your gallery, in the background.'**
   String get onbWelcomeTagline;
 
   /// S-01 risk card title.
@@ -3424,6 +3424,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Appearance'**
   String get setThemeSemantics;
+
+  /// S-01 headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories disappear.\nYours don\'t have to.'**
+  String get onbWelcomeHeadline;
+
+  /// S-01 promise row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get onbPromiseAutoTitle;
+
+  /// S-01 promise row text.
+  ///
+  /// In en, this message translates to:
+  /// **'New stories and posts are saved as they appear.'**
+  String get onbPromiseAutoBody;
+
+  /// S-01 promise row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Only who you choose'**
+  String get onbPromiseChooseTitle;
+
+  /// S-01 promise row text.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize saves the accounts you add, nothing else.'**
+  String get onbPromiseChooseBody;
+
+  /// S-01 promise row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays on your phone'**
+  String get onbPromisePrivateTitle;
+
+  /// S-01 promise row text.
+  ///
+  /// In en, this message translates to:
+  /// **'No servers. Your login never leaves the device.'**
+  String get onbPromisePrivateBody;
+
+  /// S-09 heading above the saved stories and posts grid.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get tdtSavedTitle;
+
+  /// S-06 chip over the media: the saved file's gallery folder.
+  ///
+  /// In en, this message translates to:
+  /// **'In your gallery · Pictures/Storize/{username}'**
+  String storyInGallery(String username);
 }
 
 class _AppLocalizationsDelegate

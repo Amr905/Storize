@@ -368,6 +368,48 @@ class _StoryViewerPageState extends ConsumerState<StoryViewerPage> {
                   ),
                 ),
               ),
+              // The file is already saved: say where it lives.
+              if (media?.status == MediaFileStatus.done)
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    StorizeSpacing.s16,
+                    StorizeSpacing.s8,
+                    StorizeSpacing.s16,
+                    0,
+                  ),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: DecoratedBox(
+                      key: const ValueKey('story-in-gallery'),
+                      decoration: BoxDecoration(
+                        color: colors.mediaScrim,
+                        borderRadius: StorizeRadii.chipRadius,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: StorizeSpacing.s12,
+                          vertical: StorizeSpacing.s8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_rounded, size: 16, color: onScrim),
+                            const SizedBox(width: StorizeSpacing.s8),
+                            Flexible(
+                              child: Text(
+                                l10n.storyInGallery(username),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: onScrim),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               // Link stickers, when the story has any.
               for (final url in links)
                 Padding(

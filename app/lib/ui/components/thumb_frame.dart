@@ -117,8 +117,8 @@ class ThumbFrame extends StatelessWidget {
             ),
           if (selectionMode)
             PositionedDirectional(
-              start: StorizeSpacing.s8,
-              top: StorizeSpacing.s8,
+              end: StorizeSpacing.s8,
+              bottom: StorizeSpacing.s8,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,

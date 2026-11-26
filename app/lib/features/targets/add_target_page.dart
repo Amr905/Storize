@@ -176,7 +176,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
     );
     OutlineInputBorder border(Color color, {double width = 1}) =>
         OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           borderSide: BorderSide(color: color, width: width),
         );
 
@@ -214,34 +214,59 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                 ),
               Text(l10n.tgtUsernameLabel, style: labelStyle),
               const SizedBox(height: StorizeSpacing.s12),
-              TextField(
-                controller: _username,
-                enabled: !verifying,
-                autocorrect: false,
-                enableSuggestions: false,
-                textInputAction: TextInputAction.next,
-                onChanged: notifier.setUsername,
-                decoration: InputDecoration(
-                  hintText: l10n.tgtUsernameHint,
-                  prefixText: '@ ',
-                  prefixStyle: textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _username,
+                      enabled: !verifying,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: TextInputAction.next,
+                      onChanged: notifier.setUsername,
+                      decoration: InputDecoration(
+                        hintText: l10n.tgtUsernameHint,
+                        prefixText: '@ ',
+                        prefixStyle: textTheme.bodyLarge?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        contentPadding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: StorizeSpacing.s16,
+                          vertical: 17,
+                        ),
+                        enabledBorder: border(
+                          usernameError == null
+                              ? Colors.transparent
+                              : scheme.error,
+                          width: usernameError == null ? 0 : 2,
+                        ),
+                        focusedBorder: border(
+                          usernameError == null ? scheme.primary : scheme.error,
+                          width: 2,
+                        ),
+                        disabledBorder: border(Colors.transparent, width: 0),
+                        errorBorder: border(scheme.error),
+                        focusedErrorBorder: border(scheme.error, width: 2),
+                      ),
+                    ),
                   ),
-                  contentPadding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: StorizeSpacing.s16,
-                    vertical: StorizeSpacing.s20,
+                  const SizedBox(width: StorizeSpacing.s8),
+                  // FR-74: look at the account before adding it.
+                  TonalButton(
+                    label: l10n.prvPreviewButton,
+                    icon: Icons.visibility_outlined,
+                    onPressed:
+                        sessionActive && !verifying && form.normalized != null
+                        ? () => unawaited(
+                            PreviewPage.open(
+                              context,
+                              PreviewArgs(username: form.normalized!),
+                            ),
+                          )
+                        : null,
                   ),
-                  enabledBorder: border(
-                    usernameError == null ? scheme.outline : scheme.error,
-                  ),
-                  focusedBorder: border(
-                    usernameError == null ? scheme.primary : scheme.error,
-                    width: 2,
-                  ),
-                  disabledBorder: border(scheme.outline),
-                  errorBorder: border(scheme.error),
-                  focusedErrorBorder: border(scheme.error, width: 2),
-                ),
+                ],
               ),
               if (usernameError != null)
                 _ErrorText(
@@ -281,11 +306,7 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                             bottom: StorizeSpacing.s12,
                           ),
                           child: Material(
-                            color: form.category == c
-                                ? scheme.primaryContainer.withValues(
-                                    alpha: 0.35,
-                                  )
-                                : scheme.surfaceContainerLowest,
+                            color: scheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(14),
@@ -293,7 +314,8 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                               side: BorderSide(
                                 color: form.category == c
                                     ? scheme.primary
-                                    : scheme.outline,
+                                    : scheme.outlineVariant,
+                                width: form.category == c ? 2 : 1,
                               ),
                             ),
                             child: RadioListTile<TargetCategory>(
@@ -403,40 +425,13 @@ class _AddTargetPageState extends ConsumerState<AddTargetPage> {
                     tone: StorizeColors.of(context).error,
                   ),
                 ),
-              Row(
-                children: [
-                  // FR-74: look at the account before adding it.
-                  Expanded(
-                    child: TonalButton(
-                      label: l10n.prvPreviewButton,
-                      icon: Icons.visibility_outlined,
-                      expand: true,
-                      onPressed:
-                          sessionActive && !verifying && form.normalized != null
-                          ? () => unawaited(
-                              PreviewPage.open(
-                                context,
-                                PreviewArgs(username: form.normalized!),
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: StorizeSpacing.s12),
-                  Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: verifying
-                          ? l10n.tgtVerifying
-                          : l10n.tgtAddAndVerify,
-                      loading: verifying,
-                      expand: true,
-                      onPressed: sessionActive && !verifying
-                          ? () => unawaited(_submit())
-                          : null,
-                    ),
-                  ),
-                ],
+              PrimaryButton(
+                label: verifying ? l10n.tgtVerifying : l10n.tgtAddAndVerify,
+                loading: verifying,
+                expand: true,
+                onPressed: sessionActive && !verifying
+                    ? () => unawaited(_submit())
+                    : null,
               ),
             ],
           ),
