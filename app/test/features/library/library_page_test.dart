@@ -29,7 +29,8 @@ void main() {
       expect(size.width / size.height, closeTo(9 / 16, 0.02));
       expect(find.byType(PostThumb), findsNothing);
       expect(find.text('0:12'), findsOneWidget);
-      expect(find.text('3 new'), findsOneWidget);
+      // The segment badge and the account header both say "3 new".
+      expect(find.text('3 new'), findsWidgets);
       expect(find.text('Today'), findsWidgets);
       expect(find.text('Yesterday'), findsWidgets);
     });

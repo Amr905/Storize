@@ -29,7 +29,7 @@ void main() {
       final h = await pumpApp(t);
       expect(h.location, '/library');
       expect(find.byType(NavigationDestination), findsNWidgets(4));
-      for (final label in ['Library', 'Targets', 'Activity', 'Settings']) {
+      for (final label in ['Library', 'Accounts', 'Activity', 'Settings']) {
         expect(
           find.descendant(
             of: find.byType(NavigationBar),
@@ -179,7 +179,7 @@ void main() {
         await t.pumpAndSettle();
       }
 
-      await tapTab('Targets');
+      await tapTab('Accounts');
       await h.push('/targets/9');
       expect(_target(9), findsOneWidget);
 
@@ -187,12 +187,12 @@ void main() {
       expect(find.byType(LibraryPage), findsOneWidget);
       expect(_target(9), findsNothing);
 
-      await tapTab('Targets');
+      await tapTab('Accounts');
       expect(_target(9), findsOneWidget);
       expect(h.location, '/targets/9');
 
       // Tapping the active tab pops back to its root.
-      await tapTab('Targets');
+      await tapTab('Accounts');
       expect(find.byType(TargetsPage), findsOneWidget);
       expect(_target(9), findsNothing);
     });

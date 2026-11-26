@@ -511,4 +511,30 @@ void main() {
       ],
     ),
   );
+
+  goldenBoth(
+    'kind_switch_highlights',
+    (_) => KindSwitch(
+      selected: LibraryKind.stories,
+      highlightsSelected: true,
+      storiesLabel: 'Stories',
+      postsLabel: 'Posts',
+      highlightsLabel: 'Highlights',
+      storiesCount: 12,
+      onChanged: (_) {},
+      onHighlights: () {},
+    ),
+  );
+
+  goldenBoth(
+    'storize_mark',
+    (_) => Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: const [
+        StorizeMark(dark: false, size: 96),
+        StorizeMark(dark: true, size: 96),
+        StorizeMark(size: 48),
+      ],
+    ),
+  );
 }

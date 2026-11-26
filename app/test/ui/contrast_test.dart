@@ -68,11 +68,41 @@ List<_Pair> _pairs(ColorScheme s, StorizeColors c) {
       c.onMediaScrim,
       Color.alphaBlend(c.mediaScrim, const Color(0xFF000000)),
     ),
-    // KindSwitch unselected count badge.
+    // Brand v2 pairs.
     (
-      'surface on onSurfaceVariant (count badge)',
-      s.surface,
+      'accent on accent-container ("N new" badge)',
+      c.accent.color,
+      c.accent.container,
+    ),
+    ('accent on surface', c.accent.color, s.surface),
+    (
+      'onSurface on surfaceContainerHigh (status pill)',
+      s.onSurface,
+      s.surfaceContainerHigh,
+    ),
+    (
+      'onSurfaceVariant on surfaceContainerHigh',
       s.onSurfaceVariant,
+      s.surfaceContainerHigh,
+    ),
+    (
+      'onPrimary on brand-pressed (pressed button)',
+      s.onPrimary,
+      c.brandPressed,
+    ),
+    (
+      'onSurface on primaryContainer (selected chip)',
+      s.onSurface,
+      s.primaryContainer,
+    ),
+    ('neutral-status on surface', c.neutralStatus.color, s.surface),
+    ('success on surfaceContainer', c.success.color, s.surfaceContainer),
+    ('warning on surfaceContainer', c.warning.color, s.surfaceContainer),
+    ('error on surfaceContainer', c.error.color, s.surfaceContainer),
+    (
+      'onSurface on surfaceContainerHigh (input)',
+      s.onSurface,
+      s.surfaceContainerHigh,
     ),
   ];
 }
