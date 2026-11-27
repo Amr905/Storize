@@ -32,6 +32,7 @@ class ViewerGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => throw UnimplementedError('not used by S-06');
 
   @override
@@ -46,6 +47,25 @@ class ViewerGallery implements GalleryStore {
   @override
   Future<int?> size(String contentUri) async =>
       files.contains(contentUri) ? 512 * 1024 : null;
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
 }
 
 /// A video player that never touches the platform.

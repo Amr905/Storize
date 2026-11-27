@@ -29,6 +29,7 @@ final class HookGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => inner.save(
     sourcePath: sourcePath,
     relativeDir: relativeDir,
@@ -38,6 +39,24 @@ final class HookGallery implements GalleryStore {
 
   @override
   Future<int?> size(String u) => inner.size(u);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }
 
 /// A [ContentRepo] whose `deleteByIds` throws once (the process "dies" after
@@ -424,6 +443,7 @@ final class _FailSecond implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => inner.save(
     sourcePath: sourcePath,
     relativeDir: relativeDir,
@@ -433,4 +453,22 @@ final class _FailSecond implements GalleryStore {
 
   @override
   Future<int?> size(String u) => inner.size(u);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }

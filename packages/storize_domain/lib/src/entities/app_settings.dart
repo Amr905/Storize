@@ -87,6 +87,7 @@ final class AppSettings {
     this.themeMode = AppThemeMode.system,
     this.notificationMode = NotificationMode.perItem,
     this.summaryTime = SummaryTime.defaultTime,
+    this.hideFromGallery = false,
   });
 
   /// Allowed story check intervals in minutes (BR-5).
@@ -150,6 +151,11 @@ final class AppSettings {
   /// The local time of the daily summary (FR-78). Used in daily mode only.
   final SummaryTime summaryTime;
 
+  /// Save new downloads to Storize's private storage instead of the phone
+  /// gallery (FR-79). Files already saved stay where they are until the user
+  /// moves them.
+  final bool hideFromGallery;
+
   /// The rule violations of these settings, one message each. Empty when the
   /// settings are valid. `SettingsRepo` implementations reject invalid
   /// settings with these messages.
@@ -183,6 +189,7 @@ final class AppSettings {
     AppThemeMode? themeMode,
     NotificationMode? notificationMode,
     SummaryTime? summaryTime,
+    bool? hideFromGallery,
   }) => AppSettings(
     storyIntervalMin: storyIntervalMin ?? this.storyIntervalMin,
     postIntervalMin: postIntervalMin ?? this.postIntervalMin,
@@ -205,6 +212,7 @@ final class AppSettings {
     themeMode: themeMode ?? this.themeMode,
     notificationMode: notificationMode ?? this.notificationMode,
     summaryTime: summaryTime ?? this.summaryTime,
+    hideFromGallery: hideFromGallery ?? this.hideFromGallery,
   );
 
   @override
@@ -225,7 +233,8 @@ final class AppSettings {
           other.lastUpdateCheckAt == lastUpdateCheckAt &&
           other.themeMode == themeMode &&
           other.notificationMode == notificationMode &&
-          other.summaryTime == summaryTime);
+          other.summaryTime == summaryTime &&
+          other.hideFromGallery == hideFromGallery);
 
   @override
   int get hashCode => Object.hash(
@@ -244,6 +253,7 @@ final class AppSettings {
     themeMode,
     notificationMode,
     summaryTime,
+    hideFromGallery,
   );
 
   @override

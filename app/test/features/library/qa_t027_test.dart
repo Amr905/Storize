@@ -48,6 +48,7 @@ class SpyGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => inner.save(
     sourcePath: sourcePath,
     relativeDir: relativeDir,
@@ -57,6 +58,25 @@ class SpyGallery implements GalleryStore {
 
   @override
   Future<int?> size(String contentUri) => inner.size(contentUri);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
 }
 
 /// Fails the gallery delete for the listed URIs.

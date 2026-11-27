@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:storize_domain/src/exceptions.dart';
@@ -16,7 +17,17 @@ final class FakeGalleryStore implements GalleryStore {
   ///
   /// With a [cache], a source path produced by it reports the cached byte
   /// count.
-  FakeGalleryStore({this.defaultSizeBytes = 1024, this.cache});
+  FakeGalleryStore({
+    this.defaultSizeBytes = 1024,
+    this.cache,
+    this.onOperation,
+  });
+
+  /// Called at the start of `save`, `copyTo` and `delete` (before they change
+  /// anything) with the operation name and the reference, so a test can look
+  /// at other state at that moment (for example the stored row).
+  final FutureOr<void> Function(String operation, String? contentUri)?
+  onOperation;
 
   /// The cache whose fake part paths this store understands, if any.
   final FakeMediaCache? cache;
@@ -30,10 +41,22 @@ final class FakeGalleryStore implements GalleryStore {
   GalleryStoreException? _nextDeleteError;
   GalleryStoreException? _nextExistsError;
   GalleryStoreException? _nextSizeError;
+  GalleryStoreException? _nextCopyError;
+  int _copyAfter = 0;
   int _counter = 0;
 
   /// The files that currently exist, in save order.
   List<GalleryFile> get files => List.unmodifiable(_files.values);
+
+  /// The files that currently exist in private storage.
+  List<GalleryFile> get privateFiles => List.unmodifiable(
+    _files.values.where((f) => storageTargetOf(f.uri) == StorageTarget.private),
+  );
+
+  /// The files that currently exist in the gallery.
+  List<GalleryFile> get galleryFiles => List.unmodifiable(
+    _files.values.where((f) => storageTargetOf(f.uri) == StorageTarget.gallery),
+  );
 
   /// Every file ever saved, including ones deleted later.
   List<GalleryFile> get saved => List.unmodifiable(_saved);
@@ -73,13 +96,27 @@ final class FakeGalleryStore implements GalleryStore {
   // ignore: use_setters_to_change_properties, a verb reads better in tests.
   void failNextSize(GalleryStoreException error) => _nextSizeError = error;
 
+  /// Makes a `copyTo` throw [error] once, after [after] successful copies
+  /// (default: the next one). Models a full disk or a failed verification.
+  void failNextCopy(GalleryStoreException error, {int after = 0}) {
+    _nextCopyError = error;
+    _copyAfter = after;
+  }
+
+  String _newUri(StorageTarget target) => switch (target) {
+    StorageTarget.gallery => 'content://fake/media/${++_counter}',
+    StorageTarget.private => 'file:///fake/private/${++_counter}',
+  };
+
   @override
   Future<GalleryFile> save({
     required String sourcePath,
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) async {
+    await onOperation?.call('save', null);
     final error = _nextSaveError;
     if (error != null) {
       _nextSaveError = null;
@@ -91,7 +128,7 @@ final class FakeGalleryStore implements GalleryStore {
         cache?.sizeOfPath(sourcePath) ??
         (source.existsSync() ? source.lengthSync() : defaultSizeBytes);
     final file = GalleryFile(
-      uri: 'content://fake/media/${++_counter}',
+      uri: _newUri(target),
       sizeBytes: size,
       relativePath: relativeDir,
       displayName: displayName,
@@ -102,7 +139,61 @@ final class FakeGalleryStore implements GalleryStore {
   }
 
   @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) async {
+    await onOperation?.call('copy', contentUri);
+    final error = _nextCopyError;
+    if (error != null) {
+      if (_copyAfter == 0) {
+        _nextCopyError = null;
+        throw error;
+      }
+      _copyAfter -= 1;
+    }
+    final original = _files[contentUri];
+    if (original == null) throw const GalleryWriteFailed('SOURCE_NOT_FOUND');
+    final file = GalleryFile(
+      uri: _newUri(to),
+      sizeBytes: original.sizeBytes,
+      relativePath: relativeDir,
+      displayName: displayName,
+    );
+    _files[file.uri] = file;
+    _saved.add(file);
+    return file;
+  }
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) async {
+    final copy = await copyTo(
+      contentUri,
+      to: to,
+      relativeDir: relativeDir,
+      displayName: displayName,
+      mime: mime,
+    );
+    try {
+      await delete(contentUri);
+    } on GalleryStoreException {
+      // The copy is verified: keep it, leave the original.
+    }
+    return copy;
+  }
+
+  @override
   Future<bool> delete(String contentUri) async {
+    await onOperation?.call('delete', contentUri);
     final error = _nextDeleteError;
     if (error != null) {
       _nextDeleteError = null;

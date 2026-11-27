@@ -60,6 +60,9 @@ abstract final class SettingsKeys {
   /// FR-78).
   static const String summaryTime = 'storize.summaryTime';
 
+  /// Save new downloads to private storage (bool, FR-79).
+  static const String hideFromGallery = 'storize.hideFromGallery';
+
   /// The key of every [AppSettings] field, keyed by the field name.
   static const Map<String, String> byField = {
     'storyIntervalMin': storyIntervalMin,
@@ -77,6 +80,7 @@ abstract final class SettingsKeys {
     'themeMode': themeMode,
     'notificationMode': notificationMode,
     'summaryTime': summaryTime,
+    'hideFromGallery': hideFromGallery,
   };
 }
 
@@ -217,6 +221,10 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
         stored[SettingsKeys.notificationMode],
       ),
       summaryTime: _summaryTime(stored[SettingsKeys.summaryTime]),
+      hideFromGallery: _bool(
+        stored[SettingsKeys.hideFromGallery],
+        defaults.hideFromGallery,
+      ),
     );
   }
 
@@ -284,6 +292,9 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
         SettingsKeys.summaryTime,
         to.summaryTime.minuteOfDay,
       );
+    }
+    if (from.hideFromGallery != to.hideFromGallery) {
+      await _prefs.setBool(SettingsKeys.hideFromGallery, to.hideFromGallery);
     }
   }
 

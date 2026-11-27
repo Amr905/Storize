@@ -33,6 +33,7 @@ final class HookGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) async {
     saveCalls++;
     await beforeSave?.call();
@@ -54,6 +55,24 @@ final class HookGallery implements GalleryStore {
 
   @override
   Future<int?> size(String contentUri) => inner.size(contentUri);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }
 
 /// A cache whose `discard` can crash.
