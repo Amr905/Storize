@@ -51,6 +51,13 @@ class StorizePlatformPlugin :
                             }
                         "delete" -> background(result) { media.delete(call.argument<String>("uri")) }
                         "exists" -> background(result) { media.exists(call.argument<String>("uri")) }
+                        "exportToFile" ->
+                            background(result) {
+                                media.exportToFile(
+                                    call.argument<String>("uri"),
+                                    call.argument<String>("destPath"),
+                                )
+                            }
                         "findByName" ->
                             background(result) {
                                 media.findByName(

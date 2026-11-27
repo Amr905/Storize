@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:storize_data/files/files.dart';
 import 'package:storize_platform_android/storize_platform_android.dart';
 
 import 'plugin_rules.dart';
 
 class FakeRow {
-  FakeRow(this.size, this.relativePath, this.displayName);
+  FakeRow(this.size, this.relativePath, this.displayName, [this.bytes]);
   final int size;
+
+  /// The content, when the row was made from a real file.
+  final List<int>? bytes;
   final String relativePath;
   final String displayName;
 }
@@ -45,6 +49,17 @@ class FakeNativeMedia {
   /// Total bytes reported by `storageStats`.
   int totalBytes = 64 * 1024 * 1024 * 1024;
 
+  /// After an `exportToFile`, change the written file so it differs from the
+  /// source (the reported hash stays that of the source).
+  bool corruptExport = false;
+
+  /// After an `insert`, store different bytes than the source had (a bad
+  /// copy that the size check does not see).
+  bool corruptInsert = false;
+
+  /// Throw this on the next call of the named method only.
+  final Map<String, PlatformException> failMethod = {};
+
   /// Throw this on the next call.
   PlatformException? failNext;
   int _next = 0;
@@ -58,6 +73,8 @@ class FakeNativeMedia {
       failNext = null;
       throw err;
     }
+    final methodErr = failMethod.remove(call.method);
+    if (methodErr != null) throw methodErr;
     if (call.method == 'storageStats') {
       return {'freeBytes': freeBytes, 'totalBytes': totalBytes};
     }
@@ -96,10 +113,16 @@ class FakeNativeMedia {
           finalName = '$base (${++i})$ext';
         }
         final size = source.lengthSync();
+        final content = source.readAsBytesSync();
         final uri =
             'content://media/external/${isVideo ? 'video' : 'images'}'
             '/media/${++_next}';
-        rows[uri] = FakeRow(size, path, finalName);
+        rows[uri] = FakeRow(
+          size,
+          path,
+          finalName,
+          corruptInsert ? [for (final b in content) b ^ 0xff] : content,
+        );
         return {
           'uri': uri,
           'size': size,
@@ -112,6 +135,28 @@ class FakeNativeMedia {
         return rows.containsKey(args['uri']);
       case 'size':
         return rows[args['uri']]?.size;
+      case 'readBytes':
+        final bytes = rows[args['uri']]?.bytes;
+        if (bytes == null || bytes.length > (args['maxBytes']! as int)) {
+          return null;
+        }
+        return Uint8List.fromList(bytes);
+      case 'exportToFile':
+        final row = rows[args['uri']];
+        final bytes = row?.bytes;
+        if (row == null || bytes == null) {
+          throw PlatformException(
+            code: 'SOURCE_NOT_FOUND',
+            message: 'missing /data/secret/path',
+          );
+        }
+        File(args['destPath']! as String).writeAsBytesSync(
+          corruptExport ? [for (final b in bytes) b ^ 0xff] : bytes,
+        );
+        return {
+          'size': bytes.length,
+          'sha256': PrivateFiles.sha256OfBytes(bytes),
+        };
     }
     throw MissingPluginException(call.method);
   }

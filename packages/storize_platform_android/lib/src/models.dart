@@ -27,6 +27,18 @@ class InsertedMedia {
   final String? relativePath;
 }
 
+/// Result of `exportToFile`: what was written.
+@immutable
+class ExportedFile {
+  const ExportedFile({required this.size, required this.sha256});
+
+  /// Bytes written.
+  final int size;
+
+  /// SHA-256 of the bytes that were read from the source, lower-case hex.
+  final String sha256;
+}
+
 /// Which screen `openBatterySettings` ended up opening.
 enum BatterySettingsTarget {
   /// The system "allow this app to ignore battery optimizations" dialog.

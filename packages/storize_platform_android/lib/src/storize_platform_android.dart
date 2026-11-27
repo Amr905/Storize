@@ -100,6 +100,25 @@ class StorizePlatformAndroid {
     throw _bad('readBytes', value);
   }
 
+  /// Streams the file this app saved at [uri] (a `content://media/` URI) into
+  /// [destPath], a file inside this app's private pictures folder
+  /// (`getExternalFilesDir(Pictures)/Storize/...`, FR-79). Returns the bytes
+  /// written and their SHA-256. The native side removes a partial file on
+  /// failure. A missing source is a `sourceNotFound` error.
+  Future<ExportedFile> exportToFile({
+    required String uri,
+    required String destPath,
+  }) async {
+    final map = await _call<Map<Object?, Object?>>(_media, 'exportToFile', {
+      'uri': uri,
+      'destPath': destPath,
+    });
+    final size = map?['size'];
+    final sha = map?['sha256'];
+    if (size is! int || sha is! String) throw _bad('exportToFile', map);
+    return ExportedFile(size: size, sha256: sha);
+  }
+
   /// Finds a finished file this app saved under `Storize/<relativeDir>/` with
   /// exactly [displayName], or null. Only files the app owns are returned.
   /// Used to adopt a file saved just before a kill (NFR-7).

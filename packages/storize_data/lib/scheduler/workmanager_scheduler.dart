@@ -30,7 +30,11 @@ abstract interface class DownloadEnqueuer {
 /// needed for that; a force-stop clears the work and the next start of the
 /// app registers it again).
 final class WorkmanagerScheduler
-    implements Scheduler, DownloadEnqueuer, DailySummaryScheduler {
+    implements
+        Scheduler,
+        DownloadEnqueuer,
+        DailySummaryScheduler,
+        MoveScheduler {
   /// Creates the scheduler.
   // ignore: prefer_initializing_formals, a private field behind a public name.
   WorkmanagerScheduler(this._client, {DiagnosticLog? log}) : _log = log;
@@ -165,6 +169,27 @@ final class WorkmanagerScheduler
 
   @override
   Future<void> cancelAll() => _client.cancelAll();
+
+  @override
+  Future<void> enqueueMove(
+    StorageTarget target, {
+    bool rollover = false,
+  }) => _client.registerOneOff(
+    TaskNames.moveLibrary,
+    TaskNames.moveLibrary,
+    // No network and no storage constraint: a full device should give the
+    // user a clear "storage full" result, not a task that never starts.
+    constraints: Constraints(networkType: NetworkType.notRequired),
+    // A user start replaces a queued or running move (it is resumable); a
+    // roll-over queues after the run that is ending.
+    policy: rollover ? ExistingWorkPolicy.append : ExistingWorkPolicy.replace,
+    inputData: {TaskNames.inputMoveTarget: target.name},
+    expedited: !rollover,
+  );
+
+  @override
+  Future<void> cancelMove() =>
+      _client.cancelByUniqueName(TaskNames.moveLibrary);
 
   @override
   Future<void> schedule({

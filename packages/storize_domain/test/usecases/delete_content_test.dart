@@ -4,6 +4,7 @@ import 'package:test/test.dart';
 import 'harness.dart';
 
 void main() {
+  privateStorageTests();
   late Harness h;
   late Target t;
   setUp(() async {
@@ -179,4 +180,37 @@ void main() {
       expect(h.gallery.files, hasLength(1));
     },
   );
+}
+
+void privateStorageTests() {
+  test('FR-79: deletes private files and retention reaches them too', () async {
+    final h = Harness();
+    final t = await h.addTarget();
+    final now = h.clock.now();
+    final old = now.subtract(const Duration(days: 40));
+    final id = await h.addContent(
+      t,
+      remoteId: 'old',
+      postedAt: old,
+      detectedAt: old,
+      downloadedAt: old,
+    );
+    final row = (await h.content.getById(id))!.media.single;
+    final moved = await h.gallery.copyTo(
+      row.contentUri!,
+      to: StorageTarget.private,
+      relativeDir: 'a',
+      displayName: 'x.jpg',
+      mime: 'image/jpeg',
+    );
+    await h.gallery.delete(row.contentUri!);
+    await h.content.updateMediaFile(row.copyWith(contentUri: moved.uri));
+    expect(h.gallery.privateFiles, hasLength(1));
+
+    final result = await h.deleteContent([id]);
+
+    expect(result.deletedContentIds, [id]);
+    expect(h.gallery.privateFiles, isEmpty);
+    expect(await h.content.getById(id), isNull);
+  });
 }
