@@ -161,7 +161,7 @@ Future<GoRouter> pumpSettings(
   WidgetTester tester,
   SettingsRig rig, {
   Brightness brightness = Brightness.light,
-  Size size = const Size(400, 1400),
+  Size size = const Size(400, 1700),
   SettingsSection? section,
   List<Override> extra = const [],
 }) async {

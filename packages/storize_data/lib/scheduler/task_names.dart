@@ -26,6 +26,10 @@ abstract final class TaskNames {
   /// re-schedules itself.
   static const String dailySummary = 'daily-summary';
 
+  /// One-off move of the saved files between the gallery and private storage
+  /// (FR-79). Resumable; queues itself again when its time budget runs out.
+  static const String moveLibrary = 'move-library';
+
   /// Periodic retention (24 h).
   static const String retention = 'retention';
 
@@ -41,7 +45,11 @@ abstract final class TaskNames {
     retention,
     updateCheck,
     dailySummary,
+    moveLibrary,
   };
+
+  /// Input-data key of `move-library`: the `StorageTarget` name to move to.
+  static const String inputMoveTarget = 'moveTarget';
 
   /// Input-data key: the target ID of a one-target manual check.
   static const String inputTargetId = 'targetId';

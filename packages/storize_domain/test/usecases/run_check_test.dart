@@ -659,10 +659,7 @@ void main() {
         RateLimited(Duration(minutes: 15)),
       );
       await h.go(CheckScope.posts);
-      expect(
-        (await h.targets.getById(t.id))!.lastCheckOutcome,
-        isNull,
-      );
+      expect((await h.targets.getById(t.id))!.lastCheckOutcome, isNull);
     });
 
     test('a story batch failure marks every target in it', () async {

@@ -38,6 +38,11 @@ typedef DisplayNameBuilder = String Function({
 /// The signature matches `relativeDirFor` in `storize_data`.
 typedef RelativeDirBuilder = String Function(String username);
 
+/// Where new files are saved right now (FR-79): the gallery, or private
+/// storage when the user hides Storize's files from it. Read before every
+/// save, so a changed setting applies to the next file.
+typedef StorageTargetResolver = Future<StorageTarget> Function();
+
 /// Looks up a file that is already in the gallery folder [relativeDir] under
 /// [displayName], or returns null.
 ///
@@ -295,6 +300,7 @@ final class DownloadPending {
     required DisplayNameBuilder displayName,
     required RelativeDirBuilder relativeDir,
     GalleryFileFinder? findExisting,
+    StorageTargetResolver? storageTarget,
     String? holder,
     this.budget = const Duration(minutes: 8),
   }) : _content = content,
@@ -309,7 +315,8 @@ final class DownloadPending {
        _holder = holder ?? _uniqueHolder(clock),
        _displayName = displayName,
        _relativeDir = relativeDir,
-       _find = findExisting;
+       _find = findExisting,
+       _storageTarget = storageTarget;
 
   /// The default time budget of a run (TECH_SPEC §1, "10-minute rule").
   final Duration budget;
@@ -329,6 +336,7 @@ final class DownloadPending {
   final DisplayNameBuilder _displayName;
   final RelativeDirBuilder _relativeDir;
   final GalleryFileFinder? _find;
+  final StorageTargetResolver? _storageTarget;
   final GovernorLeaseRepo _leases;
   final String _holder;
 
@@ -659,9 +667,22 @@ final class DownloadPending {
       relativeDir: relativeDir,
       displayName: name,
       mime: photo ? 'image/jpeg' : 'video/mp4',
+      target: await _target(),
     );
     await _markDone(file, saved, content, s, track);
     return const _Ok();
+  }
+
+  /// The storage for the next file. A failing setting read means the default
+  /// (the gallery): a download must not stop because of it.
+  Future<StorageTarget> _target() async {
+    final resolve = _storageTarget;
+    if (resolve == null) return StorageTarget.gallery;
+    try {
+      return await resolve();
+    } on Object {
+      return StorageTarget.gallery;
+    }
   }
 
   /// Ends [src] cleanly once the deadline has passed (checked per chunk).

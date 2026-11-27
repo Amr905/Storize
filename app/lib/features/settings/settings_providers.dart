@@ -37,6 +37,26 @@ final settingsStorageProvider = FutureProvider<StorageReport>(
   ).call(),
 );
 
+/// The progress of moving the saved files (FR-79), re-read every second while
+/// a move runs and once otherwise. Call `ref.invalidate` after starting or
+/// stopping a move. [MoveProgress.none] when moving is not wired.
+final StreamProvider<MoveProgress> moveProgressProvider =
+    StreamProvider.autoDispose<MoveProgress>((
+      ref,
+    ) async* {
+      final store = ref.watch(moveStateStoreProvider);
+      if (store == null) {
+        yield MoveProgress.none;
+        return;
+      }
+      while (true) {
+        final progress = await store.read();
+        yield progress;
+        if (progress.status != MoveStatus.running) return;
+        await Future<void>.delayed(const Duration(seconds: 1));
+      }
+    });
+
 /// The installed version shown in S-12 and compared by the update check.
 ///
 /// The default matches `pubspec.yaml`. Production should override it with
@@ -156,6 +176,55 @@ class SettingsActions {
   /// The daily summary time (FR-78). Re-schedules the daily summary run.
   Future<void> setSummaryTime(SummaryTime time) =>
       _rescheduleSummary((s) => s.copyWith(summaryTime: time));
+
+  /// Hide from phone gallery (FR-79): new downloads go to private storage
+  /// (`on`) or back to the gallery. Files already saved stay where they are.
+  /// Returns how many saved files are not yet where the setting now says
+  /// (what "Move N saved files now?" offers to move).
+  Future<int> setHideFromGallery({required bool on}) async {
+    await _settings.update((s) => s.copyWith(hideFromGallery: on));
+    final move = _ref.read(moveLibraryProvider);
+    if (move == null) return 0;
+    try {
+      return await move.countToMove(
+        on ? StorageTarget.private : StorageTarget.gallery,
+      );
+    } on Object {
+      return 0;
+    }
+  }
+
+  /// Starts (or resumes) moving the saved files to [target] in the
+  /// background. [total] is shown until the task reports its own count.
+  Future<void> startMove(StorageTarget target, {required int total}) async {
+    final store = _ref.read(moveStateStoreProvider);
+    final scheduler = _ref.read(moveSchedulerProvider);
+    if (store == null || scheduler == null) return;
+    await store.write(
+      MoveProgress(
+        status: MoveStatus.running,
+        target: target,
+        total: total,
+        updatedAt: _ref.read(clockProvider).now(),
+      ),
+    );
+    _ref.invalidate(moveProgressProvider);
+    await scheduler.enqueueMove(target);
+  }
+
+  /// Stops the move after the file it is working on. Files moved so far stay
+  /// moved and a later start continues.
+  Future<void> cancelMove() async {
+    await _ref.read(moveLibraryProvider)?.cancel();
+    await _ref.read(moveSchedulerProvider)?.cancelMove();
+    _ref.invalidate(moveProgressProvider);
+  }
+
+  /// Clears the message of a finished or stopped move.
+  Future<void> dismissMove() async {
+    await _ref.read(moveStateStoreProvider)?.write(MoveProgress.none);
+    _ref.invalidate(moveProgressProvider);
+  }
 
   /// Keep everything.
   Future<void> keepForever() =>

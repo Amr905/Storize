@@ -345,6 +345,35 @@ void runContentRepoContract(RepoHarness Function() create) {
       },
     );
 
+    test('updateMediaFileIfUri is a compare-and-set on contentUri', () async {
+      final id = await add(aContent(t1), [aFullMedia()]);
+      final stored = (await repo.getById(id))!.media.single;
+      final uri = stored.contentUri;
+      expect(uri, isNotNull);
+      final wrong = await repo.updateMediaFileIfUri(
+        stored.copyWith(contentUri: 'file:///a.jpg'),
+        expectedContentUri: 'content://other/1',
+      );
+      expect(wrong, isFalse);
+      expect((await repo.getById(id))!.media.single.contentUri, uri);
+      final right = await repo.updateMediaFileIfUri(
+        stored.copyWith(contentUri: 'file:///a.jpg'),
+        expectedContentUri: uri,
+      );
+      expect(right, isTrue);
+      expect(
+        (await repo.getById(id))!.media.single.contentUri,
+        'file:///a.jpg',
+      );
+      expect(
+        await repo.updateMediaFileIfUri(
+          aMedia().copyWith(id: 4321),
+          expectedContentUri: null,
+        ),
+        isFalse,
+      );
+    });
+
     test('updateMediaFile of an unknown id is a StateError', () async {
       await expectLater(
         repo.updateMediaFile(aMedia().copyWith(id: 4321)),

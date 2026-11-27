@@ -42,7 +42,19 @@ void main() {
         'themeMode': 'storize.themeMode',
         'notificationMode': 'storize.notificationMode',
         'summaryTime': 'storize.summaryTime',
+        'hideFromGallery': 'storize.hideFromGallery',
       });
+    });
+  });
+
+  group('FR-79 hideFromGallery', () {
+    test('defaults to false, persists and ignores a wrong type', () async {
+      expect((await repo.get()).hideFromGallery, isFalse);
+      await repo.update((s) => s.copyWith(hideFromGallery: true));
+      expect(await prefs.getBool('storize.hideFromGallery'), isTrue);
+      expect((await repo.get()).hideFromGallery, isTrue);
+      await prefs.setString('storize.hideFromGallery', 'yes');
+      expect((await repo.get()).hideFromGallery, isFalse);
     });
   });
 

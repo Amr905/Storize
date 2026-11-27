@@ -128,9 +128,7 @@ final class PreviewProfile {
         _info('stories failure=${_name(failure)}');
     }
 
-    final page = await _step(
-      () => _platform.fetchPostPage(id, policy: policy),
-    );
+    final page = await _step(() => _platform.fetchPostPage(id, policy: policy));
     var postItems = const <RemoteContent>[];
     Failure? postsFailure;
     switch (page) {

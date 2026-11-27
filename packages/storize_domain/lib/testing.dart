@@ -16,6 +16,7 @@ export 'src/testing/fake_gallery_store.dart';
 export 'src/testing/fake_governor_lease_repo.dart';
 export 'src/testing/fake_health_read_model.dart';
 export 'src/testing/fake_media_cache.dart';
+export 'src/testing/fake_move.dart';
 export 'src/testing/fake_scheduler.dart';
 export 'src/testing/fake_session_store.dart';
 export 'src/testing/fake_settings_repo.dart';

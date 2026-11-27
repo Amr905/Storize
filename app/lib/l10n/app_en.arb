@@ -2055,4 +2055,84 @@
   "@setNotifyModeOff": {"description": "Notification mode option: no content notifications."},
   "setSummaryTime": "Summary time",
   "@setSummaryTime": {"description": "S-12 row that sets the time of the daily summary (FR-78)."}
+  ,
+  "setStorageLocationPrivate": "Saved privately, only Storize shows them",
+  "@setStorageLocationPrivate": {"description": "S-12 info row when hide from phone gallery is on: files are in private storage (FR-79)."},
+  "setHideFromGallery": "Hide from phone gallery",
+  "@setHideFromGallery": {"description": "S-12 switch title (FR-79): new downloads go to private storage."},
+  "setHideFromGalleryHint": "Only Storize shows your saved files. Uninstalling Storize deletes them.",
+  "@setHideFromGalleryHint": {"description": "S-12 subtitle under the hide from phone gallery switch (FR-79). Must say that removing the app deletes the files."},
+  "setHideLockTip": "Tip: turn on App lock so Storize is protected too.",
+  "@setHideLockTip": {"description": "S-12 one-line suggestion shown under the switch when hiding is on and App lock is off (FR-79)."},
+  "hideMoveHideTitle": "{count, plural, one{Move 1 saved file now?} other{Move {count} saved files now?}}",
+  "@hideMoveHideTitle": {
+    "description": "Dialog title after turning hide from phone gallery on (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hideMoveHideBody": "They will disappear from Gallery and Photos and show only in Storize. Each file is copied and checked before the original is removed.",
+  "@hideMoveHideBody": {"description": "Dialog body after turning hide from phone gallery on (FR-79)."},
+  "hideMoveShowTitle": "{count, plural, one{Move 1 saved file back to the gallery?} other{Move {count} saved files back to the gallery?}}",
+  "@hideMoveShowTitle": {
+    "description": "Dialog title after turning hide from phone gallery off (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hideMoveShowBody": "They will show in Gallery and Photos again, in Pictures/Storize. Each file is copied and checked before the private copy is removed.",
+  "@hideMoveShowBody": {"description": "Dialog body after turning hide from phone gallery off (FR-79)."},
+  "hideMoveAction": "Move",
+  "@hideMoveAction": {"description": "Dialog button: move the saved files now (FR-79)."},
+  "hideMoveOnlyNew": "Only new downloads",
+  "@hideMoveOnlyNew": {"description": "Dialog button: leave saved files where they are; only new downloads follow the setting (FR-79)."},
+  "hideMoveProgress": "Moving files… {done} of {total}",
+  "@hideMoveProgress": {
+    "description": "S-12 progress row while the saved files are moved (FR-79).",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "hideMoveCancel": "Cancel",
+  "@hideMoveCancel": {"description": "S-12 progress row button: stop moving (files already moved stay moved) (FR-79)."},
+  "hideMoveInterrupted": "Move interrupted: {done} of {total} moved.",
+  "@hideMoveInterrupted": {
+    "description": "S-12 row when a move stopped without finishing, for example after the app was closed (FR-79).",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "hideMoveCancelled": "Move stopped: {done} of {total} moved.",
+  "@hideMoveCancelled": {
+    "description": "S-12 row after the user cancelled a move (FR-79).",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "hideMoveResume": "Resume",
+  "@hideMoveResume": {"description": "S-12 row button: continue an interrupted or stopped move (FR-79)."},
+  "hideMoveStorageFull": "Not enough space: {done} of {total} moved. Free some space, then resume.",
+  "@hideMoveStorageFull": {
+    "description": "S-12 row when a move stopped because the device is full (FR-79). Nothing was lost.",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "hideMoveDone": "{count, plural, one{1 file moved.} other{{count} files moved.}}",
+  "@hideMoveDone": {
+    "description": "S-12 row after a move finished (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hideMoveMissing": "{count, plural, one{1 file was already missing.} other{{count} files were already missing.}}",
+  "@hideMoveMissing": {
+    "description": "S-12 line: files whose original was gone (deleted elsewhere) were skipped (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hideMoveFailed": "{count, plural, one{1 file could not be moved and stays where it was.} other{{count} files could not be moved and stay where they were.}}",
+  "@hideMoveFailed": {
+    "description": "S-12 line: files that could not be moved; they were not changed (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hideMoveDismiss": "OK",
+  "@hideMoveDismiss": {"description": "S-12 button that clears the finished-move message (FR-79)."},
+  "ntfMoving": "Moving saved files… {done} of {total}",
+  "@ntfMoving": {
+    "description": "Silent notification while the saved files are moved (FR-79).",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "ntfMoveDone": "{count, plural, one{1 saved file moved} other{{count} saved files moved}}",
+  "@ntfMoveDone": {
+    "description": "Silent notification when the move finished (FR-79).",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "ntfMoveStorageFull": "Move paused: storage almost full. Nothing was lost.",
+  "@ntfMoveStorageFull": {"description": "Notification when the move stopped because the device is full (FR-79)."}
 }

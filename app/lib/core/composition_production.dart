@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart' show appFlavor;
 import 'package:flutter_riverpod/misc.dart';
+import 'package:storize_app/background/move_notifier.dart';
 import 'package:storize_app/core/composition.dart';
 import 'package:storize_app/core/discovery_secure_store.dart';
 import 'package:storize_app/core/foreground_db_refresher.dart';
@@ -91,10 +92,14 @@ Future<AppComposition> composeProduction({
     log: diagnostics.log,
   );
   final accounts = DriftAccountRepo(db);
-  final gallery = PluginGalleryStore(plugin);
+  final gallery = PluginGalleryStore(
+    plugin,
+    private: PrivateFiles.pathProvider(),
+  );
   final settings = SharedPrefsSettingsRepo();
+  final notificationPort = FlutterLocalNotificationsPort();
   final notifications = NotificationService(
-    port: FlutterLocalNotificationsPort(),
+    port: notificationPort,
     settings: settings,
     lookups: RepoNotificationLookups(
       targets: DriftTargetRepo(db),
@@ -122,7 +127,15 @@ Future<AppComposition> composeProduction({
     ),
     gallery: gallery,
     findExisting: gallery.findExisting,
-    fullPhotoReader: plugin.readBytes,
+    // Both kinds of reference: a gallery URI or a private `file://` path.
+    fullPhotoReader: gallery.readBytes,
+    moveState: SharedPrefsMoveStateStore(),
+    moveScheduler: scheduler,
+    moveNotifier: NotificationMoveNotifier(
+      port: notificationPort,
+      clock: const SystemClock(),
+      log: diagnostics.log,
+    ),
     cache: FileMediaCache.pathProvider(),
     storage: PluginStorageInfo(plugin),
     igHttp: DartIoHttp(),
@@ -232,6 +245,9 @@ List<Override> appOverrides(AppComposition c) => [
   savePreviewItemsProvider.overrideWithValue(c.savePreviewItems),
   clockProvider.overrideWithValue(c.clock),
   galleryStoreProvider.overrideWithValue(c.parts.gallery),
+  moveLibraryProvider.overrideWithValue(c.moveLibrary),
+  moveStateStoreProvider.overrideWithValue(c.parts.moveState),
+  moveSchedulerProvider.overrideWithValue(c.parts.moveScheduler),
   mediaCacheProvider.overrideWithValue(c.parts.cache),
   storageInfoProvider.overrideWithValue(c.parts.storage),
   sessionStoreProvider.overrideWithValue(c.parts.sessions),

@@ -56,7 +56,9 @@ final class MediaFile {
   /// How many download attempts have run, at most [maxAttempts].
   final int attempts;
 
-  /// The MediaStore URI once saved.
+  /// The saved file's reference once saved: a MediaStore `content://` URI in
+  /// the gallery, or a `file://` path in private storage (FR-79; see
+  /// `storageTargetOf`).
   final String? contentUri;
 
   /// The gallery folder, for example `Pictures/Storize/<username>/`.

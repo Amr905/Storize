@@ -90,9 +90,13 @@ object FileNames {
 
     /** True if [candidate] resolves to a location inside [root] (symlinks and `..` resolved). */
     fun isInside(root: File, candidate: File): Boolean {
-        val rootPath = root.canonicalFile.path
-        val path = candidate.canonicalFile.path
-        return path.startsWith(rootPath + File.separator)
+        // canonicalPath resolves symlinks and `..`; any I/O error refuses.
+        return try {
+            val rootPath = root.canonicalPath
+            candidate.canonicalPath.startsWith(rootPath + File.separator)
+        } catch (e: java.io.IOException) {
+            false
+        }
     }
 }
 

@@ -3820,6 +3820,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Summary time'**
   String get setSummaryTime;
+
+  /// S-12 info row when hide from phone gallery is on: files are in private storage (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved privately, only Storize shows them'**
+  String get setStorageLocationPrivate;
+
+  /// S-12 switch title (FR-79): new downloads go to private storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from phone gallery'**
+  String get setHideFromGallery;
+
+  /// S-12 subtitle under the hide from phone gallery switch (FR-79). Must say that removing the app deletes the files.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Storize shows your saved files. Uninstalling Storize deletes them.'**
+  String get setHideFromGalleryHint;
+
+  /// S-12 one-line suggestion shown under the switch when hiding is on and App lock is off (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: turn on App lock so Storize is protected too.'**
+  String get setHideLockTip;
+
+  /// Dialog title after turning hide from phone gallery on (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Move 1 saved file now?} other{Move {count} saved files now?}}'**
+  String hideMoveHideTitle(int count);
+
+  /// Dialog body after turning hide from phone gallery on (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'They will disappear from Gallery and Photos and show only in Storize. Each file is copied and checked before the original is removed.'**
+  String get hideMoveHideBody;
+
+  /// Dialog title after turning hide from phone gallery off (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Move 1 saved file back to the gallery?} other{Move {count} saved files back to the gallery?}}'**
+  String hideMoveShowTitle(int count);
+
+  /// Dialog body after turning hide from phone gallery off (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'They will show in Gallery and Photos again, in Pictures/Storize. Each file is copied and checked before the private copy is removed.'**
+  String get hideMoveShowBody;
+
+  /// Dialog button: move the saved files now (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get hideMoveAction;
+
+  /// Dialog button: leave saved files where they are; only new downloads follow the setting (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Only new downloads'**
+  String get hideMoveOnlyNew;
+
+  /// S-12 progress row while the saved files are moved (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Moving files… {done} of {total}'**
+  String hideMoveProgress(int done, int total);
+
+  /// S-12 progress row button: stop moving (files already moved stay moved) (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get hideMoveCancel;
+
+  /// S-12 row when a move stopped without finishing, for example after the app was closed (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Move interrupted: {done} of {total} moved.'**
+  String hideMoveInterrupted(int done, int total);
+
+  /// S-12 row after the user cancelled a move (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Move stopped: {done} of {total} moved.'**
+  String hideMoveCancelled(int done, int total);
+
+  /// S-12 row button: continue an interrupted or stopped move (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get hideMoveResume;
+
+  /// S-12 row when a move stopped because the device is full (FR-79). Nothing was lost.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough space: {done} of {total} moved. Free some space, then resume.'**
+  String hideMoveStorageFull(int done, int total);
+
+  /// S-12 row after a move finished (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 file moved.} other{{count} files moved.}}'**
+  String hideMoveDone(int count);
+
+  /// S-12 line: files whose original was gone (deleted elsewhere) were skipped (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 file was already missing.} other{{count} files were already missing.}}'**
+  String hideMoveMissing(int count);
+
+  /// S-12 line: files that could not be moved; they were not changed (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 file could not be moved and stays where it was.} other{{count} files could not be moved and stay where they were.}}'**
+  String hideMoveFailed(int count);
+
+  /// S-12 button that clears the finished-move message (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get hideMoveDismiss;
+
+  /// Silent notification while the saved files are moved (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Moving saved files… {done} of {total}'**
+  String ntfMoving(int done, int total);
+
+  /// Silent notification when the move finished (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 saved file moved} other{{count} saved files moved}}'**
+  String ntfMoveDone(int count);
+
+  /// Notification when the move stopped because the device is full (FR-79).
+  ///
+  /// In en, this message translates to:
+  /// **'Move paused: storage almost full. Nothing was lost.'**
+  String get ntfMoveStorageFull;
 }
 
 class _AppLocalizationsDelegate

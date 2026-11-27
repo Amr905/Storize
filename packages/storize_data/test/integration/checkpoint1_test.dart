@@ -166,7 +166,7 @@ void main() {
   group('(c) barrel exports and clean co-import', () {
     test('storize_data barrel exposes the settings repo and keys', () {
       expect(storizeDataVersion, isNotEmpty);
-      expect(SettingsKeys.byField, hasLength(15));
+      expect(SettingsKeys.byField, hasLength(16));
       final SettingsRepo repo = SharedPrefsSettingsRepo();
       expect(repo, isA<SettingsRepo>());
     });

@@ -13,12 +13,15 @@ import android.provider.OpenableColumns
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 private const val DEFAULT_READ_CAP = 30 * 1024 * 1024
+private const val COPY_BUFFER = 64 * 1024
 
 /**
  * Gallery operations (ADR-5, ADR-11). Everything here blocks, so the plugin calls it
@@ -298,6 +301,64 @@ class MediaStoreOps(private val context: Context) {
         } catch (e: IOException) {
             throw PluginException(ErrorCodes.IO_ERROR, "Could not read the file")
         }
+    }
+
+    /**
+     * Streams a file this app owns (a `content://media/` item in the Storize folders) into [destPath], which
+     * must lie inside this app's private pictures folder (`getExternalFilesDir(Pictures)/Storize`). Used to
+     * move files into private storage (FR-79). Returns the bytes written and their SHA-256 (lower-case hex).
+     * The partial file is removed on any failure. Errors never carry a path.
+     */
+    fun exportToFile(
+        uriString: String?,
+        destPath: String?,
+    ): Map<String, Any?> {
+        val uri = managedUri(uriString)
+        if (uri.scheme != "content") {
+            throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Only content://media/ URIs are accepted")
+        }
+        if (destPath.isNullOrEmpty()) {
+            throw PluginException(ErrorCodes.INVALID_ARGUMENT, "destPath is required")
+        }
+        val base =
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                ?: throw PluginException(ErrorCodes.IO_ERROR, "Private storage is not available")
+        val dest = File(destPath)
+        if (!FileNames.isInside(File(base, "Storize"), dest)) {
+            throw PluginException(ErrorCodes.INVALID_ARGUMENT, "Destination is outside private storage")
+        }
+        when (guard.classify(uri)) {
+            RowCheck.MISSING -> throw PluginException(ErrorCodes.SOURCE_NOT_FOUND, "Source does not exist")
+            RowCheck.FOREIGN -> throw PluginException(ErrorCodes.PERMISSION_DENIED, "This file is not in the Storize folder")
+            RowCheck.ALLOWED -> Unit
+        }
+        val digest = MessageDigest.getInstance("SHA-256")
+        var total = 0L
+        try {
+            val input =
+                resolver.openInputStream(uri)
+                    ?: throw PluginException(ErrorCodes.SOURCE_NOT_FOUND, "Source does not exist")
+            input.use { source ->
+                FileOutputStream(dest).use { out ->
+                    val buffer = ByteArray(COPY_BUFFER)
+                    while (true) {
+                        val n = source.read(buffer)
+                        if (n < 0) break
+                        digest.update(buffer, 0, n)
+                        out.write(buffer, 0, n)
+                        total += n
+                    }
+                    out.fd.sync()
+                }
+            }
+        } catch (e: FileNotFoundException) {
+            dest.delete()
+            throw PluginException(ErrorCodes.SOURCE_NOT_FOUND, "Source does not exist")
+        } catch (e: Throwable) {
+            dest.delete()
+            throw e
+        }
+        return mapOf("size" to total, "sha256" to digest.digest().joinToString("") { "%02x".format(it) })
     }
 
     /**

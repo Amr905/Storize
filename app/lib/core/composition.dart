@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:storize_app/background/move_notifier.dart';
 import 'package:storize_app/core/composition_platform.dart';
 import 'package:storize_app/core/discovery_refresher.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
@@ -57,6 +58,9 @@ final class CompositionParts {
     this.setupOps,
     this.findExisting,
     this.fullPhotoReader,
+    this.moveState,
+    this.moveScheduler,
+    this.moveNotifier,
     this.clock = const SystemClock(),
     this.governorConfig = const GovernorConfig(),
     this.allowUnmetered = false,
@@ -130,6 +134,16 @@ final class CompositionParts {
   /// Reads a gallery photo for the full-size viewers (null in tests: the
   /// viewers then keep the thumbnail).
   final Future<Uint8List?> Function(String contentUri)? fullPhotoReader;
+
+  /// Where the progress of moving the saved files lives (FR-79). Null in
+  /// tests that do not move files: the move use case is then absent.
+  final MoveStateStore? moveState;
+
+  /// Starts and stops the background move task (FR-79). Null in tests.
+  final MoveScheduler? moveScheduler;
+
+  /// Shows the progress of the move in a notification (null in tests).
+  final MoveNotifier? moveNotifier;
 
   /// Where page discovery (`doc_id`s, page tokens) is shared across isolates
   /// (secure storage in production). Null: memory only, and no foreground
@@ -229,6 +243,7 @@ final class AppComposition {
     required this.checkRuns,
     required this.leases,
     this.discoveryRefresher,
+    this.moveLibrary,
   });
 
   /// Wires everything from [parts].
@@ -394,7 +409,12 @@ final class AppComposition {
       displayName: displayNameFor,
       relativeDir: relativeDirFor,
       findExisting: parts.findExisting,
+      // FR-79: read per file, so the switch applies to the next download.
+      storageTarget: () async => (await parts.settings.get()).hideFromGallery
+          ? StorageTarget.private
+          : StorageTarget.gallery,
     );
+    final moveState = parts.moveState;
     return AppComposition._(
       background: background,
       holder: holderId,
@@ -410,6 +430,16 @@ final class AppComposition {
       checkRuns: checkRuns,
       leases: leases,
       discoveryRefresher: discoveryRefresher,
+      moveLibrary: moveState == null
+          ? null
+          : MoveLibrary(
+              content: content,
+              gallery: parts.gallery,
+              state: moveState,
+              clock: clock,
+              leases: leases,
+              log: log,
+            ),
       deleteContent: deleteContent,
       runCheck: RunCheck(
         platform: platform,
@@ -503,6 +533,10 @@ final class AppComposition {
 
   /// Looks up the targets added while Instagram was limited (FR-73).
   final ResolvePendingTargets resolvePendingTargets;
+
+  /// Moves the saved files between the gallery and private storage (FR-79).
+  /// Null when [CompositionParts.moveState] is null.
+  final MoveLibrary? moveLibrary;
 
   /// Downloads pending media.
   final DownloadPending downloadPending;

@@ -26,6 +26,7 @@ final class EveryDeleteGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => inner.save(
     sourcePath: sourcePath,
     relativeDir: relativeDir,
@@ -35,6 +36,24 @@ final class EveryDeleteGallery implements GalleryStore {
 
   @override
   Future<int?> size(String u) => inner.size(u);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }
 
 void main() {
@@ -275,6 +294,7 @@ final class _AlwaysDenied implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) => inner.save(
     sourcePath: sourcePath,
     relativeDir: relativeDir,
@@ -284,4 +304,22 @@ final class _AlwaysDenied implements GalleryStore {
 
   @override
   Future<int?> size(String u) => inner.size(u);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }

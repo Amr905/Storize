@@ -33,6 +33,7 @@ final class HookGallery implements GalleryStore {
     required String relativeDir,
     required String displayName,
     required String mime,
+    StorageTarget target = StorageTarget.gallery,
   }) async {
     saveCalls++;
     await beforeSave?.call();
@@ -41,6 +42,7 @@ final class HookGallery implements GalleryStore {
       relativeDir: relativeDir,
       displayName: displayName,
       mime: mime,
+      target: target,
     );
     await afterSave?.call();
     return f;
@@ -54,6 +56,24 @@ final class HookGallery implements GalleryStore {
 
   @override
   Future<int?> size(String contentUri) => inner.size(contentUri);
+
+  @override
+  Future<GalleryFile> copyTo(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GalleryFile> move(
+    String contentUri, {
+    required StorageTarget to,
+    required String relativeDir,
+    required String displayName,
+    required String mime,
+  }) => throw UnimplementedError();
 }
 
 /// A cache whose `discard` can crash.
@@ -130,7 +150,9 @@ void main() {
     StorageInfo? storageInfo,
     bool withFinder = false,
     Duration budget = const Duration(minutes: 8),
+    StorageTargetResolver? storageTarget,
   }) => DownloadPending(
+    storageTarget: storageTarget,
     content: content,
     targets: targets,
     activity: activity,
@@ -215,6 +237,54 @@ void main() {
             ),
         ],
       );
+
+  group('FR-79 storage target', () {
+    test('saves to private storage when the setting says so', () async {
+      final id = await seed(alice);
+      platform.queueMedia(bytes(5));
+      await build(storageTarget: () async => StorageTarget.private).run();
+      final f = (await filesOf(id)).single;
+      expect(storageTargetOf(f.contentUri!), StorageTarget.private);
+      expect(fakeGallery.privateFiles, hasLength(1));
+      expect(fakeGallery.galleryFiles, isEmpty);
+    });
+
+    test('saves to the gallery by default and when the read fails', () async {
+      final a = await seed(alice);
+      final b = await seed(alice, remoteId: 's2');
+      platform
+        ..queueMedia(bytes(5))
+        ..queueMedia(bytes(5));
+      await build().run();
+      expect(fakeGallery.galleryFiles, hasLength(2));
+      expect(await filesOf(a), isNotEmpty);
+      expect(await filesOf(b), isNotEmpty);
+
+      final c = await seed(alice, remoteId: 's3');
+      platform.queueMedia(bytes(5));
+      await build(storageTarget: () async => throw StateError('prefs')).run();
+      expect(
+        storageTargetOf((await filesOf(c)).single.contentUri!),
+        StorageTarget.gallery,
+      );
+    });
+
+    test('the target is read per file: a change applies to the next', () async {
+      final a = await seed(alice);
+      final b = await seed(alice, remoteId: 's2');
+      platform
+        ..queueMedia(bytes(5))
+        ..queueMedia(bytes(5));
+      var target = StorageTarget.gallery;
+      gallery.afterSave = () async => target = StorageTarget.private;
+      await build(storageTarget: () async => target).run();
+      final kinds = {
+        for (final id in [a, b])
+          storageTargetOf((await filesOf(id)).single.contentUri!),
+      };
+      expect(kinds, {StorageTarget.gallery, StorageTarget.private});
+    });
+  });
 
   group('AC1 batch loop', () {
     test('processes every PENDING file, stories before posts', () async {
