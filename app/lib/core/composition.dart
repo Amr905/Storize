@@ -437,6 +437,7 @@ final class AppComposition {
               gallery: parts.gallery,
               state: moveState,
               clock: clock,
+              leases: leases,
               log: log,
             ),
       deleteContent: deleteContent,

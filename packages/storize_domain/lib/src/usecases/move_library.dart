@@ -1,4 +1,5 @@
 import 'package:storize_domain/src/entities/content_filter.dart';
+import 'package:storize_domain/src/entities/governor_lease.dart';
 import 'package:storize_domain/src/entities/media_file.dart';
 import 'package:storize_domain/src/exceptions.dart';
 import 'package:storize_domain/src/ports/clock.dart';
@@ -6,6 +7,7 @@ import 'package:storize_domain/src/ports/diagnostic_log.dart';
 import 'package:storize_domain/src/ports/gallery_store.dart';
 import 'package:storize_domain/src/ports/move_state_store.dart';
 import 'package:storize_domain/src/repos/content_repo.dart';
+import 'package:storize_domain/src/repos/governor_lease_repo.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// How a [MoveLibrary.run] ended.
@@ -21,6 +23,9 @@ enum MoveEnd {
 
   /// The time budget ran out with files left: queue the task again.
   deadline,
+
+  /// Another run holds the move lease (another isolate). Nothing was done.
+  busy,
 }
 
 /// The outcome of one [MoveLibrary.run].
@@ -63,14 +68,29 @@ final class MoveLibrary {
     required this._gallery,
     required this._state,
     required this._clock,
+    required this._leases,
     this._log,
     this.batchSize = 20,
-  });
+    String? holder,
+  }) : _holder =
+           holder ?? 'move-${_clock.now().microsecondsSinceEpoch}-${_seq++}';
+
+  static int _seq = 0;
+
+  /// The key of the move lease in the lease table (login uses -1, downloads
+  /// -2). One move runs at a time across isolates.
+  static const int leaseKey = -3;
+
+  /// How long a lease holds without renewal: a crashed run frees it after
+  /// this (the run renews before every file).
+  static const Duration leaseTtl = Duration(minutes: 10);
 
   final ContentRepo _content;
   final GalleryStore _gallery;
   final MoveStateStore _state;
   final Clock _clock;
+  final GovernorLeaseRepo _leases;
+  final String _holder;
   final DiagnosticLog? _log;
 
   /// How many files are loaded and handled per batch.
@@ -102,6 +122,31 @@ final class MoveLibrary {
     DateTime? deadline,
     void Function(MoveProgress progress)? onProgress,
   }) async {
+    final lease = await _leases.acquire(
+      accountId: leaseKey,
+      holder: _holder,
+      ttl: leaseTtl,
+      initialBucket: GovernorBucket(tokens: 0, lastRefillAt: _clock.now()),
+    );
+    if (lease == null) {
+      _log?.log(LogLevel.info, 'move', 'end=busy');
+      return MoveLibraryResult(
+        end: MoveEnd.busy,
+        progress: await _state.read(),
+      );
+    }
+    try {
+      return await _runLeased(target, deadline, onProgress);
+    } finally {
+      await _leases.release(accountId: leaseKey, holder: _holder);
+    }
+  }
+
+  Future<MoveLibraryResult> _runLeased(
+    StorageTarget target,
+    DateTime? deadline,
+    void Function(MoveProgress progress)? onProgress,
+  ) async {
     await _state.setCancelRequested(value: false);
     final before = await _state.read();
     final resuming =
@@ -149,6 +194,15 @@ final class MoveLibrary {
           return stop(MoveEnd.cancelled, await publish(MoveStatus.cancelled));
         }
         if (deadline != null && !_clock.now().isBefore(deadline)) {
+          return stop(MoveEnd.deadline, await publish(MoveStatus.running));
+        }
+        // Still ours? A lost lease (stale for 10 minutes) ends the run: the
+        // other runner owns the files now.
+        if (!await _leases.renew(
+          accountId: leaseKey,
+          holder: _holder,
+          ttl: leaseTtl,
+        )) {
           return stop(MoveEnd.deadline, await publish(MoveStatus.running));
         }
         final outcome = await _moveOne(item, target);
@@ -216,20 +270,23 @@ final class MoveLibrary {
       _log?.log(LogLevel.warn, 'move', 'file_failed code=UNEXPECTED');
       return _Outcome.failed;
     }
-    // 2. The row follows the verified copy.
+    // 2. The row follows the verified copy, but only if it still holds the
+    // original (compare-and-set): a concurrent mover or a delete wins, and
+    // then our copy is dropped.
     try {
-      await _content.updateMediaFile(
+      final updated = await _content.updateMediaFileIfUri(
         row.copyWith(
           contentUri: copy.uri,
           relativePath: copy.relativePath,
           displayName: copy.displayName,
           sizeBytes: copy.sizeBytes,
         ),
+        expectedContentUri: original,
       );
-      // ignore: avoid_catching_errors, the repo signals a deleted row so.
-    } on StateError {
-      await _dropCopy(copy.uri);
-      return _Outcome.gone;
+      if (!updated) {
+        await _dropCopy(copy.uri);
+        return _Outcome.gone;
+      }
     } on Object {
       await _dropCopy(copy.uri);
       _log?.log(LogLevel.warn, 'move', 'file_failed code=ROW_UPDATE');

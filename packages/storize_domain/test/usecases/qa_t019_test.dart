@@ -68,6 +68,16 @@ final class CrashingContentRepo implements ContentRepo {
 
   @override
   Future<SavedCounts> savedSince(DateTime since) => inner.savedSince(since);
+
+  @override
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) => inner.updateMediaFileIfUri(
+    file,
+    expectedContentUri: expectedContentUri,
+  );
+
   bool crashNext = true;
 
   @override

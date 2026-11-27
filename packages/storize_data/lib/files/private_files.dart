@@ -90,10 +90,24 @@ final class PrivateFiles {
       return null;
     }
     final path = parsed.normalizePath().toFilePath();
-    final base = Directory('${(await _pictures()).path}/$folder').absolute.path;
-    final clean = Uri.file(base).normalizePath().toFilePath();
-    final prefix = clean.endsWith('/') ? clean : '$clean/';
-    return path.startsWith(prefix) && path.length > prefix.length ? path : null;
+    // Symlinks are resolved on both sides before the inside-root check, so a
+    // linked folder or file cannot lead outside. Any error refuses.
+    try {
+      final root = Directory(
+        '${(await _pictures()).path}/$folder',
+      ).resolveSymbolicLinksSync();
+      final file = File(path);
+      final resolved = file.existsSync()
+          ? file.resolveSymbolicLinksSync()
+          : '${file.parent.resolveSymbolicLinksSync()}/'
+                '${file.uri.pathSegments.last}';
+      final prefix = root.endsWith('/') ? root : '$root/';
+      return resolved.startsWith(prefix) && resolved.length > prefix.length
+          ? resolved
+          : null;
+    } on FileSystemException {
+      return null;
+    }
   }
 
   /// Whether the file at [uri] exists. An address outside the folder is

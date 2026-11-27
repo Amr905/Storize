@@ -392,6 +392,22 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
   Future<int> updateMediaFilePartial(int id, MediaFilesCompanion changes) =>
       (update(mediaFiles)..where((m) => m.id.equals(id))).write(changes);
 
+  /// Like [updateMediaFilePartial], but only when the row's `content_uri` is
+  /// still [expectedUri] (null matches a null). Returns rows changed.
+  Future<int> updateMediaFilePartialIfUri(
+    int id,
+    MediaFilesCompanion changes,
+    String? expectedUri,
+  ) =>
+      (update(mediaFiles)..where(
+            (m) =>
+                m.id.equals(id) &
+                (expectedUri == null
+                    ? m.contentUri.isNull()
+                    : m.contentUri.equals(expectedUri)),
+          ))
+          .write(changes);
+
   /// Writes every column of [content] (full replace by id).
   Future<int> updateContent(ContentRow content) =>
       (update(contents)..where((c) => c.id.equals(content.id))).write(

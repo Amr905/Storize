@@ -19,6 +19,7 @@ class _Move {
       gallery: rig.gallery,
       state: state,
       clock: rig.clock,
+      leases: FakeGovernorLeaseRepo(rig.clock),
     );
   }
 

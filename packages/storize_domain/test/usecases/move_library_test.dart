@@ -14,6 +14,7 @@ void main() {
   late FakeGalleryStore gallery;
   late FakeMoveStateStore state;
   late FakeClock clock;
+  late FakeGovernorLeaseRepo leases;
   late FakeDiagnosticLog log;
   late MoveLibrary move;
   late int targetId;
@@ -76,6 +77,7 @@ void main() {
     content = FakeContentRepo(targets: targets);
     state = FakeMoveStateStore();
     clock = FakeClock(s.t0);
+    leases = FakeGovernorLeaseRepo(clock);
     log = FakeDiagnosticLog();
     gallery = FakeGalleryStore(
       onOperation: (op, uri) async {
@@ -94,6 +96,7 @@ void main() {
       gallery: gallery,
       state: state,
       clock: clock,
+      leases: leases,
       log: log,
       batchSize: 2,
     );
@@ -178,6 +181,7 @@ void main() {
       gallery: gallery,
       state: state,
       clock: clock,
+      leases: leases,
     );
     final r = await broken.run(StorageTarget.private);
     expect(r.progress.failed, 1);
@@ -323,6 +327,7 @@ void main() {
       gallery: gallery,
       state: state,
       clock: clock,
+      leases: leases,
     );
     final r = await racing.run(StorageTarget.private);
     expect(r.progress.moved, 0);
@@ -368,6 +373,73 @@ void main() {
     expect(text, isNot(contains('Pictures')));
   });
 
+  test('a second runner is busy while the lease is held', () async {
+    await seed(2);
+    final other = MoveLibrary(
+      content: content,
+      gallery: gallery,
+      state: state,
+      clock: clock,
+      leases: leases,
+    );
+    await leases.acquire(
+      accountId: MoveLibrary.leaseKey,
+      holder: 'someone-else',
+      ttl: MoveLibrary.leaseTtl,
+      initialBucket: GovernorBucket(tokens: 0, lastRefillAt: clock.now()),
+    );
+    final r = await other.run(StorageTarget.private);
+    expect(r.end, MoveEnd.busy);
+    expect(gallery.privateFiles, isEmpty);
+    // A crashed holder frees the lease after the stale timeout.
+    clock.advance(MoveLibrary.leaseTtl + const Duration(seconds: 1));
+    final again = await other.run(StorageTarget.private);
+    expect(again.end, MoveEnd.finished);
+    expect(gallery.privateFiles, hasLength(2));
+  });
+
+  test('the lease is released after a run, also when it throws', () async {
+    await seed(1);
+    await move.run(StorageTarget.private);
+    expect(
+      (await leases.read(MoveLibrary.leaseKey))!.isHeldAt(clock.now()),
+      isFalse,
+    );
+  });
+
+  test('the row is updated only if it still holds the original', () async {
+    final uris = await seed(1);
+    final row = (await rows()).single;
+    // Another mover already changed the row.
+    await content.updateMediaFile(row.copyWith(contentUri: 'file:///x/y.jpg'));
+    final lost = await content.updateMediaFileIfUri(
+      row.copyWith(contentUri: 'file:///z.jpg'),
+      expectedContentUri: uris.single,
+    );
+    expect(lost, isFalse);
+    expect((await rows()).single.contentUri, 'file:///x/y.jpg');
+  });
+
+  test('a lost race drops our copy and keeps the winning row', () async {
+    final uris = await seed(1);
+    final racing = MoveLibrary(
+      content: _SwapRepo(content, 'file:///winner.jpg'),
+      gallery: gallery,
+      state: state,
+      clock: clock,
+      leases: leases,
+    );
+    final r = await racing.run(StorageTarget.private);
+    expect(r.progress.moved, 0);
+    expect(gallery.privateFiles, isEmpty, reason: 'our copy was removed');
+    expect((await rows()).single.contentUri, 'file:///winner.jpg');
+    expect(
+      await gallery.exists(uris.single),
+      isTrue,
+      reason: 'not ours to delete',
+    );
+  });
+
   test('relativeDirOf', () {
     expect(MoveLibrary.relativeDirOf('Pictures/Storize/bob/'), 'bob');
     expect(
@@ -393,7 +465,10 @@ final class _FailingUpdateRepo extends _Delegating {
   _FailingUpdateRepo(super.inner);
 
   @override
-  Future<void> updateMediaFile(MediaFile file) async => throw Exception('disk');
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) async => throw Exception('disk');
 }
 
 /// A repo that deletes the item right before the row is updated.
@@ -401,9 +476,15 @@ final class _DeletingRepo extends _Delegating {
   _DeletingRepo(super.inner);
 
   @override
-  Future<void> updateMediaFile(MediaFile file) async {
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) async {
     await inner.deleteByIds([file.contentId]);
-    return inner.updateMediaFile(file);
+    return inner.updateMediaFileIfUri(
+      file,
+      expectedContentUri: expectedContentUri,
+    );
   }
 }
 
@@ -422,8 +503,36 @@ base class _Delegating implements ContentRepo {
 
   @override
   Future<void> updateMediaFile(MediaFile file) => inner.updateMediaFile(file);
+
+  @override
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) => inner.updateMediaFileIfUri(
+    file,
+    expectedContentUri: expectedContentUri,
+  );
 }
 
 /// Stands for the process being killed: not an `Exception`, so nothing in the
 /// use case catches it.
 final class _Crash extends Error {}
+
+/// A repo where another mover changes the row right before our update.
+final class _SwapRepo extends _Delegating {
+  _SwapRepo(super.inner, this.winnerUri);
+
+  final String winnerUri;
+
+  @override
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) async {
+    await inner.updateMediaFile(file.copyWith(contentUri: winnerUri));
+    return inner.updateMediaFileIfUri(
+      file,
+      expectedContentUri: expectedContentUri,
+    );
+  }
+}

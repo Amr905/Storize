@@ -195,6 +195,20 @@ final class FakeContentRepo implements ContentRepo {
   }
 
   @override
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) async {
+    final current = _media[file.id];
+    if (current == null || current.contentUri != expectedContentUri) {
+      return false;
+    }
+    _media[file.id] = file;
+    _feed.notify();
+    return true;
+  }
+
+  @override
   Future<void> updateContent(Content content) async {
     if (!_contents.containsKey(content.id)) {
       throw StateError('No content with id ${content.id}');

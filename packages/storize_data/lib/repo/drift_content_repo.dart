@@ -116,6 +116,18 @@ final class DriftContentRepo implements ContentRepo {
   }
 
   @override
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  }) async =>
+      await _dao.updateMediaFilePartialIfUri(
+        file.id,
+        _toMediaCompanion(file, contentId: file.contentId),
+        expectedContentUri,
+      ) >
+      0;
+
+  @override
   Future<void> updateContent(Content content) async {
     final rows = await mapUniqueViolation(
       'content',

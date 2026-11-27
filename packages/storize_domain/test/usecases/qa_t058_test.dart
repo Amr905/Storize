@@ -14,6 +14,7 @@ void main() {
   late FakeGalleryStore gallery;
   late FakeMoveStateStore state;
   late FakeClock clock;
+  late FakeGovernorLeaseRepo leases;
   late int targetId;
   String? crashAt;
 
@@ -27,6 +28,7 @@ void main() {
     gallery: gallery,
     state: state,
     clock: clock,
+    leases: leases,
     batchSize: 2,
   );
 
@@ -76,6 +78,7 @@ void main() {
     content = FakeContentRepo(targets: targets);
     state = FakeMoveStateStore();
     clock = FakeClock(s.t0);
+    leases = FakeGovernorLeaseRepo(clock);
     gallery = FakeGalleryStore(
       onOperation: (op, uri) async {
         if (op == crashAt) throw _Crash();
@@ -109,8 +112,6 @@ void main() {
 
   test(
     'two concurrent runs: no dangling row, no orphan copies',
-    skip:
-        'QA T-058 finding F1 (medium): concurrent runs leave duplicate copies',
     () async {
       await seed(6);
       final a = newMove().run(StorageTarget.private);

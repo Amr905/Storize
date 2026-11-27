@@ -74,6 +74,9 @@ final class NotificationMoveNotifier implements MoveNotifier {
             silent: true,
           ),
         );
+      case MoveEnd.busy:
+        // Another run owns the move and its notice.
+        break;
       case MoveEnd.cancelled:
         await _cancel();
       case MoveEnd.storageFull:

@@ -141,6 +141,15 @@ abstract interface class ContentRepo {
   /// Throws [StateError] when it does not exist.
   Future<void> updateMediaFile(MediaFile file);
 
+  /// Replaces the stored media file that has the same ID **only if** its
+  /// `contentUri` is still [expectedContentUri] (a compare-and-set, FR-79: two
+  /// movers of one file cannot overwrite each other). Returns false, and
+  /// writes nothing, when the file has another URI or no longer exists.
+  Future<bool> updateMediaFileIfUri(
+    MediaFile file, {
+    required String? expectedContentUri,
+  });
+
   /// Replaces the stored content row that has the same ID.
   ///
   /// Throws [StateError] when it does not exist.

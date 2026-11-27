@@ -546,7 +546,6 @@ void main() {
         await store.delete(uri);
         expect(victim.existsSync(), isTrue, reason: 'symlink escape');
       },
-      skip: 'QA T-058 finding F2 (low): pathOf does not resolve symlinks',
     );
 
     test('a symlinked file is only unlinked, target survives', () async {
