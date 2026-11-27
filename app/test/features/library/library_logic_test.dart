@@ -83,10 +83,17 @@ void main() {
       expect(f.kind, ContentKind.post);
     });
 
-    test('carousel and reel mean nothing for stories', () {
-      final f = LibraryFilters(type: TypeFilter.reels);
-      expect(f.effectiveType(LibraryKind.stories), TypeFilter.all);
-      expect(f.effectiveType(LibraryKind.posts), TypeFilter.reels);
+    test('reels are a kind of posts: post type reel, posts only', () {
+      final f = LibraryFilters(reelsOnly: true)
+          .toContentFilter(LibraryKind.posts, now);
+      expect(f.kind, ContentKind.post);
+      expect(f.mediaType, isNull);
+      expect(
+        LibraryFilters(reelsOnly: true).matchesShape(
+          _item(1, 1, now, kind: ContentKind.post, postType: PostType.reel),
+        ),
+        isTrue,
+      );
     });
 
     test('isActive ignores the kind and equality is by value', () {
@@ -181,13 +188,13 @@ void main() {
       expect(v.filtersActive, isTrue);
     });
 
-    test('post shape filter is applied client-side', () {
+    test('reel filter is applied client-side', () {
       final v = view(
         LibraryKind.posts,
-        LibraryFilters(type: TypeFilter.carousels),
+        LibraryFilters(reelsOnly: true),
       );
       expect(v.itemCount, 1);
-      expect(v.items.single.content.id, 3);
+      expect(v.items.single.content.id, 4);
     });
 
     test('last check is the newest of the kind', () {

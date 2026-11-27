@@ -587,9 +587,9 @@ void main() {
         ids(
           all,
           LibraryKind.posts,
-          LibraryFilters(type: TypeFilter.carousels, targetIds: const {1}),
+          LibraryFilters(reelsOnly: true, targetIds: const {1}),
         ),
-        isEmpty,
+        {5},
       );
     });
 

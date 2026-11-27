@@ -8,9 +8,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/core/ui_state.dart';
 import 'package:storize_app/core/ui_state_view.dart';
+import 'package:storize_app/features/library/library_active_filters.dart';
 import 'package:storize_app/features/library/library_filter_sheet.dart';
-import 'package:storize_app/features/library/library_filters.dart';
 import 'package:storize_app/features/library/library_providers.dart';
+import 'package:storize_app/features/library/library_search_field.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_app/features/library/library_tile.dart';
 import 'package:storize_app/features/library/library_view.dart';
@@ -45,6 +46,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
   /// is still on screen.
   final ValueNotifier<DateTime?> _stickyDay = ValueNotifier<DateTime?>(null);
   bool _stickyUpdateScheduled = false;
+
+  /// The search field is open in the app bar (S-04).
+  bool _searchOpen = false;
 
   _RowLayout? _layout;
   Widget? _sliver;
@@ -93,6 +97,20 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
             .replace(f.copyWith(targetIds: {target}));
       }
     });
+  }
+
+  void _openSearch() => setState(() => _searchOpen = true);
+
+  /// Closes the search field and ends the search.
+  void _closeSearch() {
+    setState(() => _searchOpen = false);
+    ref.read(librarySearchQueryProvider.notifier).set('');
+  }
+
+  /// Removes every chip: filters, reels, highlights and the search.
+  void _clearAll() {
+    ref.read(libraryFiltersProvider.notifier).clear();
+    _closeSearch();
   }
 
   void _snack(String text) {
@@ -219,6 +237,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
     final selection = ref.watch(librarySelectionProvider);
     final kind = ref.watch(libraryKindProvider);
     final filters = ref.watch(libraryFiltersProvider);
+    final query = ref.watch(librarySearchQueryProvider);
     final checkNow = ref.watch(checkNowControllerProvider);
 
     ref.listen(checkNowControllerProvider, (_, next) {
@@ -240,6 +259,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
         ref.read(librarySelectionProvider.notifier).clear();
       })
       ..listen(libraryFiltersProvider, (prev, next) {
+        if (prev != next) ref.read(librarySelectionProvider.notifier).clear();
+      })
+      ..listen(librarySearchQueryProvider, (prev, next) {
         if (prev != next) ref.read(librarySelectionProvider.notifier).clear();
       })
       ..listen(libraryViewProvider, (_, next) {
@@ -322,9 +344,34 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                   ),
                 ],
               )
+            : _searchOpen
+            ? AppBar(
+                leading: IconButton(
+                  constraints: const BoxConstraints(
+                    minWidth: StorizeSpacing.minTouchTarget,
+                    minHeight: StorizeSpacing.minTouchTarget,
+                  ),
+                  tooltip: l10n.libSearchBack,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: _closeSearch,
+                ),
+                title: LibrarySearchField(
+                  initialText: ref.read(librarySearchQueryProvider),
+                  onCommit: ref.read(librarySearchQueryProvider.notifier).set,
+                ),
+              )
             : AppBar(
                 title: Text(l10n.screenLibrary),
                 actions: [
+                  IconButton(
+                    constraints: const BoxConstraints(
+                      minWidth: StorizeSpacing.minTouchTarget,
+                      minHeight: StorizeSpacing.minTouchTarget,
+                    ),
+                    tooltip: l10n.libSearchTooltip,
+                    icon: const Icon(Icons.search_rounded),
+                    onPressed: _openSearch,
+                  ),
                   IconButton(
                     constraints: const BoxConstraints(
                       minWidth: StorizeSpacing.minTouchTarget,
@@ -366,11 +413,14 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                           selected: kind,
                           onChanged: (k) {
                             ref.read(libraryKindProvider.notifier).select(k);
-                            if (filters.highlightsOnly) {
+                            if (filters.highlightsOnly || filters.reelsOnly) {
                               ref
                                   .read(libraryFiltersProvider.notifier)
                                   .replace(
-                                    filters.copyWith(highlightsOnly: false),
+                                    filters.copyWith(
+                                      highlightsOnly: false,
+                                      reelsOnly: false,
+                                    ),
                                   );
                             }
                           },
@@ -383,7 +433,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                             ref
                                 .read(libraryFiltersProvider.notifier)
                                 .replace(
-                                  filters.copyWith(highlightsOnly: true),
+                                  filters.copyWith(
+                                    highlightsOnly: true,
+                                    reelsOnly: false,
+                                  ),
                                 );
                           },
                           storiesLabel: l10n.libStoriesTab,
@@ -420,12 +473,18 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                         ),
                       ),
                       SliverToBoxAdapter(
-                        child: _ActiveFilterChips(
+                        child: ActiveFilterChips(
                           filters: filters,
-                          kind: kind,
-                          onChanged: ref
+                          query: query,
+                          targets: view.targets,
+                          count: view.itemCount,
+                          onFiltersChanged: ref
                               .read(libraryFiltersProvider.notifier)
                               .replace,
+                          onClearQuery: () => ref
+                              .read(librarySearchQueryProvider.notifier)
+                              .set(''),
+                          onClearAll: _clearAll,
                         ),
                       ),
                     ],
@@ -643,9 +702,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       return EmptyState(
         icon: Icons.filter_alt_off_outlined,
         title: l10n.emptyFilteredTitle,
-        body: stories ? l10n.libFilteredStories : l10n.libFilteredPosts,
+        body: l10n.libNoMatchesBody,
         actionLabel: l10n.libClearFilters,
-        onAction: ref.read(libraryFiltersProvider.notifier).clear,
+        onAction: _clearAll,
       );
     }
     final last = view.lastCheck;
@@ -667,75 +726,6 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       onAction: checking
           ? null
           : ref.read(checkNowControllerProvider.notifier).run,
-    );
-  }
-}
-
-class _ActiveFilterChips extends StatelessWidget {
-  const _ActiveFilterChips({
-    required this.filters,
-    required this.kind,
-    required this.onChanged,
-  });
-
-  final LibraryFilters filters;
-  final LibraryKind kind;
-  final ValueChanged<LibraryFilters> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final loc = MaterialLocalizations.of(context);
-    final type = filters.effectiveType(kind);
-    final dateLabel = switch (filters.date) {
-      DatePreset.any => null,
-      DatePreset.today => l10n.libDateToday,
-      DatePreset.days7 => l10n.libDate7,
-      DatePreset.days30 => l10n.libDate30,
-      DatePreset.custom =>
-        filters.customFrom == null || filters.customTo == null
-            ? l10n.libDateCustom
-            : l10n.libDateRange(
-                loc.formatMediumDate(filters.customFrom!),
-                loc.formatMediumDate(filters.customTo!),
-              ),
-    };
-    final typeLabel = switch (type) {
-      TypeFilter.all => null,
-      TypeFilter.photos => l10n.libTypePhotos,
-      TypeFilter.videos => l10n.libTypeVideos,
-      TypeFilter.carousels => l10n.libTypeCarousels,
-      TypeFilter.reels => l10n.libTypeReels,
-    };
-    if (dateLabel == null && typeLabel == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: StorizeSpacing.s16,
-      ),
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Wrap(
-          spacing: StorizeSpacing.s8,
-          children: [
-            if (dateLabel != null)
-              InputChip(
-                key: const ValueKey('active-filter-date'),
-                label: Text(dateLabel),
-                deleteButtonTooltipMessage: l10n.libRemoveFilter,
-                onDeleted: () =>
-                    onChanged(filters.copyWith(date: DatePreset.any)),
-              ),
-            if (typeLabel != null)
-              InputChip(
-                key: const ValueKey('active-filter-type'),
-                label: Text(typeLabel),
-                deleteButtonTooltipMessage: l10n.libRemoveFilter,
-                onDeleted: () =>
-                    onChanged(filters.copyWith(type: TypeFilter.all)),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

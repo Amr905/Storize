@@ -436,10 +436,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get libFilteredStories => 'No stories match these filters.';
+  String get libSearchTooltip => 'Search';
 
   @override
-  String get libFilteredPosts => 'No posts match these filters.';
+  String get libSearchHint => 'Search username, caption or location';
+
+  @override
+  String get libSearchClear => 'Clear search';
+
+  @override
+  String get libSearchBack => 'Close search';
+
+  @override
+  String libSearchChip(String query) {
+    return 'Search: $query';
+  }
+
+  @override
+  String get libKindReels => 'Reels';
+
+  @override
+  String get libClearAll => 'Clear all';
+
+  @override
+  String get libNoMatchesBody => 'Try fewer filters.';
+
+  @override
+  String libResultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get libClearFilters => 'Clear filters';
@@ -487,12 +518,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libTypeVideos => 'Videos';
-
-  @override
-  String get libTypeCarousels => 'Carousels';
-
-  @override
-  String get libTypeReels => 'Reels';
 
   @override
   String get libApply => 'Apply';

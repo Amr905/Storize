@@ -6,8 +6,8 @@ import 'package:storize_model/storize_model.dart';
 /// The date presets of S-05.
 enum DatePreset { any, today, days7, days30, custom }
 
-/// The type options of S-05. Carousels and reels apply to posts only.
-enum TypeFilter { all, photos, videos, carousels, reels }
+/// The media options of S-05.
+enum TypeFilter { all, photos, videos }
 
 /// The filters of S-05 except the kind (which is the S-04 switch).
 @immutable
@@ -20,6 +20,7 @@ class LibraryFilters {
     this.customTo,
     this.type = TypeFilter.all,
     this.highlightsOnly = false,
+    this.reelsOnly = false,
   }) : targetIds = Set<int>.unmodifiable(targetIds);
 
   /// No filters.
@@ -37,26 +38,22 @@ class LibraryFilters {
   /// Last day of a custom range, inclusive.
   final DateTime? customTo;
 
-  /// Photo, video, carousel or reel.
+  /// Photo or video.
   final TypeFilter type;
 
   /// Only highlight items (FR-72). They are stories in the kind switch.
   final bool highlightsOnly;
+
+  /// Only reels: posts whose post type is reel. Applies to posts only.
+  final bool reelsOnly;
 
   /// Whether anything narrows the library (the kind is not counted).
   bool get isActive =>
       targetIds.isNotEmpty ||
       date != DatePreset.any ||
       type != TypeFilter.all ||
-      highlightsOnly;
-
-  /// The type that applies to [kind]: carousels and reels mean nothing for
-  /// stories.
-  TypeFilter effectiveType(LibraryKind kind) =>
-      kind == LibraryKind.stories &&
-          (type == TypeFilter.carousels || type == TypeFilter.reels)
-      ? TypeFilter.all
-      : type;
+      highlightsOnly ||
+      reelsOnly;
 
   /// Returns a copy with the given fields replaced.
   LibraryFilters copyWith({
@@ -66,6 +63,7 @@ class LibraryFilters {
     DateTime? customTo,
     TypeFilter? type,
     bool? highlightsOnly,
+    bool? reelsOnly,
   }) => LibraryFilters(
     targetIds: targetIds ?? this.targetIds,
     date: date ?? this.date,
@@ -73,6 +71,7 @@ class LibraryFilters {
     customTo: customTo ?? this.customTo,
     type: type ?? this.type,
     highlightsOnly: highlightsOnly ?? this.highlightsOnly,
+    reelsOnly: reelsOnly ?? this.reelsOnly,
   );
 
   /// The repo filter for [kind] at [now] (UTC). Local midnights bound the
@@ -105,7 +104,6 @@ class LibraryFilters {
         if (a != null) from = DateTime(a.year, a.month, a.day).toUtc();
         if (b != null) to = DateTime(b.year, b.month, b.day + 1).toUtc();
     }
-    final t = effectiveType(kind);
     return ContentFilter(
       kind: highlightsOnly
           ? ContentKind.highlight
@@ -115,22 +113,18 @@ class LibraryFilters {
       targetIds: targetIds,
       from: from,
       to: to,
-      mediaType: switch (t) {
+      mediaType: switch (type) {
         TypeFilter.photos => MediaType.photo,
         TypeFilter.videos => MediaType.video,
-        _ => null,
+        TypeFilter.all => null,
       },
     );
   }
 
-  /// Whether [item] passes the post-shape part of the type filter, which the
-  /// repo filter cannot express.
-  bool matchesShape(ContentWithMedia item, LibraryKind kind) =>
-      switch (effectiveType(kind)) {
-        TypeFilter.carousels => item.content.postType == PostType.carousel,
-        TypeFilter.reels => item.content.postType == PostType.reel,
-        _ => true,
-      };
+  /// Whether [item] passes the reel part of the filter, which the repo filter
+  /// cannot express. Stories are never reels.
+  bool matchesShape(ContentWithMedia item) =>
+      !reelsOnly || item.content.postType == PostType.reel;
 
   @override
   bool operator ==(Object other) =>
@@ -140,7 +134,8 @@ class LibraryFilters {
       other.customFrom == customFrom &&
       other.customTo == customTo &&
       other.type == type &&
-      other.highlightsOnly == highlightsOnly;
+      other.highlightsOnly == highlightsOnly &&
+      other.reelsOnly == reelsOnly;
 
   @override
   int get hashCode => Object.hash(
@@ -150,5 +145,6 @@ class LibraryFilters {
     customTo,
     type,
     highlightsOnly,
+    reelsOnly,
   );
 }

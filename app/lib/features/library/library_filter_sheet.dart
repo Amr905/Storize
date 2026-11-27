@@ -94,10 +94,6 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
       (TypeFilter.all, l10n.libTypeAll),
       (TypeFilter.photos, l10n.libTypePhotos),
       (TypeFilter.videos, l10n.libTypeVideos),
-      if (_kind == LibraryKind.posts) ...[
-        (TypeFilter.carousels, l10n.libTypeCarousels),
-        (TypeFilter.reels, l10n.libTypeReels),
-      ],
     ];
     final customLabel =
         _filters.date == DatePreset.custom &&
@@ -108,7 +104,7 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
             loc.formatMediumDate(_filters.customTo!),
           )
         : l10n.libDateCustom;
-    final type = _filters.effectiveType(_kind);
+    final type = _filters.type;
 
     Widget section(String title, Widget child) => Padding(
       padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s16),
@@ -179,20 +175,42 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
                   ChoiceChip(
                     key: ValueKey('filter-kind-${k.name}'),
                     label: Text(label),
-                    selected: _kind == k && !_filters.highlightsOnly,
+                    selected:
+                        _kind == k &&
+                        !_filters.highlightsOnly &&
+                        !_filters.reelsOnly,
                     showCheckmark: true,
                     onSelected: (_) => setState(() {
                       _kind = k;
-                      _filters = _filters.copyWith(highlightsOnly: false);
+                      _filters = _filters.copyWith(
+                        highlightsOnly: false,
+                        reelsOnly: false,
+                      );
                     }),
                   ),
+                ChoiceChip(
+                  key: const ValueKey('filter-kind-reels'),
+                  label: Text(l10n.libKindReels),
+                  selected: _filters.reelsOnly,
+                  showCheckmark: true,
+                  onSelected: (on) => setState(() {
+                    _filters = _filters.copyWith(
+                      reelsOnly: on,
+                      highlightsOnly: false,
+                    );
+                    if (on) _kind = LibraryKind.posts;
+                  }),
+                ),
                 ChoiceChip(
                   key: const ValueKey('filter-kind-highlights'),
                   label: Text(l10n.libHighlightsFilter),
                   selected: _filters.highlightsOnly,
                   showCheckmark: true,
                   onSelected: (on) => setState(() {
-                    _filters = _filters.copyWith(highlightsOnly: on);
+                    _filters = _filters.copyWith(
+                      highlightsOnly: on,
+                      reelsOnly: false,
+                    );
                     if (on) _kind = LibraryKind.stories;
                   }),
                 ),

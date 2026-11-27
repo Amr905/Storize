@@ -41,6 +41,15 @@ abstract interface class ContentRepo {
   /// ID descending. Each item has its media files in slide order.
   Stream<List<ContentWithMedia>> watchLibrary(ContentFilter filter);
 
+  /// Like [watchLibrary], but only items whose username, caption, location
+  /// name or highlight title contains [query] (case-insensitive substring; the
+  /// caller trims it). An empty [query] returns the same as [watchLibrary].
+  /// Items are ordered as in [watchLibrary].
+  Stream<List<ContentWithMedia>> watchLibrarySearch(
+    ContentFilter filter,
+    String query,
+  );
+
   /// The content with [id] and its slides, or null.
   Future<ContentWithMedia?> getById(int id);
 

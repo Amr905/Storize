@@ -22,10 +22,56 @@ final class PendingMediaRows {
   final ContentRow content;
 }
 
+/// Escapes the `LIKE` wildcards `%` and `_` and the escape character itself,
+/// for use with `ESCAPE '\\'`.
+String escapeLikePattern(String raw) =>
+    raw.replaceAllMapped(RegExp(r'[\\%_]'), (m) => '\\${m[0]}');
+
+/// `column LIKE pattern ESCAPE '\'`. Drift's `like` has no ESCAPE clause, so
+/// this writes the SQL itself. The pattern goes in as a bound variable.
+final class _EscapedLike extends Expression<bool> {
+  const _EscapedLike(this.column, this.pattern);
+
+  final Expression<String> column;
+  final String pattern;
+
+  @override
+  Precedence get precedence => Precedence.primary;
+
+  @override
+  void writeInto(GenerationContext context) {
+    context.buffer.write('(');
+    column.writeInto(context);
+    context.buffer.write(' LIKE ');
+    Variable<String>(pattern).writeInto(context);
+    context.buffer.write(r" ESCAPE '\')");
+  }
+}
+
+/// The highlight title stored in `extras_json`, or NULL when there is none or
+/// the JSON is not valid.
+final class _HighlightTitle extends Expression<String> {
+  const _HighlightTitle(this.json);
+
+  final Expression<String> json;
+
+  @override
+  Precedence get precedence => Precedence.primary;
+
+  @override
+  void writeInto(GenerationContext context) {
+    context.buffer.write('(CASE WHEN json_valid(');
+    json.writeInto(context);
+    context.buffer.write(') THEN json_extract(');
+    json.writeInto(context);
+    context.buffer.write(r", '$.highlightTitle') END)");
+  }
+}
+
 /// Raw queries for `content` and `media_file`.
 ///
 /// Rows come back as drift row classes; T-006 maps them to domain entities.
-@DriftAccessor(tables: [Contents, MediaFiles])
+@DriftAccessor(tables: [Contents, MediaFiles, Targets])
 class ContentDao extends DatabaseAccessor<StorizeDatabase>
     with _$ContentDaoMixin {
   ContentDao(super.attachedDatabase);
@@ -41,8 +87,9 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
   /// there is no index on `posted_at` alone, so SQLite scans `content`; the
   /// UI always sets a kind (stories and posts are separate tabs).
   JoinedSelectStatement<HasResultSet, dynamic> libraryQuery(
-    ContentFilter filter,
-  ) {
+    ContentFilter filter, {
+    String? text,
+  }) {
     final query =
         select(contents).join([
             leftOuterJoin(
@@ -50,7 +97,14 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
               mediaFiles.contentId.equalsExp(contents.id),
             ),
           ])
-          ..where(_libraryPredicate(filter))
+          ..where(
+            text == null || text.isEmpty
+                ? _libraryPredicate(filter)
+                : Expression.and([
+                    _libraryPredicate(filter),
+                    _textPredicate(text),
+                  ]),
+          )
           ..orderBy([
             OrderingTerm.desc(contents.postedAt),
             OrderingTerm.desc(contents.id),
@@ -88,6 +142,32 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
   /// change.
   Stream<List<ContentWithMediaRows>> watchLibrary(ContentFilter filter) =>
       libraryQuery(filter).watch().map(_groupJoined);
+
+  /// Library rows whose username, caption, location or highlight title
+  /// contains [text] (see [_textPredicate]). Emits again on change.
+  Stream<List<ContentWithMediaRows>> watchSearch(
+    ContentFilter filter,
+    String text,
+  ) => libraryQuery(filter, text: text).watch().map(_groupJoined);
+
+  /// The text part of the search. `LIKE` with `\` as the escape character, so
+  /// a `%` or `_` typed by the user matches itself. LIKE is case-insensitive
+  /// for ASCII letters (SQLite's default).
+  Expression<bool> _textPredicate(String text) {
+    final pattern = '%${escapeLikePattern(text)}%';
+    return Expression.or([
+      existsQuery(
+        select(targets)..where(
+          (t) =>
+              t.id.equalsExp(contents.targetId) &
+              _EscapedLike(t.username, pattern),
+        ),
+      ),
+      _EscapedLike(contents.caption, pattern),
+      _EscapedLike(contents.locationName, pattern),
+      _EscapedLike(_HighlightTitle(contents.extrasJson), pattern),
+    ]);
+  }
 
   /// One-shot version of [watchLibrary].
   Future<List<ContentWithMediaRows>> getLibrary(ContentFilter filter) async =>
