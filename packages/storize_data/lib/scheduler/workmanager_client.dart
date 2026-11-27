@@ -27,6 +27,9 @@ abstract interface class WorkmanagerClient {
 
   /// Cancels every task.
   Future<void> cancelAll();
+
+  /// Cancels the work registered under [uniqueName], if any.
+  Future<void> cancelByUniqueName(String uniqueName);
 }
 
 /// The production [WorkmanagerClient] over the plugin singleton.
@@ -82,4 +85,8 @@ final class PluginWorkmanagerClient implements WorkmanagerClient {
 
   @override
   Future<void> cancelAll() => _plugin.cancelAll();
+
+  @override
+  Future<void> cancelByUniqueName(String uniqueName) =>
+      _plugin.cancelByUniqueName(uniqueName);
 }

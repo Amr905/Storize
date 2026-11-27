@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:storize_data/db/converters.dart';
 import 'package:storize_data/db/storize_database.dart';
 import 'package:storize_data/db/tables.dart';
 import 'package:storize_domain/storize_domain.dart';
@@ -306,6 +307,34 @@ class ContentDao extends DatabaseAccessor<StorizeDatabase>
               ]))
             .get(),
       );
+
+  /// The content ids, kinds and target ids of items with a DONE media file
+  /// downloaded at or after [since]. One row per item (the caller counts).
+  Future<List<({int id, ContentKind kind, int targetId})>> savedSince(
+    DateTime since,
+  ) async {
+    final query =
+        selectOnly(mediaFiles).join([
+            innerJoin(contents, contents.id.equalsExp(mediaFiles.contentId)),
+          ])
+          ..addColumns([contents.id, contents.kind, contents.targetId])
+          ..where(
+            mediaFiles.status.equalsValue(MediaFileStatus.done) &
+                mediaFiles.downloadedAt.isBiggerOrEqualValue(
+                  since.millisecondsSinceEpoch,
+                ),
+          );
+    final rows = await query.get();
+    const kinds = ContentKindConverter();
+    return [
+      for (final r in rows)
+        (
+          id: r.read(contents.id)!,
+          kind: kinds.fromSql(r.read(contents.kind)!),
+          targetId: r.read(contents.targetId)!,
+        ),
+    ];
+  }
 
   /// Sum of `size_bytes` of DONE media files, per target id. Targets with no
   /// downloaded bytes are absent.

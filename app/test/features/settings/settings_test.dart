@@ -341,6 +341,12 @@ void main() {
         ),
       );
       await pumpSettings(t, rig);
+      // The About rows sit below the fold since FR-78 added a row.
+      await t.scrollUntilVisible(
+        find.text('Update available'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Update available'), findsOneWidget);
       expect(find.text('v0.2.0'), findsOneWidget);
     });
@@ -350,6 +356,12 @@ void main() {
     ) async {
       final rig = SettingsRig();
       await pumpSettings(t, rig);
+      // The About rows sit below the fold since FR-78 added a row.
+      await t.scrollUntilVisible(
+        find.text('Version 0.1.0'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Update available'), findsNothing);
       expect(find.text('Version 0.1.0'), findsOneWidget);
     });

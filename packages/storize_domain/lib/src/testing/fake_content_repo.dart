@@ -250,6 +250,29 @@ final class FakeContentRepo implements ContentRepo {
           .toList();
 
   @override
+  Future<SavedCounts> savedSince(DateTime since) async {
+    final ids = <int, Set<int>>{
+      for (final k in ContentKind.values) k.index: <int>{},
+    };
+    final accounts = <int>{};
+    for (final m in _media.values) {
+      final at = m.downloadedAt;
+      if (m.status != MediaFileStatus.done || at == null) continue;
+      if (at.isBefore(since)) continue;
+      final c = _contents[m.contentId];
+      if (c == null) continue;
+      ids[c.kind.index]!.add(c.id);
+      accounts.add(c.targetId);
+    }
+    return SavedCounts(
+      stories: ids[ContentKind.story.index]!.length,
+      posts: ids[ContentKind.post.index]!.length,
+      highlights: ids[ContentKind.highlight.index]!.length,
+      accounts: accounts.length,
+    );
+  }
+
+  @override
   Future<Map<int, int>> storageBytesByTarget() async {
     final totals = <int, int>{};
     for (final m in _media.values) {

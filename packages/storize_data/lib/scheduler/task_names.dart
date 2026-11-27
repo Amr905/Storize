@@ -22,6 +22,10 @@ abstract final class TaskNames {
   /// check never queues it twice (the task itself uses [history]).
   static const String historyKick = 'history-kick';
 
+  /// One-off daily summary (FR-78): one run a day at the summary time, which
+  /// re-schedules itself.
+  static const String dailySummary = 'daily-summary';
+
   /// Periodic retention (24 h).
   static const String retention = 'retention';
 
@@ -36,6 +40,7 @@ abstract final class TaskNames {
     history,
     retention,
     updateCheck,
+    dailySummary,
   };
 
   /// Input-data key: the target ID of a one-target manual check.

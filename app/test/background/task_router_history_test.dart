@@ -27,6 +27,9 @@ final class _Recorder implements TaskNotifier {
   final List<AccountStatus> sessions = [];
 
   @override
+  Future<void> dailySummary(SavedCounts counts) async {}
+
+  @override
   Future<void> newItemsSaved(
     DownloadPendingResult downloads, {
     CheckRunResult? check,

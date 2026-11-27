@@ -115,6 +115,7 @@ MediaFile aMedia({
   MediaType type = MediaType.photo,
   MediaFileStatus status = MediaFileStatus.pending,
   int? sizeBytes,
+  DateTime? downloadedAt,
   String url = 'https://cdn.example.invalid/m',
 }) => MediaFile(
   id: MediaFile.unsavedId,
@@ -124,6 +125,7 @@ MediaFile aMedia({
   sourceUrl: '$url$slideIndex',
   status: status,
   sizeBytes: sizeBytes,
+  downloadedAt: downloadedAt,
 );
 
 /// A media file with every optional field set.

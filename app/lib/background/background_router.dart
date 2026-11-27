@@ -22,6 +22,7 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   historyProbe: c.backfillHistory.hasRunning,
   highlights: c.syncHighlights.runDue,
   resolvePending: c.resolvePendingTargets.run,
+  dailySummary: _dailySummaryFor(c),
   log: c.log,
   notifier: c.parts.notifications,
   activeTargets: (scope, targetId) async {
@@ -38,6 +39,21 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
         .length;
   },
 );
+
+/// The FR-78 daily summary task of [c], or null when the scheduler cannot
+/// register the daily run (only the WorkManager scheduler can).
+DailySummaryTask? _dailySummaryFor(AppComposition c) {
+  final enqueuer = c.parts.enqueuer;
+  return switch (enqueuer) {
+    final DailySummaryScheduler scheduler => DailySummaryTask(
+      settings: c.settings,
+      content: c.content,
+      clock: c.clock,
+      scheduler: scheduler,
+    ),
+    _ => null,
+  };
+}
 
 /// Runs the GitHub release check and stores the time (`lastUpdateCheckAt`).
 ///

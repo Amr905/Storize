@@ -17,6 +17,9 @@ abstract interface class TaskNotifier {
   /// The session of the active account changed to [status].
   Future<void> sessionChanged(AccountStatus status);
 
+  /// Shows the FR-78 daily summary of [counts] (never called with zero).
+  Future<void> dailySummary(SavedCounts counts);
+
   /// The downloads stopped for lack of space.
   Future<void> storageFull();
 
@@ -99,6 +102,7 @@ final class TaskRouter {
     this._historyProbe,
     this._highlights,
     this._resolvePending,
+    this._dailySummary,
     this.budget = const Duration(minutes: 9),
     this.startMargin = const Duration(seconds: 30),
   });
@@ -130,6 +134,7 @@ final class TaskRouter {
   final HistoryProbe? _historyProbe;
   final HighlightsRunner? _highlights;
   final PendingResolver? _resolvePending;
+  final DailySummaryTask? _dailySummary;
 
   /// The wait before the next `history` task while backfills run.
   static const Duration historyDelay = Duration(minutes: 1);
@@ -166,6 +171,8 @@ final class TaskRouter {
         case TaskNames.updateCheck:
           await _updateCheck();
           return true;
+        case TaskNames.dailySummary:
+          return await _dailySummaryTask();
         default:
           _log?.log(LogLevel.warn, 'background', 'unknown_task');
           return true;
@@ -368,6 +375,33 @@ final class TaskRouter {
     if (notifier == null || status == null) return;
     try {
       await notifier.sessionChanged(status);
+    } on Object catch (error) {
+      _logNotifyFailure(error);
+    }
+  }
+
+  /// The `daily-summary` task (FR-78): shows today's summary, then schedules
+  /// the next run. The re-schedule comes last, because it replaces this
+  /// run's registration under the same name. A failed count is not retried
+  /// here: the error reaches [route], which logs it and asks for a retry, and
+  /// the next run is already scheduled by then.
+  Future<bool> _dailySummaryTask() async {
+    final task = _dailySummary;
+    if (task == null) return true;
+    try {
+      final counts = await task.countToday();
+      if (counts != null) await _notifySummary(counts);
+    } finally {
+      await task.reschedule();
+    }
+    return true;
+  }
+
+  Future<void> _notifySummary(SavedCounts counts) async {
+    final notifier = _notifier;
+    if (notifier == null) return;
+    try {
+      await notifier.dailySummary(counts);
     } on Object catch (error) {
       _logNotifyFailure(error);
     }

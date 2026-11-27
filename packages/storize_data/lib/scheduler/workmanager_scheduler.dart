@@ -29,7 +29,8 @@ abstract interface class DownloadEnqueuer {
 /// itself re-creates persisted work after a reboot, so nothing else is
 /// needed for that; a force-stop clears the work and the next start of the
 /// app registers it again).
-final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
+final class WorkmanagerScheduler
+    implements Scheduler, DownloadEnqueuer, DailySummaryScheduler {
   /// Creates the scheduler.
   // ignore: prefer_initializing_formals, a private field behind a public name.
   WorkmanagerScheduler(this._client, {DiagnosticLog? log}) : _log = log;
@@ -164,4 +165,26 @@ final class WorkmanagerScheduler implements Scheduler, DownloadEnqueuer {
 
   @override
   Future<void> cancelAll() => _client.cancelAll();
+
+  @override
+  Future<void> schedule({
+    required NotificationMode mode,
+    required SummaryTime time,
+    required DateTime nowUtc,
+    required Duration localOffset,
+  }) async {
+    if (mode != NotificationMode.daily) {
+      await _client.cancelByUniqueName(TaskNames.dailySummary);
+      return;
+    }
+    // ExistingWorkPolicy.replace: a changed time or a finished run replaces
+    // the pending one, so there is never a second summary run queued.
+    await _client.registerOneOff(
+      TaskNames.dailySummary,
+      TaskNames.dailySummary,
+      constraints: Constraints(networkType: NetworkType.notRequired),
+      policy: ExistingWorkPolicy.replace,
+      initialDelay: SummaryWindow.delayUntilNext(time, nowUtc, localOffset),
+    );
+  }
 }

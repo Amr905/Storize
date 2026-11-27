@@ -37,6 +37,7 @@ export 'src/usecases/add_target.dart';
 export 'src/usecases/apply_retention.dart';
 export 'src/usecases/backfill_history.dart';
 export 'src/usecases/compute_storage.dart';
+export 'src/usecases/daily_summary.dart';
 export 'src/usecases/delete_content.dart';
 export 'src/usecases/detect_gaps.dart';
 export 'src/usecases/download_pending.dart';

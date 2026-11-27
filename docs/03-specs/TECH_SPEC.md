@@ -652,3 +652,10 @@ Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(List<String
 
 ### 17.5 Gallery paths
 `Pictures/Storize/<username>/Highlights/<sanitized title>/`.
+
+## 18. v0.4 notes
+
+- **Daily summary (FR-78, T-057):** notification channel `daily_summary` ("Daily summary", low importance, notification id 7). Background task `daily-summary`: a one-off WorkManager run at the next `summaryTime` (`ExistingWorkPolicy.replace`), re-enqueued after each run and re-applied by `AppComposition.keepScheduleApplied` whenever `notificationMode`/`summaryTime` change and at start-up. Port `DailySummaryScheduler` (separate from `Scheduler`); `ContentRepo.savedSince` counts. No Instagram traffic.
+- **Health (FR-75, T-056):** `HealthReadModel` port (read-only); drift v4 adds `target.last_success_at`, `last_check_outcome`, `last_check_code`, written by `RunCheck`.
+- **Captions and details (FR-77, T-054):** drift v3 adds `location_name`, `tagged_usernames` (JSON).
+

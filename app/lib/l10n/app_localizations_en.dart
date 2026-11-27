@@ -2293,4 +2293,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hltNever => 'never';
+
+  @override
+  String get ntfChannelDailySummary => 'Daily summary';
+
+  @override
+  String ntfDailySummaryBoth(int stories, int posts, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stories,
+      locale: localeName,
+      other: '$stories stories',
+      one: '1 story',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      posts,
+      locale: localeName,
+      other: '$posts posts',
+      one: '1 post',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return 'Today: $_temp0 and $_temp1 saved from $_temp2';
+  }
+
+  @override
+  String ntfDailySummaryStories(int stories, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stories,
+      locale: localeName,
+      other: '$stories stories',
+      one: '1 story',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return 'Today: $_temp0 saved from $_temp1';
+  }
+
+  @override
+  String ntfDailySummaryPosts(int posts, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      posts,
+      locale: localeName,
+      other: '$posts posts',
+      one: '1 post',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return 'Today: $_temp0 saved from $_temp1';
+  }
+
+  @override
+  String ntfDailySummaryHighlightsOnly(int highlights, int accounts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      highlights,
+      locale: localeName,
+      other: '$highlights highlights',
+      one: '1 highlight',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      accounts,
+      locale: localeName,
+      other: '$accounts accounts',
+      one: '1 account',
+    );
+    return 'Today: $_temp0 saved from $_temp1';
+  }
+
+  @override
+  String ntfDailySummaryHighlightsSuffix(int highlights) {
+    String _temp0 = intl.Intl.pluralLogic(
+      highlights,
+      locale: localeName,
+      other: '$highlights highlights',
+      one: '1 highlight',
+    );
+    return ', and $_temp0';
+  }
+
+  @override
+  String get setNotifyMode => 'Notify me';
+
+  @override
+  String get setNotifyModeHint =>
+      'Problems such as a lost login always notify at once.';
+
+  @override
+  String get setNotifyModePerItem => 'Per item';
+
+  @override
+  String get setNotifyModeDaily => 'Daily summary';
+
+  @override
+  String get setNotifyModeOff => 'Off';
+
+  @override
+  String get setSummaryTime => 'Summary time';
 }

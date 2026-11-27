@@ -54,6 +54,9 @@ final class _Client implements WorkmanagerClient {
   );
   @override
   Future<void> cancelAll() async {}
+
+  @override
+  Future<void> cancelByUniqueName(String uniqueName) async {}
 }
 
 final class _ThrowingPlugin extends StorizePlatformAndroid {

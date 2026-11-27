@@ -14,6 +14,59 @@ enum AppThemeMode {
   dark,
 }
 
+/// How the app notifies about saved content (FR-78, Settings -> Notify me).
+enum NotificationMode {
+  /// One notification per item or group (the default, as before FR-78).
+  perItem,
+
+  /// One summary notification a day at [AppSettings.summaryTime].
+  daily,
+
+  /// No content notifications. Problem notifications still show.
+  off,
+}
+
+/// A time of day in the user's local time (FR-78 summary time).
+@immutable
+final class SummaryTime {
+  /// Creates a time. Throws [RangeError] outside 00:00 to 23:59.
+  const SummaryTime(this.hour, this.minute)
+    : assert(hour >= 0 && hour < 24, 'hour must be 0..23'),
+      assert(minute >= 0 && minute < 60, 'minute must be 0..59');
+
+  /// Creates the time of [minuteOfDay] (0 to 1439). Throws [RangeError]
+  /// outside that range.
+  factory SummaryTime.fromMinuteOfDay(int minuteOfDay) {
+    if (minuteOfDay < 0 || minuteOfDay > 1439) {
+      throw RangeError.range(minuteOfDay, 0, 1439, 'minuteOfDay');
+    }
+    return SummaryTime(minuteOfDay ~/ 60, minuteOfDay % 60);
+  }
+
+  /// The default summary time, 21:00.
+  static const SummaryTime defaultTime = SummaryTime(21, 0);
+
+  /// The hour, 0 to 23.
+  final int hour;
+
+  /// The minute, 0 to 59.
+  final int minute;
+
+  /// Minutes after local midnight, 0 to 1439 (the stored form).
+  int get minuteOfDay => hour * 60 + minute;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SummaryTime && other.hour == hour && other.minute == minute;
+
+  @override
+  int get hashCode => Object.hash(hour, minute);
+
+  @override
+  String toString() =>
+      'SummaryTime($hour:${minute.toString().padLeft(2, '0')})';
+}
+
 /// The user settings (TECH_SPEC §3 "Settings", stored in shared_preferences).
 @immutable
 final class AppSettings {
@@ -32,6 +85,8 @@ final class AppSettings {
     this.pageModeInBackground = false,
     this.lastUpdateCheckAt,
     this.themeMode = AppThemeMode.system,
+    this.notificationMode = NotificationMode.perItem,
+    this.summaryTime = SummaryTime.defaultTime,
   });
 
   /// Allowed story check intervals in minutes (BR-5).
@@ -88,6 +143,13 @@ final class AppSettings {
   /// The appearance: follow the phone, or force light or dark.
   final AppThemeMode themeMode;
 
+  /// How content is notified (FR-78). [NotificationMode.perItem] keeps the
+  /// previous behaviour; the New stories / New posts toggles apply to it only.
+  final NotificationMode notificationMode;
+
+  /// The local time of the daily summary (FR-78). Used in daily mode only.
+  final SummaryTime summaryTime;
+
   /// The rule violations of these settings, one message each. Empty when the
   /// settings are valid. `SettingsRepo` implementations reject invalid
   /// settings with these messages.
@@ -119,6 +181,8 @@ final class AppSettings {
     bool? pageModeInBackground,
     Object? lastUpdateCheckAt = unset,
     AppThemeMode? themeMode,
+    NotificationMode? notificationMode,
+    SummaryTime? summaryTime,
   }) => AppSettings(
     storyIntervalMin: storyIntervalMin ?? this.storyIntervalMin,
     postIntervalMin: postIntervalMin ?? this.postIntervalMin,
@@ -139,6 +203,8 @@ final class AppSettings {
       this.lastUpdateCheckAt,
     ),
     themeMode: themeMode ?? this.themeMode,
+    notificationMode: notificationMode ?? this.notificationMode,
+    summaryTime: summaryTime ?? this.summaryTime,
   );
 
   @override
@@ -157,7 +223,9 @@ final class AppSettings {
           other.riskAcknowledgedAt == riskAcknowledgedAt &&
           other.pageModeInBackground == pageModeInBackground &&
           other.lastUpdateCheckAt == lastUpdateCheckAt &&
-          other.themeMode == themeMode);
+          other.themeMode == themeMode &&
+          other.notificationMode == notificationMode &&
+          other.summaryTime == summaryTime);
 
   @override
   int get hashCode => Object.hash(
@@ -174,6 +242,8 @@ final class AppSettings {
     pageModeInBackground,
     lastUpdateCheckAt,
     themeMode,
+    notificationMode,
+    summaryTime,
   );
 
   @override

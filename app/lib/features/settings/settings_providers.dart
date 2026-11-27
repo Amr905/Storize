@@ -148,6 +148,15 @@ class SettingsActions {
   Future<void> setThemeMode(AppThemeMode mode) =>
       _settings.update((s) => s.copyWith(themeMode: mode));
 
+  /// Notify me: per item, daily summary or off (FR-78). Re-schedules the
+  /// daily summary run.
+  Future<void> setNotificationMode(NotificationMode mode) =>
+      _rescheduleSummary((s) => s.copyWith(notificationMode: mode));
+
+  /// The daily summary time (FR-78). Re-schedules the daily summary run.
+  Future<void> setSummaryTime(SummaryTime time) =>
+      _rescheduleSummary((s) => s.copyWith(summaryTime: time));
+
   /// Keep everything.
   Future<void> keepForever() =>
       _settings.update((s) => s.copyWith(retentionDays: null));
@@ -157,6 +166,23 @@ class SettingsActions {
   Future<RetentionResult> keepAfterDays(int days) async {
     await _settings.update((s) => s.copyWith(retentionDays: days));
     return _ref.read(applyRetentionProvider).call();
+  }
+
+  Future<void> _rescheduleSummary(
+    AppSettings Function(AppSettings) change,
+  ) async {
+    final s = await _settings.update(change);
+    // Only the WorkManager scheduler can register the daily run.
+    switch (_ref.read(schedulerProvider)) {
+      case final DailySummaryScheduler scheduler:
+        await scheduler.schedule(
+          mode: s.notificationMode,
+          time: s.summaryTime,
+          nowUtc: _ref.read(clockProvider).now(),
+          localOffset: DateTime.now().timeZoneOffset,
+        );
+      case _:
+    }
   }
 
   Future<void> _reschedule(AppSettings Function(AppSettings) change) async {

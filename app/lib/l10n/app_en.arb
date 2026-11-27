@@ -2015,4 +2015,44 @@
   "@hltNever": {
     "description": "Relative time when there was no event. Lower case, used in 'Last run never'."
   }
+  ,
+  "ntfChannelDailySummary": "Daily summary",
+  "@ntfChannelDailySummary": {"description": "Notification channel name for the FR-78 daily summary (low importance)."},
+  "ntfDailySummaryBoth": "Today: {stories, plural, one{1 story} other{{stories} stories}} and {posts, plural, one{1 post} other{{posts} posts}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfDailySummaryBoth": {
+    "description": "FR-78 daily summary text when there are stories and posts.",
+    "placeholders": {"stories": {"type": "int"}, "posts": {"type": "int"}, "accounts": {"type": "int"}}
+  },
+  "ntfDailySummaryStories": "Today: {stories, plural, one{1 story} other{{stories} stories}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfDailySummaryStories": {
+    "description": "FR-78 daily summary text when only stories were saved.",
+    "placeholders": {"stories": {"type": "int"}, "accounts": {"type": "int"}}
+  },
+  "ntfDailySummaryPosts": "Today: {posts, plural, one{1 post} other{{posts} posts}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfDailySummaryPosts": {
+    "description": "FR-78 daily summary text when only posts (and reels) were saved.",
+    "placeholders": {"posts": {"type": "int"}, "accounts": {"type": "int"}}
+  },
+  "ntfDailySummaryHighlightsOnly": "Today: {highlights, plural, one{1 highlight} other{{highlights} highlights}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}",
+  "@ntfDailySummaryHighlightsOnly": {
+    "description": "FR-78 daily summary text when only highlights were saved.",
+    "placeholders": {"highlights": {"type": "int"}, "accounts": {"type": "int"}}
+  },
+  "ntfDailySummaryHighlightsSuffix": ", and {highlights, plural, one{1 highlight} other{{highlights} highlights}}",
+  "@ntfDailySummaryHighlightsSuffix": {
+    "description": "Added to the FR-78 summary text when highlights were also saved.",
+    "placeholders": {"highlights": {"type": "int"}}
+  },
+  "setNotifyMode": "Notify me",
+  "@setNotifyMode": {"description": "S-12 row and sheet title for the notification mode (FR-78)."},
+  "setNotifyModeHint": "Problems such as a lost login always notify at once.",
+  "@setNotifyModeHint": {"description": "S-12 subtitle under the notification mode row."},
+  "setNotifyModePerItem": "Per item",
+  "@setNotifyModePerItem": {"description": "Notification mode option: one notification per new item or group."},
+  "setNotifyModeDaily": "Daily summary",
+  "@setNotifyModeDaily": {"description": "Notification mode option: one summary a day."},
+  "setNotifyModeOff": "Off",
+  "@setNotifyModeOff": {"description": "Notification mode option: no content notifications."},
+  "setSummaryTime": "Summary time",
+  "@setSummaryTime": {"description": "S-12 row that sets the time of the daily summary (FR-78)."}
 }
