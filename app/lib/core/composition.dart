@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:storize_app/background/move_notifier.dart';
 import 'package:storize_app/core/composition_platform.dart';
 import 'package:storize_app/core/discovery_refresher.dart';
+import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/onboarding/login_lease.dart';
 import 'package:storize_app/features/onboarding/setup_ops.dart';
@@ -58,6 +59,7 @@ final class CompositionParts {
     this.setupOps,
     this.findExisting,
     this.fullPhotoReader,
+    this.share,
     this.moveState,
     this.moveScheduler,
     this.moveNotifier,
@@ -134,6 +136,10 @@ final class CompositionParts {
   /// Reads a gallery photo for the full-size viewers (null in tests: the
   /// viewers then keep the thumbnail).
   final Future<Uint8List?> Function(String contentUri)? fullPhotoReader;
+
+  /// The system share sheet (null in tests: the library and viewers then use
+  /// the no-op default).
+  final ShareService? share;
 
   /// Where the progress of moving the saved files lives (FR-79). Null in
   /// tests that do not move files: the move use case is then absent.
