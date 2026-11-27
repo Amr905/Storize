@@ -538,13 +538,33 @@
       }
     }
   },
-  "libFilteredStories": "No stories match these filters.",
-  "@libFilteredStories": {
-    "description": "S-04 empty state (c) for stories."
+  "libSearchTooltip": "Search",
+  "@libSearchTooltip": {"description": "Library app bar: tooltip of the search button (FR-76)."},
+  "libSearchHint": "Search username, caption or location",
+  "@libSearchHint": {"description": "Library search field hint (FR-76)."},
+  "libSearchClear": "Clear search",
+  "@libSearchClear": {"description": "Tooltip of the button that clears the search text."},
+  "libSearchBack": "Close search",
+  "@libSearchBack": {"description": "Tooltip of the back button that closes the search field."},
+  "libSearchChip": "Search: {query}",
+  "@libSearchChip": {
+    "description": "Active filter chip for the search text. {query} is the text typed by the user.",
+    "placeholders": {"query": {"type": "String"}}
   },
-  "libFilteredPosts": "No posts match these filters.",
-  "@libFilteredPosts": {
-    "description": "S-04 empty state (c) for posts."
+  "libKindReels": "Reels",
+  "@libKindReels": {"description": "S-05 kind option and active filter chip: reels only (FR-76)."},
+  "libTypeCarousels": "Carousels",
+  "@libTypeCarousels": {
+    "description": "Type filter option (posts only)."
+  },
+  "libClearAll": "Clear all",
+  "@libClearAll": {"description": "S-04 button that removes every active filter chip and the search."},
+  "libNoMatchesBody": "Try fewer filters.",
+  "@libNoMatchesBody": {"description": "S-04 empty state (c) body when the search or filters hide every item."},
+  "libResultCount": "{count, plural, =1{1 result} other{{count} results}}",
+  "@libResultCount": {
+    "description": "S-04 line under the filter chips with the number of items shown (FR-76).",
+    "placeholders": {"count": {"type": "int"}}
   },
   "libClearFilters": "Clear filters",
   "@libClearFilters": {
@@ -613,14 +633,6 @@
   "libTypeVideos": "Videos",
   "@libTypeVideos": {
     "description": "Type filter option."
-  },
-  "libTypeCarousels": "Carousels",
-  "@libTypeCarousels": {
-    "description": "Type filter option (posts only)."
-  },
-  "libTypeReels": "Reels",
-  "@libTypeReels": {
-    "description": "Type filter option (posts only)."
   },
   "libApply": "Apply",
   "@libApply": {

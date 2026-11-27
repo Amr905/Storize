@@ -65,6 +65,26 @@ final class FakeContentRepo implements ContentRepo {
         return rows.map(_join).toList();
       });
 
+  /// Matches caption and location name only. The fake has no account or
+  /// highlight-title data; the drift query covers those.
+  @override
+  Stream<List<ContentWithMedia>> watchLibrarySearch(
+    ContentFilter filter,
+    String query,
+  ) {
+    final needle = query.toLowerCase();
+    bool hit(String? s) => s != null && s.toLowerCase().contains(needle);
+    return watchLibrary(filter).map(
+      (rows) => [
+        for (final r in rows)
+          if (needle.isEmpty ||
+              hit(r.content.caption) ||
+              hit(r.content.locationName))
+            r,
+      ],
+    );
+  }
+
   @override
   Future<ContentWithMedia?> getById(int id) async {
     final c = _contents[id];

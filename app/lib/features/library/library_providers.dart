@@ -45,6 +45,41 @@ class LibraryFiltersController extends Notifier<LibraryFilters> {
   void clear() => state = LibraryFilters.none;
 }
 
+/// How long the search field waits after the last keystroke (S-04 search).
+const Duration librarySearchDebounce = Duration(milliseconds: 300);
+
+/// The committed search text, trimmed. Empty means no search. The page sets
+/// it after [librarySearchDebounce], so each keystroke does not query the
+/// database.
+final librarySearchQueryProvider =
+    NotifierProvider<LibrarySearchController, String>(
+      LibrarySearchController.new,
+    );
+
+/// Holds the search text.
+class LibrarySearchController extends Notifier<String> {
+  @override
+  String build() => '';
+
+  /// Commits [text] (trimmed). Pass '' to end the search.
+  void set(String text) => state = text.trim();
+}
+
+/// The IDs of the items matching the search text (drift query, see
+/// `ContentRepo.watchLibrarySearch`), for the current kind and filters. Null
+/// when no search is active.
+final librarySearchIdsProvider = StreamProvider<Set<int>?>((ref) {
+  final query = ref.watch(librarySearchQueryProvider);
+  if (query.isEmpty) return Stream.value(null);
+  final kind = ref.watch(libraryKindProvider);
+  final filters = ref.watch(libraryFiltersProvider);
+  final now = ref.watch(clockProvider).now();
+  return ref
+      .watch(contentRepoProvider)
+      .watchLibrarySearch(filters.toContentFilter(kind, now), query)
+      .map((rows) => {for (final r in rows) r.content.id});
+});
+
 /// The IDs of the selected items. Empty means selection mode is off.
 final librarySelectionProvider =
     NotifierProvider<LibrarySelectionController, Set<int>>(
@@ -96,11 +131,19 @@ final libraryViewProvider = Provider<AsyncValue<LibraryView>>((ref) {
     final targets = ref.watch(libraryTargetsProvider);
     final kind = ref.watch(libraryKindProvider);
     final filters = ref.watch(libraryFiltersProvider);
-    final error = all.error ?? targets.error;
-    if (error != null && (!all.hasValue || !targets.hasValue)) {
-      return AsyncError(error, all.stackTrace ?? targets.stackTrace!);
+    final query = ref.watch(librarySearchQueryProvider);
+    final search = ref.watch(librarySearchIdsProvider);
+    final error = all.error ?? targets.error ?? search.error;
+    if (error != null &&
+        (!all.hasValue || !targets.hasValue || search.hasError)) {
+      return AsyncError(
+        error,
+        all.stackTrace ?? targets.stackTrace ?? search.stackTrace!,
+      );
     }
     if (!all.hasValue || !targets.hasValue) return const AsyncLoading();
+    // While a search is starting there is no result yet: keep loading.
+    if (query.isNotEmpty && !search.hasValue) return const AsyncLoading();
     final now = ref.watch(clockProvider).now();
     return AsyncData(
       buildLibraryView(
@@ -109,6 +152,7 @@ final libraryViewProvider = Provider<AsyncValue<LibraryView>>((ref) {
         kind: kind,
         filters: filters,
         now: now,
+        searchIds: query.isEmpty ? null : search.value,
       ),
     );
   } on Object catch (e, s) {
@@ -123,6 +167,7 @@ LibraryView buildLibraryView({
   required LibraryKind kind,
   required LibraryFilters filters,
   required DateTime now,
+  Set<int>? searchIds,
 }) {
   final wanted = kind == LibraryKind.stories
       ? ContentKind.story
@@ -144,7 +189,9 @@ LibraryView buildLibraryView({
     }
     if ((c.kind == ContentKind.post) != (wanted == ContentKind.post)) continue;
     totalOfKind++;
-    if (filter.matches(c, item.media) && filters.matchesShape(item, kind)) {
+    if ((searchIds == null || searchIds.contains(c.id)) &&
+        filter.matches(c, item.media) &&
+        filters.matchesShape(item, kind)) {
       shown.add(item);
     }
   }
@@ -170,7 +217,7 @@ LibraryView buildLibraryView({
     unviewedStories: unviewedStories,
     unviewedPosts: unviewedPosts,
     totalOfKind: totalOfKind,
-    filtersActive: filters.isActive,
+    filtersActive: filters.isActive || searchIds != null,
     now: now,
     lastCheck: lastCheck,
   );

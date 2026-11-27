@@ -821,17 +821,65 @@ abstract class AppLocalizations {
   /// **'Waiting for new posts. Last check {time}.'**
   String libWaitingPostsAt(String time);
 
-  /// S-04 empty state (c) for stories.
+  /// Library app bar: tooltip of the search button (FR-76).
   ///
   /// In en, this message translates to:
-  /// **'No stories match these filters.'**
-  String get libFilteredStories;
+  /// **'Search'**
+  String get libSearchTooltip;
 
-  /// S-04 empty state (c) for posts.
+  /// Library search field hint (FR-76).
   ///
   /// In en, this message translates to:
-  /// **'No posts match these filters.'**
-  String get libFilteredPosts;
+  /// **'Search username, caption or location'**
+  String get libSearchHint;
+
+  /// Tooltip of the button that clears the search text.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get libSearchClear;
+
+  /// Tooltip of the back button that closes the search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get libSearchBack;
+
+  /// Active filter chip for the search text. {query} is the text typed by the user.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: {query}'**
+  String libSearchChip(String query);
+
+  /// S-05 kind option and active filter chip: reels only (FR-76).
+  ///
+  /// In en, this message translates to:
+  /// **'Reels'**
+  String get libKindReels;
+
+  /// Type filter option (posts only).
+  ///
+  /// In en, this message translates to:
+  /// **'Carousels'**
+  String get libTypeCarousels;
+
+  /// S-04 button that removes every active filter chip and the search.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get libClearAll;
+
+  /// S-04 empty state (c) body when the search or filters hide every item.
+  ///
+  /// In en, this message translates to:
+  /// **'Try fewer filters.'**
+  String get libNoMatchesBody;
+
+  /// S-04 line under the filter chips with the number of items shown (FR-76).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result} other{{count} results}}'**
+  String libResultCount(int count);
 
   /// S-04 empty state (c) button.
   ///
@@ -922,18 +970,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Videos'**
   String get libTypeVideos;
-
-  /// Type filter option (posts only).
-  ///
-  /// In en, this message translates to:
-  /// **'Carousels'**
-  String get libTypeCarousels;
-
-  /// Type filter option (posts only).
-  ///
-  /// In en, this message translates to:
-  /// **'Reels'**
-  String get libTypeReels;
 
   /// S-05 apply button.
   ///

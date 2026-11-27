@@ -83,10 +83,18 @@ void main() {
       expect(f.kind, ContentKind.post);
     });
 
-    test('carousel and reel mean nothing for stories', () {
-      final f = LibraryFilters(type: TypeFilter.reels);
-      expect(f.effectiveType(LibraryKind.stories), TypeFilter.all);
-      expect(f.effectiveType(LibraryKind.posts), TypeFilter.reels);
+    test('reels are a kind of posts: post type reel, posts only', () {
+      final f = LibraryFilters(reelsOnly: true)
+          .toContentFilter(LibraryKind.posts, now);
+      expect(f.kind, ContentKind.post);
+      expect(f.mediaType, isNull);
+      expect(
+        LibraryFilters(reelsOnly: true).matchesShape(
+          _item(1, 1, now, kind: ContentKind.post, postType: PostType.reel),
+          LibraryKind.posts,
+        ),
+        isTrue,
+      );
     });
 
     test('isActive ignores the kind and equality is by value', () {
@@ -188,6 +196,40 @@ void main() {
       );
       expect(v.itemCount, 1);
       expect(v.items.single.content.id, 3);
+    });
+
+    test('carousels combine with the reel and account filters', () {
+      final v = view(
+        LibraryKind.posts,
+        LibraryFilters(type: TypeFilter.carousels, targetIds: const {1}),
+      );
+      expect(v.items.map((i) => i.content.id), [3]);
+      final none = view(
+        LibraryKind.posts,
+        LibraryFilters(type: TypeFilter.carousels, reelsOnly: true),
+      );
+      expect(none.itemCount, 0);
+    });
+
+    test('carousels mean nothing for stories', () {
+      final v = view(
+        LibraryKind.stories,
+        LibraryFilters(type: TypeFilter.carousels),
+      );
+      expect(v.itemCount, 2);
+    });
+
+    test('a search id set narrows the shown items and counts as active', () {
+      final v = buildLibraryView(
+        all: all,
+        targets: [t1, t2],
+        kind: LibraryKind.posts,
+        filters: LibraryFilters(type: TypeFilter.carousels),
+        now: now,
+        searchIds: {4},
+      );
+      expect(v.itemCount, 0);
+      expect(v.filtersActive, isTrue);
     });
 
     test('last check is the newest of the kind', () {

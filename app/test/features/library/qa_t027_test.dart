@@ -591,6 +591,14 @@ void main() {
         ),
         isEmpty,
       );
+      expect(
+        ids(
+          all,
+          LibraryKind.posts,
+          LibraryFilters(reelsOnly: true, targetIds: const {1}),
+        ),
+        {5},
+      );
     });
 
     test('unviewed counts ignore every filter, per kind', () {

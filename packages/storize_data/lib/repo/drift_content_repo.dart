@@ -39,6 +39,19 @@ final class DriftContentRepo implements ContentRepo {
       );
 
   @override
+  Stream<List<ContentWithMedia>> watchLibrarySearch(
+    ContentFilter filter,
+    String query,
+  ) => freshStream(
+    debounceAfterFirst(
+      _dao
+          .watchSearch(filter, query)
+          .map((rows) => rows.map(_toContentWithMedia).toList()),
+      libraryDebounce,
+    ),
+  );
+
+  @override
   Future<ContentWithMedia?> getById(int id) async {
     final row = await _dao.getById(id);
     return row == null ? null : _toContentWithMedia(row);

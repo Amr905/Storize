@@ -49,6 +49,12 @@ final class CrashingContentRepo implements ContentRepo {
   bool crashNext = true;
 
   @override
+  Stream<List<ContentWithMedia>> watchLibrarySearch(
+    ContentFilter filter,
+    String query,
+  ) => inner.watchLibrarySearch(filter, query);
+
+  @override
   Future<void> deleteByIds(Iterable<int> ids) async {
     if (crashNext) {
       crashNext = false;

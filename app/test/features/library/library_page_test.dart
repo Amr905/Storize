@@ -225,20 +225,15 @@ void main() {
       await pumpLibrary(t, rig);
       await t.tap(find.byTooltip('Filters'));
       await t.pumpAndSettle();
-      await t.tap(find.byKey(const ValueKey('filter-kind-posts')));
+      await t.tap(find.byKey(const ValueKey('filter-kind-reels')));
       await t.pumpAndSettle();
-      // Carousel and reel types exist for posts only.
-      expect(
-        find.byKey(const ValueKey('filter-type-carousels')),
-        findsOneWidget,
-      );
-      await t.tap(find.byKey(const ValueKey('filter-type-carousels')));
       await t.tap(find.text('Apply'));
       await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('active-filter-reels')), findsOneWidget);
       expect(find.byType(PostThumb), findsOneWidget);
     });
 
-    testWidgets('sheet type filter hides carousel and reel for stories', (
+    testWidgets('sheet media filter offers photos and videos only', (
       t,
     ) async {
       final rig = LibraryRig();
@@ -246,6 +241,8 @@ void main() {
       await pumpLibrary(t, rig);
       await t.tap(find.byTooltip('Filters'));
       await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('filter-type-photos')), findsOneWidget);
+      expect(find.byKey(const ValueKey('filter-type-videos')), findsOneWidget);
       expect(find.byKey(const ValueKey('filter-type-carousels')), findsNothing);
       expect(find.byKey(const ValueKey('filter-type-reels')), findsNothing);
     });
@@ -552,7 +549,7 @@ void main() {
                 .copyWith(targetIds: {client.id}, date: DatePreset.today),
           );
       await t.pumpAndSettle();
-      expect(find.text('No stories match these filters.'), findsOneWidget);
+      expect(find.text('Try fewer filters.'), findsOneWidget);
       await t.tap(find.text('Clear filters'));
       await t.pumpAndSettle();
       expect(_tiles(), findsNWidgets(9));
