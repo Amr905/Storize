@@ -1,4 +1,5 @@
 import 'package:storize_app/l10n/app_localizations.dart';
+import 'package:storize_domain/storize_domain.dart';
 
 /// Largest "Keep downloads" window in days (FR-54).
 const int retentionMaxDays = 3650;
@@ -21,6 +22,14 @@ String _oneDecimal(double value) => value.toStringAsFixed(1);
 String intervalLabel(AppLocalizations l10n, int minutes) => minutes < 60
     ? l10n.setIntervalMinutes(minutes)
     : l10n.setIntervalHours(minutes ~/ 60);
+
+/// The FR-78 notification mode as shown on S-12.
+String notifyModeLabel(AppLocalizations l10n, NotificationMode mode) =>
+    switch (mode) {
+      NotificationMode.perItem => l10n.setNotifyModePerItem,
+      NotificationMode.daily => l10n.setNotifyModeDaily,
+      NotificationMode.off => l10n.setNotifyModeOff,
+    };
 
 /// Parses the "After N days" field. Returns null unless the text is a whole
 /// number from 1 to [retentionMaxDays].

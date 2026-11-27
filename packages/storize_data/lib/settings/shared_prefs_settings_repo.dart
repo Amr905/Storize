@@ -53,6 +53,13 @@ abstract final class SettingsKeys {
   /// The appearance: `system`, `light` or `dark` (string).
   static const String themeMode = 'storize.themeMode';
 
+  /// The notification mode: `perItem`, `daily` or `off` (string, FR-78).
+  static const String notificationMode = 'storize.notificationMode';
+
+  /// The daily summary time as minutes after local midnight, 0 to 1439 (int,
+  /// FR-78).
+  static const String summaryTime = 'storize.summaryTime';
+
   /// The key of every [AppSettings] field, keyed by the field name.
   static const Map<String, String> byField = {
     'storyIntervalMin': storyIntervalMin,
@@ -68,6 +75,8 @@ abstract final class SettingsKeys {
     'pageModeInBackground': pageModeInBackground,
     'lastUpdateCheckAt': lastUpdateCheckAt,
     'themeMode': themeMode,
+    'notificationMode': notificationMode,
+    'summaryTime': summaryTime,
   };
 }
 
@@ -204,6 +213,10 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
       ),
       lastUpdateCheckAt: _instant(stored[SettingsKeys.lastUpdateCheckAt]),
       themeMode: _themeMode(stored[SettingsKeys.themeMode]),
+      notificationMode: _notificationMode(
+        stored[SettingsKeys.notificationMode],
+      ),
+      summaryTime: _summaryTime(stored[SettingsKeys.summaryTime]),
     );
   }
 
@@ -260,6 +273,18 @@ final class SharedPrefsSettingsRepo implements SettingsRepo {
     if (from.themeMode != to.themeMode) {
       await _prefs.setString(SettingsKeys.themeMode, to.themeMode.name);
     }
+    if (from.notificationMode != to.notificationMode) {
+      await _prefs.setString(
+        SettingsKeys.notificationMode,
+        to.notificationMode.name,
+      );
+    }
+    if (from.summaryTime != to.summaryTime) {
+      await _prefs.setInt(
+        SettingsKeys.summaryTime,
+        to.summaryTime.minuteOfDay,
+      );
+    }
   }
 
   Future<void> _setOrRemoveInt(String key, int? value) =>
@@ -294,6 +319,23 @@ AppThemeMode _themeMode(Object? raw) {
     if (raw == mode.name) return mode;
   }
   return AppThemeMode.system;
+}
+
+/// The stored notification mode, or [NotificationMode.perItem] (the behaviour
+/// before FR-78) when absent or unknown.
+NotificationMode _notificationMode(Object? raw) {
+  for (final mode in NotificationMode.values) {
+    if (raw == mode.name) return mode;
+  }
+  return NotificationMode.perItem;
+}
+
+/// The stored summary time, or 21:00 when absent or outside the day.
+SummaryTime _summaryTime(Object? raw) {
+  if (raw is int && raw >= 0 && raw <= 1439) {
+    return SummaryTime.fromMinuteOfDay(raw);
+  }
+  return SummaryTime.defaultTime;
 }
 
 bool _bool(Object? raw, bool fallback) => raw is bool ? raw : fallback;

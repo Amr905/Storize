@@ -132,16 +132,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SectionHeader(l10n.setSectionNotifications),
         _SectionCard(
           children: [
-            SettingRow.toggle(
-              title: l10n.setNotifyStories,
-              switchValue: s.notifyStories,
-              onChanged: (on) => unawaited(actions.setNotifyStories(on: on)),
+            _ValueRow(
+              title: l10n.setNotifyMode,
+              subtitle: l10n.setNotifyModeHint,
+              value: notifyModeLabel(l10n, s.notificationMode),
+              onTap: () => unawaited(_pickNotifyMode(s)),
             ),
-            SettingRow.toggle(
-              title: l10n.setNotifyPosts,
-              switchValue: s.notifyPosts,
-              onChanged: (on) => unawaited(actions.setNotifyPosts(on: on)),
-            ),
+            if (s.notificationMode == NotificationMode.daily)
+              _ValueRow(
+                title: l10n.setSummaryTime,
+                value: MaterialLocalizations.of(context).formatTimeOfDay(
+                  TimeOfDay(
+                    hour: s.summaryTime.hour,
+                    minute: s.summaryTime.minute,
+                  ),
+                ),
+                onTap: () => unawaited(_pickSummaryTime(s)),
+              ),
+            // The content toggles apply to "Per item" only (FR-78).
+            if (s.notificationMode == NotificationMode.perItem) ...[
+              SettingRow.toggle(
+                title: l10n.setNotifyStories,
+                switchValue: s.notifyStories,
+                onChanged: (on) => unawaited(actions.setNotifyStories(on: on)),
+              ),
+              SettingRow.toggle(
+                title: l10n.setNotifyPosts,
+                switchValue: s.notifyPosts,
+                onChanged: (on) => unawaited(actions.setNotifyPosts(on: on)),
+              ),
+            ],
             SettingRow.toggle(
               title: l10n.setNotifyLogin,
               subtitle: s.notifyLogin ? null : l10n.setNotifyLoginOffWarning,
@@ -227,6 +247,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
     if (picked == null || picked == s.postIntervalMin) return;
     await ref.read(settingsActionsProvider).setPostInterval(picked);
+  }
+
+  Future<void> _pickNotifyMode(AppSettings s) async {
+    final picked = await showNotifyModeSheet(
+      context,
+      current: s.notificationMode,
+    );
+    if (picked == null || picked == s.notificationMode) return;
+    await ref.read(settingsActionsProvider).setNotificationMode(picked);
+  }
+
+  Future<void> _pickSummaryTime(AppSettings s) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: s.summaryTime.hour,
+        minute: s.summaryTime.minute,
+      ),
+    );
+    if (picked == null) return;
+    final time = SummaryTime(picked.hour, picked.minute);
+    if (time == s.summaryTime) return;
+    await ref.read(settingsActionsProvider).setSummaryTime(time);
   }
 
   Future<void> _editRetention(AppSettings s) => showModalBottomSheet<void>(

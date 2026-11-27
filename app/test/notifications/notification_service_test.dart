@@ -65,7 +65,7 @@ final class _Rig {
 
 void main() {
   group('channels (AC1)', () {
-    test('creates the six channels with their importance', () async {
+    test('creates the seven channels with their importance', () async {
       final r = _Rig();
       await r.service.initialize();
 
@@ -78,6 +78,7 @@ void main() {
           'storage': NotificationImportance.high,
           'background': NotificationImportance.low,
           'export': NotificationImportance.normal,
+          'daily_summary': NotificationImportance.low,
         },
       );
     });

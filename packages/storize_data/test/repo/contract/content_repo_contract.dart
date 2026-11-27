@@ -457,6 +457,66 @@ void runContentRepoContract(RepoHarness Function() create) {
     });
   });
 
+  group('savedSince (FR-78)', () {
+    final since = DateTime.utc(2026, 11, 27, 9);
+
+    test(
+      'counts items with a DONE file downloaded at or after since',
+      () async {
+        await add(aContent(t1, remoteId: 'a'), [
+          aMedia(
+            status: MediaFileStatus.done,
+            downloadedAt: since.add(const Duration(hours: 1)),
+          ),
+          aMedia(
+            slideIndex: 1,
+            status: MediaFileStatus.done,
+            downloadedAt: since.add(const Duration(hours: 2)),
+          ),
+        ]);
+        await add(aContent(t1, remoteId: 'p', kind: ContentKind.post), [
+          aMedia(status: MediaFileStatus.done, downloadedAt: since),
+        ]);
+        await add(aContent(t2, remoteId: 'h', kind: ContentKind.highlight), [
+          aMedia(
+            status: MediaFileStatus.done,
+            downloadedAt: since.add(const Duration(minutes: 5)),
+          ),
+        ]);
+        // Before since, not DONE, or never downloaded: all excluded.
+        await add(aContent(t2, remoteId: 'old'), [
+          aMedia(
+            status: MediaFileStatus.done,
+            downloadedAt: since.subtract(const Duration(seconds: 1)),
+          ),
+        ]);
+        await add(aContent(t2, remoteId: 'failed'), [
+          aMedia(status: MediaFileStatus.failed, downloadedAt: since),
+        ]);
+        await add(aContent(t2, remoteId: 'pending'), [aMedia()]);
+
+        final counts = await repo.savedSince(since);
+        expect(counts.stories, 1);
+        expect(counts.posts, 1);
+        expect(counts.highlights, 1);
+        expect(counts.accounts, 2);
+        expect(counts.total, 3);
+      },
+    );
+
+    test('is all zero when nothing was saved since', () async {
+      await add(aContent(t1, remoteId: 'a'), [
+        aMedia(
+          status: MediaFileStatus.done,
+          downloadedAt: since.subtract(const Duration(days: 1)),
+        ),
+      ]);
+      final counts = await repo.savedSince(since);
+      expect(counts.total, 0);
+      expect(counts.accounts, 0);
+    });
+  });
+
   group('storageBytesByTarget', () {
     test(
       'sums DONE files with a size per target; others are excluded',

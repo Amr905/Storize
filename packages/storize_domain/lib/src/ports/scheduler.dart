@@ -1,3 +1,4 @@
+import 'package:storize_domain/src/entities/app_settings.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// Registers background work (workmanager, TECH_SPEC §4.3).
@@ -25,4 +26,22 @@ abstract interface class Scheduler {
 
   /// Cancels every registered task.
   Future<void> cancelAll();
+}
+
+/// Keeps the one-off daily summary run (FR-78) registered at the right time.
+///
+/// Separate from [Scheduler] so the existing port does not change. The
+/// production implementation is `WorkmanagerScheduler`.
+// Kept as its own port: one method is enough here.
+// ignore: one_member_abstracts
+abstract interface class DailySummaryScheduler {
+  /// Replaces the pending `daily-summary` run with the next run at [time]
+  /// (local time), or cancels it unless [mode] is [NotificationMode.daily].
+  /// [nowUtc] and [localOffset] give the local clock.
+  Future<void> schedule({
+    required NotificationMode mode,
+    required SummaryTime time,
+    required DateTime nowUtc,
+    required Duration localOffset,
+  });
 }

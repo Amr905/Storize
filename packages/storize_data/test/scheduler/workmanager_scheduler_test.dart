@@ -15,6 +15,7 @@ final class _Call {
 final class _FakeClient implements WorkmanagerClient {
   final List<_Call> calls = [];
   bool cancelled = false;
+  final List<String> cancelledUnique = [];
 
   _Call byUnique(String unique) => calls.lastWhere((c) => c.unique == unique);
 
@@ -54,6 +55,10 @@ final class _FakeClient implements WorkmanagerClient {
 
   @override
   Future<void> cancelAll() async => cancelled = true;
+
+  @override
+  Future<void> cancelByUniqueName(String uniqueName) async =>
+      cancelledUnique.add(uniqueName);
 }
 
 void main() {

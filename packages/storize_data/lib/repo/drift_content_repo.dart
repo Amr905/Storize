@@ -144,6 +144,25 @@ final class DriftContentRepo implements ContentRepo {
 
   @override
   Future<Map<int, int>> storageBytesByTarget() => _dao.storageBytesByTarget();
+
+  @override
+  Future<SavedCounts> savedSince(DateTime since) async {
+    final rows = await _dao.savedSince(since);
+    final byKind = <ContentKind, Set<int>>{
+      for (final k in ContentKind.values) k: <int>{},
+    };
+    final accounts = <int>{};
+    for (final r in rows) {
+      byKind[r.kind]!.add(r.id);
+      accounts.add(r.targetId);
+    }
+    return SavedCounts(
+      stories: byKind[ContentKind.story]!.length,
+      posts: byKind[ContentKind.post]!.length,
+      highlights: byKind[ContentKind.highlight]!.length,
+      accounts: accounts.length,
+    );
+  }
 }
 
 ContentWithMedia _toContentWithMedia(ContentWithMediaRows r) =>

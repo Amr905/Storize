@@ -32,6 +32,14 @@ DownloadPendingResult _downloaded(
 
 final class _RecordingNotifier implements TaskNotifier {
   final List<String> calls = [];
+  final List<SavedCounts> summaries = [];
+
+  @override
+  Future<void> dailySummary(SavedCounts counts) async {
+    summaries.add(counts);
+    calls.add('daily_summary');
+  }
+
   final List<CheckRunResult?> checksSeen = [];
   AccountStatus? status;
   bool throws = false;

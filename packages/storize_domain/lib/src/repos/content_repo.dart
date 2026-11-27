@@ -32,9 +32,56 @@ final class ContentInsertResult {
       'ContentInsertResult(contentId: $contentId, isNew: $isNew)';
 }
 
+/// What was saved in a period (FR-78 daily summary). Posts include reels.
+@immutable
+final class SavedCounts {
+  /// Creates counts.
+  const SavedCounts({
+    required this.stories,
+    required this.posts,
+    required this.highlights,
+    required this.accounts,
+  });
+
+  /// Stories with at least one file saved in the period.
+  final int stories;
+
+  /// Posts (and reels) with at least one file saved in the period.
+  final int posts;
+
+  /// Highlight items with at least one file saved in the period.
+  final int highlights;
+
+  /// Distinct accounts of those items, all kinds together.
+  final int accounts;
+
+  /// Items of all kinds.
+  int get total => stories + posts + highlights;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SavedCounts &&
+      other.stories == stories &&
+      other.posts == posts &&
+      other.highlights == highlights &&
+      other.accounts == accounts;
+
+  @override
+  int get hashCode => Object.hash(stories, posts, highlights, accounts);
+
+  @override
+  String toString() =>
+      'SavedCounts(stories: $stories, posts: $posts, '
+      'highlights: $highlights, accounts: $accounts)';
+}
+
 /// Access to stories, posts and their media files (tables `content` and
 /// `media_file`).
 abstract interface class ContentRepo {
+  /// Counts the items that got at least one file with status DONE whose
+  /// `downloaded_at` is at or after [since] (UTC). Makes no Instagram call.
+  Future<SavedCounts> savedSince(DateTime since);
+
   /// Emits the library now and after every change.
   ///
   /// Items matching [filter] are ordered by `postedAt`, newest first, then by

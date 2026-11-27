@@ -171,6 +171,9 @@ void main() {
 
     test('every known task name has a route', () async {
       for (final name in TaskNames.all) {
+        // The daily summary needs its own task (wired in production by
+        // background_router.dart); see daily_summary_router_test.dart.
+        if (name == TaskNames.dailySummary) continue;
         final r = _Rig();
         await r.router.route(name);
         expect(r.order, isNotEmpty, reason: name);

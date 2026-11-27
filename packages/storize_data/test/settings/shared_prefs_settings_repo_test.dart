@@ -40,6 +40,8 @@ void main() {
         'pageModeInBackground': 'storize.pageModeInBackground',
         'lastUpdateCheckAt': 'storize.lastUpdateCheckAt',
         'themeMode': 'storize.themeMode',
+        'notificationMode': 'storize.notificationMode',
+        'summaryTime': 'storize.summaryTime',
       });
     });
   });
@@ -52,6 +54,52 @@ void main() {
       expect((await repo.get()).themeMode, AppThemeMode.dark);
       await prefs.setString('storize.themeMode', 'sepia');
       expect((await repo.get()).themeMode, AppThemeMode.system);
+    });
+  });
+
+  group('FR-78 notification mode and summary time', () {
+    test('default to per item and 21:00 when nothing is stored', () async {
+      final settings = await repo.get();
+      expect(settings.notificationMode, NotificationMode.perItem);
+      expect(settings.summaryTime, SummaryTime.defaultTime);
+    });
+
+    test('persist and read back, with the stored forms', () async {
+      await repo.update(
+        (s) => s.copyWith(
+          notificationMode: NotificationMode.daily,
+          summaryTime: const SummaryTime(7, 45),
+        ),
+      );
+      expect(await prefs.getString('storize.notificationMode'), 'daily');
+      expect(await prefs.getInt('storize.summaryTime'), 7 * 60 + 45);
+
+      final fresh = SharedPrefsSettingsRepo(prefs: prefs);
+      final read = await fresh.get();
+      expect(read.notificationMode, NotificationMode.daily);
+      expect(read.summaryTime, const SummaryTime(7, 45));
+    });
+
+    test(
+      'unknown mode and out-of-day times fall back to the defaults',
+      () async {
+        await prefs.setString('storize.notificationMode', 'hourly');
+        await prefs.setInt('storize.summaryTime', 1440);
+        final read = await repo.get();
+        expect(read.notificationMode, NotificationMode.perItem);
+        expect(read.summaryTime, SummaryTime.defaultTime);
+
+        await prefs.setInt('storize.summaryTime', -1);
+        expect((await repo.get()).summaryTime, SummaryTime.defaultTime);
+      },
+    );
+
+    test('a wrong stored type falls back to the default', () async {
+      await prefs.setInt('storize.notificationMode', 2);
+      await prefs.setString('storize.summaryTime', '21:00');
+      final read = await repo.get();
+      expect(read.notificationMode, NotificationMode.perItem);
+      expect(read.summaryTime, SummaryTime.defaultTime);
     });
   });
 

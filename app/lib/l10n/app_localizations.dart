@@ -3748,6 +3748,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'never'**
   String get hltNever;
+
+  /// Notification channel name for the FR-78 daily summary (low importance).
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary'**
+  String get ntfChannelDailySummary;
+
+  /// FR-78 daily summary text when there are stories and posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {stories, plural, one{1 story} other{{stories} stories}} and {posts, plural, one{1 post} other{{posts} posts}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfDailySummaryBoth(int stories, int posts, int accounts);
+
+  /// FR-78 daily summary text when only stories were saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {stories, plural, one{1 story} other{{stories} stories}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfDailySummaryStories(int stories, int accounts);
+
+  /// FR-78 daily summary text when only posts (and reels) were saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {posts, plural, one{1 post} other{{posts} posts}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfDailySummaryPosts(int posts, int accounts);
+
+  /// FR-78 daily summary text when only highlights were saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {highlights, plural, one{1 highlight} other{{highlights} highlights}} saved from {accounts, plural, one{1 account} other{{accounts} accounts}}'**
+  String ntfDailySummaryHighlightsOnly(int highlights, int accounts);
+
+  /// Added to the FR-78 summary text when highlights were also saved.
+  ///
+  /// In en, this message translates to:
+  /// **', and {highlights, plural, one{1 highlight} other{{highlights} highlights}}'**
+  String ntfDailySummaryHighlightsSuffix(int highlights);
+
+  /// S-12 row and sheet title for the notification mode (FR-78).
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me'**
+  String get setNotifyMode;
+
+  /// S-12 subtitle under the notification mode row.
+  ///
+  /// In en, this message translates to:
+  /// **'Problems such as a lost login always notify at once.'**
+  String get setNotifyModeHint;
+
+  /// Notification mode option: one notification per new item or group.
+  ///
+  /// In en, this message translates to:
+  /// **'Per item'**
+  String get setNotifyModePerItem;
+
+  /// Notification mode option: one summary a day.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary'**
+  String get setNotifyModeDaily;
+
+  /// Notification mode option: no content notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get setNotifyModeOff;
+
+  /// S-12 row that sets the time of the daily summary (FR-78).
+  ///
+  /// In en, this message translates to:
+  /// **'Summary time'**
+  String get setSummaryTime;
 }
 
 class _AppLocalizationsDelegate

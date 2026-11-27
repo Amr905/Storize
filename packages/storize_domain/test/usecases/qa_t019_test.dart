@@ -46,6 +46,9 @@ final class CrashingContentRepo implements ContentRepo {
   CrashingContentRepo(this.inner);
 
   final ContentRepo inner;
+
+  @override
+  Future<SavedCounts> savedSince(DateTime since) => inner.savedSince(since);
   bool crashNext = true;
 
   @override

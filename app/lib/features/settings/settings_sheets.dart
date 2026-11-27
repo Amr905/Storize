@@ -7,6 +7,7 @@ import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
+import 'package:storize_domain/storize_domain.dart';
 
 /// Opens the interval picker. Resolves to the chosen minutes, or null when
 /// the sheet is dismissed. [oneHourHint] adds the ban-risk hint to the 1 h
@@ -76,6 +77,63 @@ class _IntervalSheet extends StatelessWidget {
                       subtitle: oneHourHint && minutes == 60
                           ? Text(l10n.setPostOneHourWarning)
                           : null,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the "Notify me" sheet (FR-78). Resolves to the chosen mode, or null
+/// when the sheet is dismissed.
+Future<NotificationMode?> showNotifyModeSheet(
+  BuildContext context, {
+  required NotificationMode current,
+}) => showModalBottomSheet<NotificationMode>(
+  context: context,
+  showDragHandle: true,
+  builder: (_) => _NotifyModeSheet(current: current),
+);
+
+class _NotifyModeSheet extends StatelessWidget {
+  const _NotifyModeSheet({required this.current});
+
+  final NotificationMode current;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                StorizeSpacing.s16,
+                0,
+                StorizeSpacing.s16,
+                StorizeSpacing.s8,
+              ),
+              child: Text(
+                l10n.setNotifyMode,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            RadioGroup<NotificationMode>(
+              groupValue: current,
+              onChanged: (value) => Navigator.of(context).pop(value),
+              child: Column(
+                children: [
+                  for (final mode in NotificationMode.values)
+                    RadioListTile<NotificationMode>(
+                      value: mode,
+                      title: Text(notifyModeLabel(l10n, mode)),
                     ),
                 ],
               ),

@@ -26,6 +26,9 @@ abstract final class NotificationChannels {
 
   /// Exports (T-035).
   static const String export = 'export';
+
+  /// The FR-78 daily summary (low importance, its own channel).
+  static const String dailySummary = 'daily_summary';
 }
 
 /// Fixed notification ids. Per-target ids sit above [targetBase].
@@ -47,6 +50,9 @@ abstract final class NotificationIds {
 
   /// Summary of the highlight group.
   static const int highlightsSummary = 6;
+
+  /// The FR-78 daily summary.
+  static const int dailySummary = 7;
 
   /// First id of the per-target notifications.
   static const int targetBase = 1000;
@@ -129,6 +135,11 @@ final class NotificationService implements TaskNotifier {
       name: _strings.ntfChannelExport,
       importance: NotificationImportance.normal,
     ),
+    NotificationChannelSpec(
+      id: NotificationChannels.dailySummary,
+      name: _strings.ntfChannelDailySummary,
+      importance: NotificationImportance.low,
+    ),
   ];
 
   /// Payloads of notifications tapped while the app runs, as in-app locations.
@@ -171,6 +182,9 @@ final class NotificationService implements TaskNotifier {
       ];
       if (counts.isEmpty) return;
       final settings = await _settings.get();
+      // FR-78: daily and off send no per-item content notifications. The
+      // problem notifications do not go through here.
+      if (settings.notificationMode != NotificationMode.perItem) return;
       final wanted = [
         for (final c in counts)
           if (c.kind != ContentKind.post
@@ -245,6 +259,43 @@ final class NotificationService implements TaskNotifier {
     } on Object catch (error) {
       _logFailure('new_items', error);
     }
+  }
+
+  @override
+  Future<void> dailySummary(SavedCounts counts) async {
+    try {
+      if (counts.total == 0 || !await _port.areEnabled()) return;
+      await _port.show(
+        NotificationRequest(
+          id: NotificationIds.dailySummary,
+          channelId: NotificationChannels.dailySummary,
+          title: _summaryText(counts),
+          payload: 'storize://library',
+        ),
+      );
+    } on Object catch (error) {
+      _logFailure('daily_summary', error);
+    }
+  }
+
+  /// The FR-78 text: "Today: 5 stories and 2 posts saved from 3 accounts",
+  /// plus ", and N highlights" when there are highlights.
+  String _summaryText(SavedCounts c) {
+    final base = switch ((c.stories > 0, c.posts > 0)) {
+      (true, true) => _strings.ntfDailySummaryBoth(
+        c.stories,
+        c.posts,
+        c.accounts,
+      ),
+      (true, false) => _strings.ntfDailySummaryStories(c.stories, c.accounts),
+      (false, true) => _strings.ntfDailySummaryPosts(c.posts, c.accounts),
+      (false, false) => _strings.ntfDailySummaryHighlightsOnly(
+        c.highlights,
+        c.accounts,
+      ),
+    };
+    if (c.highlights == 0 || (c.stories == 0 && c.posts == 0)) return base;
+    return base + _strings.ntfDailySummaryHighlightsSuffix(c.highlights);
   }
 
   @override
