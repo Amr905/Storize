@@ -227,5 +227,4 @@ final class _FailingGallery implements GalleryStore {
     required String displayName,
     required String mime,
   }) => throw UnimplementedError();
-
 }

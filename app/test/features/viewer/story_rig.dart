@@ -65,7 +65,6 @@ class ViewerGallery implements GalleryStore {
     required String displayName,
     required String mime,
   }) => throw UnimplementedError();
-
 }
 
 /// A video player that never touches the platform.

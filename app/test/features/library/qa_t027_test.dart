@@ -76,7 +76,6 @@ class SpyGallery implements GalleryStore {
     required String displayName,
     required String mime,
   }) => throw UnimplementedError();
-
 }
 
 /// Fails the gallery delete for the listed URIs.
