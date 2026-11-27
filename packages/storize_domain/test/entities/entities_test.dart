@@ -75,10 +75,16 @@ void main() {
         slideCount: 1,
         detectedAt: t0,
         caption: 'secret words',
+        locationName: 'ZZFAKE_place',
+        taggedUsernames: const ['zzfake_a'],
         extras: {'a': 1},
       );
       expect(() => c.extras['b'] = 2, throwsUnsupportedError);
       expect(c.toString(), isNot(contains('secret')));
+      expect(c.toString(), isNot(contains('ZZFAKE_place')));
+      expect(c.toString(), isNot(contains('zzfake_a')));
+      expect(c.copyWith(locationName: null).locationName, isNull);
+      expect(c.copyWith().taggedUsernames, ['zzfake_a']);
     });
 
     test('copyWith keeps the identity key', () {

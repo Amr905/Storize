@@ -93,6 +93,8 @@ Content aFullContent(int targetId) => Content(
   postedAt: at(10),
   expiresAt: at(20),
   caption: 'caption',
+  locationName: 'ZZFAKE_place',
+  taggedUsernames: const ['zzfake_a', 'zzfake_b'],
   slideCount: 2,
   isCloseFriends: true,
   extras: const {

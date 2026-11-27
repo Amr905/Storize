@@ -2317,6 +2317,28 @@ class $ContentsTable extends Contents
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _locationNameMeta = const VerificationMeta(
+    'locationName',
+  );
+  @override
+  late final GeneratedColumn<String> locationName = GeneratedColumn<String>(
+    'location_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _taggedUsernamesMeta = const VerificationMeta(
+    'taggedUsernames',
+  );
+  @override
+  late final GeneratedColumn<String> taggedUsernames = GeneratedColumn<String>(
+    'tagged_usernames',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _slideCountMeta = const VerificationMeta(
     'slideCount',
   );
@@ -2397,6 +2419,8 @@ class $ContentsTable extends Contents
     postedAt,
     expiresAt,
     caption,
+    locationName,
+    taggedUsernames,
     slideCount,
     isCloseFriends,
     extrasJson,
@@ -2445,6 +2469,24 @@ class $ContentsTable extends Contents
       context.handle(
         _captionMeta,
         caption.isAcceptableOrUnknown(data['caption']!, _captionMeta),
+      );
+    }
+    if (data.containsKey('location_name')) {
+      context.handle(
+        _locationNameMeta,
+        locationName.isAcceptableOrUnknown(
+          data['location_name']!,
+          _locationNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tagged_usernames')) {
+      context.handle(
+        _taggedUsernamesMeta,
+        taggedUsernames.isAcceptableOrUnknown(
+          data['tagged_usernames']!,
+          _taggedUsernamesMeta,
+        ),
       );
     }
     if (data.containsKey('slide_count')) {
@@ -2531,6 +2573,14 @@ class $ContentsTable extends Contents
         DriftSqlType.string,
         data['${effectivePrefix}caption'],
       ),
+      locationName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location_name'],
+      ),
+      taggedUsernames: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tagged_usernames'],
+      ),
       slideCount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}slide_count'],
@@ -2595,6 +2645,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
   final DateTime postedAt;
   final DateTime? expiresAt;
   final String? caption;
+  final String? locationName;
+  final String? taggedUsernames;
   final int slideCount;
   final bool isCloseFriends;
   final String? extrasJson;
@@ -2611,6 +2663,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     required this.postedAt,
     this.expiresAt,
     this.caption,
+    this.locationName,
+    this.taggedUsernames,
     required this.slideCount,
     required this.isCloseFriends,
     this.extrasJson,
@@ -2647,6 +2701,12 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     }
     if (!nullToAbsent || caption != null) {
       map['caption'] = Variable<String>(caption);
+    }
+    if (!nullToAbsent || locationName != null) {
+      map['location_name'] = Variable<String>(locationName);
+    }
+    if (!nullToAbsent || taggedUsernames != null) {
+      map['tagged_usernames'] = Variable<String>(taggedUsernames);
     }
     map['slide_count'] = Variable<int>(slideCount);
     map['is_close_friends'] = Variable<bool>(isCloseFriends);
@@ -2686,6 +2746,12 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
       caption: caption == null && nullToAbsent
           ? const Value.absent()
           : Value(caption),
+      locationName: locationName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationName),
+      taggedUsernames: taggedUsernames == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taggedUsernames),
       slideCount: Value(slideCount),
       isCloseFriends: Value(isCloseFriends),
       extrasJson: extrasJson == null && nullToAbsent
@@ -2712,6 +2778,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
       postedAt: serializer.fromJson<DateTime>(json['postedAt']),
       expiresAt: serializer.fromJson<DateTime?>(json['expiresAt']),
       caption: serializer.fromJson<String?>(json['caption']),
+      locationName: serializer.fromJson<String?>(json['locationName']),
+      taggedUsernames: serializer.fromJson<String?>(json['taggedUsernames']),
       slideCount: serializer.fromJson<int>(json['slideCount']),
       isCloseFriends: serializer.fromJson<bool>(json['isCloseFriends']),
       extrasJson: serializer.fromJson<String?>(json['extrasJson']),
@@ -2733,6 +2801,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
       'postedAt': serializer.toJson<DateTime>(postedAt),
       'expiresAt': serializer.toJson<DateTime?>(expiresAt),
       'caption': serializer.toJson<String?>(caption),
+      'locationName': serializer.toJson<String?>(locationName),
+      'taggedUsernames': serializer.toJson<String?>(taggedUsernames),
       'slideCount': serializer.toJson<int>(slideCount),
       'isCloseFriends': serializer.toJson<bool>(isCloseFriends),
       'extrasJson': serializer.toJson<String?>(extrasJson),
@@ -2752,6 +2822,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     DateTime? postedAt,
     Value<DateTime?> expiresAt = const Value.absent(),
     Value<String?> caption = const Value.absent(),
+    Value<String?> locationName = const Value.absent(),
+    Value<String?> taggedUsernames = const Value.absent(),
     int? slideCount,
     bool? isCloseFriends,
     Value<String?> extrasJson = const Value.absent(),
@@ -2768,6 +2840,10 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     postedAt: postedAt ?? this.postedAt,
     expiresAt: expiresAt.present ? expiresAt.value : this.expiresAt,
     caption: caption.present ? caption.value : this.caption,
+    locationName: locationName.present ? locationName.value : this.locationName,
+    taggedUsernames: taggedUsernames.present
+        ? taggedUsernames.value
+        : this.taggedUsernames,
     slideCount: slideCount ?? this.slideCount,
     isCloseFriends: isCloseFriends ?? this.isCloseFriends,
     extrasJson: extrasJson.present ? extrasJson.value : this.extrasJson,
@@ -2786,6 +2862,12 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
       postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
       caption: data.caption.present ? data.caption.value : this.caption,
+      locationName: data.locationName.present
+          ? data.locationName.value
+          : this.locationName,
+      taggedUsernames: data.taggedUsernames.present
+          ? data.taggedUsernames.value
+          : this.taggedUsernames,
       slideCount: data.slideCount.present
           ? data.slideCount.value
           : this.slideCount,
@@ -2815,6 +2897,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
           ..write('postedAt: $postedAt, ')
           ..write('expiresAt: $expiresAt, ')
           ..write('caption: $caption, ')
+          ..write('locationName: $locationName, ')
+          ..write('taggedUsernames: $taggedUsernames, ')
           ..write('slideCount: $slideCount, ')
           ..write('isCloseFriends: $isCloseFriends, ')
           ..write('extrasJson: $extrasJson, ')
@@ -2836,6 +2920,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     postedAt,
     expiresAt,
     caption,
+    locationName,
+    taggedUsernames,
     slideCount,
     isCloseFriends,
     extrasJson,
@@ -2856,6 +2942,8 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
           other.postedAt == this.postedAt &&
           other.expiresAt == this.expiresAt &&
           other.caption == this.caption &&
+          other.locationName == this.locationName &&
+          other.taggedUsernames == this.taggedUsernames &&
           other.slideCount == this.slideCount &&
           other.isCloseFriends == this.isCloseFriends &&
           other.extrasJson == this.extrasJson &&
@@ -2874,6 +2962,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
   final Value<DateTime> postedAt;
   final Value<DateTime?> expiresAt;
   final Value<String?> caption;
+  final Value<String?> locationName;
+  final Value<String?> taggedUsernames;
   final Value<int> slideCount;
   final Value<bool> isCloseFriends;
   final Value<String?> extrasJson;
@@ -2890,6 +2980,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
     this.postedAt = const Value.absent(),
     this.expiresAt = const Value.absent(),
     this.caption = const Value.absent(),
+    this.locationName = const Value.absent(),
+    this.taggedUsernames = const Value.absent(),
     this.slideCount = const Value.absent(),
     this.isCloseFriends = const Value.absent(),
     this.extrasJson = const Value.absent(),
@@ -2907,6 +2999,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
     required DateTime postedAt,
     this.expiresAt = const Value.absent(),
     this.caption = const Value.absent(),
+    this.locationName = const Value.absent(),
+    this.taggedUsernames = const Value.absent(),
     this.slideCount = const Value.absent(),
     this.isCloseFriends = const Value.absent(),
     this.extrasJson = const Value.absent(),
@@ -2929,6 +3023,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
     Expression<int>? postedAt,
     Expression<int>? expiresAt,
     Expression<String>? caption,
+    Expression<String>? locationName,
+    Expression<String>? taggedUsernames,
     Expression<int>? slideCount,
     Expression<bool>? isCloseFriends,
     Expression<String>? extrasJson,
@@ -2946,6 +3042,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
       if (postedAt != null) 'posted_at': postedAt,
       if (expiresAt != null) 'expires_at': expiresAt,
       if (caption != null) 'caption': caption,
+      if (locationName != null) 'location_name': locationName,
+      if (taggedUsernames != null) 'tagged_usernames': taggedUsernames,
       if (slideCount != null) 'slide_count': slideCount,
       if (isCloseFriends != null) 'is_close_friends': isCloseFriends,
       if (extrasJson != null) 'extras_json': extrasJson,
@@ -2965,6 +3063,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
     Value<DateTime>? postedAt,
     Value<DateTime?>? expiresAt,
     Value<String?>? caption,
+    Value<String?>? locationName,
+    Value<String?>? taggedUsernames,
     Value<int>? slideCount,
     Value<bool>? isCloseFriends,
     Value<String?>? extrasJson,
@@ -2982,6 +3082,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
       postedAt: postedAt ?? this.postedAt,
       expiresAt: expiresAt ?? this.expiresAt,
       caption: caption ?? this.caption,
+      locationName: locationName ?? this.locationName,
+      taggedUsernames: taggedUsernames ?? this.taggedUsernames,
       slideCount: slideCount ?? this.slideCount,
       isCloseFriends: isCloseFriends ?? this.isCloseFriends,
       extrasJson: extrasJson ?? this.extrasJson,
@@ -3029,6 +3131,12 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
     if (caption.present) {
       map['caption'] = Variable<String>(caption.value);
     }
+    if (locationName.present) {
+      map['location_name'] = Variable<String>(locationName.value);
+    }
+    if (taggedUsernames.present) {
+      map['tagged_usernames'] = Variable<String>(taggedUsernames.value);
+    }
     if (slideCount.present) {
       map['slide_count'] = Variable<int>(slideCount.value);
     }
@@ -3066,6 +3174,8 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
           ..write('postedAt: $postedAt, ')
           ..write('expiresAt: $expiresAt, ')
           ..write('caption: $caption, ')
+          ..write('locationName: $locationName, ')
+          ..write('taggedUsernames: $taggedUsernames, ')
           ..write('slideCount: $slideCount, ')
           ..write('isCloseFriends: $isCloseFriends, ')
           ..write('extrasJson: $extrasJson, ')
@@ -7118,6 +7228,8 @@ typedef $$ContentsTableCreateCompanionBuilder = ContentsCompanion Function({
   required DateTime postedAt,
   Value<DateTime?> expiresAt,
   Value<String?> caption,
+  Value<String?> locationName,
+  Value<String?> taggedUsernames,
   Value<int> slideCount,
   Value<bool> isCloseFriends,
   Value<String?> extrasJson,
@@ -7135,6 +7247,8 @@ typedef $$ContentsTableUpdateCompanionBuilder = ContentsCompanion Function({
   Value<DateTime> postedAt,
   Value<DateTime?> expiresAt,
   Value<String?> caption,
+  Value<String?> locationName,
+  Value<String?> taggedUsernames,
   Value<int> slideCount,
   Value<bool> isCloseFriends,
   Value<String?> extrasJson,
@@ -7233,6 +7347,16 @@ class $$ContentsTableFilterComposer
 
   ColumnFilters<String> get caption => $composableBuilder(
     column: $table.caption,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locationName => $composableBuilder(
+    column: $table.locationName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taggedUsernames => $composableBuilder(
+    column: $table.taggedUsernames,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7366,6 +7490,16 @@ class $$ContentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get locationName => $composableBuilder(
+    column: $table.locationName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taggedUsernames => $composableBuilder(
+    column: $table.taggedUsernames,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get slideCount => $composableBuilder(
     column: $table.slideCount,
     builder: (column) => ColumnOrderings(column),
@@ -7452,6 +7586,16 @@ class $$ContentsTableAnnotationComposer
 
   GeneratedColumn<String> get caption =>
       $composableBuilder(column: $table.caption, builder: (column) => column);
+
+  GeneratedColumn<String> get locationName => $composableBuilder(
+    column: $table.locationName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taggedUsernames => $composableBuilder(
+    column: $table.taggedUsernames,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get slideCount => $composableBuilder(
     column: $table.slideCount,
@@ -7566,6 +7710,8 @@ class $$ContentsTableTableManager
                 Value<DateTime> postedAt = const Value.absent(),
                 Value<DateTime?> expiresAt = const Value.absent(),
                 Value<String?> caption = const Value.absent(),
+                Value<String?> locationName = const Value.absent(),
+                Value<String?> taggedUsernames = const Value.absent(),
                 Value<int> slideCount = const Value.absent(),
                 Value<bool> isCloseFriends = const Value.absent(),
                 Value<String?> extrasJson = const Value.absent(),
@@ -7582,6 +7728,8 @@ class $$ContentsTableTableManager
                 postedAt: postedAt,
                 expiresAt: expiresAt,
                 caption: caption,
+                locationName: locationName,
+                taggedUsernames: taggedUsernames,
                 slideCount: slideCount,
                 isCloseFriends: isCloseFriends,
                 extrasJson: extrasJson,
@@ -7600,6 +7748,8 @@ class $$ContentsTableTableManager
                 required DateTime postedAt,
                 Value<DateTime?> expiresAt = const Value.absent(),
                 Value<String?> caption = const Value.absent(),
+                Value<String?> locationName = const Value.absent(),
+                Value<String?> taggedUsernames = const Value.absent(),
                 Value<int> slideCount = const Value.absent(),
                 Value<bool> isCloseFriends = const Value.absent(),
                 Value<String?> extrasJson = const Value.absent(),
@@ -7616,6 +7766,8 @@ class $$ContentsTableTableManager
                 postedAt: postedAt,
                 expiresAt: expiresAt,
                 caption: caption,
+                locationName: locationName,
+                taggedUsernames: taggedUsernames,
                 slideCount: slideCount,
                 isCloseFriends: isCloseFriends,
                 extrasJson: extrasJson,

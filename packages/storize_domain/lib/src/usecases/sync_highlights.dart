@@ -231,6 +231,9 @@ final class SyncHighlights {
     kind: ContentKind.highlight,
     postedAt: c.postedAt,
     slides: c.slides,
+    caption: c.caption,
+    locationName: c.locationName,
+    taggedUsernames: c.taggedUsernames,
     closeFriends: c.closeFriends,
     extras: {
       ...c.extras,

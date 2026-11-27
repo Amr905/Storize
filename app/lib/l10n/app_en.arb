@@ -1847,5 +1847,17 @@
   "tdtSavedTitle": "Saved",
   "@tdtSavedTitle": {"description": "S-09 heading above the saved stories and posts grid."},
   "storyInGallery": "In your gallery · Pictures/Storize/{username}",
-  "@storyInGallery": {"description": "S-06 chip over the media: the saved file's gallery folder.", "placeholders": {"username": {"type": "String"}}}
+  "@storyInGallery": {"description": "S-06 chip over the media: the saved file's gallery folder.", "placeholders": {"username": {"type": "String"}}},
+  "infoCaption": "Caption",
+  "@infoCaption": {"description": "Info sheet: label above the post caption."},
+  "infoCopyCaption": "Copy caption",
+  "@infoCopyCaption": {"description": "Info sheet: button that copies the caption to the clipboard."},
+  "infoCaptionCopied": "Caption copied",
+  "@infoCaptionCopied": {"description": "Snackbar after the caption was copied (Info sheet button or long-press in the post viewer)."},
+  "infoLocation": "Location",
+  "@infoLocation": {"description": "Info sheet: accessibility label of the location pin icon."},
+  "infoTagged": "Tagged accounts",
+  "@infoTagged": {"description": "Info sheet: label above the chips of accounts tagged in the post."},
+  "infoSavedOn": "Saved on",
+  "@infoSavedOn": {"description": "Info sheet row: when the file was saved to the gallery."}
 }

@@ -62,6 +62,26 @@ void requireRowChanged(int rows, String what, int id) {
 String? encodeJsonMap(Map<String, Object?> map) =>
     map.isEmpty ? null : jsonEncode(map);
 
+/// Encodes a string list as JSON; an empty list is NULL.
+String? encodeStringList(List<String> list) =>
+    list.isEmpty ? null : jsonEncode(list);
+
+/// Decodes a JSON string list column. NULL and malformed data give an empty
+/// list: tags are display-only and must never break a row.
+List<String> decodeStringList(String? json) {
+  if (json == null) return const [];
+  try {
+    final decoded = jsonDecode(json);
+    if (decoded is! List) return const [];
+    return [
+      for (final e in decoded)
+        if (e is String) e,
+    ];
+  } on FormatException {
+    return const [];
+  }
+}
+
 /// Decodes a JSON map column; NULL is an empty map.
 Map<String, Object?> decodeJsonMap(String? json) {
   if (json == null) return const {};

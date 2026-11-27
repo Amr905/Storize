@@ -1128,8 +1128,291 @@ i1.GeneratedColumn<double> _column_81(String aliasedName) =>
       $customConstraints: 'NOT NULL DEFAULT 1.0',
       defaultValue: const i1.CustomExpression('1.0'),
     );
+
+final class Schema3 extends i0.VersionedSchema {
+  Schema3({required super.database}) : super(version: 3);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    loginAccount,
+    target,
+    content,
+    mediaFile,
+    checkRun,
+    activityEvent,
+    governorLease,
+    idxTargetStatus,
+    idxContentKindPostedAt,
+    idxContentTargetKindPostedAt,
+    idxMediaFileStatus,
+    idxCheckRunScopeStartedAt,
+    idxActivityEventAt,
+  ];
+  late final Shape0 loginAccount = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'login_account',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 target = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'target',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'UNIQUE(platform, remote_user_id)',
+        'CHECK(track_stories + track_posts + track_reels >= 1)',
+      ],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_9,
+        _column_3,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_4,
+        _column_5,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape7 content = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'content',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(target_id, kind, remote_id)'],
+      columns: [
+        _column_0,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_82,
+        _column_83,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_4,
+        _column_45,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 mediaFile = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'media_file',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(content_id, slide_index)'],
+      columns: [
+        _column_0,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_4,
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_10,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_57,
+        _column_58,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 checkRun = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'check_run',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['CHECK(scope IN (\'STORIES\', \'POSTS\'))'],
+      columns: [
+        _column_0,
+        _column_59,
+        _column_60,
+        _column_61,
+        _column_62,
+        _column_63,
+        _column_64,
+        _column_65,
+        _column_66,
+        _column_67,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 activityEvent = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'activity_event',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_68,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_73,
+        _column_74,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 governorLease = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'governor_lease',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(login_account_id)'],
+      columns: [
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_81,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index idxTargetStatus = i1.Index(
+    'idx_target_status',
+    'CREATE INDEX idx_target_status ON target (status)',
+  );
+  final i1.Index idxContentKindPostedAt = i1.Index(
+    'idx_content_kind_posted_at',
+    'CREATE INDEX idx_content_kind_posted_at ON content (kind, posted_at DESC)',
+  );
+  final i1.Index idxContentTargetKindPostedAt = i1.Index(
+    'idx_content_target_kind_posted_at',
+    'CREATE INDEX idx_content_target_kind_posted_at ON content (target_id, kind, posted_at DESC)',
+  );
+  final i1.Index idxMediaFileStatus = i1.Index(
+    'idx_media_file_status',
+    'CREATE INDEX idx_media_file_status ON media_file (status)',
+  );
+  final i1.Index idxCheckRunScopeStartedAt = i1.Index(
+    'idx_check_run_scope_started_at',
+    'CREATE INDEX idx_check_run_scope_started_at ON check_run (scope, started_at)',
+  );
+  final i1.Index idxActivityEventAt = i1.Index(
+    'idx_activity_event_at',
+    'CREATE INDEX idx_activity_event_at ON activity_event (at DESC)',
+  );
+}
+
+class Shape7 extends i0.VersionedTable {
+  Shape7({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get targetId =>
+      columnsByName['target_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get remoteId =>
+      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get shortcode =>
+      columnsByName['shortcode']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get postType =>
+      columnsByName['post_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get postedAt =>
+      columnsByName['posted_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get expiresAt =>
+      columnsByName['expires_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get caption =>
+      columnsByName['caption']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get locationName =>
+      columnsByName['location_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get taggedUsernames =>
+      columnsByName['tagged_usernames']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get slideCount =>
+      columnsByName['slide_count']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isCloseFriends =>
+      columnsByName['is_close_friends']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get extrasJson =>
+      columnsByName['extras_json']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get detectedAt =>
+      columnsByName['detected_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get status =>
+      columnsByName['status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get viewed =>
+      columnsByName['viewed']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_82(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'location_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_83(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'tagged_usernames',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1138,6 +1421,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from1To2(migrator, schema);
         return 2;
+      case 2:
+        final schema = Schema3(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from2To3(migrator, schema);
+        return 3;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1146,6 +1434,7 @@ i0.MigrationStepWithVersion migrationSteps({
 
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2),
+  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
 );

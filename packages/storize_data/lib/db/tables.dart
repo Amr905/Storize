@@ -123,6 +123,8 @@ class Contents extends Table {
   IntColumn get expiresAt =>
       integer().nullable().map(const EpochMsConverter())();
   TextColumn get caption => text().nullable()();
+  TextColumn get locationName => text().nullable()();
+  TextColumn get taggedUsernames => text().nullable()();
   IntColumn get slideCount => integer().withDefault(const Constant(1))();
   BoolColumn get isCloseFriends =>
       boolean().withDefault(const Constant(false))();

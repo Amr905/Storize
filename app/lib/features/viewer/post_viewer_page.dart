@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/library/library_services.dart';
+import 'package:storize_app/features/viewer/content_details.dart';
 import 'package:storize_app/features/viewer/post_info_sheet.dart';
 import 'package:storize_app/features/viewer/post_providers.dart';
 import 'package:storize_app/features/viewer/post_slide.dart';
@@ -330,13 +331,19 @@ class _PostViewerPageState extends ConsumerState<PostViewerPage> {
                       ),
                       if (caption != null && caption.isNotEmpty) ...[
                         const SizedBox(height: StorizeSpacing.s4),
-                        Text(
-                          caption,
-                          maxLines: _captionOpen ? null : 3,
-                          overflow: _captionOpen
-                              ? TextOverflow.visible
-                              : TextOverflow.ellipsis,
-                          style: text.bodyLarge?.copyWith(color: onSurface),
+                        GestureDetector(
+                          onLongPress: () async {
+                            await copyCaption(caption);
+                            if (mounted) _snack(l10n.infoCaptionCopied);
+                          },
+                          child: Text(
+                            caption,
+                            maxLines: _captionOpen ? null : 3,
+                            overflow: _captionOpen
+                                ? TextOverflow.visible
+                                : TextOverflow.ellipsis,
+                            style: text.bodyLarge?.copyWith(color: onSurface),
+                          ),
                         ),
                         TextButton(
                           style: TextButton.styleFrom(

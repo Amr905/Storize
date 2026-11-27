@@ -50,6 +50,8 @@ final class MediaMapper {
       kind: ContentKind.story,
       postedAt: item['taken_at'].unixTime,
       expiresAt: item['expiring_at'].unixTime,
+      locationName: _locationName(item),
+      taggedUsernames: _taggedUsernames(item),
       closeFriends: _closeFriends(item),
       slides: [?slide.media],
       extras: extras,
@@ -72,6 +74,9 @@ final class MediaMapper {
       remoteId: item['pk'].string,
       kind: ContentKind.highlight,
       postedAt: item['taken_at'].unixTime,
+      caption: _caption(item),
+      locationName: _locationName(item),
+      taggedUsernames: _taggedUsernames(item),
       closeFriends: _closeFriends(item),
       slides: [?slide.media],
       extras: {
@@ -95,8 +100,10 @@ final class MediaMapper {
     final postedAt = node['taken_at'].unixTime;
     final slides = <RemoteMedia>[];
     final unsupported = <int>[];
+    var carouselChildren = const <Node>[];
     if (kind == _Kind.carousel) {
       final children = node['carousel_media'].list;
+      carouselChildren = children;
       if (children.isEmpty) throw SchemaException(node['carousel_media'].path);
       for (var i = 0; i < children.length; i++) {
         final slide = _slide(children[i], i);
@@ -120,7 +127,9 @@ final class MediaMapper {
       shortcode: node['code'].string,
       postType: postType,
       postedAt: postedAt,
-      caption: node['caption']['text'].stringOrNull,
+      caption: _caption(node),
+      locationName: _locationName(node),
+      taggedUsernames: _taggedUsernames(node, carouselChildren),
       slides: slides,
       extras: {
         if (pinned) 'pinned': true,
@@ -128,6 +137,49 @@ final class MediaMapper {
         if (unsupported.isNotEmpty) unsupportedStreamKey: unsupported,
       },
     );
+  }
+
+  /// The caption text. Tolerant: a missing or odd-typed field gives null.
+  String? _caption(Node item) {
+    final text = item['caption']['text'].value;
+    return text is String && text.isNotEmpty ? text : null;
+  }
+
+  /// `location.name`. Tolerant: absent or odd types give null.
+  String? _locationName(Node item) {
+    final name = item['location']['name'].value;
+    if (name is! String) return null;
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  /// Most tagged usernames kept per item.
+  static const int _maxTags = 50;
+
+  /// `usertags.in[].user.username` of [item] and of each carousel child,
+  /// deduplicated in order and capped at [_maxTags]. Tolerant of any shape.
+  List<String> _taggedUsernames(Node item, [List<Node> children = const []]) {
+    final out = <String>[];
+    final seen = <String>{};
+    void collect(Node n) {
+      final tags = n['usertags']['in'].value;
+      if (tags is! List<Object?>) return;
+      for (final tag in tags) {
+        if (out.length >= _maxTags) return;
+        if (tag is! Map<String, Object?>) continue;
+        final user = tag['user'];
+        if (user is! Map<String, Object?>) continue;
+        final name = user['username'];
+        if (name is! String) continue;
+        final trimmed = name.trim();
+        if (trimmed.isEmpty || !seen.add(trimmed.toLowerCase())) continue;
+        out.add(trimmed);
+      }
+    }
+
+    collect(item);
+    children.forEach(collect);
+    return out;
   }
 
   _Kind _mediaType(Node item, {required bool allowCarousel}) {
@@ -292,6 +344,8 @@ RemoteContent withHighlightOrder(RemoteContent content, int order) =>
       postType: content.postType,
       expiresAt: content.expiresAt,
       caption: content.caption,
+      locationName: content.locationName,
+      taggedUsernames: content.taggedUsernames,
       closeFriends: content.closeFriends,
       extras: {...content.extras, HighlightExtras.order: order},
     );

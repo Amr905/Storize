@@ -18,11 +18,14 @@ final class Content {
     this.postType,
     this.expiresAt,
     this.caption,
+    this.locationName,
+    List<String> taggedUsernames = const [],
     this.isCloseFriends = false,
     Map<String, Object?> extras = const {},
     this.status = ContentStatus.pending,
     this.viewed = false,
-  }) : extras = freezeMap(extras);
+  }) : taggedUsernames = List<String>.unmodifiable(taggedUsernames),
+       extras = freezeMap(extras);
 
   /// The [id] of an entity that has not been stored yet.
   static const int unsavedId = 0;
@@ -54,6 +57,12 @@ final class Content {
   /// The caption. Posts only.
   final String? caption;
 
+  /// The location name (FR-77).
+  final String? locationName;
+
+  /// Tagged usernames (FR-77). Stored as JSON.
+  final List<String> taggedUsernames;
+
   /// How many media files it has: 1 for a story.
   final int slideCount;
 
@@ -82,6 +91,8 @@ final class Content {
     DateTime? postedAt,
     Object? expiresAt = unset,
     Object? caption = unset,
+    Object? locationName = unset,
+    List<String>? taggedUsernames,
     int? slideCount,
     bool? isCloseFriends,
     Map<String, Object?>? extras,
@@ -98,6 +109,8 @@ final class Content {
     postedAt: postedAt ?? this.postedAt,
     expiresAt: pick<DateTime>(expiresAt, this.expiresAt),
     caption: pick<String>(caption, this.caption),
+    locationName: pick<String>(locationName, this.locationName),
+    taggedUsernames: taggedUsernames ?? this.taggedUsernames,
     slideCount: slideCount ?? this.slideCount,
     isCloseFriends: isCloseFriends ?? this.isCloseFriends,
     extras: extras ?? this.extras,
@@ -119,6 +132,8 @@ final class Content {
           other.postedAt == postedAt &&
           other.expiresAt == expiresAt &&
           other.caption == caption &&
+          other.locationName == locationName &&
+          deepEquals(other.taggedUsernames, taggedUsernames) &&
           other.slideCount == slideCount &&
           other.isCloseFriends == isCloseFriends &&
           deepEquals(other.extras, extras) &&
@@ -137,6 +152,8 @@ final class Content {
     postedAt,
     expiresAt,
     caption,
+    locationName,
+    deepHash(taggedUsernames),
     slideCount,
     isCloseFriends,
     deepHash(extras),
@@ -145,7 +162,8 @@ final class Content {
     viewed,
   );
 
-  /// Omits [caption] and [extras] so that post content does not reach logs.
+  /// Omits [caption], [locationName], [taggedUsernames] and [extras] so that
+  /// post content does not reach logs.
   @override
   String toString() =>
       'Content(id: $id, targetId: $targetId, kind: ${kind.name}, '

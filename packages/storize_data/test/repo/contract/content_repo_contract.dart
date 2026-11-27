@@ -106,6 +106,26 @@ void runContentRepoContract(RepoHarness Function() create) {
       expect(read.media.length, 1);
     });
 
+    test(
+      'location and tagged usernames round-trip, and may be empty',
+      () async {
+        final a = await repo.insertIfNew(aFullContent(t1), [aMedia()]);
+        final read = (await repo.getById(a.contentId))!.content;
+        expect(read.locationName, 'ZZFAKE_place');
+        expect(read.taggedUsernames, ['zzfake_a', 'zzfake_b']);
+        final b = await repo.insertIfNew(
+          aContent(t1, kind: ContentKind.post).copyWith(
+            locationName: null,
+            taggedUsernames: const [],
+          ),
+          [aMedia()],
+        );
+        final empty = (await repo.getById(b.contentId))!.content;
+        expect(empty.locationName, isNull);
+        expect(empty.taggedUsernames, isEmpty);
+      },
+    );
+
     test('same remoteId under another kind or target is new', () async {
       final story = await repo.insertIfNew(aContent(t1), [aMedia()]);
       final post = await repo.insertIfNew(
