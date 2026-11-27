@@ -27,6 +27,8 @@ Future<int?> insertRemote(
       postedAt: c.postedAt.toUtc(),
       expiresAt: c.expiresAt?.toUtc(),
       caption: post ? c.caption : null,
+      locationName: c.locationName,
+      taggedUsernames: c.taggedUsernames,
       slideCount: c.slides.length,
       isCloseFriends: c.closeFriends,
       extras: c.extras,

@@ -69,6 +69,30 @@ void main() {
     expect(ContentKind.fromDb('HIGHLIGHT'), ContentKind.highlight);
   });
 
+  test('v2 to v3 keeps content and adds the detail columns', () async {
+    final schema = await verifier.schemaAt(2);
+    schema.rawDatabase
+      ..execute(
+        'INSERT INTO target (id, platform, remote_user_id, username, '
+        'category, status, posts_watermark_at, added_at) VALUES (1, '
+        "'INSTAGRAM', 'u-1', 'old_user', 'PUBLIC', 'ACTIVE', 1000, 2000)",
+      )
+      ..execute(
+        'INSERT INTO content (target_id, kind, remote_id, posted_at, '
+        "caption, detected_at, status) VALUES (1, 'POST', 'ZZFAKE_old', 3000, "
+        "'ZZFAKE_cap', 4000, 'PENDING')",
+      );
+    final db = StorizeDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 3);
+
+    final repo = DriftContentRepo(db);
+    final old = (await repo.listByTarget(1)).single.content;
+    expect(old.caption, 'ZZFAKE_cap');
+    expect(old.locationName, isNull);
+    expect(old.taggedUsernames, isEmpty);
+  });
+
   test('a database from a newer build is refused (v99)', () async {
     final db = StorizeDatabase.forTesting(
       NativeDatabase.memory(

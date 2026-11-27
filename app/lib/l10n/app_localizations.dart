@@ -3478,6 +3478,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In your gallery · Pictures/Storize/{username}'**
   String storyInGallery(String username);
+
+  /// Info sheet: label above the post caption.
+  ///
+  /// In en, this message translates to:
+  /// **'Caption'**
+  String get infoCaption;
+
+  /// Info sheet: button that copies the caption to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy caption'**
+  String get infoCopyCaption;
+
+  /// Snackbar after the caption was copied (Info sheet button or long-press in the post viewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Caption copied'**
+  String get infoCaptionCopied;
+
+  /// Info sheet: accessibility label of the location pin icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get infoLocation;
+
+  /// Info sheet: label above the chips of accounts tagged in the post.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagged accounts'**
+  String get infoTagged;
+
+  /// Info sheet row: when the file was saved to the gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on'**
+  String get infoSavedOn;
 }
 
 class _AppLocalizationsDelegate

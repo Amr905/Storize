@@ -37,7 +37,7 @@ class DatabaseTooNew implements Exception {
       'was created by a newer version of the app';
 }
 
-/// The Storize database (TECH_SPEC §3 and §17, schema v2).
+/// The Storize database (TECH_SPEC §3 and §17, schema v3).
 @DriftDatabase(
   tables: [
     LoginAccounts,
@@ -104,7 +104,7 @@ class StorizeDatabase extends _$StorizeDatabase {
   static const String databaseName = 'storize';
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -134,6 +134,12 @@ class StorizeDatabase extends _$StorizeDatabase {
       await m.addColumn(t, t.historyOldestSeenAt);
       await m.addColumn(t, t.historyUpdatedAt);
       await m.addColumn(t, t.highlightsEnabled);
+    },
+    from2To3: (m, schema) async {
+      // v3 (T-054, FR-77): location and tagged usernames on `content`.
+      final c = schema.content;
+      await m.addColumn(c, c.locationName);
+      await m.addColumn(c, c.taggedUsernames);
     },
   );
 

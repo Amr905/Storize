@@ -67,8 +67,11 @@ final class RemoteContent {
     this.postType,
     this.expiresAt,
     this.caption,
+    this.locationName,
+    List<String> taggedUsernames = const [],
     this.closeFriends = false,
   }) : slides = List<RemoteMedia>.unmodifiable(slides),
+       taggedUsernames = List<String>.unmodifiable(taggedUsernames),
        extras = Map<String, Object?>.unmodifiable({
          for (final e in extras.entries) e.key: deepUnmodifiable(e.value),
        });
@@ -94,6 +97,12 @@ final class RemoteContent {
   /// The caption. Posts only.
   final String? caption;
 
+  /// The location name, when Instagram provides one (FR-77).
+  final String? locationName;
+
+  /// Usernames tagged in the media, deduplicated (FR-77).
+  final List<String> taggedUsernames;
+
   /// Whether the story was shared with close friends (FR-27).
   final bool closeFriends;
 
@@ -114,6 +123,8 @@ final class RemoteContent {
           other.postedAt == postedAt &&
           other.expiresAt == expiresAt &&
           other.caption == caption &&
+          other.locationName == locationName &&
+          deepEquals(other.taggedUsernames, taggedUsernames) &&
           other.closeFriends == closeFriends &&
           deepEquals(other.slides, slides) &&
           deepEquals(other.extras, extras));
@@ -127,12 +138,15 @@ final class RemoteContent {
     postedAt,
     expiresAt,
     caption,
+    locationName,
+    deepHash(taggedUsernames),
     closeFriends,
     deepHash(slides),
     deepHash(extras),
   );
 
-  /// Omits [caption] and [extras] so that post content does not reach logs.
+  /// Omits [caption], [locationName], [taggedUsernames] and [extras] so that
+  /// post content does not reach logs.
   @override
   String toString() =>
       'RemoteContent(remoteId: $remoteId, kind: ${kind.name}, '

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/viewer/content_details.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_domain/storize_domain.dart';
@@ -12,6 +13,7 @@ Future<void> showStoryInfoSheet(
   required String username,
 }) => showModalBottomSheet<void>(
   context: context,
+  isScrollControlled: true,
   shape: const RoundedRectangleBorder(borderRadius: StorizeRadii.sheetRadius),
   builder: (_) => StoryInfoSheet(item: item, username: username),
 );
@@ -50,7 +52,12 @@ class StoryInfoSheet extends StatelessWidget {
     final rows = <(String, String)>[
       (l10n.storyInfoPosted, _when(context, item.content.postedAt)),
       if (media?.downloadedAt != null)
-        (l10n.storyInfoDownloaded, _when(context, media!.downloadedAt!)),
+        (
+          item.content.kind == ContentKind.highlight
+              ? l10n.infoSavedOn
+              : l10n.storyInfoDownloaded,
+          _when(context, media!.downloadedAt!),
+        ),
       (l10n.storyInfoType, isVideo ? l10n.storyTypeVideo : l10n.storyTypePhoto),
       if (isVideo && media?.durationMs != null)
         (
@@ -78,34 +85,46 @@ class StoryInfoSheet extends StatelessWidget {
           StorizeSpacing.s24,
           StorizeSpacing.s24,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.storyInfoTitle, style: text.titleLarge),
-            const SizedBox(height: StorizeSpacing.s12),
-            for (final (label, value) in rows)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  bottom: StorizeSpacing.s12,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 128,
-                      child: Text(
-                        label,
-                        style: text.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.storyInfoTitle, style: text.titleLarge),
+              const SizedBox(height: StorizeSpacing.s12),
+              ContentDetails(
+                caption: item.content.caption,
+                locationName: item.content.locationName,
+                taggedUsernames: item.content.taggedUsernames,
+                onCaptionCopied: () => ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(content: Text(l10n.infoCaptionCopied)),
+                  ),
+              ),
+              for (final (label, value) in rows)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    bottom: StorizeSpacing.s12,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 128,
+                        child: Text(
+                          label,
+                          style: text.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(child: Text(value, style: text.bodyMedium)),
-                  ],
+                      Expanded(child: Text(value, style: text.bodyMedium)),
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

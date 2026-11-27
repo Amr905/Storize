@@ -118,6 +118,8 @@ void main() {
         'posted_at': 'INTEGER',
         'expires_at': 'INTEGER',
         'caption': 'TEXT',
+        'location_name': 'TEXT',
+        'tagged_usernames': 'TEXT',
         'slide_count': 'INTEGER',
         'is_close_friends': 'INTEGER',
         'extras_json': 'TEXT',

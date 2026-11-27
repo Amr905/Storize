@@ -2095,4 +2095,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String storyInGallery(String username) {
     return 'In your gallery · Pictures/Storize/$username';
   }
+
+  @override
+  String get infoCaption => 'Caption';
+
+  @override
+  String get infoCopyCaption => 'Copy caption';
+
+  @override
+  String get infoCaptionCopied => 'Caption copied';
+
+  @override
+  String get infoLocation => 'Location';
+
+  @override
+  String get infoTagged => 'Tagged accounts';
+
+  @override
+  String get infoSavedOn => 'Saved on';
 }

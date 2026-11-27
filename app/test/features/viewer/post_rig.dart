@@ -36,6 +36,8 @@ Future<int> addPost(
   required List<SlideSpec> slides,
   PostType? postType,
   String? caption,
+  String? locationName,
+  List<String> taggedUsernames = const [],
   String? shortcode = 'ABC123',
   DateTime? postedAt,
 }) async {
@@ -73,6 +75,8 @@ Future<int> addPost(
       shortcode: shortcode,
       postType: postType,
       caption: caption,
+      locationName: locationName,
+      taggedUsernames: taggedUsernames,
       slideCount: slides.length,
       postedAt: (postedAt ?? testNow.subtract(const Duration(hours: 3)))
           .toUtc(),

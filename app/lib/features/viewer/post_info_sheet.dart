@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:storize_app/features/viewer/content_details.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_domain/storize_domain.dart';
@@ -20,6 +21,7 @@ Future<void> showPostInfoSheet(
   required String username,
 }) => showModalBottomSheet<void>(
   context: context,
+  isScrollControlled: true,
   shape: const RoundedRectangleBorder(borderRadius: StorizeRadii.sheetRadius),
   builder: (_) => PostInfoSheet(item: item, username: username),
 );
@@ -73,6 +75,12 @@ class _PostInfoSheetState extends State<PostInfoSheet> {
         ? 'Pictures/Storize/${widget.username}/'
         : (media.first.relativePath ?? 'Pictures/Storize/${widget.username}/');
 
+    DateTime? savedAt;
+    for (final m in media) {
+      final d = m.downloadedAt;
+      if (d != null && (savedAt == null || d.isAfter(savedAt))) savedAt = d;
+    }
+
     final rows = <(String, String)>[
       (l10n.storyInfoPosted, _when(context, content.postedAt)),
       (l10n.storyInfoType, postTypeLabel(l10n, content, media)),
@@ -86,6 +94,7 @@ class _PostInfoSheetState extends State<PostInfoSheet> {
                   (totalBytes / (1024 * 1024)).toStringAsFixed(1),
                 ),
         ),
+      if (savedAt != null) (l10n.infoSavedOn, _when(context, savedAt)),
       (l10n.storyInfoItemId, content.remoteId),
       (l10n.storyInfoFolder, folder),
     ];
@@ -98,69 +107,81 @@ class _PostInfoSheetState extends State<PostInfoSheet> {
           StorizeSpacing.s24,
           StorizeSpacing.s24,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.storyInfoTitle, style: text.titleLarge),
-            const SizedBox(height: StorizeSpacing.s12),
-            if (link != null) ...[
-              Text(
-                l10n.postLinkTitle,
-                style: text.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      link,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodyMedium,
-                    ),
-                  ),
-                  IconButton(
-                    constraints: const BoxConstraints(
-                      minWidth: StorizeSpacing.minTouchTarget,
-                      minHeight: StorizeSpacing.minTouchTarget,
-                    ),
-                    tooltip: l10n.postCopyLink,
-                    icon: const Icon(Icons.copy_rounded),
-                    onPressed: () => _copy(link),
-                  ),
-                ],
-              ),
-              if (_copied)
-                Text(
-                  l10n.postLinkCopied,
-                  style: text.bodySmall?.copyWith(color: scheme.primary),
-                ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.storyInfoTitle, style: text.titleLarge),
               const SizedBox(height: StorizeSpacing.s12),
-            ],
-            for (final (label, value) in rows)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  bottom: StorizeSpacing.s12,
+              ContentDetails(
+                caption: content.caption,
+                locationName: content.locationName,
+                taggedUsernames: content.taggedUsernames,
+                onCaptionCopied: () => ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(content: Text(l10n.infoCaptionCopied)),
+                  ),
+              ),
+              if (link != null) ...[
+                Text(
+                  l10n.postLinkTitle,
+                  style: text.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    SizedBox(
-                      width: 128,
+                    Expanded(
                       child: Text(
-                        label,
-                        style: text.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        link,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium,
                       ),
                     ),
-                    Expanded(child: Text(value, style: text.bodyMedium)),
+                    IconButton(
+                      constraints: const BoxConstraints(
+                        minWidth: StorizeSpacing.minTouchTarget,
+                        minHeight: StorizeSpacing.minTouchTarget,
+                      ),
+                      tooltip: l10n.postCopyLink,
+                      icon: const Icon(Icons.copy_rounded),
+                      onPressed: () => _copy(link),
+                    ),
                   ],
                 ),
-              ),
-          ],
+                if (_copied)
+                  Text(
+                    l10n.postLinkCopied,
+                    style: text.bodySmall?.copyWith(color: scheme.primary),
+                  ),
+                const SizedBox(height: StorizeSpacing.s12),
+              ],
+              for (final (label, value) in rows)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    bottom: StorizeSpacing.s12,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 128,
+                        child: Text(
+                          label,
+                          style: text.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Text(value, style: text.bodyMedium)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

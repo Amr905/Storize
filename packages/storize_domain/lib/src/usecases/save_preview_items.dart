@@ -319,6 +319,8 @@ final class SavePreviewItems {
       postedAt: c.postedAt.toUtc(),
       expiresAt: c.expiresAt?.toUtc(),
       caption: isStory ? null : c.caption,
+      locationName: c.locationName,
+      taggedUsernames: c.taggedUsernames,
       slideCount: c.slides.length,
       isCloseFriends: c.closeFriends,
       extras: c.extras,
