@@ -532,4 +532,44 @@ void main() {
     expect(caught.toString(), isNot(contains('secret')));
     expect(StorizePlatformErrorKind.ioError.code, 'IO_ERROR');
   });
+
+  group('QA symlinks', () {
+    test(
+      'a symlinked folder inside the root cannot reach outside files',
+      () async {
+        final outsideDir = Directory('${tmp.path}/outside')..createSync();
+        final victim = File('${outsideDir.path}/victim.jpg')
+          ..writeAsBytesSync(data(4));
+        final root = await priv.root();
+        Link('${root.path}/evil').createSync(outsideDir.path);
+        final uri = Uri.file('${root.path}/evil/victim.jpg').toString();
+        await store.delete(uri);
+        expect(victim.existsSync(), isTrue, reason: 'symlink escape');
+      },
+      skip: 'QA T-058 finding F2 (low): pathOf does not resolve symlinks',
+    );
+
+    test('a symlinked file is only unlinked, target survives', () async {
+      final victim = File('${tmp.path}/victim2.jpg')..writeAsBytesSync(data(4));
+      final root = await priv.root();
+      Link('${root.path}/l.jpg').createSync(victim.path);
+      await store.delete(Uri.file('${root.path}/l.jpg').toString());
+      expect(victim.existsSync(), isTrue);
+    });
+  });
+
+  test(
+    'QA: .nomedia exists at the root and content:// never hits disk',
+    () async {
+      await savePrivate();
+      expect(File('${pictures.path}/Storize/.nomedia').existsSync(), isTrue);
+      for (final u in [
+        'content://media/external/images/media/5',
+        'garbage',
+        '',
+      ]) {
+        expect(await store.exists(u), isFalse);
+      }
+    },
+  );
 }
