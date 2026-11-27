@@ -434,7 +434,8 @@ enum Severity implements DbEnum {
   static Severity fromDb(String value) => decodeDbEnum(values, value);
 }
 
-/// Outcome of the last check of one target (`target.last_check_outcome`, FR-75).
+/// Outcome of the last check of one target (`target.last_check_outcome`,
+/// FR-75).
 enum TargetCheckOutcome implements DbEnum {
   /// The check saved new items.
   ok('OK'),

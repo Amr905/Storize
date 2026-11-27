@@ -20,6 +20,7 @@ final class FakeHealthReadModel implements HealthReadModel {
   Future<HealthSnapshot> read() async {
     reads++;
     final e = error;
+    // ignore: only_throw_errors, tests inject any failure.
     if (e != null) throw e;
     return snapshot;
   }

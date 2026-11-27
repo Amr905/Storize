@@ -477,7 +477,8 @@ final class RunCheck {
         ),
       );
     } on Object catch (_) {
-      // The Health screen shows the last stored outcome; a missed write is fine.
+      // The Health screen shows the last stored outcome; a missed write is
+      // fine.
     }
   }
 
