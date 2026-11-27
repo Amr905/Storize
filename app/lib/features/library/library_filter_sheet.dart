@@ -94,6 +94,8 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
       (TypeFilter.all, l10n.libTypeAll),
       (TypeFilter.photos, l10n.libTypePhotos),
       (TypeFilter.videos, l10n.libTypeVideos),
+      if (_kind == LibraryKind.posts)
+        (TypeFilter.carousels, l10n.libTypeCarousels),
     ];
     final customLabel =
         _filters.date == DatePreset.custom &&
@@ -104,7 +106,7 @@ class _LibraryFilterSheetState extends State<LibraryFilterSheet> {
             loc.formatMediumDate(_filters.customTo!),
           )
         : l10n.libDateCustom;
-    final type = _filters.type;
+    final type = _filters.effectiveType(_kind);
 
     Widget section(String title, Widget child) => Padding(
       padding: const EdgeInsetsDirectional.only(top: StorizeSpacing.s16),

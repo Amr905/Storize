@@ -191,7 +191,7 @@ LibraryView buildLibraryView({
     totalOfKind++;
     if ((searchIds == null || searchIds.contains(c.id)) &&
         filter.matches(c, item.media) &&
-        filters.matchesShape(item)) {
+        filters.matchesShape(item, kind)) {
       shown.add(item);
     }
   }

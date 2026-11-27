@@ -553,6 +553,10 @@
   },
   "libKindReels": "Reels",
   "@libKindReels": {"description": "S-05 kind option and active filter chip: reels only (FR-76)."},
+  "libTypeCarousels": "Carousels",
+  "@libTypeCarousels": {
+    "description": "Type filter option (posts only)."
+  },
   "libClearAll": "Clear all",
   "@libClearAll": {"description": "S-04 button that removes every active filter chip and the search."},
   "libNoMatchesBody": "Try fewer filters.",

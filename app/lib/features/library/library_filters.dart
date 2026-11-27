@@ -6,8 +6,8 @@ import 'package:storize_model/storize_model.dart';
 /// The date presets of S-05.
 enum DatePreset { any, today, days7, days30, custom }
 
-/// The media options of S-05.
-enum TypeFilter { all, photos, videos }
+/// The type options of S-05. Carousels apply to posts only.
+enum TypeFilter { all, photos, videos, carousels }
 
 /// The filters of S-05 except the kind (which is the S-04 switch).
 @immutable
@@ -46,6 +46,12 @@ class LibraryFilters {
 
   /// Only reels: posts whose post type is reel. Applies to posts only.
   final bool reelsOnly;
+
+  /// The type that applies to [kind]: carousels mean nothing for stories.
+  TypeFilter effectiveType(LibraryKind kind) =>
+      kind == LibraryKind.stories && type == TypeFilter.carousels
+      ? TypeFilter.all
+      : type;
 
   /// Whether anything narrows the library (the kind is not counted).
   bool get isActive =>
@@ -113,18 +119,24 @@ class LibraryFilters {
       targetIds: targetIds,
       from: from,
       to: to,
-      mediaType: switch (type) {
+      mediaType: switch (effectiveType(kind)) {
         TypeFilter.photos => MediaType.photo,
         TypeFilter.videos => MediaType.video,
-        TypeFilter.all => null,
+        TypeFilter.all || TypeFilter.carousels => null,
       },
     );
   }
 
-  /// Whether [item] passes the reel part of the filter, which the repo filter
-  /// cannot express. Stories are never reels.
-  bool matchesShape(ContentWithMedia item) =>
-      !reelsOnly || item.content.postType == PostType.reel;
+  /// Whether [item] passes the post-shape parts of the filter (reels and
+  /// carousels), which the repo filter cannot express. Stories pass.
+  bool matchesShape(ContentWithMedia item, LibraryKind kind) {
+    if (kind == LibraryKind.stories) return true;
+    if (reelsOnly && item.content.postType != PostType.reel) return false;
+    return switch (effectiveType(kind)) {
+      TypeFilter.carousels => item.content.postType == PostType.carousel,
+      _ => true,
+    };
+  }
 
   @override
   bool operator ==(Object other) =>

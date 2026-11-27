@@ -475,6 +475,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                       SliverToBoxAdapter(
                         child: ActiveFilterChips(
                           filters: filters,
+                          kind: kind,
                           query: query,
                           targets: view.targets,
                           count: view.itemCount,

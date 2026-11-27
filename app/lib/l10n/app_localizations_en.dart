@@ -456,6 +456,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libKindReels => 'Reels';
 
   @override
+  String get libTypeCarousels => 'Carousels';
+
+  @override
   String get libClearAll => 'Clear all';
 
   @override

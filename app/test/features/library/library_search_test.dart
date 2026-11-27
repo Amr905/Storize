@@ -240,6 +240,35 @@ void main() {
     });
   });
 
+  group('carousels with search', () {
+    testWidgets('the carousel type combines with the search and removes', (
+      t,
+    ) async {
+      final rig = LibraryRig();
+      await seedSearch(rig);
+      final c = await pumpLibrary(t, rig);
+      await t.tap(find.text('Posts').first);
+      await t.pumpAndSettle();
+      await _search(t, 'sunset');
+      expect(_count(t), '2 results');
+      c
+          .read(libraryFiltersProvider.notifier)
+          .replace(LibraryFilters(type: TypeFilter.carousels));
+      await t.pumpAndSettle();
+      expect(_chip('active-filter-type'), findsOneWidget);
+      expect(find.text('Carousels'), findsOneWidget);
+      expect(_count(t), '1 result');
+      await t.tap(
+        find.descendant(
+          of: _chip('active-filter-type'),
+          matching: find.byTooltip('Remove filter'),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(_count(t), '2 results');
+    });
+  });
+
   group('reels in the kind sheet', () {
     testWidgets('choosing Reels applies a reel chip and the count', (t) async {
       final rig = LibraryRig();

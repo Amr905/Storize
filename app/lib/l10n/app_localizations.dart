@@ -857,6 +857,12 @@ abstract class AppLocalizations {
   /// **'Reels'**
   String get libKindReels;
 
+  /// Type filter option (posts only).
+  ///
+  /// In en, this message translates to:
+  /// **'Carousels'**
+  String get libTypeCarousels;
+
   /// S-04 button that removes every active filter chip and the search.
   ///
   /// In en, this message translates to:

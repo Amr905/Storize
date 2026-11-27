@@ -10,6 +10,7 @@ class ActiveFilterChips extends StatelessWidget {
   /// Creates the chips.
   const ActiveFilterChips({
     required this.filters,
+    required this.kind,
     required this.query,
     required this.targets,
     required this.count,
@@ -21,6 +22,9 @@ class ActiveFilterChips extends StatelessWidget {
 
   /// The applied filters (the kind switch is not a chip).
   final LibraryFilters filters;
+
+  /// The current kind (decides whether the type filter applies).
+  final LibraryKind kind;
 
   /// The committed search text, or '' when no search is active.
   final String query;
@@ -60,10 +64,11 @@ class ActiveFilterChips extends StatelessWidget {
                 loc.formatMediumDate(filters.customTo!),
               ),
     };
-    final typeLabel = switch (filters.type) {
+    final typeLabel = switch (filters.effectiveType(kind)) {
       TypeFilter.all => null,
       TypeFilter.photos => l10n.libTypePhotos,
       TypeFilter.videos => l10n.libTypeVideos,
+      TypeFilter.carousels => l10n.libTypeCarousels,
     };
     final accounts = [
       for (final t in targets)

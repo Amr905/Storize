@@ -587,6 +587,14 @@ void main() {
         ids(
           all,
           LibraryKind.posts,
+          LibraryFilters(type: TypeFilter.carousels, targetIds: const {1}),
+        ),
+        isEmpty,
+      );
+      expect(
+        ids(
+          all,
+          LibraryKind.posts,
           LibraryFilters(reelsOnly: true, targetIds: const {1}),
         ),
         {5},
