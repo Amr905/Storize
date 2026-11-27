@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:storize_model/storize_model.dart';
+import 'package:storize_platform_android/storize_platform_android.dart';
 
 /// One saved file handed to the system share sheet.
 @immutable
@@ -44,6 +45,28 @@ final class NoOpShareService implements ShareService {
 
   @override
   Future<void> share(List<ShareFile> files) async {}
+}
+
+/// The production [ShareService]: an Android chooser through the native plugin
+/// (`ACTION_SEND` / `ACTION_SEND_MULTIPLE`, FR-79). Gallery URIs go as they
+/// are; private `file://` paths go through the app's FileProvider.
+final class PlatformShareService implements ShareService {
+  /// Creates the service over the native plugin.
+  const PlatformShareService(this._plugin);
+
+  final StorizePlatformAndroid _plugin;
+
+  @override
+  Future<void> share(List<ShareFile> files) {
+    if (files.isEmpty) return Future<void>.value();
+    return _plugin.shareFiles(
+      uris: [for (final f in files) f.contentUri],
+      mimes: [
+        for (final f in files)
+          if (f.mediaType == MediaType.video) 'video/*' else 'image/*',
+      ],
+    );
+  }
 }
 
 /// The result of a "check now" run.

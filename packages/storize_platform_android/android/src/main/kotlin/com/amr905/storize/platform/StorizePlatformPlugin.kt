@@ -32,6 +32,7 @@ class StorizePlatformPlugin :
         val media = MediaStoreOps(context)
         val thumbnails = ThumbnailOps(context)
         val storage = StorageStatsOps()
+        val share = ShareOps(context)
         val battery = BatteryOps(context)
         val exits = ExitReasonOps(context)
         val perms = PermissionOps(context).also { permissions = it }
@@ -70,6 +71,13 @@ class StorizePlatformPlugin :
                                 media.readBytes(
                                     call.argument<String>("uri"),
                                     intArg(call, "maxBytes"),
+                                )
+                            }
+                        "shareFiles" ->
+                            mainThread(result) {
+                                share.share(
+                                    call.argument<List<String>>("uris"),
+                                    call.argument<List<String>>("mimes"),
                                 )
                             }
                         "size" -> background(result) { media.size(call.argument<String>("uri")) }

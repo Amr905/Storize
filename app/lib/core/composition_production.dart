@@ -129,6 +129,7 @@ Future<AppComposition> composeProduction({
     findExisting: gallery.findExisting,
     // Both kinds of reference: a gallery URI or a private `file://` path.
     fullPhotoReader: gallery.readBytes,
+    share: PlatformShareService(plugin),
     moveState: SharedPrefsMoveStateStore(),
     moveScheduler: scheduler,
     moveNotifier: NotificationMoveNotifier(
@@ -230,11 +231,7 @@ List<Override> appOverrides(AppComposition c) => [
   settingsRepoProvider.overrideWithValue(c.settings),
   governorLeaseRepoProvider.overrideWithValue(c.leases),
   healthReadModelProvider.overrideWithValue(
-    DriftHealthReadModel(
-      c.parts.db,
-      clock: c.clock,
-      settingsRepo: c.settings,
-    ),
+    DriftHealthReadModel(c.parts.db, clock: c.clock, settingsRepo: c.settings),
   ),
   contentPlatformProvider.overrideWithValue(c.platform),
   schedulerProvider.overrideWithValue(c.scheduler),
@@ -253,6 +250,8 @@ List<Override> appOverrides(AppComposition c) => [
   sessionStoreProvider.overrideWithValue(c.parts.sessions),
   pinStoreProvider.overrideWithValue(c.parts.pins),
   biometricAuthProvider.overrideWithValue(c.parts.biometric),
+  if (c.parts.share case final share?)
+    shareServiceProvider.overrideWithValue(share),
   checkNowActionProvider.overrideWithValue(
     SchedulerCheckNowAction(c.scheduler),
   ),

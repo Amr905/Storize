@@ -144,6 +144,58 @@ class StorizePlatformAndroid {
     );
   }
 
+  /// Opens the system share sheet for [uris] (one `ACTION_SEND`, several
+  /// `ACTION_SEND_MULTIPLE`) with a temporary read grant. [mimes] has one entry
+  /// per URI: `image/*`, `video/*` or a specific saved type.
+  ///
+  /// `content://media/` items pass as they are; `file://` paths must be inside
+  /// the app's private `Pictures/Storize/` folder and are handed over through
+  /// the app's FileProvider. Anything else is refused with `INVALID_ARGUMENT`
+  /// or `PERMISSION_DENIED`, a missing file is `SOURCE_NOT_FOUND`, and no app
+  /// that can handle it is `UNAVAILABLE`. Errors carry no path.
+  Future<void> shareFiles({
+    required List<String> uris,
+    required List<String> mimes,
+  }) async {
+    if (uris.isEmpty || uris.length != mimes.length) {
+      throw ArgumentError('uris and mimes must be equal-length and not empty');
+    }
+    for (final uri in uris) {
+      if (!_isShareable(uri)) {
+        throw const StorizePlatformException(
+          'PERMISSION_DENIED',
+          'Uri is outside the Storize folders',
+        );
+      }
+    }
+    _requireBool(
+      'shareFiles',
+      await _call<Object?>(_media, 'shareFiles', {
+        'uris': List<String>.of(uris),
+        'mimes': List<String>.of(mimes),
+      }),
+    );
+  }
+
+  static bool _isShareable(String uri) {
+    if (uri.startsWith('content://media/')) return true;
+    if (!uri.startsWith('file:///')) return false;
+    final Uri parsed;
+    try {
+      parsed = Uri.parse(uri);
+    } on FormatException {
+      return false;
+    }
+    final segments = parsed.pathSegments;
+    if (segments.contains('..') || segments.contains('.')) return false;
+    for (var i = 0; i + 2 < segments.length; i++) {
+      if (segments[i] == 'Pictures' && segments[i + 1] == 'Storize') {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Free and total bytes of the primary shared storage (the gallery volume).
   Future<StorageStats> storageStats() async {
     final raw = await _call<Object?>(_media, 'storageStats');
