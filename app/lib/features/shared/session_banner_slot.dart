@@ -24,6 +24,7 @@ class SessionBannerSlot extends ConsumerWidget {
       message: relogin ? l10n.bannerReloginBody : l10n.bannerRestrictedBody,
       fixLabel: l10n.bannerFix,
       onFix: () => context.push(Routes.accountPath),
+      onDetails: () => context.push(Routes.healthPath),
     );
   }
 }

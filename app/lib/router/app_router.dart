@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/features/account/account_page.dart';
 import 'package:storize_app/features/activity/activity_page.dart';
+import 'package:storize_app/features/health/health_page.dart';
 import 'package:storize_app/features/library/library_page.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/onboarding/login_page.dart';
@@ -167,6 +168,13 @@ GoRouter createRouter({
                 path: Routes.activityPath,
                 name: Routes.activity,
                 builder: (_, _) => const ActivityPage(),
+                routes: [
+                  GoRoute(
+                    path: 'health',
+                    name: Routes.health,
+                    builder: (_, _) => const HealthPage(),
+                  ),
+                ],
               ),
             ],
           ),

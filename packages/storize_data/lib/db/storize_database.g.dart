@@ -899,6 +899,38 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
     defaultValue: const Constant(false),
   );
   @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> lastSuccessAt =
+      GeneratedColumn<int>(
+        'last_success_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($TargetsTable.$converterlastSuccessAtn);
+  @override
+  late final GeneratedColumnWithTypeConverter<TargetCheckOutcome?, String>
+  lastCheckOutcome =
+      GeneratedColumn<String>(
+        'last_check_outcome',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<TargetCheckOutcome?>(
+        $TargetsTable.$converterlastCheckOutcomen,
+      );
+  static const VerificationMeta _lastCheckCodeMeta = const VerificationMeta(
+    'lastCheckCode',
+  );
+  @override
+  late final GeneratedColumn<String> lastCheckCode = GeneratedColumn<String>(
+    'last_check_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     platform,
@@ -929,6 +961,9 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
     historyOldestSeenAt,
     historyUpdatedAt,
     highlightsEnabled,
+    lastSuccessAt,
+    lastCheckOutcome,
+    lastCheckCode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1054,6 +1089,15 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
         highlightsEnabled.isAcceptableOrUnknown(
           data['highlights_enabled']!,
           _highlightsEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_check_code')) {
+      context.handle(
+        _lastCheckCodeMeta,
+        lastCheckCode.isAcceptableOrUnknown(
+          data['last_check_code']!,
+          _lastCheckCodeMeta,
         ),
       );
     }
@@ -1214,6 +1258,22 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}highlights_enabled'],
       )!,
+      lastSuccessAt: $TargetsTable.$converterlastSuccessAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}last_success_at'],
+        ),
+      ),
+      lastCheckOutcome: $TargetsTable.$converterlastCheckOutcomen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}last_check_outcome'],
+        ),
+      ),
+      lastCheckCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_check_code'],
+      ),
     );
   }
 
@@ -1264,6 +1324,16 @@ class $TargetsTable extends Targets with TableInfo<$TargetsTable, TargetRow> {
       const EpochMsConverter();
   static TypeConverter<DateTime?, int?> $converterhistoryUpdatedAtn =
       NullAwareTypeConverter.wrap($converterhistoryUpdatedAt);
+  static TypeConverter<DateTime, int> $converterlastSuccessAt =
+      const EpochMsConverter();
+  static TypeConverter<DateTime?, int?> $converterlastSuccessAtn =
+      NullAwareTypeConverter.wrap($converterlastSuccessAt);
+  static TypeConverter<TargetCheckOutcome, String> $converterlastCheckOutcome =
+      const TargetCheckOutcomeConverter();
+  static TypeConverter<TargetCheckOutcome?, String?>
+  $converterlastCheckOutcomen = NullAwareTypeConverter.wrap(
+    $converterlastCheckOutcome,
+  );
 }
 
 class TargetRow extends DataClass implements Insertable<TargetRow> {
@@ -1296,6 +1366,9 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
   final DateTime? historyOldestSeenAt;
   final DateTime? historyUpdatedAt;
   final bool highlightsEnabled;
+  final DateTime? lastSuccessAt;
+  final TargetCheckOutcome? lastCheckOutcome;
+  final String? lastCheckCode;
   const TargetRow({
     required this.id,
     required this.platform,
@@ -1326,6 +1399,9 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     this.historyOldestSeenAt,
     this.historyUpdatedAt,
     required this.highlightsEnabled,
+    this.lastSuccessAt,
+    this.lastCheckOutcome,
+    this.lastCheckCode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1427,6 +1503,19 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       );
     }
     map['highlights_enabled'] = Variable<bool>(highlightsEnabled);
+    if (!nullToAbsent || lastSuccessAt != null) {
+      map['last_success_at'] = Variable<int>(
+        $TargetsTable.$converterlastSuccessAtn.toSql(lastSuccessAt),
+      );
+    }
+    if (!nullToAbsent || lastCheckOutcome != null) {
+      map['last_check_outcome'] = Variable<String>(
+        $TargetsTable.$converterlastCheckOutcomen.toSql(lastCheckOutcome),
+      );
+    }
+    if (!nullToAbsent || lastCheckCode != null) {
+      map['last_check_code'] = Variable<String>(lastCheckCode);
+    }
     return map;
   }
 
@@ -1485,6 +1574,15 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
           ? const Value.absent()
           : Value(historyUpdatedAt),
       highlightsEnabled: Value(highlightsEnabled),
+      lastSuccessAt: lastSuccessAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSuccessAt),
+      lastCheckOutcome: lastCheckOutcome == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCheckOutcome),
+      lastCheckCode: lastCheckCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCheckCode),
     );
   }
 
@@ -1531,6 +1629,11 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
         json['historyUpdatedAt'],
       ),
       highlightsEnabled: serializer.fromJson<bool>(json['highlightsEnabled']),
+      lastSuccessAt: serializer.fromJson<DateTime?>(json['lastSuccessAt']),
+      lastCheckOutcome: serializer.fromJson<TargetCheckOutcome?>(
+        json['lastCheckOutcome'],
+      ),
+      lastCheckCode: serializer.fromJson<String?>(json['lastCheckCode']),
     );
   }
   @override
@@ -1566,6 +1669,11 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       'historyOldestSeenAt': serializer.toJson<DateTime?>(historyOldestSeenAt),
       'historyUpdatedAt': serializer.toJson<DateTime?>(historyUpdatedAt),
       'highlightsEnabled': serializer.toJson<bool>(highlightsEnabled),
+      'lastSuccessAt': serializer.toJson<DateTime?>(lastSuccessAt),
+      'lastCheckOutcome': serializer.toJson<TargetCheckOutcome?>(
+        lastCheckOutcome,
+      ),
+      'lastCheckCode': serializer.toJson<String?>(lastCheckCode),
     };
   }
 
@@ -1599,6 +1707,9 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     Value<DateTime?> historyOldestSeenAt = const Value.absent(),
     Value<DateTime?> historyUpdatedAt = const Value.absent(),
     bool? highlightsEnabled,
+    Value<DateTime?> lastSuccessAt = const Value.absent(),
+    Value<TargetCheckOutcome?> lastCheckOutcome = const Value.absent(),
+    Value<String?> lastCheckCode = const Value.absent(),
   }) => TargetRow(
     id: id ?? this.id,
     platform: platform ?? this.platform,
@@ -1645,6 +1756,15 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
         ? historyUpdatedAt.value
         : this.historyUpdatedAt,
     highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
+    lastSuccessAt: lastSuccessAt.present
+        ? lastSuccessAt.value
+        : this.lastSuccessAt,
+    lastCheckOutcome: lastCheckOutcome.present
+        ? lastCheckOutcome.value
+        : this.lastCheckOutcome,
+    lastCheckCode: lastCheckCode.present
+        ? lastCheckCode.value
+        : this.lastCheckCode,
   );
   TargetRow copyWithCompanion(TargetsCompanion data) {
     return TargetRow(
@@ -1719,6 +1839,15 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
       highlightsEnabled: data.highlightsEnabled.present
           ? data.highlightsEnabled.value
           : this.highlightsEnabled,
+      lastSuccessAt: data.lastSuccessAt.present
+          ? data.lastSuccessAt.value
+          : this.lastSuccessAt,
+      lastCheckOutcome: data.lastCheckOutcome.present
+          ? data.lastCheckOutcome.value
+          : this.lastCheckOutcome,
+      lastCheckCode: data.lastCheckCode.present
+          ? data.lastCheckCode.value
+          : this.lastCheckCode,
     );
   }
 
@@ -1753,7 +1882,10 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
           ..write('historyFetched: $historyFetched, ')
           ..write('historyOldestSeenAt: $historyOldestSeenAt, ')
           ..write('historyUpdatedAt: $historyUpdatedAt, ')
-          ..write('highlightsEnabled: $highlightsEnabled')
+          ..write('highlightsEnabled: $highlightsEnabled, ')
+          ..write('lastSuccessAt: $lastSuccessAt, ')
+          ..write('lastCheckOutcome: $lastCheckOutcome, ')
+          ..write('lastCheckCode: $lastCheckCode')
           ..write(')'))
         .toString();
   }
@@ -1789,6 +1921,9 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
     historyOldestSeenAt,
     historyUpdatedAt,
     highlightsEnabled,
+    lastSuccessAt,
+    lastCheckOutcome,
+    lastCheckCode,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1822,7 +1957,10 @@ class TargetRow extends DataClass implements Insertable<TargetRow> {
           other.historyFetched == this.historyFetched &&
           other.historyOldestSeenAt == this.historyOldestSeenAt &&
           other.historyUpdatedAt == this.historyUpdatedAt &&
-          other.highlightsEnabled == this.highlightsEnabled);
+          other.highlightsEnabled == this.highlightsEnabled &&
+          other.lastSuccessAt == this.lastSuccessAt &&
+          other.lastCheckOutcome == this.lastCheckOutcome &&
+          other.lastCheckCode == this.lastCheckCode);
 }
 
 class TargetsCompanion extends UpdateCompanion<TargetRow> {
@@ -1855,6 +1993,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
   final Value<DateTime?> historyOldestSeenAt;
   final Value<DateTime?> historyUpdatedAt;
   final Value<bool> highlightsEnabled;
+  final Value<DateTime?> lastSuccessAt;
+  final Value<TargetCheckOutcome?> lastCheckOutcome;
+  final Value<String?> lastCheckCode;
   const TargetsCompanion({
     this.id = const Value.absent(),
     this.platform = const Value.absent(),
@@ -1885,6 +2026,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     this.historyOldestSeenAt = const Value.absent(),
     this.historyUpdatedAt = const Value.absent(),
     this.highlightsEnabled = const Value.absent(),
+    this.lastSuccessAt = const Value.absent(),
+    this.lastCheckOutcome = const Value.absent(),
+    this.lastCheckCode = const Value.absent(),
   });
   TargetsCompanion.insert({
     this.id = const Value.absent(),
@@ -1916,6 +2060,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     this.historyOldestSeenAt = const Value.absent(),
     this.historyUpdatedAt = const Value.absent(),
     this.highlightsEnabled = const Value.absent(),
+    this.lastSuccessAt = const Value.absent(),
+    this.lastCheckOutcome = const Value.absent(),
+    this.lastCheckCode = const Value.absent(),
   }) : platform = Value(platform),
        remoteUserId = Value(remoteUserId),
        username = Value(username),
@@ -1953,6 +2100,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     Expression<int>? historyOldestSeenAt,
     Expression<int>? historyUpdatedAt,
     Expression<bool>? highlightsEnabled,
+    Expression<int>? lastSuccessAt,
+    Expression<String>? lastCheckOutcome,
+    Expression<String>? lastCheckCode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1986,6 +2136,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
         'history_oldest_seen_at': historyOldestSeenAt,
       if (historyUpdatedAt != null) 'history_updated_at': historyUpdatedAt,
       if (highlightsEnabled != null) 'highlights_enabled': highlightsEnabled,
+      if (lastSuccessAt != null) 'last_success_at': lastSuccessAt,
+      if (lastCheckOutcome != null) 'last_check_outcome': lastCheckOutcome,
+      if (lastCheckCode != null) 'last_check_code': lastCheckCode,
     });
   }
 
@@ -2019,6 +2172,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     Value<DateTime?>? historyOldestSeenAt,
     Value<DateTime?>? historyUpdatedAt,
     Value<bool>? highlightsEnabled,
+    Value<DateTime?>? lastSuccessAt,
+    Value<TargetCheckOutcome?>? lastCheckOutcome,
+    Value<String?>? lastCheckCode,
   }) {
     return TargetsCompanion(
       id: id ?? this.id,
@@ -2050,6 +2206,9 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
       historyOldestSeenAt: historyOldestSeenAt ?? this.historyOldestSeenAt,
       historyUpdatedAt: historyUpdatedAt ?? this.historyUpdatedAt,
       highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
+      lastSuccessAt: lastSuccessAt ?? this.lastSuccessAt,
+      lastCheckOutcome: lastCheckOutcome ?? this.lastCheckOutcome,
+      lastCheckCode: lastCheckCode ?? this.lastCheckCode,
     );
   }
 
@@ -2175,6 +2334,19 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
     if (highlightsEnabled.present) {
       map['highlights_enabled'] = Variable<bool>(highlightsEnabled.value);
     }
+    if (lastSuccessAt.present) {
+      map['last_success_at'] = Variable<int>(
+        $TargetsTable.$converterlastSuccessAtn.toSql(lastSuccessAt.value),
+      );
+    }
+    if (lastCheckOutcome.present) {
+      map['last_check_outcome'] = Variable<String>(
+        $TargetsTable.$converterlastCheckOutcomen.toSql(lastCheckOutcome.value),
+      );
+    }
+    if (lastCheckCode.present) {
+      map['last_check_code'] = Variable<String>(lastCheckCode.value);
+    }
     return map;
   }
 
@@ -2209,7 +2381,10 @@ class TargetsCompanion extends UpdateCompanion<TargetRow> {
           ..write('historyFetched: $historyFetched, ')
           ..write('historyOldestSeenAt: $historyOldestSeenAt, ')
           ..write('historyUpdatedAt: $historyUpdatedAt, ')
-          ..write('highlightsEnabled: $highlightsEnabled')
+          ..write('highlightsEnabled: $highlightsEnabled, ')
+          ..write('lastSuccessAt: $lastSuccessAt, ')
+          ..write('lastCheckOutcome: $lastCheckOutcome, ')
+          ..write('lastCheckCode: $lastCheckCode')
           ..write(')'))
         .toString();
   }
@@ -6226,6 +6401,9 @@ typedef $$TargetsTableCreateCompanionBuilder = TargetsCompanion Function({
   Value<DateTime?> historyOldestSeenAt,
   Value<DateTime?> historyUpdatedAt,
   Value<bool> highlightsEnabled,
+  Value<DateTime?> lastSuccessAt,
+  Value<TargetCheckOutcome?> lastCheckOutcome,
+  Value<String?> lastCheckCode,
 });
 typedef $$TargetsTableUpdateCompanionBuilder = TargetsCompanion Function({
   Value<int> id,
@@ -6257,6 +6435,9 @@ typedef $$TargetsTableUpdateCompanionBuilder = TargetsCompanion Function({
   Value<DateTime?> historyOldestSeenAt,
   Value<DateTime?> historyUpdatedAt,
   Value<bool> highlightsEnabled,
+  Value<DateTime?> lastSuccessAt,
+  Value<TargetCheckOutcome?> lastCheckOutcome,
+  Value<String?> lastCheckCode,
 });
 
 final class $$TargetsTableReferences
@@ -6479,6 +6660,27 @@ class $$TargetsTableFilterComposer
 
   ColumnFilters<bool> get highlightsEnabled => $composableBuilder(
     column: $table.highlightsEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int> get lastSuccessAt =>
+      $composableBuilder(
+        column: $table.lastSuccessAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<
+    TargetCheckOutcome?,
+    TargetCheckOutcome,
+    String
+  >
+  get lastCheckOutcome => $composableBuilder(
+    column: $table.lastCheckOutcome,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get lastCheckCode => $composableBuilder(
+    column: $table.lastCheckCode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6705,6 +6907,21 @@ class $$TargetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lastSuccessAt => $composableBuilder(
+    column: $table.lastSuccessAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastCheckOutcome => $composableBuilder(
+    column: $table.lastCheckOutcome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastCheckCode => $composableBuilder(
+    column: $table.lastCheckCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$LoginAccountsTableOrderingComposer get loginAccountId {
     final $$LoginAccountsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6872,6 +7089,23 @@ class $$TargetsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<DateTime?, int> get lastSuccessAt =>
+      $composableBuilder(
+        column: $table.lastSuccessAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<TargetCheckOutcome?, String>
+  get lastCheckOutcome => $composableBuilder(
+    column: $table.lastCheckOutcome,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastCheckCode => $composableBuilder(
+    column: $table.lastCheckCode,
+    builder: (column) => column,
+  );
+
   $$LoginAccountsTableAnnotationComposer get loginAccountId {
     final $$LoginAccountsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -7007,6 +7241,10 @@ class $$TargetsTableTableManager
                 Value<DateTime?> historyOldestSeenAt = const Value.absent(),
                 Value<DateTime?> historyUpdatedAt = const Value.absent(),
                 Value<bool> highlightsEnabled = const Value.absent(),
+                Value<DateTime?> lastSuccessAt = const Value.absent(),
+                Value<TargetCheckOutcome?> lastCheckOutcome =
+                    const Value.absent(),
+                Value<String?> lastCheckCode = const Value.absent(),
               }) => TargetsCompanion(
                 id: id,
                 platform: platform,
@@ -7037,6 +7275,9 @@ class $$TargetsTableTableManager
                 historyOldestSeenAt: historyOldestSeenAt,
                 historyUpdatedAt: historyUpdatedAt,
                 highlightsEnabled: highlightsEnabled,
+                lastSuccessAt: lastSuccessAt,
+                lastCheckOutcome: lastCheckOutcome,
+                lastCheckCode: lastCheckCode,
               ),
           createCompanionCallback:
               ({
@@ -7069,6 +7310,10 @@ class $$TargetsTableTableManager
                 Value<DateTime?> historyOldestSeenAt = const Value.absent(),
                 Value<DateTime?> historyUpdatedAt = const Value.absent(),
                 Value<bool> highlightsEnabled = const Value.absent(),
+                Value<DateTime?> lastSuccessAt = const Value.absent(),
+                Value<TargetCheckOutcome?> lastCheckOutcome =
+                    const Value.absent(),
+                Value<String?> lastCheckCode = const Value.absent(),
               }) => TargetsCompanion.insert(
                 id: id,
                 platform: platform,
@@ -7099,6 +7344,9 @@ class $$TargetsTableTableManager
                 historyOldestSeenAt: historyOldestSeenAt,
                 historyUpdatedAt: historyUpdatedAt,
                 highlightsEnabled: highlightsEnabled,
+                lastSuccessAt: lastSuccessAt,
+                lastCheckOutcome: lastCheckOutcome,
+                lastCheckCode: lastCheckCode,
               ),
           withReferenceMapper: (p0) => p0
               .map(

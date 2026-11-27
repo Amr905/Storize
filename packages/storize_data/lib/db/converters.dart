@@ -180,6 +180,18 @@ class CheckRunScopeConverter extends TypeConverter<CheckScope, String> {
   }
 }
 
+class TargetCheckOutcomeConverter
+    extends TypeConverter<TargetCheckOutcome, String> {
+  const TargetCheckOutcomeConverter();
+
+  @override
+  TargetCheckOutcome fromSql(String fromDb) =>
+      TargetCheckOutcome.fromDb(fromDb);
+
+  @override
+  String toSql(TargetCheckOutcome value) => value.dbValue;
+}
+
 class HistoryRangeConverter extends TypeConverter<HistoryRange, String> {
   const HistoryRangeConverter();
 

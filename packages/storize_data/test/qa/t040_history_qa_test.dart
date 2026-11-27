@@ -100,16 +100,16 @@ void main() {
       );
     });
 
-    test('a fresh install is schema v3 with the defaults', () async {
+    test('a fresh install is schema v4 with the defaults', () async {
       final db = newDb();
       addTearDown(db.close);
-      expect(db.schemaVersion, 3);
+      expect(db.schemaVersion, 4);
       final id = await addTarget(db);
       final t = (await DriftTargetRepo(db).getById(id))!;
       expect(t.historyRange, HistoryRange.none);
       expect(t.highlightsEnabled, isFalse);
       final v = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(v.read<int>('user_version'), 3);
+      expect(v.read<int>('user_version'), 4);
     });
   });
 

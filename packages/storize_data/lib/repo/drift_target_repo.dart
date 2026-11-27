@@ -95,6 +95,9 @@ Target _toTarget(TargetRow r) => Target(
   historySince: r.historySince,
   historyProgress: _progressOf(r),
   highlightsEnabled: r.highlightsEnabled,
+  lastSuccessAt: r.lastSuccessAt,
+  lastCheckOutcome: r.lastCheckOutcome,
+  lastCheckCode: r.lastCheckCode,
 );
 
 /// A never-started backfill (IDLE, never written) reads as no progress.
@@ -140,4 +143,7 @@ TargetsCompanion _toCompanion(Target t) => TargetsCompanion(
   historyOldestSeenAt: Value(t.historyProgress?.oldestSeenAt),
   historyUpdatedAt: Value(t.historyProgress?.updatedAt),
   highlightsEnabled: Value(t.highlightsEnabled),
+  lastSuccessAt: Value(t.lastSuccessAt),
+  lastCheckOutcome: Value(t.lastCheckOutcome),
+  lastCheckCode: Value(t.lastCheckCode),
 );

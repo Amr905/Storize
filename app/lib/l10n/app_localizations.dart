@@ -3550,6 +3550,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved on'**
   String get infoSavedOn;
+
+  /// Health screen title, also the Activity app-bar icon tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get hltTitle;
+
+  /// Subtitle under the Health title.
+  ///
+  /// In en, this message translates to:
+  /// **'Why things did or didn\'t download'**
+  String get hltSubtitle;
+
+  /// Link on the session and limit banners that opens the Health screen.
+  ///
+  /// In en, this message translates to:
+  /// **'See details'**
+  String get hltSeeDetails;
+
+  /// Section title of the session card.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram session'**
+  String get hltSessionTitle;
+
+  /// Session card when no login account exists.
+  ///
+  /// In en, this message translates to:
+  /// **'No Instagram account is connected.'**
+  String get hltSessionNone;
+
+  /// Section title of the request budget card.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram requests'**
+  String get hltLimitsTitle;
+
+  /// Budget bar label. count and max are whole numbers.
+  ///
+  /// In en, this message translates to:
+  /// **'About {count} of {max} requests left right now'**
+  String hltBudgetLeft(int count, int max);
+
+  /// Note under the budget bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests refill at about {perHour} an hour.'**
+  String hltBudgetRefill(int perHour);
+
+  /// Row title when Instagram asked Storize to slow down.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused by Instagram'**
+  String get hltPausedTitle;
+
+  /// Pause row with the end time and a countdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resumes at {time}, {minutes, plural, =1{1 min left} other{{minutes} min left}}'**
+  String hltPausedUntil(String time, int minutes);
+
+  /// Row title for the schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Next check'**
+  String get hltNextCheck;
+
+  /// Schedule row. The system decides the exact run time.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {storyMin} min for stories, every {postMin} min for posts. The exact time is set by Android.'**
+  String hltNextCheckInterval(int storyMin, int postMin);
+
+  /// Schedule row with the time of the last check run.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run {ago}'**
+  String hltLastRun(String ago);
+
+  /// Schedule row before the first run.
+  ///
+  /// In en, this message translates to:
+  /// **'No check has run yet.'**
+  String get hltNoRunYet;
+
+  /// Section title of the per-account list.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get hltAccountsTitle;
+
+  /// Accounts list when there are no targets.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts tracked yet.'**
+  String get hltNoAccounts;
+
+  /// Per-account line with the last successful check.
+  ///
+  /// In en, this message translates to:
+  /// **'Last success {ago}'**
+  String hltLastSuccess(String ago);
+
+  /// Per-account line when no check has succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'No successful check yet.'**
+  String get hltNoSuccess;
+
+  /// Per-account count of items saved today.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing saved today} =1{1 saved today} other{{count} saved today}}'**
+  String hltSavedToday(int count);
+
+  /// Result pill: the last check saved new items.
+  ///
+  /// In en, this message translates to:
+  /// **'Ok'**
+  String get hltResultOk;
+
+  /// Result pill: the last check found nothing new.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new'**
+  String get hltResultNothingNew;
+
+  /// Result pill: the last check failed. reason is a short plain phrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {reason}'**
+  String hltResultFailed(String reason);
+
+  /// Result pill: the account was added while Instagram was limited.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to look up'**
+  String get hltResultWaiting;
+
+  /// Result pill: the account is paused by the user.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get hltResultPaused;
+
+  /// Failure reason: the account cannot be seen.
+  ///
+  /// In en, this message translates to:
+  /// **'Private or blocked'**
+  String get hltReasonNotVisible;
+
+  /// Failure reason: the account no longer exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not found'**
+  String get hltReasonNotFound;
+
+  /// Failure reason: the response shape changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram changed its page format'**
+  String get hltReasonSchema;
+
+  /// Failure reason: the session needs a new login. Lower case, used after 'Failed:'.
+  ///
+  /// In en, this message translates to:
+  /// **'log in again'**
+  String get hltReasonSession;
+
+  /// Relative time: under a minute.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get hltAgoJustNow;
+
+  /// Relative time in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min ago} other{{count} min ago}}'**
+  String hltAgoMinutes(int count);
+
+  /// Relative time in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 h ago} other{{count} h ago}}'**
+  String hltAgoHours(int count);
+
+  /// Relative time in days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day ago} other{{count} days ago}}'**
+  String hltAgoDays(int count);
+
+  /// Relative time when there was no event. Lower case, used in 'Last run never'.
+  ///
+  /// In en, this message translates to:
+  /// **'never'**
+  String get hltNever;
 }
 
 class _AppLocalizationsDelegate

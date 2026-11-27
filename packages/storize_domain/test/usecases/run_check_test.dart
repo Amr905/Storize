@@ -621,4 +621,60 @@ void main() {
       },
     );
   });
+
+  group('FR-75 last check outcome per target', () {
+    test('posts with new items: ok, success time stamped, no code', () async {
+      final t = await h.add('1');
+      h.platform.fetchNewPostsResults.addOk([post('a', 10)]);
+      await h.go(CheckScope.posts);
+      final back = (await h.targets.getById(t.id))!;
+      expect(back.lastCheckOutcome, TargetCheckOutcome.ok);
+      expect(back.lastSuccessAt, h.clock.now());
+      expect(back.lastCheckCode, isNull);
+    });
+
+    test('a check that finds nothing is nothing new', () async {
+      final t = await h.add('1');
+      h.platform.fetchNewPostsResults.addOk([]);
+      await h.go(CheckScope.posts);
+      final back = (await h.targets.getById(t.id))!;
+      expect(back.lastCheckOutcome, TargetCheckOutcome.nothingNew);
+      expect(back.lastSuccessAt, h.clock.now());
+    });
+
+    test('a network failure is failed with a short code, and keeps '
+        'the last success', () async {
+      final t = await h.add('1');
+      h.platform.fetchNewPostsResults.fallback = const Err(NetworkFailure());
+      await h.go(CheckScope.posts);
+      final back = (await h.targets.getById(t.id))!;
+      expect(back.lastCheckOutcome, TargetCheckOutcome.failed);
+      expect(back.lastCheckCode, 'network');
+      expect(back.lastSuccessAt, isNull);
+    });
+
+    test('a rate limit says nothing about one target', () async {
+      final t = await h.add('1');
+      h.platform.fetchNewPostsResults.fallback = const Err(
+        RateLimited(Duration(minutes: 15)),
+      );
+      await h.go(CheckScope.posts);
+      expect(
+        (await h.targets.getById(t.id))!.lastCheckOutcome,
+        isNull,
+      );
+    });
+
+    test('a story batch failure marks every target in it', () async {
+      final a = await h.add('1');
+      final b = await h.add('2');
+      h.platform.fetchStoriesResults.fallback = const Err(NetworkFailure());
+      await h.go(CheckScope.stories);
+      for (final id in [a.id, b.id]) {
+        final back = (await h.targets.getById(id))!;
+        expect(back.lastCheckOutcome, TargetCheckOutcome.failed);
+        expect(back.lastCheckCode, 'network');
+      }
+    });
+  });
 }
