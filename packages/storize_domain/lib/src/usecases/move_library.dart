@@ -95,9 +95,12 @@ final class MoveLibrary {
 
   /// Moves the saved files to [target] until done, cancelled, out of space or
   /// past [deadline]. Never throws for per-file failures.
+  ///
+  /// [onProgress] is called after every written progress (for a notification).
   Future<MoveLibraryResult> run(
     StorageTarget target, {
     DateTime? deadline,
+    void Function(MoveProgress progress)? onProgress,
   }) async {
     await _state.setCancelRequested(value: false);
     final before = await _state.read();
@@ -123,6 +126,7 @@ final class MoveLibrary {
         updatedAt: _clock.now(),
       );
       await _state.write(p);
+      onProgress?.call(p);
       return p;
     }
 

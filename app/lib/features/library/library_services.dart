@@ -7,8 +7,23 @@ class ShareFile {
   /// Creates a file reference.
   const ShareFile({required this.contentUri, required this.mediaType});
 
-  /// The MediaStore URI of the file in the gallery.
+  /// The saved file's reference: a MediaStore URI for a gallery file, or a
+  /// `file://` path for a private file (FR-79).
   final String contentUri;
+
+  /// Whether the file is in Storize's private storage. Another app cannot read
+  /// it by path: the share seam must hand it over through the app's
+  /// `FileProvider` ([privateShareAuthoritySuffix]) with a temporary read
+  /// grant.
+  bool get isPrivate => contentUri.startsWith('file://');
+
+  /// The local path of a private file, or null for a gallery file.
+  String? get privatePath =>
+      isPrivate ? Uri.parse(contentUri).toFilePath() : null;
+
+  /// The `FileProvider` authority is the application id plus this suffix
+  /// (declared in `AndroidManifest.xml`, paths in `res/xml/file_paths.xml`).
+  static const String privateShareAuthoritySuffix = '.storize.files';
 
   /// Photo or video (decides the MIME type).
   final MediaType mediaType;

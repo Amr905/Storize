@@ -77,6 +77,16 @@ final galleryStoreProvider = Provider<GalleryStore>(
   (ref) => _unwired('galleryStoreProvider'),
 );
 
+/// The move of the saved files between the gallery and private storage
+/// (FR-79). Null until the composition wires it (tests that do not move files).
+final moveLibraryProvider = Provider<MoveLibrary?>((ref) => null);
+
+/// Where the progress of that move lives (FR-79). Null until wired.
+final moveStateStoreProvider = Provider<MoveStateStore?>((ref) => null);
+
+/// Starts the background move task (FR-79). Null until wired.
+final moveSchedulerProvider = Provider<MoveScheduler?>((ref) => null);
+
 /// [MediaCache].
 final mediaCacheProvider = Provider<MediaCache>(
   (ref) => _unwired('mediaCacheProvider'),

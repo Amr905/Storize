@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:storize_app/background/move_notifier.dart';
 import 'package:storize_data/scheduler/scheduler.dart';
 import 'package:storize_domain/storize_domain.dart';
 import 'package:storize_instagram/governor/governor.dart';
@@ -71,6 +74,13 @@ typedef PendingResolver = Future<ResolvePendingResult> Function({
   DateTime? deadline,
 });
 
+/// Runs [MoveLibrary.run] (FR-79).
+typedef MoveRunner = Future<MoveLibraryResult> Function(
+  StorageTarget target, {
+  DateTime? deadline,
+  void Function(MoveProgress progress)? onProgress,
+});
+
 /// Routes a background task name to its use case (TECH_SPEC section 2,
 /// `callbackDispatcher`).
 ///
@@ -103,6 +113,9 @@ final class TaskRouter {
     this._highlights,
     this._resolvePending,
     this._dailySummary,
+    this._move,
+    this._moveNotifier,
+    this._moveScheduler,
     this.budget = const Duration(minutes: 9),
     this.startMargin = const Duration(seconds: 30),
   });
@@ -135,6 +148,9 @@ final class TaskRouter {
   final HighlightsRunner? _highlights;
   final PendingResolver? _resolvePending;
   final DailySummaryTask? _dailySummary;
+  final MoveRunner? _move;
+  final MoveNotifier? _moveNotifier;
+  final MoveScheduler? _moveScheduler;
 
   /// The wait before the next `history` task while backfills run.
   static const Duration historyDelay = Duration(minutes: 1);
@@ -173,6 +189,8 @@ final class TaskRouter {
           return true;
         case TaskNames.dailySummary:
           return await _dailySummaryTask();
+        case TaskNames.moveLibrary:
+          return await _moveTask(input);
         default:
           _log?.log(LogLevel.warn, 'background', 'unknown_task');
           return true;
@@ -394,6 +412,34 @@ final class TaskRouter {
     } finally {
       await task.reschedule();
     }
+    return true;
+  }
+
+  /// The `move-library` task (FR-79): moves the saved files to the target in
+  /// the input data. Resumable. When the time budget runs out with files left,
+  /// it queues itself again; a full device or a cancel ends it cleanly. Only
+  /// counts and codes reach the log.
+  Future<bool> _moveTask(Map<String, dynamic>? input) async {
+    final run = _move;
+    if (run == null) return true;
+    final raw = input?[TaskNames.inputMoveTarget];
+    final target = StorageTarget.values.where((t) => t.name == raw).firstOrNull;
+    if (target == null) {
+      _log?.log(LogLevel.warn, 'background', 'move_without_target');
+      return true;
+    }
+    final notifier = _moveNotifier;
+    final result = await run(
+      target,
+      deadline: _deadline(),
+      onProgress: notifier == null
+          ? null
+          : (p) => unawaited(notifier.progress(p)),
+    );
+    if (result.end == MoveEnd.deadline) {
+      await _moveScheduler?.enqueueMove(target, rollover: true);
+    }
+    await notifier?.finished(result);
     return true;
   }
 

@@ -9,6 +9,7 @@ import 'package:storize_app/features/account/account_health.dart';
 import 'package:storize_app/features/account/account_providers.dart';
 import 'package:storize_app/features/settings/app_lock_row.dart';
 import 'package:storize_app/features/settings/appearance_control.dart';
+import 'package:storize_app/features/settings/hide_from_gallery_rows.dart';
 import 'package:storize_app/features/settings/settings_format.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/features/settings/settings_sheets.dart';
@@ -179,9 +180,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               _SectionCard(
                 children: [
                   SettingRow.info(
-                    title: l10n.setStorageLocation,
+                    title: s.hideFromGallery
+                        ? l10n.setStorageLocationPrivate
+                        : l10n.setStorageLocation,
                     leadingIcon: Icons.folder_outlined,
                   ),
+                  HideFromGalleryRows(settings: s),
                   SettingRow.navigation(
                     title: _usageText(l10n, storage),
                     leadingIcon: Icons.pie_chart_outline_rounded,

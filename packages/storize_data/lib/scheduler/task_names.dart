@@ -48,7 +48,7 @@ abstract final class TaskNames {
     moveLibrary,
   };
 
-  /// Input-data key of `move-library`: the [StorageTarget] name to move to.
+  /// Input-data key of `move-library`: the `StorageTarget` name to move to.
   static const String inputMoveTarget = 'moveTarget';
 
   /// Input-data key: the target ID of a one-target manual check.

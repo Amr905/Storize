@@ -2400,4 +2400,137 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setSummaryTime => 'Summary time';
+
+  @override
+  String get setStorageLocationPrivate =>
+      'Saved privately, only Storize shows them';
+
+  @override
+  String get setHideFromGallery => 'Hide from phone gallery';
+
+  @override
+  String get setHideFromGalleryHint =>
+      'Only Storize shows your saved files. Uninstalling Storize deletes them.';
+
+  @override
+  String get setHideLockTip =>
+      'Tip: turn on App lock so Storize is protected too.';
+
+  @override
+  String hideMoveHideTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count saved files now?',
+      one: 'Move 1 saved file now?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hideMoveHideBody =>
+      'They will disappear from Gallery and Photos and show only in Storize. Each file is copied and checked before the original is removed.';
+
+  @override
+  String hideMoveShowTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count saved files back to the gallery?',
+      one: 'Move 1 saved file back to the gallery?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hideMoveShowBody =>
+      'They will show in Gallery and Photos again, in Pictures/Storize. Each file is copied and checked before the private copy is removed.';
+
+  @override
+  String get hideMoveAction => 'Move';
+
+  @override
+  String get hideMoveOnlyNew => 'Only new downloads';
+
+  @override
+  String hideMoveProgress(int done, int total) {
+    return 'Moving files… $done of $total';
+  }
+
+  @override
+  String get hideMoveCancel => 'Cancel';
+
+  @override
+  String hideMoveInterrupted(int done, int total) {
+    return 'Move interrupted: $done of $total moved.';
+  }
+
+  @override
+  String hideMoveCancelled(int done, int total) {
+    return 'Move stopped: $done of $total moved.';
+  }
+
+  @override
+  String get hideMoveResume => 'Resume';
+
+  @override
+  String hideMoveStorageFull(int done, int total) {
+    return 'Not enough space: $done of $total moved. Free some space, then resume.';
+  }
+
+  @override
+  String hideMoveDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files moved.',
+      one: '1 file moved.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hideMoveMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files were already missing.',
+      one: '1 file was already missing.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hideMoveFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files could not be moved and stay where they were.',
+      one: '1 file could not be moved and stays where it was.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hideMoveDismiss => 'OK';
+
+  @override
+  String ntfMoving(int done, int total) {
+    return 'Moving saved files… $done of $total';
+  }
+
+  @override
+  String ntfMoveDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saved files moved',
+      one: '1 saved file moved',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ntfMoveStorageFull =>
+      'Move paused: storage almost full. Nothing was lost.';
 }

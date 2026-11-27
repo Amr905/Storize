@@ -23,6 +23,9 @@ TaskRouter routerFor(AppComposition c) => TaskRouter(
   highlights: c.syncHighlights.runDue,
   resolvePending: c.resolvePendingTargets.run,
   dailySummary: _dailySummaryFor(c),
+  move: c.moveLibrary?.run,
+  moveNotifier: c.parts.moveNotifier,
+  moveScheduler: c.parts.moveScheduler,
   log: c.log,
   notifier: c.parts.notifications,
   activeTargets: (scope, targetId) async {

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FR-79: files that are hidden from the gallery live under
+     <external files dir>/Pictures/Storize/. The viewer shares them through a
+     content:// URI of FileProvider with a temporary read grant, so no other
+     path of the app is ever exposed. -->
+<paths>
+    <external-files-path name="storize_private_media" path="Pictures/Storize/" />
+</paths>

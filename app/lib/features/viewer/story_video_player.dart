@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:video_player/video_player.dart';
@@ -85,12 +87,15 @@ abstract interface class StoryVideoPlayer {
 /// Makes a [StoryVideoPlayer] for a gallery `contentUri`.
 typedef StoryVideoPlayerFactory = StoryVideoPlayer Function(String contentUri);
 
-/// The default player, backed by `video_player` (Android content URIs).
+/// The default player, backed by `video_player`: Android content URIs for
+/// gallery files, and `file://` paths for files in private storage (FR-79).
 final class VideoPlayerStoryPlayer implements StoryVideoPlayer {
   /// Creates a player for [contentUri]. Nothing is opened until
   /// [initialize].
   VideoPlayerStoryPlayer(String contentUri)
-    : _controller = VideoPlayerController.contentUri(Uri.parse(contentUri));
+    : _controller = contentUri.startsWith('file://')
+          ? VideoPlayerController.file(File(Uri.parse(contentUri).toFilePath()))
+          : VideoPlayerController.contentUri(Uri.parse(contentUri));
 
   final VideoPlayerController _controller;
   final ValueNotifier<StoryVideoValue> _value = ValueNotifier(
