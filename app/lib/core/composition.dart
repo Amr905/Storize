@@ -700,6 +700,33 @@ final class AppComposition {
         })
         .listen((_) {});
     _subscriptions.add(sub);
+    // FR-78: keep the daily summary run registered, also after a force-stop
+    // or an app update (the first value is applied at start-up).
+    _subscriptions.add(
+      settings
+          .watch()
+          .map((s) => (s.notificationMode, s.summaryTime))
+          .distinct()
+          .asyncMap((v) async {
+            final s = scheduler;
+            if (s is! DailySummaryScheduler) return;
+            try {
+              await (s as DailySummaryScheduler).schedule(
+                mode: v.$1,
+                time: v.$2,
+                nowUtc: clock.now(),
+                localOffset: DateTime.now().timeZoneOffset,
+              );
+            } on Object catch (error) {
+              log.log(
+                LogLevel.warn,
+                'scheduler',
+                'summary_schedule_failed type=${error.runtimeType}',
+              );
+            }
+          })
+          .listen((_) {}),
+    );
     return sub;
   }
 
