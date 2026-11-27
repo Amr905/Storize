@@ -555,3 +555,23 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
   3. Saving from an untracked account creates a paused preview-only target; nothing downloads automatically. "Track this account automatically" opens the add form with the username, or activates that target.
   4. Every in-page query logs `start` and an end line with ms; no values in logs.
   5. Goldens (light and dark) under TZ=UTC.
+
+## v0.4 (user-approved 2026-11-27: "start implementing them")
+
+### T-054 Captions and post details (FR-77) — Sonnet · todo
+1. Mappers keep caption, taken-at, location name and tagged usernames (GraphQL timeline node and reels items) when present; drift stores them (migration); never logged.
+2. Viewer Info sheet shows them; long-press caption copies it. Goldens light and dark.
+
+### T-055 Library search and filters (FR-76) — Haiku · todo (after T-054)
+1. Search field + filter sheet (accounts, date range, kind, media type); chips; result count; drift queries indexed; widget tests and goldens.
+
+### T-056 Health screen (FR-75) — Haiku · todo
+1. Read-only view model over governor state, session, scheduler and per-target last check; plain reasons; entry from Activity and banners; tests and goldens.
+
+### T-057 Daily summary notification (FR-78) — Haiku · todo
+1. Notification mode setting (per item / daily / off) and time; a daily task builds the summary; problem alerts unchanged; tests.
+
+### T-058 Hide from phone gallery (FR-79) — Sonnet + QA (deletion) · todo
+1. `GalleryStore` gains a private target (app-specific storage, `.nomedia`); setting chooses where new files go; Library and viewer read both.
+2. Move existing both ways: copy, verify size/hash, then delete the original; resumable; progress; no loss on interruption. Tests.
+
