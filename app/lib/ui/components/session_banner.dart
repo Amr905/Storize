@@ -16,6 +16,8 @@ class SessionBanner extends StatelessWidget {
     this.title,
     this.message,
     this.fixLabel,
+    this.onDetails,
+    this.detailsLabel,
     super.key,
   });
 
@@ -33,6 +35,13 @@ class SessionBanner extends StatelessWidget {
 
   /// Action label override.
   final String? fixLabel;
+
+  /// Opens the Health screen (FR-75). The "See details" link is shown only
+  /// when this is set.
+  final VoidCallback? onDetails;
+
+  /// "See details" label override.
+  final String? detailsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +101,20 @@ class SessionBanner extends StatelessWidget {
                         color: tone.onContainer,
                       ),
                     ),
+                    if (onDetails != null)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton(
+                          onPressed: onDetails,
+                          style: TextButton.styleFrom(
+                            foregroundColor: tone.onContainer,
+                          ),
+                          child: Text(
+                            detailsLabel ??
+                                AppLocalizations.of(context).hltSeeDetails,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

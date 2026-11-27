@@ -93,6 +93,38 @@ void main() {
     expect(old.taggedUsernames, isEmpty);
   });
 
+  test('v3 to v4 keeps targets and adds the check-result columns', () async {
+    final schema = await verifier.schemaAt(3);
+    schema.rawDatabase.execute(
+      'INSERT INTO target (id, platform, remote_user_id, username, '
+      'category, status, posts_watermark_at, added_at) VALUES (1, '
+      "'INSTAGRAM', 'u-1', 'old_user', 'PUBLIC', 'ACTIVE', 1000, 2000)",
+    );
+    final db = StorizeDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 4);
+
+    final repo = DriftTargetRepo(db);
+    final old = (await repo.getById(1))!;
+    expect(old.username, 'old_user');
+    expect(old.lastSuccessAt, isNull);
+    expect(old.lastCheckOutcome, isNull);
+    expect(old.lastCheckCode, isNull);
+
+    final at = DateTime.utc(2026, 11, 27, 8);
+    await repo.update(
+      old.copyWith(
+        lastSuccessAt: at,
+        lastCheckOutcome: TargetCheckOutcome.failed,
+        lastCheckCode: 'network',
+      ),
+    );
+    final back = (await repo.getById(1))!;
+    expect(back.lastSuccessAt, at);
+    expect(back.lastCheckOutcome, TargetCheckOutcome.failed);
+    expect(back.lastCheckCode, 'network');
+  });
+
   test('a database from a newer build is refused (v99)', () async {
     final db = StorizeDatabase.forTesting(
       NativeDatabase.memory(

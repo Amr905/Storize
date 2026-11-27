@@ -33,6 +33,9 @@ final class Target {
     this.historySince,
     this.historyProgress,
     this.highlightsEnabled = false,
+    this.lastSuccessAt,
+    this.lastCheckOutcome,
+    this.lastCheckCode,
   }) : assert(
          trackStories || trackPosts || trackReels,
          'At least one track flag must be on (FR-65, FR-67)',
@@ -119,6 +122,17 @@ final class Target {
   /// Whether highlights are tracked (FR-71).
   final bool highlightsEnabled;
 
+  /// When a check of this target last succeeded (found items or nothing
+  /// new), UTC. Null when none has (FR-75).
+  final DateTime? lastSuccessAt;
+
+  /// The outcome of the last check of this target, or null if none (FR-75).
+  final TargetCheckOutcome? lastCheckOutcome;
+
+  /// A short code for a failed [lastCheckOutcome], such as `network`. It is
+  /// never a URL, id or message from Instagram (FR-75).
+  final String? lastCheckCode;
+
   /// Returns a copy with the given fields replaced. Pass null to clear a
   /// nullable field. `platform` cannot change; `remoteUserId` changes only
   /// when a pending lookup resolves (FR-73).
@@ -147,6 +161,9 @@ final class Target {
     Object? historySince = unset,
     Object? historyProgress = unset,
     bool? highlightsEnabled,
+    Object? lastSuccessAt = unset,
+    Object? lastCheckOutcome = unset,
+    Object? lastCheckCode = unset,
   }) => Target(
     id: id ?? this.id,
     platform: platform,
@@ -179,6 +196,12 @@ final class Target {
       this.historyProgress,
     ),
     highlightsEnabled: highlightsEnabled ?? this.highlightsEnabled,
+    lastSuccessAt: pick<DateTime>(lastSuccessAt, this.lastSuccessAt),
+    lastCheckOutcome: pick<TargetCheckOutcome>(
+      lastCheckOutcome,
+      this.lastCheckOutcome,
+    ),
+    lastCheckCode: pick<String>(lastCheckCode, this.lastCheckCode),
   );
 
   @override
@@ -209,7 +232,10 @@ final class Target {
           other.historyRange == historyRange &&
           other.historySince == historySince &&
           other.historyProgress == historyProgress &&
-          other.highlightsEnabled == highlightsEnabled);
+          other.highlightsEnabled == highlightsEnabled &&
+          other.lastSuccessAt == lastSuccessAt &&
+          other.lastCheckOutcome == lastCheckOutcome &&
+          other.lastCheckCode == lastCheckCode);
 
   @override
   int get hashCode => Object.hashAll([
@@ -238,6 +264,9 @@ final class Target {
     historySince,
     historyProgress,
     highlightsEnabled,
+    lastSuccessAt,
+    lastCheckOutcome,
+    lastCheckCode,
   ]);
 
   /// Omits [note] and [displayName], which are personal content.

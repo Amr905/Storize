@@ -79,6 +79,12 @@ class Targets extends Table {
       integer().nullable().map(const EpochMsConverter())();
   BoolColumn get highlightsEnabled =>
       boolean().withDefault(const Constant(false))();
+  // Added in schema v4 (T-056, FR-75): what the last check of the target did.
+  IntColumn get lastSuccessAt =>
+      integer().nullable().map(const EpochMsConverter())();
+  TextColumn get lastCheckOutcome =>
+      text().nullable().map(const TargetCheckOutcomeConverter())();
+  TextColumn get lastCheckCode => text().nullable()();
 
   @override
   List<Set<Column>> get uniqueKeys => [

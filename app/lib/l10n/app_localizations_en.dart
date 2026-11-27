@@ -2141,4 +2141,156 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoSavedOn => 'Saved on';
+
+  @override
+  String get hltTitle => 'Health';
+
+  @override
+  String get hltSubtitle => 'Why things did or didn\'t download';
+
+  @override
+  String get hltSeeDetails => 'See details';
+
+  @override
+  String get hltSessionTitle => 'Instagram session';
+
+  @override
+  String get hltSessionNone => 'No Instagram account is connected.';
+
+  @override
+  String get hltLimitsTitle => 'Instagram requests';
+
+  @override
+  String hltBudgetLeft(int count, int max) {
+    return 'About $count of $max requests left right now';
+  }
+
+  @override
+  String hltBudgetRefill(int perHour) {
+    return 'Requests refill at about $perHour an hour.';
+  }
+
+  @override
+  String get hltPausedTitle => 'Paused by Instagram';
+
+  @override
+  String hltPausedUntil(String time, int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min left',
+      one: '1 min left',
+    );
+    return 'Resumes at $time, $_temp0';
+  }
+
+  @override
+  String get hltNextCheck => 'Next check';
+
+  @override
+  String hltNextCheckInterval(int storyMin, int postMin) {
+    return 'Every $storyMin min for stories, every $postMin min for posts. The exact time is set by Android.';
+  }
+
+  @override
+  String hltLastRun(String ago) {
+    return 'Last run $ago';
+  }
+
+  @override
+  String get hltNoRunYet => 'No check has run yet.';
+
+  @override
+  String get hltAccountsTitle => 'Accounts';
+
+  @override
+  String get hltNoAccounts => 'No accounts tracked yet.';
+
+  @override
+  String hltLastSuccess(String ago) {
+    return 'Last success $ago';
+  }
+
+  @override
+  String get hltNoSuccess => 'No successful check yet.';
+
+  @override
+  String hltSavedToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saved today',
+      one: '1 saved today',
+      zero: 'Nothing saved today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hltResultOk => 'Ok';
+
+  @override
+  String get hltResultNothingNew => 'Nothing new';
+
+  @override
+  String hltResultFailed(String reason) {
+    return 'Failed: $reason';
+  }
+
+  @override
+  String get hltResultWaiting => 'Waiting to look up';
+
+  @override
+  String get hltResultPaused => 'Paused';
+
+  @override
+  String get hltReasonNotVisible => 'Private or blocked';
+
+  @override
+  String get hltReasonNotFound => 'Account not found';
+
+  @override
+  String get hltReasonSchema => 'Instagram changed its page format';
+
+  @override
+  String get hltReasonSession => 'log in again';
+
+  @override
+  String get hltAgoJustNow => 'just now';
+
+  @override
+  String hltAgoMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min ago',
+      one: '1 min ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hltAgoHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count h ago',
+      one: '1 h ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hltAgoDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hltNever => 'never';
 }

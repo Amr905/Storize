@@ -10,6 +10,7 @@ import 'package:storize_app/features/activity/activity_model.dart';
 import 'package:storize_app/features/activity/activity_providers.dart';
 import 'package:storize_app/features/shared/session_banner_slot.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
+import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
 import 'package:storize_domain/storize_domain.dart';
 
@@ -53,6 +54,13 @@ class ActivityPage extends ConsumerWidget {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: l10n.hltTitle,
+            icon: const Icon(Icons.health_and_safety_outlined),
+            onPressed: () => context.push(Routes.healthPath),
+          ),
+        ],
       ),
       body: Column(
         children: [

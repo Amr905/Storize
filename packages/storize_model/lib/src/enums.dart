@@ -433,3 +433,24 @@ enum Severity implements DbEnum {
   /// Maps a database value. Throws [ArgumentError] if unknown.
   static Severity fromDb(String value) => decodeDbEnum(values, value);
 }
+
+/// Outcome of the last check of one target (`target.last_check_outcome`,
+/// FR-75).
+enum TargetCheckOutcome implements DbEnum {
+  /// The check saved new items.
+  ok('OK'),
+
+  /// The check worked and found nothing new.
+  nothingNew('NOTHING_NEW'),
+
+  /// The check failed; the short reason is in `target.last_check_code`.
+  failed('FAILED');
+
+  const TargetCheckOutcome(this.dbValue);
+
+  @override
+  final String dbValue;
+
+  /// Maps a database value. Throws [ArgumentError] if unknown.
+  static TargetCheckOutcome fromDb(String value) => decodeDbEnum(values, value);
+}

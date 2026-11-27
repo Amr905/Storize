@@ -104,7 +104,7 @@ class StorizeDatabase extends _$StorizeDatabase {
   static const String databaseName = 'storize';
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -140,6 +140,13 @@ class StorizeDatabase extends _$StorizeDatabase {
       final c = schema.content;
       await m.addColumn(c, c.locationName);
       await m.addColumn(c, c.taggedUsernames);
+    },
+    from3To4: (m, schema) async {
+      // v4 (T-056, FR-75): what the last check of each target did.
+      final t = schema.target;
+      await m.addColumn(t, t.lastSuccessAt);
+      await m.addColumn(t, t.lastCheckOutcome);
+      await m.addColumn(t, t.lastCheckCode);
     },
   );
 

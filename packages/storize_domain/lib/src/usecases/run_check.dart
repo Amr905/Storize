@@ -264,6 +264,13 @@ final class RunCheck {
           return;
         }
         await _onFailure(run, failure, targetLevel ? chunk.single : null);
+        if (targetLevel) {
+          await _recordFailure(chunk.single, failure);
+        } else if (_isTargetFailure(failure)) {
+          for (final t in chunk) {
+            await _recordFailure(t, failure);
+          }
+        }
         if (failure is SchemaChanged && chunk.length == 1) {
           await _rotateToBack(chunk.single, CheckScope.stories);
         }
@@ -301,6 +308,9 @@ final class RunCheck {
       t.copyWith(
         lastStoriesCheckAt: now,
         lastNewStoryAt: newCount > 0 ? now : t.lastNewStoryAt,
+        lastSuccessAt: now,
+        lastCheckOutcome: _okOutcome(newCount),
+        lastCheckCode: null,
       ),
     );
   }
@@ -349,6 +359,9 @@ final class RunCheck {
           final targetLevel =
               failure is TargetNotVisible || failure is TargetNotFound;
           await _onFailure(run, failure, targetLevel ? target : null);
+          if (_isTargetFailure(failure)) {
+            await _recordFailure(target, failure);
+          }
           if (failure is SchemaChanged) {
             await _rotateToBack(target, CheckScope.posts);
           }
@@ -413,6 +426,9 @@ final class RunCheck {
           postsWatermarkAt: mark,
           lastPostsCheckAt: now,
           lastNewPostAt: ids.isNotEmpty ? now : t.lastNewPostAt,
+          lastSuccessAt: now,
+          lastCheckOutcome: _okOutcome(ids.length),
+          lastCheckCode: null,
         ),
       );
     }
@@ -420,6 +436,51 @@ final class RunCheck {
   }
 
   // ----------------------------------------------------------------- shared
+
+  /// The outcome of a check that worked: `ok` when items were saved.
+  static TargetCheckOutcome _okOutcome(int newCount) =>
+      newCount > 0 ? TargetCheckOutcome.ok : TargetCheckOutcome.nothingNew;
+
+  /// Failures that belong to one target's check. Session and rate-limit
+  /// problems stop the whole run, so they say nothing about one target.
+  static bool _isTargetFailure(Failure failure) => switch (failure) {
+    TargetNotVisible() ||
+    TargetNotFound() ||
+    NetworkFailure() ||
+    SchemaChanged() ||
+    UnknownFailure() => true,
+    RateLimited() || SessionInvalid() || AccountRestricted() => false,
+  };
+
+  /// The short code shown on the Health screen (FR-75). Never a message from
+  /// Instagram, an id or a URL.
+  static String _failureCode(Failure failure) => switch (failure) {
+    TargetNotVisible() => 'not_visible',
+    TargetNotFound() => 'not_found',
+    NetworkFailure() => 'network',
+    SchemaChanged() => 'schema_changed',
+    UnknownFailure() => 'unknown',
+    RateLimited() => 'rate_limited',
+    SessionInvalid() => 'session',
+    AccountRestricted() => 'restricted',
+  };
+
+  /// Records a failed check of [target] (best effort; it never breaks a run).
+  Future<void> _recordFailure(Target target, Failure failure) async {
+    try {
+      final t = await _targets.getById(target.id);
+      if (t == null) return;
+      await _targets.update(
+        t.copyWith(
+          lastCheckOutcome: TargetCheckOutcome.failed,
+          lastCheckCode: _failureCode(failure),
+        ),
+      );
+    } on Object catch (_) {
+      // The Health screen shows the last stored outcome; a missed write is
+      // fine.
+    }
+  }
 
   /// Stores [c] with PENDING media. Returns the new content ID, or null when
   /// it exists already or has nothing to download.

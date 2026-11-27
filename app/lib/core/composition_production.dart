@@ -7,6 +7,7 @@ import 'package:storize_app/core/discovery_secure_store.dart';
 import 'package:storize_app/core/foreground_db_refresher.dart';
 import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
+import 'package:storize_app/features/health/health_providers.dart';
 import 'package:storize_app/features/library/library_services.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
@@ -215,6 +216,13 @@ List<Override> appOverrides(AppComposition c) => [
   checkRunRepoProvider.overrideWithValue(c.checkRuns),
   settingsRepoProvider.overrideWithValue(c.settings),
   governorLeaseRepoProvider.overrideWithValue(c.leases),
+  healthReadModelProvider.overrideWithValue(
+    DriftHealthReadModel(
+      c.parts.db,
+      clock: c.clock,
+      settingsRepo: c.settings,
+    ),
+  ),
   contentPlatformProvider.overrideWithValue(c.platform),
   schedulerProvider.overrideWithValue(c.scheduler),
   allowUnmeteredProvider.overrideWithValue(c.parts.allowUnmetered),

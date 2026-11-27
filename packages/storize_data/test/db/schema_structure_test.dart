@@ -107,6 +107,9 @@ void main() {
         'history_oldest_seen_at': 'INTEGER',
         'history_updated_at': 'INTEGER',
         'highlights_enabled': 'INTEGER',
+        'last_success_at': 'INTEGER',
+        'last_check_outcome': 'TEXT',
+        'last_check_code': 'TEXT',
       },
       'content': {
         'id': 'INTEGER',

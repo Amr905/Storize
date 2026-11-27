@@ -1871,5 +1871,148 @@
   "infoTagged": "Tagged accounts",
   "@infoTagged": {"description": "Info sheet: label above the chips of accounts tagged in the post."},
   "infoSavedOn": "Saved on",
-  "@infoSavedOn": {"description": "Info sheet row: when the file was saved to the gallery."}
+  "@infoSavedOn": {"description": "Info sheet row: when the file was saved to the gallery."},
+  "hltTitle": "Health",
+  "@hltTitle": {
+    "description": "Health screen title, also the Activity app-bar icon tooltip."
+  },
+  "hltSubtitle": "Why things did or didn't download",
+  "@hltSubtitle": {
+    "description": "Subtitle under the Health title."
+  },
+  "hltSeeDetails": "See details",
+  "@hltSeeDetails": {
+    "description": "Link on the session and limit banners that opens the Health screen."
+  },
+  "hltSessionTitle": "Instagram session",
+  "@hltSessionTitle": {
+    "description": "Section title of the session card."
+  },
+  "hltSessionNone": "No Instagram account is connected.",
+  "@hltSessionNone": {
+    "description": "Session card when no login account exists."
+  },
+  "hltLimitsTitle": "Instagram requests",
+  "@hltLimitsTitle": {
+    "description": "Section title of the request budget card."
+  },
+  "hltBudgetLeft": "About {count} of {max} requests left right now",
+  "@hltBudgetLeft": {
+    "description": "Budget bar label. count and max are whole numbers.",
+    "placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}
+  },
+  "hltBudgetRefill": "Requests refill at about {perHour} an hour.",
+  "@hltBudgetRefill": {
+    "description": "Note under the budget bar.",
+    "placeholders": {"perHour": {"type": "int"}}
+  },
+  "hltPausedTitle": "Paused by Instagram",
+  "@hltPausedTitle": {
+    "description": "Row title when Instagram asked Storize to slow down."
+  },
+  "hltPausedUntil": "Resumes at {time}, {minutes, plural, =1{1 min left} other{{minutes} min left}}",
+  "@hltPausedUntil": {
+    "description": "Pause row with the end time and a countdown.",
+    "placeholders": {"time": {"type": "String"}, "minutes": {"type": "int"}}
+  },
+  "hltNextCheck": "Next check",
+  "@hltNextCheck": {
+    "description": "Row title for the schedule."
+  },
+  "hltNextCheckInterval": "Every {storyMin} min for stories, every {postMin} min for posts. The exact time is set by Android.",
+  "@hltNextCheckInterval": {
+    "description": "Schedule row. The system decides the exact run time.",
+    "placeholders": {"storyMin": {"type": "int"}, "postMin": {"type": "int"}}
+  },
+  "hltLastRun": "Last run {ago}",
+  "@hltLastRun": {
+    "description": "Schedule row with the time of the last check run.",
+    "placeholders": {"ago": {"type": "String"}}
+  },
+  "hltNoRunYet": "No check has run yet.",
+  "@hltNoRunYet": {
+    "description": "Schedule row before the first run."
+  },
+  "hltAccountsTitle": "Accounts",
+  "@hltAccountsTitle": {
+    "description": "Section title of the per-account list."
+  },
+  "hltNoAccounts": "No accounts tracked yet.",
+  "@hltNoAccounts": {
+    "description": "Accounts list when there are no targets."
+  },
+  "hltLastSuccess": "Last success {ago}",
+  "@hltLastSuccess": {
+    "description": "Per-account line with the last successful check.",
+    "placeholders": {"ago": {"type": "String"}}
+  },
+  "hltNoSuccess": "No successful check yet.",
+  "@hltNoSuccess": {
+    "description": "Per-account line when no check has succeeded."
+  },
+  "hltSavedToday": "{count, plural, =0{Nothing saved today} =1{1 saved today} other{{count} saved today}}",
+  "@hltSavedToday": {
+    "description": "Per-account count of items saved today.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hltResultOk": "Ok",
+  "@hltResultOk": {
+    "description": "Result pill: the last check saved new items."
+  },
+  "hltResultNothingNew": "Nothing new",
+  "@hltResultNothingNew": {
+    "description": "Result pill: the last check found nothing new."
+  },
+  "hltResultFailed": "Failed: {reason}",
+  "@hltResultFailed": {
+    "description": "Result pill: the last check failed. reason is a short plain phrase.",
+    "placeholders": {"reason": {"type": "String"}}
+  },
+  "hltResultWaiting": "Waiting to look up",
+  "@hltResultWaiting": {
+    "description": "Result pill: the account was added while Instagram was limited."
+  },
+  "hltResultPaused": "Paused",
+  "@hltResultPaused": {
+    "description": "Result pill: the account is paused by the user."
+  },
+  "hltReasonNotVisible": "Private or blocked",
+  "@hltReasonNotVisible": {
+    "description": "Failure reason: the account cannot be seen."
+  },
+  "hltReasonNotFound": "Account not found",
+  "@hltReasonNotFound": {
+    "description": "Failure reason: the account no longer exists."
+  },
+  "hltReasonSchema": "Instagram changed its page format",
+  "@hltReasonSchema": {
+    "description": "Failure reason: the response shape changed."
+  },
+  "hltReasonSession": "log in again",
+  "@hltReasonSession": {
+    "description": "Failure reason: the session needs a new login. Lower case, used after 'Failed:'."
+  },
+  "hltAgoJustNow": "just now",
+  "@hltAgoJustNow": {
+    "description": "Relative time: under a minute."
+  },
+  "hltAgoMinutes": "{count, plural, =1{1 min ago} other{{count} min ago}}",
+  "@hltAgoMinutes": {
+    "description": "Relative time in minutes.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hltAgoHours": "{count, plural, =1{1 h ago} other{{count} h ago}}",
+  "@hltAgoHours": {
+    "description": "Relative time in hours.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hltAgoDays": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@hltAgoDays": {
+    "description": "Relative time in days.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "hltNever": "never",
+  "@hltNever": {
+    "description": "Relative time when there was no event. Lower case, used in 'Last run never'."
+  }
 }

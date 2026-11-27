@@ -23,6 +23,7 @@ abstract final class Routes {
   static const String addTarget = 'addTarget';
   static const String targetDetail = 'targetDetail';
   static const String activity = 'activity';
+  static const String health = 'health';
   static const String settings = 'settings';
   static const String account = 'account';
   static const String lock = 'lock';
@@ -35,6 +36,7 @@ abstract final class Routes {
   static const String targetsPath = '/targets';
   static const String addTargetPath = '/targets/add';
   static const String activityPath = '/activity';
+  static const String healthPath = '/activity/health';
   static const String settingsPath = '/settings';
   static const String accountPath = '/account';
   static const String lockPath = '/lock';
