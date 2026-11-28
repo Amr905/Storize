@@ -46,7 +46,6 @@ class _SaveFromLinkPageState extends ConsumerState<SaveFromLinkPage> {
       unawaited(
         Future<void>.microtask(() {
           if (!mounted) return;
-          ref.read(handledClipboardTextProvider.notifier).mark(initial.trim());
           unawaited(_lookUp());
         }),
       );
@@ -67,7 +66,6 @@ class _SaveFromLinkPageState extends ConsumerState<SaveFromLinkPage> {
     );
     if (!mounted || text == null || _field.text.isNotEmpty) return;
     _field.text = text;
-    ref.read(handledClipboardTextProvider.notifier).mark(text);
   }
 
   Future<void> _paste() async {

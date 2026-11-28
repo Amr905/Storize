@@ -2174,9 +2174,5 @@
   "lnkOpen": "Open",
   "@lnkOpen": {"description": "Link preview: opens the saved item in the viewer."},
   "lnkDone": "Done",
-  "@lnkDone": {"description": "Link preview: closes the sheet."},
-  "lnkOfferSnack": "Save the copied Instagram link?",
-  "@lnkOfferSnack": {"description": "Snackbar shown once when the app comes back and the clipboard holds a new Instagram link."},
-  "lnkOfferAction": "Save",
-  "@lnkOfferAction": {"description": "Action of lnkOfferSnack: opens Save from link with the copied link."}
+  "@lnkDone": {"description": "Link preview: closes the sheet."}
 }

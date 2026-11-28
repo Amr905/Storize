@@ -4078,18 +4078,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get lnkDone;
-
-  /// Snackbar shown once when the app comes back and the clipboard holds a new Instagram link.
-  ///
-  /// In en, this message translates to:
-  /// **'Save the copied Instagram link?'**
-  String get lnkOfferSnack;
-
-  /// Action of lnkOfferSnack: opens Save from link with the copied link.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get lnkOfferAction;
 }
 
 class _AppLocalizationsDelegate

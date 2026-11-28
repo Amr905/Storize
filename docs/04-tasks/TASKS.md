@@ -581,4 +581,4 @@ The spike is the biggest schedule risk, so it starts first, in parallel with the
 1. `LinkParser` (pure Dart) reads story, post, reel, `/<user>/p/<code>/`, highlight and `/s/<base64>` links; query strings, `www.`/`m.`, text around the link; anything else is null.
 2. In-page query `PolarisPostRootQuery` on both allowlists; `ContentLinkSource`-style port `LinkedContentSource` (post by shortcode, highlight with owner); `shortcode__web_info` mapper; stories via `resolveUser` + `fetchStories`.
 3. `SaveFromLink` use case (lookup, duplicates, save through `SavePreviewItems`); logs hold kind and outcome only.
-4. UI: Save from link screen (clipboard prefill), Link preview sheet, Library and Accounts entries, Android share target (plugin channel `storize/share_in`), resume clipboard snackbar. Tests and goldens (light, dark).
+4. UI: Save from link screen (clipboard prefill), Link preview sheet, Library and Accounts entries, Android share target (plugin channel `storize/share_in`). Tests and goldens (light, dark).

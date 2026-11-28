@@ -40,18 +40,3 @@ Future<String?> clipboardInstagramText(ClipboardTextReader read) async {
 final sharedTextProvider = StreamProvider<String>(
   (ref) => const Stream<String>.empty(),
 );
-
-/// The clipboard text that was already offered or handled, so the resume
-/// offer shows once per copied link (in memory only).
-class HandledClipboardText extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  /// Remembers [text].
-  // ignore: use_setters_to_change_properties, a notifier command.
-  void mark(String? text) => state = text;
-}
-
-/// The last copied text that was offered or opened.
-final handledClipboardTextProvider =
-    NotifierProvider<HandledClipboardText, String?>(HandledClipboardText.new);

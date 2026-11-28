@@ -2613,10 +2613,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lnkDone => 'Done';
-
-  @override
-  String get lnkOfferSnack => 'Save the copied Instagram link?';
-
-  @override
-  String get lnkOfferAction => 'Save';
 }

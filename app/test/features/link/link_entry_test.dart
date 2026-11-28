@@ -81,63 +81,6 @@ void main() {
     });
   });
 
-  group('clipboard offer on resume', () {
-    testWidgets('a new copied link is offered once', (t) async {
-      final rig = LinkRig()..clipboard = postLinkText;
-      final h = await pumpApp(t, overrides: rig.appOverrides);
-      final l10n = l10nOf(t);
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text(l10n.lnkOfferSnack), findsOneWidget);
-      expect(rig.fake.calls, isEmpty, reason: 'nothing is looked up yet');
-
-      // The same link is not offered again.
-      ScaffoldMessenger.of(t.element(find.byType(Scaffold).first))
-          .hideCurrentSnackBar();
-      await t.pumpAndSettle();
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text(l10n.lnkOfferSnack), findsNothing);
-
-      // A different link is.
-      rig.clipboard = 'https://www.instagram.com/reel/ZZFAKE_c9/';
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text(l10n.lnkOfferSnack), findsOneWidget);
-
-      rig.scriptPost();
-      await t.tap(find.text(l10n.lnkOfferAction));
-      await t.pumpAndSettle();
-      expect(h.location, startsWith(Routes.saveFromLinkPath));
-      expect(find.byType(LinkPreviewSheet), findsOneWidget);
-    });
-
-    testWidgets('no link on the clipboard: no offer', (t) async {
-      final rig = LinkRig()..clipboard = 'some words';
-      await pumpApp(t, overrides: rig.appOverrides);
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text(l10nOf(t).lnkOfferSnack), findsNothing);
-      rig.clipboard = null;
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text(l10nOf(t).lnkOfferSnack), findsNothing);
-    });
-
-    testWidgets('quiet while locked', (t) async {
-      final rig = LinkRig()..clipboard = postLinkText;
-      final locked = gate(appLockedProvider, initial: true);
-      await pumpApp(
-        t,
-        bypassLock: false,
-        overrides: [...rig.appOverrides, ...locked.overrides],
-      );
-      resume(t);
-      await t.pumpAndSettle();
-      expect(find.text('Save the copied Instagram link?'), findsNothing);
-    });
-  });
-
   group('entry points', () {
     testWidgets('Library app bar has Save from link', (t) async {
       final rig = LibraryRig();

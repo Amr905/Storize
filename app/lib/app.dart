@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/foreground_db_refresher.dart';
-import 'package:storize_app/features/link/clipboard_link_offer.dart';
 import 'package:storize_app/features/link/link_providers.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
@@ -67,12 +66,10 @@ class _StorizeAppView extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
-      builder: (context, child) {
-        final app = ClipboardLinkOffer(child: child!);
-        return forced == null
-            ? app
-            : Directionality(textDirection: forced, child: app);
-      },
+      builder: forced == null
+          ? null
+          : (context, child) =>
+                Directionality(textDirection: forced, child: child!),
     );
   }
 }
