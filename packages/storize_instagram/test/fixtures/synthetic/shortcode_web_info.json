@@ -1,0 +1,63 @@
+{
+  "data": {
+    "xdt_api__v1__media__shortcode__web_info": {
+      "items": [
+        {
+          "pk": "ZZFAKE_link_post",
+          "id": "ZZFAKE_link_post_ZZFAKE_user_a",
+          "code": "ZZFAKE_c_link",
+          "media_type": 8,
+          "product_type": "carousel_container",
+          "taken_at": 1800000100,
+          "user": {
+            "pk": "ZZFAKE_user_a",
+            "username": "zzfake_user_a",
+            "full_name": "ZZFAKE Name",
+            "is_private": false,
+            "profile_pic_url": "https://cdn.example.test/ZZFAKE_avatar.jpg"
+          },
+          "caption": {
+            "text": "ZZFAKE link caption"
+          },
+          "carousel_media": [
+            {
+              "pk": "ZZFAKE_link_child_1",
+              "media_type": 1,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "https://cdn.example.test/ZZFAKE_l1_1080x1080.jpg",
+                    "width": 1080,
+                    "height": 1080
+                  }
+                ]
+              }
+            },
+            {
+              "pk": "ZZFAKE_link_child_2",
+              "media_type": 2,
+              "image_versions2": {
+                "candidates": [
+                  {
+                    "url": "https://cdn.example.test/ZZFAKE_l2_640x640.jpg",
+                    "width": 640,
+                    "height": 640
+                  }
+                ]
+              },
+              "video_versions": [
+                {
+                  "type": 101,
+                  "url": "https://cdn.example.test/ZZFAKE_l2_101.mp4",
+                  "width": 720,
+                  "height": 1280
+                }
+              ]
+            }
+          ],
+          "carousel_media_count": 2
+        }
+      ]
+    }
+  }
+}

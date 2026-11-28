@@ -9,6 +9,7 @@ const Set<String> inPageQueryAllowlist = {
   'PolarisProfilePostsTabContentQuery_connection',
   'PolarisStoriesV3ReelPageStandaloneQuery',
   'PolarisProfileStoryHighlightsTrayContentQuery',
+  'PolarisPostRootQuery',
 };
 
 /// Whether [name] may be run in the page: on the allowlist and without

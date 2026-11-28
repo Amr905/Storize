@@ -1,3 +1,4 @@
+import 'package:storize_domain/storize_domain.dart' show LinkedItems;
 import 'package:storize_instagram/direct/direct_extractor.dart';
 import 'package:storize_instagram/direct/username_cache.dart';
 import 'package:storize_instagram/governor/governor.dart';
@@ -133,6 +134,14 @@ class InPageOps implements ExtractionOps, HistoryOps {
   @override
   Future<Result<List<RemoteHighlight>>> fetchHighlights(String userId) =>
       _with(() => extractor.fetchHighlights(userId));
+
+  /// One post or reel by shortcode (T-060).
+  Future<Result<LinkedItems>> fetchPostByShortcode(String shortcode) =>
+      _with(() => extractor.postByShortcode(shortcode));
+
+  /// A highlight with its owner (T-060).
+  Future<Result<LinkedItems>> fetchHighlightWithOwner(String highlightId) =>
+      _with(() => extractor.highlightWithOwner(highlightId));
 
   @override
   Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(

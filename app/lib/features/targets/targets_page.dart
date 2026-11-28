@@ -70,13 +70,28 @@ class TargetsPage extends ConsumerWidget {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        tooltip: l10n.tgtAddAccount,
-        onPressed: () => unawaited(context.push(Routes.addTargetPath)),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.tgtAddShort),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // FR-80: save one item by link, without tracking the account.
+          FloatingActionButton.small(
+            heroTag: null,
+            tooltip: l10n.lnkTitle,
+            onPressed: () => unawaited(context.push(Routes.saveFromLinkPath)),
+            child: const Icon(Icons.link_rounded),
+          ),
+          const SizedBox(height: StorizeSpacing.s12),
+          FloatingActionButton.extended(
+            heroTag: null,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            tooltip: l10n.tgtAddAccount,
+            onPressed: () => unawaited(context.push(Routes.addTargetPath)),
+            icon: const Icon(Icons.add_rounded),
+            label: Text(l10n.tgtAddShort),
+          ),
+        ],
       ),
       body: Column(
         children: [

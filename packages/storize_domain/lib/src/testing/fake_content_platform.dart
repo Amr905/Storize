@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:storize_domain/src/ports/content_platform.dart';
+import 'package:storize_domain/src/ports/linked_content_source.dart';
 import 'package:storize_model/storize_model.dart';
 
 /// A queue of scripted [Result]s for one method of [FakeContentPlatform].
@@ -63,7 +64,8 @@ class _MediaScript {
 ///
 /// Queue results per method (`resolveUser.addOk(...)`,
 /// `fetchStories.addFailure(...)`) and inspect [calls] afterwards.
-final class FakeContentPlatform implements ContentPlatform {
+final class FakeContentPlatform
+    implements ContentPlatform, LinkedContentSource {
   /// Creates a fake for [id] (Instagram by default).
   FakeContentPlatform({this.id = PlatformId.instagram});
 
@@ -97,6 +99,14 @@ final class FakeContentPlatform implements ContentPlatform {
   /// Scripted results of `fetchHighlightItems`.
   final ScriptedResults<Map<String, List<RemoteContent>>>
   fetchHighlightItemsResults = ScriptedResults();
+
+  /// Scripted results of `fetchPostByShortcode`.
+  final ScriptedResults<LinkedItems> fetchPostByShortcodeResults =
+      ScriptedResults();
+
+  /// Scripted results of `fetchHighlightWithOwner`.
+  final ScriptedResults<LinkedItems> fetchHighlightWithOwnerResults =
+      ScriptedResults();
 
   /// Scripted results of `verifySession`.
   final ScriptedResults<RemoteUser> verifySessionResults = ScriptedResults();
@@ -199,6 +209,24 @@ final class FakeContentPlatform implements ContentPlatform {
       ]),
     );
     return fetchHighlightItemsResults.take('fetchHighlightItems');
+  }
+
+  @override
+  Future<Result<LinkedItems>> fetchPostByShortcode(
+    String shortcode, {
+    required ExtractionPolicy policy,
+  }) async {
+    _calls.add(PlatformCall('fetchPostByShortcode', [shortcode, policy]));
+    return fetchPostByShortcodeResults.take('fetchPostByShortcode');
+  }
+
+  @override
+  Future<Result<LinkedItems>> fetchHighlightWithOwner(
+    String highlightId, {
+    required ExtractionPolicy policy,
+  }) async {
+    _calls.add(PlatformCall('fetchHighlightWithOwner', [highlightId, policy]));
+    return fetchHighlightWithOwnerResults.take('fetchHighlightWithOwner');
   }
 
   @override

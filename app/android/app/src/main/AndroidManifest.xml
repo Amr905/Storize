@@ -36,6 +36,14 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- FR-80: "Share -> Storize" from the Instagram app sends the link
+                 as plain text. The plugin reads it (storize/share_in) and the
+                 app opens Save from link. Nothing else is accepted. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
         </activity>
         <!-- FR-79: shares a file from private storage (hidden from the
              gallery) with another app. Not exported: access only through a

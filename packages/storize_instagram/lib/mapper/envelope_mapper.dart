@@ -257,6 +257,37 @@ final class EnvelopeMapper {
     return out;
   }
 
+  /// `PolarisPostRootQuery` (T-060): the post of a shortcode,
+  /// `data.xdt_api__v1__media__shortcode__web_info.items[0]`, the same v1
+  /// media shape as a timeline node. Null when the item list is empty or
+  /// null (removed, or not visible to the account).
+  (UserProfile, RemoteContent)? graphqlShortcodeWebInfo(Node body) {
+    final data = body['data'];
+    const key = 'xdt_api__v1__media__shortcode__web_info';
+    if (!data.has(key)) throw SchemaException(data[key].path);
+    final info = data[key];
+    if (info.isNull) return null;
+    final items = info['items'].listOrEmpty;
+    if (items.isEmpty) return null;
+    final node = items.first;
+    return (users.profile(node['user']), media.post(node));
+  }
+
+  /// The owner and items of the highlight [id] from the stories reel query
+  /// (`is_highlight: true`): the reel's `user` and its items. Null when the
+  /// reply has no reel for [id].
+  (UserProfile, List<RemoteContent>)? graphqlHighlightWithOwner(
+    Node body,
+    String id,
+  ) {
+    for (final reel in _graphqlReelList(body['data'])) {
+      if (stripHighlightPrefix(reel['id'].string) != id) continue;
+      final items = _highlightReels([reel], [id])[id] ?? const [];
+      return (users.profile(reel['user']), items);
+    }
+    return null;
+  }
+
   // ---------------------------------------------------------------- REST
 
   /// IG-1 `web_profile_info`: `data.user`. Null user gives null.

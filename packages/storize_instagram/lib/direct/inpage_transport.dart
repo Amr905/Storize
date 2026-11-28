@@ -13,7 +13,7 @@ import 'package:storize_model/storize_model.dart';
 /// Answers the same neutral values as `GraphqlTransport` (shared mappers).
 /// `userById` and `viewer` need queries that are not allowed in the page and
 /// give `UnknownFailure('inpage_unsupported')`.
-final class InPageTransport implements IgTransport {
+final class InPageTransport implements IgTransport, LinkTransport {
   /// Creates the transport.
   const InPageTransport({
     this.mapper = const EnvelopeMapper(),
@@ -46,6 +46,32 @@ final class InPageTransport implements IgTransport {
         path: '/api/graphql',
         form: {'name': query, 'variables': jsonEncode(variables)},
       );
+
+  @override
+  Future<Result<(UserProfile, RemoteContent)?>> postByShortcode(
+    String shortcode,
+    IgCall call,
+  ) => callAndParse(
+    call,
+    _request('PolarisPostRootQuery', {
+      'shortcode': shortcode,
+      'include_longform_landscape_cover': false,
+    }),
+    mapper.graphqlShortcodeWebInfo,
+  );
+
+  @override
+  Future<Result<(UserProfile, List<RemoteContent>)?>> highlightWithOwner(
+    String highlightId,
+    IgCall call,
+  ) => callAndParse(
+    call,
+    _request('PolarisStoriesV3ReelPageStandaloneQuery', {
+      'reel_ids_arr': ['highlight:$highlightId'],
+      'is_highlight': true,
+    }),
+    (body) => mapper.graphqlHighlightWithOwner(body, highlightId),
+  );
 
   @override
   Future<Result<UserProfile>> userById(String userId, IgCall call) async =>

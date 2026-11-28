@@ -18,6 +18,8 @@ var QUERY_ALLOWLIST = {
   PolarisProfilePostsTabContentQuery_connection: 1,
   PolarisStoriesV3ReelPageStandaloneQuery: 1,
   PolarisProfileStoryHighlightsTrayContentQuery: 1,
+  // T-060 (FR-80): one post or reel by shortcode (read only).
+  PolarisPostRootQuery: 1,
 };
 
 var LAZY_TIMEOUT_MS = 5000;

@@ -430,6 +430,54 @@ final class DirectExtractor {
     return Ok(out);
   });
 
+  // ------------------------------------------------------------------ links
+
+  /// One post or reel by [shortcode] and its owner (T-060, FR-80). Needs the
+  /// in-page transport; any other is `UnknownFailure('inpage_unsupported')`.
+  /// A post that is gone or not visible is `TargetNotFound`.
+  Future<Result<LinkedItems>> postByShortcode(String shortcode) =>
+      _op<LinkedItems>('postByShortcode', (call) async {
+        if (transport case final LinkTransport t) {
+          return _linkedPost(await t.postByShortcode(shortcode, call));
+        }
+        return const Err(UnknownFailure(null, 'inpage_unsupported'));
+      });
+
+  Future<Result<LinkedItems>> _linkedPost(
+    Result<(UserProfile, RemoteContent)?> r,
+  ) async {
+    if (r is Err<(UserProfile, RemoteContent)?>) return Err(r.failure);
+    final found = (r as Ok<(UserProfile, RemoteContent)?>).value;
+    if (found == null) return const Err(TargetNotFound());
+    await _cacheUsername(
+      found.$1.user.remoteUserId,
+      found.$1.user.username,
+    );
+    return Ok(LinkedItems(user: found.$1.user, items: [found.$2]));
+  }
+
+  /// The items and the owner of the highlight [highlightId] (T-060). Needs
+  /// the in-page transport. A highlight that is gone is `TargetNotFound`.
+  Future<Result<LinkedItems>> highlightWithOwner(String highlightId) =>
+      _op<LinkedItems>('highlightWithOwner', (call) async {
+        final id = stripHighlightPrefix(highlightId.trim());
+        if (transport case final LinkTransport t) {
+          return _linkedHighlight(await t.highlightWithOwner(id, call));
+        }
+        return const Err(UnknownFailure(null, 'inpage_unsupported'));
+      });
+
+  Future<Result<LinkedItems>> _linkedHighlight(
+    Result<(UserProfile, List<RemoteContent>)?> r,
+  ) async {
+    if (r is Err<(UserProfile, List<RemoteContent>)?>) {
+      return Err(r.failure);
+    }
+    final found = (r as Ok<(UserProfile, List<RemoteContent>)?>).value;
+    if (found == null) return const Err(TargetNotFound());
+    return Ok(LinkedItems(user: found.$1.user, items: found.$2));
+  }
+
   // --------------------------------------------------------------- plumbing
 
   /// Remembers the username of a successful profile and returns the user.

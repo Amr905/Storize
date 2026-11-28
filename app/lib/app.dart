@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:storize_app/core/foreground_db_refresher.dart';
+import 'package:storize_app/features/link/clipboard_link_offer.dart';
+import 'package:storize_app/features/link/link_providers.dart';
 import 'package:storize_app/features/settings/settings_providers.dart';
 import 'package:storize_app/l10n/app_localizations.dart';
 import 'package:storize_app/notifications/notification_taps.dart';
 import 'package:storize_app/router/app_router.dart';
+import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/ui/ui.dart';
 
 /// Root widget: `ProviderScope` then `MaterialApp.router`.
@@ -40,6 +45,17 @@ class _StorizeAppView extends ConsumerWidget {
         ref.read(routerProvider).go(value);
       }
     });
+    // "Share -> Storize" while the app runs: open Save from link with the
+    // text. Through the router, so the lock and onboarding gates apply.
+    ref.listen(sharedTextProvider, (_, next) {
+      if (next case AsyncData(:final value)) {
+        unawaited(
+          ref
+              .read(routerProvider)
+              .push(Routes.saveFromLinkLocation(text: value)),
+        );
+      }
+    });
     final themeMode = ref.watch(themeModeProvider);
     final forced = textDirection;
     return MaterialApp.router(
@@ -51,10 +67,12 @@ class _StorizeAppView extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
-      builder: forced == null
-          ? null
-          : (context, child) =>
-                Directionality(textDirection: forced, child: child!),
+      builder: (context, child) {
+        final app = ClipboardLinkOffer(child: child!);
+        return forced == null
+            ? app
+            : Directionality(textDirection: forced, child: app);
+      },
     );
   }
 }
