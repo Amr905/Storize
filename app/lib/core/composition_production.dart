@@ -10,6 +10,7 @@ import 'package:storize_app/core/gates.dart';
 import 'package:storize_app/core/providers.dart';
 import 'package:storize_app/features/health/health_providers.dart';
 import 'package:storize_app/features/library/library_services.dart';
+import 'package:storize_app/features/link/link_providers.dart';
 import 'package:storize_app/features/lock/biometric_auth.dart';
 import 'package:storize_app/features/lock/lock_controller.dart';
 import 'package:storize_app/features/onboarding/onboarding_providers.dart';
@@ -240,6 +241,7 @@ List<Override> appOverrides(AppComposition c) => [
   syncHighlightsProvider.overrideWithValue(c.syncHighlights),
   previewProfileProvider.overrideWithValue(c.previewProfile),
   savePreviewItemsProvider.overrideWithValue(c.savePreviewItems),
+  saveFromLinkProvider.overrideWithValue(c.saveFromLink),
   clockProvider.overrideWithValue(c.clock),
   galleryStoreProvider.overrideWithValue(c.parts.gallery),
   moveLibraryProvider.overrideWithValue(c.moveLibrary),

@@ -6,7 +6,7 @@ import 'package:storize_model/storize_model.dart';
 /// Wraps an [IgTransport] and reports `Timeline.skippedMalformed` to
 /// [PlatformSignals] (T-013 N3), so the count reaches the caller although
 /// `DirectExtractor` only logs it. Every other call passes straight through.
-final class SkipCountingTransport implements IgTransport {
+final class SkipCountingTransport implements IgTransport, LinkTransport {
   /// Wraps [inner].
   const SkipCountingTransport(this.inner, this.signals);
 
@@ -84,4 +84,31 @@ final class SkipCountingTransport implements IgTransport {
   @override
   Future<Result<Viewer>> viewer(String ownUserId, IgCall call) =>
       inner.viewer(ownUserId, call);
+
+  @override
+  Future<Result<(UserProfile, RemoteContent)?>> postByShortcode(
+    String shortcode,
+    IgCall call,
+  ) async {
+    if (inner case final LinkTransport i) {
+      return i.postByShortcode(shortcode, call);
+    }
+    return const Err(_unsupported);
+  }
+
+  @override
+  Future<Result<(UserProfile, List<RemoteContent>)?>> highlightWithOwner(
+    String highlightId,
+    IgCall call,
+  ) async {
+    if (inner case final LinkTransport i) {
+      return i.highlightWithOwner(highlightId, call);
+    }
+    return const Err(_unsupported);
+  }
+
+  static const Failure _unsupported = UnknownFailure(
+    null,
+    'inpage_unsupported',
+  );
 }

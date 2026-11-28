@@ -3958,6 +3958,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move paused: storage almost full. Nothing was lost.'**
   String get ntfMoveStorageFull;
+
+  /// Save from link screen title and the tooltip of its entry points (FR-80).
+  ///
+  /// In en, this message translates to:
+  /// **'Save from link'**
+  String get lnkTitle;
+
+  /// Save from link: label of the link field.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram link'**
+  String get lnkFieldLabel;
+
+  /// Save from link: hint of the link field.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a story, post, reel or highlight link'**
+  String get lnkFieldHint;
+
+  /// Save from link: tooltip of the paste button.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get lnkPaste;
+
+  /// Save from link: button that reads the link and opens its preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Look up'**
+  String get lnkLookUp;
+
+  /// Save from link: the text holds no supported Instagram link.
+  ///
+  /// In en, this message translates to:
+  /// **'This link isn\'t supported'**
+  String get lnkUnsupported;
+
+  /// Save from link: what links are supported, under the unsupported message.
+  ///
+  /// In en, this message translates to:
+  /// **'Storize saves stories, posts, reels and highlights from instagram.com links.'**
+  String get lnkUnsupportedHint;
+
+  /// Save from link: the story of the link is not there any more.
+  ///
+  /// In en, this message translates to:
+  /// **'This story has expired or isn\'t visible to your account.'**
+  String get lnkStoryGone;
+
+  /// Save from link: the post or reel of the link is not there.
+  ///
+  /// In en, this message translates to:
+  /// **'This post isn\'t available any more, or isn\'t visible to your account.'**
+  String get lnkPostGone;
+
+  /// Save from link: the highlight of the link is not there.
+  ///
+  /// In en, this message translates to:
+  /// **'This highlight isn\'t available any more, or isn\'t visible to your account.'**
+  String get lnkHighlightGone;
+
+  /// Title of the bottom sheet that shows what a link points at (FR-80).
+  ///
+  /// In en, this message translates to:
+  /// **'Link preview'**
+  String get lnkSheetTitle;
+
+  /// Link preview: the link is one story.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get lnkKindStory;
+
+  /// Link preview: the link is a post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get lnkKindPost;
+
+  /// Link preview: the link is a reel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reel'**
+  String get lnkKindReel;
+
+  /// Link preview: the link is a highlight with this many items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Highlight · 1 item} other{Highlight · {count} items}}'**
+  String lnkKindHighlight(int count);
+
+  /// Link preview: saves the item the link points at.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get lnkSave;
+
+  /// Link preview: saves every item of a highlight that is not saved yet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Save 1 item} other{Save all {count} items}}'**
+  String lnkSaveAll(int count);
+
+  /// Link preview: the item is in the gallery already.
+  ///
+  /// In en, this message translates to:
+  /// **'Already saved'**
+  String get lnkAlreadySaved;
+
+  /// Link preview: opens the saved item in the viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get lnkOpen;
+
+  /// Link preview: closes the sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get lnkDone;
 }
 
 class _AppLocalizationsDelegate

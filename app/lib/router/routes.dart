@@ -27,6 +27,7 @@ abstract final class Routes {
   static const String settings = 'settings';
   static const String account = 'account';
   static const String lock = 'lock';
+  static const String saveFromLink = 'saveFromLink';
 
   // Paths.
   static const String welcomePath = '/welcome';
@@ -40,6 +41,7 @@ abstract final class Routes {
   static const String settingsPath = '/settings';
   static const String accountPath = '/account';
   static const String lockPath = '/lock';
+  static const String saveFromLinkPath = '/link';
 
   /// S-04 with optional filters.
   static String libraryLocation({ContentKind? kind, int? targetId}) =>
@@ -53,6 +55,15 @@ abstract final class Routes {
 
   /// S-09.
   static String targetDetailLocation(int targetId) => '/targets/$targetId';
+
+  /// Save from link (FR-80). With [text] (a shared or copied link) the
+  /// screen looks it up at once.
+  static String saveFromLinkLocation({String? text}) => text == null
+      ? saveFromLinkPath
+      : Uri(
+          path: saveFromLinkPath,
+          queryParameters: {'text': text},
+        ).toString();
 
   /// S-12, optionally scrolled to [section].
   static String settingsLocation({SettingsSection? section}) =>

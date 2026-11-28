@@ -2533,4 +2533,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ntfMoveStorageFull =>
       'Move paused: storage almost full. Nothing was lost.';
+
+  @override
+  String get lnkTitle => 'Save from link';
+
+  @override
+  String get lnkFieldLabel => 'Instagram link';
+
+  @override
+  String get lnkFieldHint => 'Paste a story, post, reel or highlight link';
+
+  @override
+  String get lnkPaste => 'Paste';
+
+  @override
+  String get lnkLookUp => 'Look up';
+
+  @override
+  String get lnkUnsupported => 'This link isn\'t supported';
+
+  @override
+  String get lnkUnsupportedHint =>
+      'Storize saves stories, posts, reels and highlights from instagram.com links.';
+
+  @override
+  String get lnkStoryGone =>
+      'This story has expired or isn\'t visible to your account.';
+
+  @override
+  String get lnkPostGone =>
+      'This post isn\'t available any more, or isn\'t visible to your account.';
+
+  @override
+  String get lnkHighlightGone =>
+      'This highlight isn\'t available any more, or isn\'t visible to your account.';
+
+  @override
+  String get lnkSheetTitle => 'Link preview';
+
+  @override
+  String get lnkKindStory => 'Story';
+
+  @override
+  String get lnkKindPost => 'Post';
+
+  @override
+  String get lnkKindReel => 'Reel';
+
+  @override
+  String lnkKindHighlight(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Highlight · $count items',
+      one: 'Highlight · 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lnkSave => 'Save';
+
+  @override
+  String lnkSaveAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Save all $count items',
+      one: 'Save 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lnkAlreadySaved => 'Already saved';
+
+  @override
+  String get lnkOpen => 'Open';
+
+  @override
+  String get lnkDone => 'Done';
 }

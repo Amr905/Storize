@@ -86,7 +86,8 @@ import 'package:storize_model/storize_model.dart';
 /// every page load one `RequestCost.pageLoad` (3) call inside the extractors;
 /// this class makes no governed call itself and never nests or leaves one
 /// unawaited.
-final class InstagramPlatform implements ContentPlatform, ContentSignals {
+final class InstagramPlatform
+    implements ContentPlatform, ContentSignals, LinkedContentSource {
   /// Creates the platform from its parts. Use [InstagramPlatform.assemble] to
   /// build the parts with the right sharing.
   InstagramPlatform({
@@ -445,6 +446,38 @@ final class InstagramPlatform implements ContentPlatform, ContentSignals {
       inPage: (o) => o.fetchHighlightItems(highlightIds),
     );
   }
+
+  /// One post or reel by shortcode (T-060, FR-80). **In-page only**: the
+  /// query exists only in the page's modules, so direct and page mode answer
+  /// `UnknownFailure('not_implemented')`. Every request is governed.
+  @override
+  Future<Result<LinkedItems>> fetchPostByShortcode(
+    String shortcode, {
+    required ExtractionPolicy policy,
+  }) => _run<LinkedItems>(
+    'fetchPostByShortcode',
+    policy,
+    _notImplemented,
+    _notImplemented,
+    inPage: (o) => o.fetchPostByShortcode(shortcode),
+  );
+
+  /// A highlight with its owner (T-060, FR-80). In-page only, like
+  /// [fetchPostByShortcode].
+  @override
+  Future<Result<LinkedItems>> fetchHighlightWithOwner(
+    String highlightId, {
+    required ExtractionPolicy policy,
+  }) => _run<LinkedItems>(
+    'fetchHighlightWithOwner',
+    policy,
+    _notImplemented,
+    _notImplemented,
+    inPage: (o) => o.fetchHighlightWithOwner(highlightId),
+  );
+
+  Future<Result<LinkedItems>> _notImplemented() async =>
+      const Err(UnknownFailure(null, 'not_implemented'));
 
   @override
   Stream<List<int>> openMedia(String url, {int fromByte = 0}) =>

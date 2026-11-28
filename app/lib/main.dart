@@ -6,11 +6,14 @@ import 'package:storize_app/app.dart';
 import 'package:storize_app/background/background_dispatcher.dart';
 import 'package:storize_app/core/composition.dart';
 import 'package:storize_app/core/composition_production.dart';
+import 'package:storize_app/features/link/link_providers.dart';
 import 'package:storize_app/notifications/notification_taps.dart';
 import 'package:storize_app/router/app_router.dart';
+import 'package:storize_app/router/routes.dart';
 import 'package:storize_app/startup_error.dart';
 import 'package:storize_data/log/log.dart';
 import 'package:storize_domain/storize_domain.dart';
+import 'package:storize_platform_android/storize_platform_android.dart';
 import 'package:workmanager/workmanager.dart';
 
 /// App entry point.
@@ -43,6 +46,7 @@ Future<Widget> buildApp({
   StorizeDiagnostics? diagnostics,
   Future<AppComposition> Function(StorizeDiagnostics)? compose,
   Future<void> Function()? initializeWorkmanager,
+  ShareIntentSource? shareIntent,
 }) async {
   final d =
       diagnostics ??
@@ -60,10 +64,17 @@ Future<Widget> buildApp({
     unawaited(_startUp(composition));
     // A notification that launched the app opens its screen at start-up.
     final launch = await composition.parts.notifications?.launchLocation();
+    // "Share -> Storize" that launched the app opens Save from link (FR-80).
+    final share = shareIntent ?? ShareIntentSource();
+    final shared = launch == null ? await _sharedAtLaunch(share) : null;
+    final start =
+        launch ??
+        (shared == null ? null : Routes.saveFromLinkLocation(text: shared));
     return StorizeApp(
       overrides: [
         ...appOverrides(composition),
-        if (launch != null) initialLocationProvider.overrideWithValue(launch),
+        if (start != null) initialLocationProvider.overrideWithValue(start),
+        sharedTextProvider.overrideWith((ref) => share.texts),
         if (composition.parts.notifications case final n?)
           notificationTapsProvider.overrideWith((ref) => n.taps),
       ],
@@ -101,6 +112,16 @@ Future<StorizeDiagnostics?> installDiagnostics({
     final diagnostics = await open();
     diagnostics.installCrashHooks();
     return diagnostics;
+  } on Object {
+    return null;
+  }
+}
+
+/// The text that launched the app, or null. A share problem never stops the
+/// start-up.
+Future<String?> _sharedAtLaunch(ShareIntentSource source) async {
+  try {
+    return await source.initialText();
   } on Object {
     return null;
   }

@@ -6,6 +6,7 @@ import 'package:storize_app/features/account/account_page.dart';
 import 'package:storize_app/features/activity/activity_page.dart';
 import 'package:storize_app/features/health/health_page.dart';
 import 'package:storize_app/features/library/library_page.dart';
+import 'package:storize_app/features/link/save_from_link_page.dart';
 import 'package:storize_app/features/lock/lock_page.dart';
 import 'package:storize_app/features/onboarding/login_page.dart';
 import 'package:storize_app/features/onboarding/setup_page.dart';
@@ -119,6 +120,13 @@ GoRouter createRouter({
         name: Routes.addTarget,
         parentNavigatorKey: rootKey,
         builder: (_, _) => const AddTargetPage(),
+      ),
+      GoRoute(
+        path: Routes.saveFromLinkPath,
+        name: Routes.saveFromLink,
+        parentNavigatorKey: rootKey,
+        builder: (_, state) =>
+            SaveFromLinkPage(initialText: state.uri.queryParameters['text']),
       ),
       GoRoute(
         path: Routes.accountPath,

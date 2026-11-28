@@ -332,3 +332,11 @@ Device log of the T-048 build: doc_ids found, but **no providers and no tokens**
 **Direct mode sends nothing without** both tokens and a known shape for the query (providers found, or the module/capture shows none): it returns `SchemaChanged('page_tokens')` / `SchemaChanged('providers')` first. Backfill history defers on both.
 
 **Discovery log.** `provided=<Query>:<n>,...` and `tokens=dtsg:yes|no(module|capture),lsd:yes|no(module|capture)`; counts and sources only.
+
+## 2026-11-28 ground truth: links (T-060)
+Verified by the Lead in a logged-in web page.
+- Post or reel by shortcode: `PolarisPostRootQuery`, variables `{shortcode, include_longform_landscape_cover: false}` plus 6 relay providers (merged by the page script). Reply `data.xdt_api__v1__media__shortcode__web_info.items[0]`: the v1 media shape (pk, code, media_type, image_versions2, video_versions, carousel_media, user, caption, taken_at). Mapped with the existing post mapper.
+- Story: `resolveUser`, then `PolarisStoriesV3ReelPageStandaloneQuery` `{reel_ids_arr: [userId], is_highlight: false}`; pick the item whose pk equals the link pk.
+- Highlight: same query with `['highlight:<id>']`, `is_highlight: true`. Owner taken from the reel `user` (unverified: needs `username`).
+- Share short link `/s/<base64>` decodes to `highlight:<id>`.
+

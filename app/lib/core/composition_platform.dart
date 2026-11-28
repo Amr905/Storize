@@ -19,7 +19,8 @@ typedef PlatformFactory = Future<InstagramPlatform> Function(int accountId);
 /// With no active account the adapter of account `0` is used: it has no
 /// stored session, so every call fails with `SessionInvalid` (BR-7) and sends
 /// nothing.
-final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
+final class ActiveAccountPlatform
+    implements ContentPlatform, ContentSignals, LinkedContentSource {
   /// Creates the wrapper.
   ActiveAccountPlatform({
     required this._accounts,
@@ -168,6 +169,28 @@ final class ActiveAccountPlatform implements ContentPlatform, ContentSignals {
   @override
   Future<Result<DateTime?>> latestPostTime(String userId) async =>
       _prio(() async => (await _current()).latestPostTime(userId));
+
+  @override
+  Future<Result<LinkedItems>> fetchPostByShortcode(
+    String shortcode, {
+    required ExtractionPolicy policy,
+  }) async => _interactive(
+    () async => (await _current()).fetchPostByShortcode(
+      shortcode,
+      policy: policy,
+    ),
+  );
+
+  @override
+  Future<Result<LinkedItems>> fetchHighlightWithOwner(
+    String highlightId, {
+    required ExtractionPolicy policy,
+  }) async => _interactive(
+    () async => (await _current()).fetchHighlightWithOwner(
+      highlightId,
+      policy: policy,
+    ),
+  );
 
   @override
   Future<Result<RemoteUser>> verifySession() async =>

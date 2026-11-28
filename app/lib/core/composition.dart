@@ -239,6 +239,7 @@ final class AppComposition {
     required this.downloadPending,
     required this.previewProfile,
     required this.savePreviewItems,
+    required this.saveFromLink,
     required this.applyRetention,
     required this.detectGaps,
     required this.deleteContent,
@@ -421,6 +422,14 @@ final class AppComposition {
           : StorageTarget.gallery,
     );
     final moveState = parts.moveState;
+    final savePreviewItems = SavePreviewItems(
+      targets: targets,
+      content: content,
+      downloads: downloadPending,
+      platform: platform,
+      clock: clock,
+      log: log,
+    );
     return AppComposition._(
       background: background,
       holder: holderId,
@@ -481,13 +490,16 @@ final class AppComposition {
         // One in-page session for the three calls; closed at the end (T-052).
         onFinished: platform.closeInPage,
       ),
-      savePreviewItems: SavePreviewItems(
+      savePreviewItems: savePreviewItems,
+      saveFromLink: SaveFromLink(
+        platform: platform,
+        source: platform,
         targets: targets,
         content: content,
-        downloads: downloadPending,
-        platform: platform,
-        clock: clock,
+        save: savePreviewItems,
         log: log,
+        // One in-page session for the lookup; closed at the end (T-060).
+        onFinished: platform.closeInPage,
       ),
       applyRetention: ApplyRetention(
         settings: parts.settings,
@@ -552,6 +564,9 @@ final class AppComposition {
 
   /// Saves items picked in the preview (FR-74).
   final SavePreviewItems savePreviewItems;
+
+  /// Looks a pasted or shared Instagram link up and saves it (FR-80).
+  final SaveFromLink saveFromLink;
 
   /// Deletes content older than the retention window.
   final ApplyRetention applyRetention;

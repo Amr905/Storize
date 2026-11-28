@@ -13,7 +13,8 @@ import java.util.concurrent.RejectedExecutionException
 
 /**
  * Native Android entry point for Storize (ADR-11). Channels:
- * `storize/media` (gallery) and `storize/system` (battery, OEM, stop reasons).
+ * `storize/media` (gallery), `storize/system` (battery, OEM, stop reasons) and `storize/share_in`
+ * (text shared into the app, FR-80).
  * MethodChannels are in-process, and the plugin manifest exports no components.
  */
 class StorizePlatformPlugin :
@@ -21,6 +22,8 @@ class StorizePlatformPlugin :
     ActivityAware {
     private var mediaChannel: MethodChannel? = null
     private var systemChannel: MethodChannel? = null
+    private var shareInChannel: MethodChannel? = null
+    private val shareIn = ShareInOps()
     private var executor: ExecutorService? = null
     private var permissions: PermissionOps? = null
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -117,13 +120,27 @@ class StorizePlatformPlugin :
                     }
                 }
             }
+
+        shareInChannel =
+            MethodChannel(binding.binaryMessenger, SHARE_IN_CHANNEL).also { channel ->
+                shareIn.attachChannel(channel)
+                channel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "initialText" -> result.success(shareIn.takeInitialText())
+                        else -> result.notImplemented()
+                    }
+                }
+            }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         mediaChannel?.setMethodCallHandler(null)
         systemChannel?.setMethodCallHandler(null)
+        shareInChannel?.setMethodCallHandler(null)
+        shareIn.detachChannel()
         mediaChannel = null
         systemChannel = null
+        shareInChannel = null
         executor?.shutdown()
         executor = null
         permissions = null
@@ -131,18 +148,22 @@ class StorizePlatformPlugin :
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         permissions?.attach(binding)
+        shareIn.attach(binding)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
         permissions?.detach()
+        shareIn.detach()
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         permissions?.attach(binding)
+        shareIn.attach(binding)
     }
 
     override fun onDetachedFromActivity() {
         permissions?.detach()
+        shareIn.detach()
     }
 
     private fun intArg(
@@ -192,5 +213,6 @@ class StorizePlatformPlugin :
     companion object {
         const val MEDIA_CHANNEL = "storize/media"
         const val SYSTEM_CHANNEL = "storize/system"
+        const val SHARE_IN_CHANNEL = "storize/share_in"
     }
 }

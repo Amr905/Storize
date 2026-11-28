@@ -659,3 +659,11 @@ Future<Result<Map<String, List<RemoteContent>>>> fetchHighlightItems(List<String
 - **Health (FR-75, T-056):** `HealthReadModel` port (read-only); drift v4 adds `target.last_success_at`, `last_check_outcome`, `last_check_code`, written by `RunCheck`.
 - **Captions and details (FR-77, T-054):** drift v3 adds `location_name`, `tagged_usernames` (JSON).
 
+## 19. v0.5 notes: download by link (FR-80, T-060)
+- `LinkParser` (domain, pure) -> `ParsedLink`. `SaveFromLink.lookup` reads the item (foreground, interactive priority, one in-page session closed at the end); `save` calls `SavePreviewItems`.
+- Port: additive interface `LinkedContentSource` (`fetchPostByShortcode`, `fetchHighlightWithOwner`), implemented by `InstagramPlatform` and `ActiveAccountPlatform`; `ContentPlatform` is unchanged (deviation from "method on the port": avoids breaking every implementer). In-page only; direct and page mode answer `not_implemented`. Stories use `resolveUser` + `fetchStories`.
+- In-page allowlist (JS and Dart) gains `PolarisPostRootQuery`; Mutation/Seen stay refused.
+- Share target: manifest `ACTION_SEND text/plain` filter; plugin `ShareInOps` (`storize/share_in`: `initialText`, `onText`); the app routes to `/link?text=` through the router (gates apply). The clipboard is read only when Save from link opens (no resume read: Android 12+ paste toast).
+- Logs: `[link] lookup kind=<k> outcome=<o>`, `save kind=<k> n saved failed`. Never the link, username or ids.
+- Unverified: owner `username` in the highlight reel's `user`; device check for launchMode with share (see Open questions).
+

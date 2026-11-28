@@ -65,6 +65,23 @@ abstract interface class IgTransport {
   Future<Result<Viewer>> viewer(String ownUserId, IgCall call);
 }
 
+/// Reads what an Instagram link points at (T-060, FR-80). Implemented by the
+/// in-page transport only: the queries it needs are not in direct mode.
+abstract interface class LinkTransport {
+  /// One post or reel by [shortcode]; null when removed or not visible.
+  Future<Result<(UserProfile, RemoteContent)?>> postByShortcode(
+    String shortcode,
+    IgCall call,
+  );
+
+  /// The owner and items of the highlight [highlightId] (plain id); null when
+  /// the reply has no such reel.
+  Future<Result<(UserProfile, List<RemoteContent>)?>> highlightWithOwner(
+    String highlightId,
+    IgCall call,
+  );
+}
+
 /// Sends [request] with [call] and parses the JSON object with [parse].
 /// A [SchemaException] inside [parse] becomes `Err(SchemaChanged(where))`.
 Future<Result<R>> callAndParse<R>(

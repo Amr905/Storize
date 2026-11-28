@@ -377,6 +377,16 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                       minWidth: StorizeSpacing.minTouchTarget,
                       minHeight: StorizeSpacing.minTouchTarget,
                     ),
+                    tooltip: l10n.lnkTitle,
+                    icon: const Icon(Icons.link_rounded),
+                    onPressed: () =>
+                        unawaited(context.push(Routes.saveFromLinkPath)),
+                  ),
+                  IconButton(
+                    constraints: const BoxConstraints(
+                      minWidth: StorizeSpacing.minTouchTarget,
+                      minHeight: StorizeSpacing.minTouchTarget,
+                    ),
                     tooltip: l10n.libFilterTooltip,
                     icon: const Icon(Icons.tune_rounded),
                     onPressed: view == null ? null : () => _openFilters(view),

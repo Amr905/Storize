@@ -2,6 +2,7 @@
 library;
 
 export 'src/models.dart';
+export 'src/share_intent.dart';
 export 'src/storize_platform_android.dart';
 export 'src/storize_platform_exception.dart';
 
